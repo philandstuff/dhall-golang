@@ -43,7 +43,9 @@ var Lambda = SkipWSAfter(parsec.TokenExact(`[λ\\]`, "LAMBDA"))
 var OpenParens = SkipWSAfter(parsec.AtomExact(`(`, "OPAREN"))
 var CloseParens = SkipWSAfter(parsec.AtomExact(`)`, "CPAREN"))
 var Colon = SkipWSAfter(parsec.AtomExact(`:`, "COLON"))
-var Arrow = SkipWSAfter(parsec.TokenExact(`→|->`, "ARROW"))
+var Arrow = SkipWSAfter(parsec.OrdChoice(nil,
+	parsec.AtomExact(`->`, "ARROW"),
+	parsec.AtomExact(`→`, "ARROW")))
 
 var SimpleLabel = parsec.TokenExact(`[A-Za-z_][0-9a-zA-Z_/-]*`, "SIMPLE")
 
