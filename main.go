@@ -6,7 +6,7 @@ import "github.com/philandstuff/dhall-golang/parser"
 import "github.com/prataprc/goparsec"
 
 func main() {
-	text := []byte(`\(foo : bar) -> baz`)
+	text := []byte(`λ(foo : bar) → baz`)
 	root, _ := parser.Expression(parsec.NewScanner(text))
 	// nodes := root.([]parsec.ParsecNode)
 	// t := nodes[0].(*parsec.Terminal)

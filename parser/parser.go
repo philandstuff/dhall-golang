@@ -31,12 +31,10 @@ var WhitespaceChunk = parsec.OrdChoice(
 var Whitespace = parsec.Kleene(nil, WhitespaceChunk)
 
 func SkipWSAfter(p parsec.Parser) parsec.Parser {
-	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
-		news := s.Clone()
-		node, news := p(news)
-		_, news = Whitespace(news)
-		return node, news
+	parseFirst := func(ns []parsec.ParsecNode) parsec.ParsecNode {
+		return ns[0]
 	}
+	return parsec.And(parseFirst, p, Whitespace)
 }
 
 var Lambda = SkipWSAfter(parsec.TokenExact(`[λ\\]`, "LAMBDA"))
