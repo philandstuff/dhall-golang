@@ -14,18 +14,17 @@ type LambdaExpr struct {
 
 var ExprA parsec.Parser
 
-func Pure(name string, value string) parsec.Parser {
-	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
-		cursor := s.GetCursor()
-		return parsec.NewTerminal(name, value, cursor), s
-	}
-}
+var LineComment = parsec.And(nil,
+	parsec.AtomExact(`--`, "LINECOMMENTMARK"),
+	parsec.Kleene(nil, parsec.TokenExact(`[\x20-\x{10ffff}\t]`, "COMMENT")),
+	parsec.TokenExact(`\n|\r\n`, "EOL"),
+)
 
 var WhitespaceChunk = parsec.OrdChoice(
 	nil,
 	parsec.TokenExact(`[ \t\n]|\r\n`, "WS"),
-	// LineComment
-	// BlockComment
+	LineComment,
+	// BlockComment,
 )
 
 var Whitespace = parsec.Kleene(nil, WhitespaceChunk)
