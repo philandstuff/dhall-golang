@@ -21,9 +21,8 @@ func PrettyPrint(node parsec.ParsecNode, writer io.Writer) {
 		PrettyPrint(typedNode.Type, writer)
 		fmt.Fprint(writer, ") → ")
 		PrettyPrint(typedNode.Body, writer)
-	case string:
-		fmt.Fprint(writer, typedNode)
-	case *parser.WhitespaceNode:
+	case *parser.LabelNode:
+		fmt.Fprint(writer, typedNode.Value)
 
 	}
 }

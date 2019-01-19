@@ -6,13 +6,25 @@ import (
 	"github.com/prataprc/goparsec"
 )
 
+type LabelNode struct {
+	Value    string
+	Comments []Comment
+}
+
 type LambdaExpr struct {
-	Label parsec.ParsecNode
+	Label *LabelNode
 	Type  interface{}
 	Body  interface{}
 }
 
 var ExprA parsec.Parser
+
+func unwrapOrdChoice(ns []parsec.ParsecNode) parsec.ParsecNode {
+	if ns == nil || len(ns) < 1 {
+		return nil
+	}
+	return ns[0]
+}
 
 func parseLineComment(ns []parsec.ParsecNode) parsec.ParsecNode {
 	if ns == nil || len(ns) < 3 {
@@ -32,10 +44,6 @@ type Comment struct {
 	Value   string
 }
 
-type WhitespaceNode struct {
-	Comments []Comment
-}
-
 var WhitespaceChunk = parsec.OrdChoice(
 	nil,
 	parsec.TokenExact(`[ \t\n]|\r\n`, "WS"),
@@ -45,9 +53,9 @@ var WhitespaceChunk = parsec.OrdChoice(
 
 func parseWhitespace(ns []parsec.ParsecNode) parsec.ParsecNode {
 	if ns == nil || len(ns) < 1 {
-		return &WhitespaceNode{}
+		return []Comment{}
 	}
-	var comments []Comment
+	var comments []Comment = []Comment{}
 	for _, n := range ns {
 		chunk := n.([]parsec.ParsecNode)[0]
 		switch t := chunk.(type) {
@@ -57,26 +65,38 @@ func parseWhitespace(ns []parsec.ParsecNode) parsec.ParsecNode {
 			comments = append(comments, *t)
 		}
 	}
-	return &WhitespaceNode{Comments: comments}
+	return comments
 }
 
 var Whitespace = parsec.Kleene(parseWhitespace, WhitespaceChunk)
 
-func SkipWSAfter(p parsec.Parser) parsec.Parser {
-	return parsec.And(nil, p, Whitespace)
+func SkipWSAfter(parseFunc parsec.Nodify, p parsec.Parser) parsec.Parser {
+	return parsec.And(parseFunc, p, Whitespace)
 }
 
-var Lambda = SkipWSAfter(parsec.TokenExact(`[λ\\]`, "LAMBDA"))
-var OpenParens = SkipWSAfter(parsec.AtomExact(`(`, "OPAREN"))
-var CloseParens = SkipWSAfter(parsec.AtomExact(`)`, "CPAREN"))
-var Colon = SkipWSAfter(parsec.AtomExact(`:`, "COLON"))
-var Arrow = SkipWSAfter(parsec.TokenExact(`(->|→)`, "ARROW"))
+type AtomNode struct {
+	Value    string
+	Comments []Comment
+}
+
+func parseAtom(nodes []parsec.ParsecNode) parsec.ParsecNode {
+	return &AtomNode{
+		Value:    nodes[0].(*parsec.Terminal).Name,
+		Comments: nodes[1].([]Comment),
+	}
+}
+
+var Lambda = SkipWSAfter(parseAtom, parsec.TokenExact(`[λ\\]`, "LAMBDA"))
+var OpenParens = SkipWSAfter(parseAtom, parsec.AtomExact(`(`, "OPAREN"))
+var CloseParens = SkipWSAfter(parseAtom, parsec.AtomExact(`)`, "CPAREN"))
+var Colon = SkipWSAfter(parseAtom, parsec.AtomExact(`:`, "COLON"))
+var Arrow = SkipWSAfter(parseAtom, parsec.TokenExact(`(->|→)`, "ARROW"))
 
 var SimpleLabel = parsec.TokenExact(`[A-Za-z_][0-9a-zA-Z_/-]*`, "SIMPLE")
 
-var Label = SkipWSAfter(parsec.OrdChoice(parseLabel,
+var Label = SkipWSAfter(parseLabel,
 	SimpleLabel,
-))
+)
 
 func parseLabel(ns []parsec.ParsecNode) parsec.ParsecNode {
 	if ns == nil || len(ns) < 1 {
@@ -86,7 +106,10 @@ func parseLabel(ns []parsec.ParsecNode) parsec.ParsecNode {
 	case *parsec.Terminal:
 		switch n.Name {
 		case "SIMPLE":
-			return n.Value
+			return &LabelNode{
+				Value:    n.Value,
+				Comments: ns[1].([]Comment),
+			}
 		}
 	}
 	return nil
@@ -121,17 +144,10 @@ func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
 	t := ns[4]
 	body := ns[7]
 	return &LambdaExpr{
-		Label: label.(parsec.ParsecNode),
+		Label: label.(*LabelNode),
 		Type:  t,
 		Body:  body,
 	}
-}
-
-func parseExpr(ns []parsec.ParsecNode) parsec.ParsecNode {
-	if ns == nil || len(ns) < 1 {
-		return nil
-	}
-	return ns[0]
 }
 
 func Expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
@@ -147,7 +163,7 @@ func Expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		Expr,
 	)
 
-	expr := parsec.OrdChoice(parseExpr,
+	expr := parsec.OrdChoice(unwrapOrdChoice,
 		lambdaAbstraction,
 		Label,
 	)

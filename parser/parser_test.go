@@ -10,30 +10,27 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func WithoutTrailingWS(node interface{}) interface{} {
-	return []parsec.ParsecNode{node, &parser.WhitespaceNode{}}
+func label(value string) *parser.LabelNode {
+	return &parser.LabelNode{Value: value, Comments: []parser.Comment{}}
 }
 
-func WithTrailingLineComment(node interface{}, comment string) interface{} {
-	return []parsec.ParsecNode{node, &parser.WhitespaceNode{
+func labelWithComment(value string, comment string) *parser.LabelNode {
+	return &parser.LabelNode{
+		Value: value,
 		Comments: []parser.Comment{
 			parser.Comment{
 				Value: comment,
 			},
-		},
-	}}
+		}}
 }
 
 var _ = Describe("Expression", func() {
 	DescribeTable("Simple tokens",
-		func(parser parsec.Parser, text []byte, name string) {
-			root, news := parser(parsec.NewScanner(text))
+		func(p parsec.Parser, text []byte, name string) {
+			root, news := p(parsec.NewScanner(text))
 			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
-			ns := root.([]parsec.ParsecNode)
-			var t *parsec.Terminal
-			Expect(ns[0]).To(BeAssignableToTypeOf(t))
-			t = ns[0].(*parsec.Terminal)
-			Expect(t.Name).To(Equal(name))
+			t := root.(*parser.AtomNode)
+			Expect(t.Value).To(Equal(name))
 		},
 		Entry("ASCII lambda", parser.Lambda, []byte(`\`), "LAMBDA"),
 		Entry("Unicode lambda", parser.Lambda, []byte(`λ`), "LAMBDA"),
@@ -55,16 +52,16 @@ var _ = Describe("Expression", func() {
 		Entry("simple",
 			[]byte(`λ(foo : bar) → baz`),
 			parser.LambdaExpr{
-				Label: WithoutTrailingWS("foo"),
-				Type:  WithoutTrailingWS("bar"),
-				Body:  WithoutTrailingWS("baz"),
+				Label: label("foo"),
+				Type:  label("bar"),
+				Body:  label("baz"),
 			}),
 		Entry("with line comment",
 			[]byte("λ(foo : bar) --asdf\n → baz"),
 			parser.LambdaExpr{
-				Label: WithoutTrailingWS("foo"),
-				Type:  WithoutTrailingWS("bar"),
-				Body:  WithoutTrailingWS("baz"),
+				Label: label("foo"),
+				Type:  label("bar"),
+				Body:  label("baz"),
 			}),
 	)
 	DescribeTable("line comments",
@@ -121,26 +118,22 @@ var _ = Describe("Expression", func() {
 		},
 		Entry("simple space",
 			[]byte(`    `),
-			&parser.WhitespaceNode{}),
+			[]parser.Comment{}),
 		Entry("newlines and space",
 			[]byte("\n\n\n\n    "),
-			&parser.WhitespaceNode{}),
+			[]parser.Comment{}),
 		Entry("minimal line comment",
 			[]byte("--\n"),
-			&parser.WhitespaceNode{
-				Comments: []parser.Comment{
-					parser.Comment{
-						Value: "",
-					},
+			[]parser.Comment{
+				parser.Comment{
+					Value: "",
 				},
 			}),
 		Entry("line comment with string",
 			[]byte("-- foobar\n"),
-			&parser.WhitespaceNode{
-				Comments: []parser.Comment{
-					parser.Comment{
-						Value: " foobar",
-					},
+			[]parser.Comment{
+				parser.Comment{
+					Value: " foobar",
 				},
 			}),
 	)
@@ -153,16 +146,16 @@ var _ = Describe("Expression", func() {
 		Entry("simple lambda",
 			[]byte(`λ(foo : bar) → baz`),
 			&parser.LambdaExpr{
-				Label: WithoutTrailingWS("foo"),
-				Type:  WithoutTrailingWS("bar"),
-				Body:  WithoutTrailingWS("baz"),
+				Label: label("foo"),
+				Type:  label("bar"),
+				Body:  label("baz"),
 			}),
 		Entry("lambda with trailing comment",
 			[]byte("λ(foo : bar) → baz -- bar\n"),
 			&parser.LambdaExpr{
-				Label: WithoutTrailingWS("foo"),
-				Type:  WithoutTrailingWS("bar"),
-				Body:  WithTrailingLineComment("baz", " bar"),
+				Label: label("foo"),
+				Type:  label("bar"),
+				Body:  labelWithComment("baz", " bar"),
 			}),
 	)
 })
