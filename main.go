@@ -1,9 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
 
-import "github.com/philandstuff/dhall-golang/parser"
-import "github.com/prataprc/goparsec"
+	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/prataprc/goparsec"
+)
 
 func main() {
 	text := []byte("λ(foo : bar) → -- foo \n baz\n")
