@@ -7,18 +7,34 @@ import (
 )
 
 type LambdaExpr struct {
-	Label string
+	Label parsec.ParsecNode
 	Type  interface{}
 	Body  interface{}
 }
 
 var ExprA parsec.Parser
 
-var LineComment = parsec.And(nil,
+func parseLineComment(ns []parsec.ParsecNode) parsec.ParsecNode {
+	if ns == nil || len(ns) < 3 {
+		return nil
+	}
+	return &Comment{Value: ns[1].(*parsec.Terminal).Value}
+}
+
+var LineComment = parsec.And(parseLineComment,
 	parsec.AtomExact(`--`, "LINECOMMENTMARK"),
-	parsec.Kleene(nil, parsec.TokenExact(`[\x20-\x{10ffff}\t]`, "COMMENT")),
+	parsec.TokenExact(`[\x20-\x{10ffff}\t]*`, "LINECOMMENT"),
 	parsec.TokenExact(`\n|\r\n`, "EOL"),
 )
+
+type Comment struct {
+	IsBlock bool
+	Value   string
+}
+
+type WhitespaceNode struct {
+	Comments []Comment
+}
 
 var WhitespaceChunk = parsec.OrdChoice(
 	nil,
@@ -27,22 +43,34 @@ var WhitespaceChunk = parsec.OrdChoice(
 	// BlockComment,
 )
 
-var Whitespace = parsec.Kleene(nil, WhitespaceChunk)
+func parseWhitespace(ns []parsec.ParsecNode) parsec.ParsecNode {
+	if ns == nil || len(ns) < 1 {
+		return &WhitespaceNode{}
+	}
+	var comments []Comment
+	for _, n := range ns {
+		chunk := n.([]parsec.ParsecNode)[0]
+		switch t := chunk.(type) {
+		case *parsec.Terminal:
+			continue
+		case *Comment:
+			comments = append(comments, *t)
+		}
+	}
+	return &WhitespaceNode{Comments: comments}
+}
+
+var Whitespace = parsec.Kleene(parseWhitespace, WhitespaceChunk)
 
 func SkipWSAfter(p parsec.Parser) parsec.Parser {
-	parseFirst := func(ns []parsec.ParsecNode) parsec.ParsecNode {
-		return ns[0]
-	}
-	return parsec.And(parseFirst, p, Whitespace)
+	return parsec.And(nil, p, Whitespace)
 }
 
 var Lambda = SkipWSAfter(parsec.TokenExact(`[λ\\]`, "LAMBDA"))
 var OpenParens = SkipWSAfter(parsec.AtomExact(`(`, "OPAREN"))
 var CloseParens = SkipWSAfter(parsec.AtomExact(`)`, "CPAREN"))
 var Colon = SkipWSAfter(parsec.AtomExact(`:`, "COLON"))
-var Arrow = SkipWSAfter(parsec.OrdChoice(nil,
-	parsec.AtomExact(`->`, "ARROW"),
-	parsec.AtomExact(`→`, "ARROW")))
+var Arrow = SkipWSAfter(parsec.TokenExact(`(->|→)`, "ARROW"))
 
 var SimpleLabel = parsec.TokenExact(`[A-Za-z_][0-9a-zA-Z_/-]*`, "SIMPLE")
 
@@ -88,18 +116,12 @@ func parseNatural(ns []parsec.ParsecNode) parsec.ParsecNode {
 var Natural = parsec.OrdChoice(parseNatural, parsec.Hex(), parsec.Oct(), parsec.Token(`[1-9][0-9]+`, "DEC"))
 var Identifier = parsec.OrdChoice(nil, SimpleLabel)
 
-func Skip(s parsec.Scanner, p parsec.Parser) parsec.Scanner {
-	news := s.Clone()
-	_, news = p(news)
-	return news
-}
-
 func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
 	label := ns[2]
 	t := ns[4]
 	body := ns[7]
 	return &LambdaExpr{
-		Label: label.(string),
+		Label: label.(parsec.ParsecNode),
 		Type:  t,
 		Body:  body,
 	}
