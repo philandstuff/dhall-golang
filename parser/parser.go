@@ -150,8 +150,8 @@ func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
 	}
 }
 
-func Expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
-	var Expr parsec.Parser = Expression
+func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+	var Expr parsec.Parser = expression
 	lambdaAbstraction := parsec.And(parseLambda,
 		Lambda,
 		OpenParens,
@@ -169,3 +169,7 @@ func Expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 	)
 	return expr(s)
 }
+
+var Expression parsec.Parser = expression
+
+var CompleteExpression = parsec.And(nil, Whitespace, Expression)
