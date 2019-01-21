@@ -16,19 +16,19 @@ func prettyPrintComment(writer io.Writer, comment parser.Comment) {
 	}
 }
 
-func PrettyPrint(node parsec.ParsecNode, writer io.Writer) {
+func PrettyPrint(writer io.Writer, node parsec.ParsecNode) {
 	switch typedNode := node.(type) {
 	case []parsec.ParsecNode:
 		for _, n := range typedNode {
-			PrettyPrint(n, writer)
+			PrettyPrint(writer, n)
 		}
 	case *parser.LambdaExpr:
 		fmt.Fprint(writer, "λ(")
-		PrettyPrint(typedNode.Label, writer)
+		PrettyPrint(writer, typedNode.Label)
 		fmt.Fprint(writer, " : ")
-		PrettyPrint(typedNode.Type, writer)
+		PrettyPrint(writer, typedNode.Type)
 		fmt.Fprint(writer, ") → ")
-		PrettyPrint(typedNode.Body, writer)
+		PrettyPrint(writer, typedNode.Body)
 	case *parser.LabelNode:
 		fmt.Fprint(writer, typedNode.Value)
 	case []parser.Comment:

@@ -15,11 +15,10 @@ var _ = DescribeTable("PrettyPrint",
 	func(input string, expected_regex string) {
 		buf := gbytes.NewBuffer()
 		node, _ := parser.CompleteExpression(parsec.NewScanner([]byte(input)))
-		pprint.PrettyPrint(node, buf)
+		pprint.PrettyPrint(buf, node)
 		Expect(buf).To(gbytes.Say(expected_regex))
 	},
 	Entry("converts ascii to unicode", "\\(foo : bar) -> baz", `λ\(foo : bar\) → baz`),
 	Entry("preserves unicode", "λ(foo : bar) → baz", `λ\(foo : bar\) → baz`),
 	Entry("preserves leading comments", "-- comment\nλ(foo : bar) → baz", `-- comment\nλ\(foo : bar\) → baz`),
-	Entry("preserves interstitial comments", "λ(foo : bar) --comment\n → baz", `λ\(foo : bar\) --comment\n→ baz`),
 )
