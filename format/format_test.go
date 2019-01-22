@@ -1,8 +1,8 @@
-package pprint_test
+package format_test
 
 import (
+	"github.com/philandstuff/dhall-golang/format"
 	"github.com/philandstuff/dhall-golang/parser"
-	"github.com/philandstuff/dhall-golang/pprint"
 
 	// . "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -11,11 +11,11 @@ import (
 	"github.com/prataprc/goparsec"
 )
 
-var _ = DescribeTable("PrettyPrint",
+var _ = DescribeTable("Format",
 	func(input string, expected_regex string) {
 		buf := gbytes.NewBuffer()
 		node, _ := parser.CompleteExpression(parsec.NewScanner([]byte(input)))
-		pprint.PrettyPrint(buf, node)
+		format.Format(buf, node)
 		Expect(buf).To(gbytes.Say(expected_regex))
 	},
 	Entry("converts ascii to unicode", "\\(foo : bar) -> baz", `λ\(foo : bar\) → baz`),

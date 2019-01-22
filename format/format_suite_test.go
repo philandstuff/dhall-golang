@@ -1,4 +1,4 @@
-package pprint_test
+package format_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestPprint(t *testing.T) {
+func TestFormat(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Pprint Suite")
+	RunSpecs(t, "Format Suite")
 }
