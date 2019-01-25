@@ -7,8 +7,7 @@ import (
 )
 
 type LabelNode struct {
-	Value    string
-	Comments []Comment
+	Value string
 }
 
 type LambdaExpr struct {
@@ -107,8 +106,7 @@ func parseLabel(ns []parsec.ParsecNode) parsec.ParsecNode {
 		switch n.Name {
 		case "SIMPLE":
 			return &LabelNode{
-				Value:    n.Value,
-				Comments: ns[1].([]Comment),
+				Value: n.Value,
 			}
 		}
 	}
