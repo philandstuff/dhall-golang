@@ -1,6 +1,8 @@
 package ast
 
-type Expr interface{}
+type Expr interface {
+	expr()
+}
 
 type LabelNode struct {
 	Value string
@@ -11,6 +13,9 @@ type LambdaExpr struct {
 	Type  Expr
 	Body  Expr
 }
+
+func (*LabelNode) expr()  {}
+func (*LambdaExpr) expr() {}
 
 func NewLabelNode(value string) *LabelNode {
 	return &LabelNode{

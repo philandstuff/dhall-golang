@@ -128,7 +128,7 @@ func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
 	label := ns[2]
 	t := ns[4]
 	body := ns[7]
-	return ast.NewLambdaExpr(label.(*ast.LabelNode), t, body)
+	return ast.NewLambdaExpr(label.(*ast.LabelNode), t.(ast.Expr), body.(ast.Expr))
 }
 
 func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
