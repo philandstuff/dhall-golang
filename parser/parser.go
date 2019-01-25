@@ -3,20 +3,9 @@ package parser
 import (
 	"strconv"
 
+	"github.com/philandstuff/dhall-golang/ast"
 	"github.com/prataprc/goparsec"
 )
-
-type LabelNode struct {
-	Value string
-}
-
-type LambdaExpr struct {
-	Label *LabelNode
-	Type  interface{}
-	Body  interface{}
-}
-
-var ExprA parsec.Parser
 
 func unwrapOrdChoice(ns []parsec.ParsecNode) parsec.ParsecNode {
 	if ns == nil || len(ns) < 1 {
@@ -105,9 +94,7 @@ func parseLabel(ns []parsec.ParsecNode) parsec.ParsecNode {
 	case *parsec.Terminal:
 		switch n.Name {
 		case "SIMPLE":
-			return &LabelNode{
-				Value: n.Value,
-			}
+			return ast.NewLabelNode(n.Value)
 		}
 	}
 	return nil
@@ -141,11 +128,7 @@ func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
 	label := ns[2]
 	t := ns[4]
 	body := ns[7]
-	return &LambdaExpr{
-		Label: label.(*LabelNode),
-		Type:  t,
-		Body:  body,
-	}
+	return ast.NewLambdaExpr(label.(*ast.LabelNode), t, body)
 }
 
 func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
