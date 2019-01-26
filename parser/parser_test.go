@@ -33,36 +33,20 @@ var _ = Describe("Expression", func() {
 		Entry("ASCII arrow", parser.Arrow, []byte(`->`), "ARROW"),
 		Entry("Unicode arrow", parser.Arrow, []byte(`→`), "ARROW"),
 	)
-	DescribeTable("Type/Kind/Sort",
-		func(text []byte, c ast.Const) {
+	DescribeTable("simple expressions",
+		func(text []byte, e ast.Expr) {
 			root, news := parser.Expression(parsec.NewScanner(text))
 			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
 			t := root.(ast.Expr)
-			Expect(t).To(Equal(c))
+			Expect(t).To(Equal(e))
 		},
 		Entry("Type", []byte(`Type`), ast.Type),
 		Entry("Kind", []byte(`Kind`), ast.Kind),
 		Entry("Sort", []byte(`Sort`), ast.Sort),
-	)
-	DescribeTable("builtin types",
-		func(text []byte, e ast.Expr) {
-			root, news := parser.Expression(parsec.NewScanner(text))
-			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
-			t := root.(ast.Expr)
-			Expect(t).To(Equal(e))
-		},
 		Entry("Natural", []byte(`Natural`), ast.Natural),
-	)
-	DescribeTable("literals",
-		func(text []byte, e ast.Expr) {
-			root, news := parser.Expression(parsec.NewScanner(text))
-			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
-			t := root.(ast.Expr)
-			Expect(t).To(Equal(e))
-		},
-		Entry("Natural decimal", []byte(`1234`), ast.NaturalLit(1234)),
-		Entry("Natural octal", []byte(`01234`), ast.NaturalLit(01234)),
-		Entry("Natural hex", []byte(`0x1234`), ast.NaturalLit(0x1234)),
+		Entry("NaturalLit decimal", []byte(`1234`), ast.NaturalLit(1234)),
+		Entry("NaturalLit octal", []byte(`01234`), ast.NaturalLit(01234)),
+		Entry("NaturalLit hex", []byte(`0x1234`), ast.NaturalLit(0x1234)),
 	)
 	DescribeTable("lambda expressions",
 		func(text []byte, expected ast.LambdaExpr) {
