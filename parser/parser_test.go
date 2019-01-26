@@ -1,6 +1,9 @@
 package parser_test
 
 import (
+	"fmt"
+
+	"github.com/philandstuff/dhall-golang/ast"
 	"github.com/philandstuff/dhall-golang/parser"
 
 	"github.com/prataprc/goparsec"
@@ -10,18 +13,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func label(value string) *parser.LabelNode {
-	return &parser.LabelNode{Value: value, Comments: []parser.Comment{}}
-}
-
-func labelWithComment(value string, comment string) *parser.LabelNode {
-	return &parser.LabelNode{
-		Value: value,
-		Comments: []parser.Comment{
-			parser.Comment{
-				Value: comment,
-			},
-		}}
+func Var(value string) ast.Var {
+	return ast.Var{Name: value}
 }
 
 var _ = Describe("Expression", func() {
@@ -41,27 +34,28 @@ var _ = Describe("Expression", func() {
 		Entry("Unicode arrow", parser.Arrow, []byte(`→`), "ARROW"),
 	)
 	DescribeTable("lambda expressions",
-		func(text []byte, expected parser.LambdaExpr) {
+		func(text []byte, expected ast.LambdaExpr) {
 			root, news := parser.Expression(parsec.NewScanner(text))
 			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
-			var t *parser.LambdaExpr
+			var t *ast.LambdaExpr
 			Expect(root).To(BeAssignableToTypeOf(t))
-			t = root.(*parser.LambdaExpr)
+			t = root.(*ast.LambdaExpr)
+			fmt.Printf("expected: %+v\nactual: %+v\n", expected, *t)
 			Expect(*t).To(Equal(expected))
 		},
 		Entry("simple",
 			[]byte(`λ(foo : bar) → baz`),
-			parser.LambdaExpr{
-				Label: label("foo"),
-				Type:  label("bar"),
-				Body:  label("baz"),
+			ast.LambdaExpr{
+				Label: "foo",
+				Type:  Var("bar"),
+				Body:  Var("baz"),
 			}),
 		Entry("with line comment",
 			[]byte("λ(foo : bar) --asdf\n → baz"),
-			parser.LambdaExpr{
-				Label: label("foo"),
-				Type:  label("bar"),
-				Body:  label("baz"),
+			ast.LambdaExpr{
+				Label: "foo",
+				Type:  Var("bar"),
+				Body:  Var("baz"),
 			}),
 	)
 	DescribeTable("line comments",
@@ -145,17 +139,17 @@ var _ = Describe("Expression", func() {
 		},
 		Entry("simple lambda",
 			[]byte(`λ(foo : bar) → baz`),
-			&parser.LambdaExpr{
-				Label: label("foo"),
-				Type:  label("bar"),
-				Body:  label("baz"),
+			&ast.LambdaExpr{
+				Label: "foo",
+				Type:  Var("bar"),
+				Body:  Var("baz"),
 			}),
 		Entry("lambda with trailing comment",
 			[]byte("λ(foo : bar) → baz -- bar\n"),
-			&parser.LambdaExpr{
-				Label: label("foo"),
-				Type:  label("bar"),
-				Body:  labelWithComment("baz", " bar"),
+			&ast.LambdaExpr{
+				Label: "foo",
+				Type:  Var("bar"),
+				Body:  Var("baz"),
 			}),
 	)
 })

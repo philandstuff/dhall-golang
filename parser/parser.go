@@ -86,6 +86,12 @@ var Label = SkipWSAfter(parseLabel,
 	SimpleLabel,
 )
 
+func parseVar(ns []parsec.ParsecNode) parsec.ParsecNode {
+	return ast.Var{Name: ns[0].(string)}
+}
+
+var Var = parsec.And(parseVar, Label)
+
 func parseLabel(ns []parsec.ParsecNode) parsec.ParsecNode {
 	if ns == nil || len(ns) < 1 {
 		return nil
@@ -94,7 +100,7 @@ func parseLabel(ns []parsec.ParsecNode) parsec.ParsecNode {
 	case *parsec.Terminal:
 		switch n.Name {
 		case "SIMPLE":
-			return ast.Label(n.Value)
+			return n.Value
 		}
 	}
 	return nil
@@ -125,10 +131,10 @@ var Natural = parsec.OrdChoice(parseNatural, parsec.Hex(), parsec.Oct(), parsec.
 var Identifier = parsec.OrdChoice(nil, SimpleLabel)
 
 func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
-	label := ns[2]
+	label := ns[2].(string)
 	t := ns[4]
 	body := ns[7]
-	return ast.NewLambdaExpr(label.(ast.Label), t.(ast.Expr), body.(ast.Expr))
+	return ast.NewLambdaExpr(label, t.(ast.Expr), body.(ast.Expr))
 }
 
 func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
@@ -146,7 +152,7 @@ func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 
 	expr := parsec.OrdChoice(unwrapOrdChoice,
 		lambdaAbstraction,
-		Label,
+		Var,
 	)
 	return expr(s)
 }

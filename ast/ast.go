@@ -5,19 +5,22 @@ type (
 		expr()
 	}
 
-	Label string
+	Var struct {
+		Name  string
+		Index int
+	}
 
 	LambdaExpr struct {
-		Label Label
+		Label string
 		Type  Expr
 		Body  Expr
 	}
 )
 
-func (Label) expr()       {}
+func (Var) expr()         {}
 func (*LambdaExpr) expr() {}
 
-func NewLambdaExpr(arg Label, argType Expr, body Expr) *LambdaExpr {
+func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {
 	return &LambdaExpr{
 		Label: arg,
 		Type:  argType,
