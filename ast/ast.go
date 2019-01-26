@@ -3,6 +3,7 @@ package ast
 import (
 	"errors"
 	"fmt"
+	"io"
 )
 
 type TypeContext *map[string][]Expr
@@ -15,6 +16,7 @@ type (
 	Expr interface {
 		Normalize() Expr
 		TypeWith(TypeContext) (Expr, error)
+		WriteTo(io.Writer) (int, error)
 	}
 
 	Const int
@@ -44,6 +46,30 @@ const (
 var (
 	Natural natural = natural(struct{}{})
 )
+
+func (c Const) WriteTo(out io.Writer) (int, error) {
+	if c == Type {
+		return fmt.Fprint(out, "Type")
+	} else if c == Kind {
+		return fmt.Fprint(out, "Kind")
+	}
+	return fmt.Fprint(out, "Sort")
+}
+
+func (v Var) WriteTo(out io.Writer) (int, error) {
+	if v.Index == 0 {
+		return fmt.Fprint(out, v.Name)
+	}
+	return fmt.Fprintf(out, "%s@%d", v.Name, v.Index)
+}
+
+func (*LambdaExpr) WriteTo(out io.Writer) (int, error) {
+	return 0, errors.New("unimplemented")
+}
+
+func (natural) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Natural") }
+
+func (n NaturalLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", n) }
 
 func (c Const) TypeWith(TypeContext) (Expr, error) {
 	if c == Type {
