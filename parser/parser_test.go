@@ -53,6 +53,17 @@ var _ = Describe("Expression", func() {
 		},
 		Entry("Natural", []byte(`Natural`), ast.Natural),
 	)
+	DescribeTable("literals",
+		func(text []byte, e ast.Expr) {
+			root, news := parser.Expression(parsec.NewScanner(text))
+			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
+			t := root.(ast.Expr)
+			Expect(t).To(Equal(e))
+		},
+		Entry("Natural decimal", []byte(`1234`), ast.NaturalLit(1234)),
+		Entry("Natural octal", []byte(`01234`), ast.NaturalLit(01234)),
+		Entry("Natural hex", []byte(`0x1234`), ast.NaturalLit(0x1234)),
+	)
 	DescribeTable("lambda expressions",
 		func(text []byte, expected ast.LambdaExpr) {
 			root, news := parser.Expression(parsec.NewScanner(text))

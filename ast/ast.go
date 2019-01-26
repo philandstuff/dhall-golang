@@ -31,6 +31,8 @@ type (
 	}
 
 	natural struct{}
+
+	NaturalLit int
 )
 
 const (
@@ -66,6 +68,8 @@ func (lam *LambdaExpr) TypeWith(ctx TypeContext) (Expr, error) {
 
 func (natural) TypeWith(TypeContext) (Expr, error) { return Type, nil }
 
+func (n NaturalLit) TypeWith(TypeContext) (Expr, error) { return Natural, nil }
+
 func (c Const) Normalize() Expr { return c }
 func (v Var) Normalize() Expr   { return v }
 
@@ -76,7 +80,8 @@ func (lam *LambdaExpr) Normalize() Expr {
 		Body:  lam.Body.Normalize(),
 	}
 }
-func (n natural) Normalize() Expr { return n }
+func (n natural) Normalize() Expr    { return n }
+func (n NaturalLit) Normalize() Expr { return n }
 
 func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {
 	return &LambdaExpr{

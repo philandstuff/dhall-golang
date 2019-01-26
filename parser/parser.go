@@ -143,14 +143,14 @@ func parseNaturalLit(ns []parsec.ParsecNode) parsec.ParsecNode {
 	case *parsec.Terminal:
 		switch n.Name {
 		case "DEC":
-			val, _ := strconv.ParseUint(n.Value, 10, 64)
-			return val
+			val, _ := strconv.ParseInt(n.Value, 10, 64)
+			return ast.NaturalLit(val)
 		case "OCT":
-			val, _ := strconv.ParseUint(n.Value[1:], 8, 64)
-			return val
+			val, _ := strconv.ParseInt(n.Value[1:], 8, 64)
+			return ast.NaturalLit(val)
 		case "HEX":
-			val, _ := strconv.ParseUint(n.Value[2:], 16, 64)
-			return val
+			val, _ := strconv.ParseInt(n.Value[2:], 16, 64)
+			return ast.NaturalLit(val)
 		}
 	}
 	return nil
@@ -184,6 +184,7 @@ func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		Const,
 		Natural,
 		Var,
+		NaturalLit,
 	)
 	return expr(s)
 }
