@@ -2,7 +2,7 @@ package ast
 
 type (
 	Expr interface {
-		expr()
+		Normalize() Expr
 	}
 
 	Var struct {
@@ -17,8 +17,15 @@ type (
 	}
 )
 
-func (Var) expr()         {}
-func (*LambdaExpr) expr() {}
+func (v Var) Normalize() Expr { return v }
+
+func (lam *LambdaExpr) Normalize() Expr {
+	return &LambdaExpr{
+		Label: lam.Label,
+		Type:  lam.Type.Normalize(),
+		Body:  lam.Body.Normalize(),
+	}
+}
 
 func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {
 	return &LambdaExpr{

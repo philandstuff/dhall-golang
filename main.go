@@ -11,6 +11,6 @@ import (
 func main() {
 	text := []byte("λ(foo : bar) → -- foo \n baz\n")
 	root, _ := parser.Expression(parsec.NewScanner(text))
-	t := root.(*ast.LambdaExpr)
-	fmt.Printf("%+v\n", t)
+	t := root.(ast.Expr)
+	fmt.Printf("%+v\n", t.Normalize())
 }
