@@ -74,6 +74,12 @@ func parseAtom(nodes []parsec.ParsecNode) parsec.ParsecNode {
 	}
 }
 
+func parseBuiltinType(t ast.Expr) func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+	return func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+		return t
+	}
+}
+
 var Lambda = SkipWSAfter(parseAtom, parsec.TokenExact(`[λ\\]`, "LAMBDA"))
 var OpenParens = SkipWSAfter(parseAtom, parsec.AtomExact(`(`, "OPAREN"))
 var CloseParens = SkipWSAfter(parseAtom, parsec.AtomExact(`)`, "CPAREN"))
@@ -82,6 +88,8 @@ var Arrow = SkipWSAfter(parseAtom, parsec.TokenExact(`(->|→)`, "ARROW"))
 var TypeToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Type`, "TYPE"))
 var KindToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Kind`, "KIND"))
 var SortToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Sort`, "SORT"))
+
+var Natural = SkipWSAfter(parseBuiltinType(ast.Natural), parsec.AtomExact(`Natural`, "NATURAL"))
 
 var SimpleLabel = parsec.TokenExact(`[A-Za-z_][0-9a-zA-Z_/-]*`, "SIMPLE")
 
@@ -127,7 +135,7 @@ func parseLabel(ns []parsec.ParsecNode) parsec.ParsecNode {
 	return nil
 }
 
-func parseNatural(ns []parsec.ParsecNode) parsec.ParsecNode {
+func parseNaturalLit(ns []parsec.ParsecNode) parsec.ParsecNode {
 	if ns == nil || len(ns) < 1 {
 		return nil
 	}
@@ -148,7 +156,7 @@ func parseNatural(ns []parsec.ParsecNode) parsec.ParsecNode {
 	return nil
 }
 
-var Natural = parsec.OrdChoice(parseNatural, parsec.Hex(), parsec.Oct(), parsec.Token(`[1-9][0-9]+`, "DEC"))
+var NaturalLit = parsec.OrdChoice(parseNaturalLit, parsec.Hex(), parsec.Oct(), parsec.Token(`[1-9][0-9]+`, "DEC"))
 var Identifier = parsec.OrdChoice(nil, SimpleLabel)
 
 func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
@@ -174,6 +182,7 @@ func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 	expr := parsec.OrdChoice(unwrapOrdChoice,
 		lambdaAbstraction,
 		Const,
+		Natural,
 		Var,
 	)
 	return expr(s)

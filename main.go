@@ -12,7 +12,7 @@ import (
 func load(e ast.Expr) ast.Expr { return e }
 
 func main() {
-	text := []byte("Kind")
+	text := []byte("Natural")
 	expr := parser.ParseExpression(text)
 	resolvedExpr := load(expr)
 	inferredType, err := resolvedExpr.TypeWith(ast.EmptyContext())

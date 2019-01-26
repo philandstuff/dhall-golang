@@ -44,6 +44,15 @@ var _ = Describe("Expression", func() {
 		Entry("Kind", []byte(`Kind`), ast.Kind),
 		Entry("Sort", []byte(`Sort`), ast.Sort),
 	)
+	DescribeTable("builtin types",
+		func(text []byte, e ast.Expr) {
+			root, news := parser.Expression(parsec.NewScanner(text))
+			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
+			t := root.(ast.Expr)
+			Expect(t).To(Equal(e))
+		},
+		Entry("Natural", []byte(`Natural`), ast.Natural),
+	)
 	DescribeTable("lambda expressions",
 		func(text []byte, expected ast.LambdaExpr) {
 			root, news := parser.Expression(parsec.NewScanner(text))
