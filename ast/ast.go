@@ -1,29 +1,23 @@
 package ast
 
-type Expr interface {
-	expr()
-}
+type (
+	Expr interface {
+		expr()
+	}
 
-type LabelNode struct {
-	Value string
-}
+	Label string
 
-type LambdaExpr struct {
-	Label *LabelNode
-	Type  Expr
-	Body  Expr
-}
+	LambdaExpr struct {
+		Label Label
+		Type  Expr
+		Body  Expr
+	}
+)
 
-func (*LabelNode) expr()  {}
+func (Label) expr()       {}
 func (*LambdaExpr) expr() {}
 
-func NewLabelNode(value string) *LabelNode {
-	return &LabelNode{
-		Value: value,
-	}
-}
-
-func NewLambdaExpr(arg *LabelNode, argType Expr, body Expr) *LambdaExpr {
+func NewLambdaExpr(arg Label, argType Expr, body Expr) *LambdaExpr {
 	return &LambdaExpr{
 		Label: arg,
 		Type:  argType,

@@ -94,7 +94,7 @@ func parseLabel(ns []parsec.ParsecNode) parsec.ParsecNode {
 	case *parsec.Terminal:
 		switch n.Name {
 		case "SIMPLE":
-			return ast.NewLabelNode(n.Value)
+			return ast.Label(n.Value)
 		}
 	}
 	return nil
@@ -128,7 +128,7 @@ func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
 	label := ns[2]
 	t := ns[4]
 	body := ns[7]
-	return ast.NewLambdaExpr(label.(*ast.LabelNode), t.(ast.Expr), body.(ast.Expr))
+	return ast.NewLambdaExpr(label.(ast.Label), t.(ast.Expr), body.(ast.Expr))
 }
 
 func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
