@@ -79,12 +79,33 @@ var OpenParens = SkipWSAfter(parseAtom, parsec.AtomExact(`(`, "OPAREN"))
 var CloseParens = SkipWSAfter(parseAtom, parsec.AtomExact(`)`, "CPAREN"))
 var Colon = SkipWSAfter(parseAtom, parsec.AtomExact(`:`, "COLON"))
 var Arrow = SkipWSAfter(parseAtom, parsec.TokenExact(`(->|→)`, "ARROW"))
+var TypeToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Type`, "TYPE"))
+var KindToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Kind`, "KIND"))
+var SortToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Sort`, "SORT"))
 
 var SimpleLabel = parsec.TokenExact(`[A-Za-z_][0-9a-zA-Z_/-]*`, "SIMPLE")
 
 var Label = SkipWSAfter(parseLabel,
 	SimpleLabel,
 )
+
+func parseConst(ns []parsec.ParsecNode) parsec.ParsecNode {
+
+	switch n := ns[0].(type) {
+	case *AtomNode:
+		switch n.Value {
+		case "TYPE":
+			return ast.Type
+		case "KIND":
+			return ast.Kind
+		case "SORT":
+			return ast.Sort
+		}
+	}
+	return nil
+}
+
+var Const = parsec.OrdChoice(parseConst, TypeToken, KindToken, SortToken)
 
 func parseVar(ns []parsec.ParsecNode) parsec.ParsecNode {
 	return ast.Var{Name: ns[0].(string)}
@@ -152,6 +173,7 @@ func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 
 	expr := parsec.OrdChoice(unwrapOrdChoice,
 		lambdaAbstraction,
+		Const,
 		Var,
 	)
 	return expr(s)

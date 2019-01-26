@@ -33,6 +33,17 @@ var _ = Describe("Expression", func() {
 		Entry("ASCII arrow", parser.Arrow, []byte(`->`), "ARROW"),
 		Entry("Unicode arrow", parser.Arrow, []byte(`→`), "ARROW"),
 	)
+	DescribeTable("Type/Kind/Sort",
+		func(text []byte, c ast.Const) {
+			root, news := parser.Expression(parsec.NewScanner(text))
+			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
+			t := root.(ast.Expr)
+			Expect(t).To(Equal(c))
+		},
+		Entry("Type", []byte(`Type`), ast.Type),
+		Entry("Kind", []byte(`Kind`), ast.Kind),
+		Entry("Sort", []byte(`Sort`), ast.Sort),
+	)
 	DescribeTable("lambda expressions",
 		func(text []byte, expected ast.LambdaExpr) {
 			root, news := parser.Expression(parsec.NewScanner(text))
