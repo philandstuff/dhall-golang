@@ -160,3 +160,9 @@ func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 var Expression parsec.Parser = expression
 
 var CompleteExpression = parsec.And(nil, Whitespace, Expression)
+
+// FIXME: if this doesn't parse all input, we have no way of knowing
+func ParseExpression(input []byte) ast.Expr {
+	expr, _ := Expression(parsec.NewScanner(input))
+	return expr.(ast.Expr)
+}
