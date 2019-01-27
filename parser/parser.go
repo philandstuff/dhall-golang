@@ -85,6 +85,7 @@ var OpenParens = SkipWSAfter(parseAtom, parsec.AtomExact(`(`, "OPAREN"))
 var CloseParens = SkipWSAfter(parseAtom, parsec.AtomExact(`)`, "CPAREN"))
 var Colon = SkipWSAfter(parseAtom, parsec.AtomExact(`:`, "COLON"))
 var Arrow = SkipWSAfter(parseAtom, parsec.TokenExact(`(->|→)`, "ARROW"))
+var ForAll = SkipWSAfter(parseAtom, parsec.TokenExact(`(forall|∀)`, "FORALL"))
 var TypeToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Type`, "TYPE"))
 var KindToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Kind`, "KIND"))
 var SortToken = SkipWSAfter(parseAtom, parsec.AtomExact(`Sort`, "SORT"))
@@ -166,30 +167,49 @@ func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {
 	return ast.NewLambdaExpr(label, t.(ast.Expr), body.(ast.Expr))
 }
 
-func expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
-	var Expr parsec.Parser = expression
-	lambdaAbstraction := parsec.And(parseLambda,
+func lambdaAbstraction(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+	return parsec.And(parseLambda,
 		Lambda,
 		OpenParens,
 		Label,
 		Colon,
-		Expr,
+		parsec.Parser(Expression),
 		CloseParens,
 		Arrow,
-		Expr,
-	)
+		parsec.Parser(Expression),
+	)(s)
+}
 
-	expr := parsec.OrdChoice(unwrapOrdChoice,
-		lambdaAbstraction,
+func parsePi(ns []parsec.ParsecNode) parsec.ParsecNode {
+	label := ns[2].(string)
+	t := ns[4]
+	body := ns[7]
+	return &ast.Pi{Label: label, Type: t.(ast.Expr), Body: body.(ast.Expr)}
+}
+
+func piType(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+	return parsec.And(parsePi,
+		ForAll,
+		OpenParens,
+		Label,
+		Colon,
+		parsec.Parser(Expression),
+		CloseParens,
+		Arrow,
+		parsec.Parser(Expression),
+	)(s)
+}
+
+func Expression(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+	return parsec.OrdChoice(unwrapOrdChoice,
+		parsec.Parser(lambdaAbstraction),
+		parsec.Parser(piType),
 		Const,
 		Natural,
 		Var,
 		NaturalLit,
-	)
-	return expr(s)
+	)(s)
 }
-
-var Expression parsec.Parser = expression
 
 var CompleteExpression = parsec.And(nil, Whitespace, Expression)
 

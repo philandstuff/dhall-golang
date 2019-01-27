@@ -32,6 +32,12 @@ type (
 		Body  Expr
 	}
 
+	Pi struct {
+		Label string
+		Type  Expr
+		Body  Expr
+	}
+
 	natural struct{}
 
 	NaturalLit int
@@ -45,6 +51,15 @@ const (
 
 var (
 	Natural natural = natural(struct{}{})
+)
+
+var (
+	_ Expr = Type
+	_ Expr = &Var{}
+	_ Expr = &LambdaExpr{}
+	_ Expr = &Pi{}
+	_ Expr = Natural
+	_ Expr = NaturalLit(3)
 )
 
 func (c Const) WriteTo(out io.Writer) (int, error) {
@@ -64,6 +79,10 @@ func (v Var) WriteTo(out io.Writer) (int, error) {
 }
 
 func (*LambdaExpr) WriteTo(out io.Writer) (int, error) {
+	return 0, errors.New("unimplemented")
+}
+
+func (*Pi) WriteTo(out io.Writer) (int, error) {
 	return 0, errors.New("unimplemented")
 }
 
@@ -92,6 +111,10 @@ func (lam *LambdaExpr) TypeWith(ctx TypeContext) (Expr, error) {
 	return nil, errors.New("Unimplemented")
 }
 
+func (pi *Pi) TypeWith(ctx TypeContext) (Expr, error) {
+	return nil, errors.New("Unimplemented")
+}
+
 func (natural) TypeWith(TypeContext) (Expr, error) { return Type, nil }
 
 func (n NaturalLit) TypeWith(TypeContext) (Expr, error) { return Natural, nil }
@@ -106,6 +129,14 @@ func (lam *LambdaExpr) Normalize() Expr {
 		Body:  lam.Body.Normalize(),
 	}
 }
+func (pi *Pi) Normalize() Expr {
+	return &Pi{
+		Label: pi.Label,
+		Type:  pi.Type.Normalize(),
+		Body:  pi.Body.Normalize(),
+	}
+}
+
 func (n natural) Normalize() Expr    { return n }
 func (n NaturalLit) Normalize() Expr { return n }
 

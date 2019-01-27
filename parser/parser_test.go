@@ -1,8 +1,6 @@
 package parser_test
 
 import (
-	"fmt"
-
 	"github.com/philandstuff/dhall-golang/ast"
 	"github.com/philandstuff/dhall-golang/parser"
 
@@ -50,29 +48,36 @@ var _ = Describe("Expression", func() {
 		Entry("NaturalLit hex", []byte(`0x1234`), ast.NaturalLit(0x1234)),
 	)
 	DescribeTable("lambda expressions",
-		func(text []byte, expected ast.LambdaExpr) {
+		func(text []byte, expected ast.Expr) {
 			root, news := parser.Expression(parsec.NewScanner(text))
 			Expect(news.GetCursor()).To(Equal(len(text)), "Should parse all input")
-			var t *ast.LambdaExpr
-			Expect(root).To(BeAssignableToTypeOf(t))
-			t = root.(*ast.LambdaExpr)
-			fmt.Printf("expected: %+v\nactual: %+v\n", expected, *t)
-			Expect(*t).To(Equal(expected))
+			t := root.(ast.Expr)
+			Expect(t).To(Equal(expected))
 		},
-		Entry("simple",
+		Entry("simple λ",
 			[]byte(`λ(foo : bar) → baz`),
-			ast.LambdaExpr{
-				Label: "foo",
-				Type:  Var("bar"),
-				Body:  Var("baz"),
-			}),
+			&ast.LambdaExpr{
+				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+		Entry(`simple \`,
+			[]byte(`\(foo : bar) → baz`),
+			&ast.LambdaExpr{
+				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
 		Entry("with line comment",
 			[]byte("λ(foo : bar) --asdf\n → baz"),
-			ast.LambdaExpr{
-				Label: "foo",
-				Type:  Var("bar"),
-				Body:  Var("baz"),
-			}),
+			&ast.LambdaExpr{
+				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+		Entry("simple ∀",
+			[]byte(`∀(foo : bar) → baz`),
+			&ast.Pi{
+				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+		Entry(`simple forall`,
+			[]byte(`forall(foo : bar) → baz`),
+			&ast.Pi{
+				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+		Entry("with line comment",
+			[]byte("∀(foo : bar) --asdf\n → baz"),
+			&ast.Pi{
+				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
 	)
 	DescribeTable("line comments",
 		func(text []byte, expected interface{}) {
