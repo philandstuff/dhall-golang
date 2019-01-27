@@ -156,7 +156,7 @@ func parseNaturalLit(ns []parsec.ParsecNode) parsec.ParsecNode {
 	return nil
 }
 
-var NaturalLit = parsec.OrdChoice(parseNaturalLit, parsec.Hex(), parsec.Oct(), parsec.Token(`[1-9][0-9]+`, "DEC"))
+var NaturalLit = parsec.OrdChoice(parseNaturalLit, parsec.Hex(), parsec.Oct(), parsec.Token(`[1-9][0-9]*`, "DEC"))
 var Identifier = parsec.OrdChoice(nil, SimpleLabel)
 
 func parseLambda(ns []parsec.ParsecNode) parsec.ParsecNode {

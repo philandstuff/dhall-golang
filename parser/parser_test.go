@@ -45,6 +45,7 @@ var _ = Describe("Expression", func() {
 		Entry("Sort", []byte(`Sort`), ast.Sort),
 		Entry("Natural", []byte(`Natural`), ast.Natural),
 		Entry("NaturalLit decimal", []byte(`1234`), ast.NaturalLit(1234)),
+		Entry("NaturalLit decimal", []byte(`3`), ast.NaturalLit(3)),
 		Entry("NaturalLit octal", []byte(`01234`), ast.NaturalLit(01234)),
 		Entry("NaturalLit hex", []byte(`0x1234`), ast.NaturalLit(0x1234)),
 	)
