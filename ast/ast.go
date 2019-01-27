@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 )
 
 type TypeContext *map[string][]Expr
@@ -49,6 +50,19 @@ const (
 	Sort Const = Const(iota)
 )
 
+func Rule(a Const, b Const) (Const, error) {
+	if b == Type {
+		return Type, nil
+	}
+	if a == Kind && b == Kind {
+		return Kind, nil
+	}
+	if a == Sort && (b == Kind || b == Sort) {
+		return Sort, nil
+	}
+	return Const(0), errors.New("Dependent types are not allowed")
+}
+
 var (
 	Natural natural = natural(struct{}{})
 )
@@ -78,12 +92,44 @@ func (v Var) WriteTo(out io.Writer) (int, error) {
 	return fmt.Fprintf(out, "%s@%d", v.Name, v.Index)
 }
 
-func (*LambdaExpr) WriteTo(out io.Writer) (int, error) {
-	return 0, errors.New("unimplemented")
+func (lam *LambdaExpr) WriteTo(out io.Writer) (int, error) {
+	w1, err := fmt.Fprintf(out, "λ(%s : ", lam.Label)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	w2, err := lam.Type.WriteTo(out)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	w3, err := fmt.Fprint(out, ") → ")
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	w4, err := lam.Body.WriteTo(out)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	return w1 + w2 + w3 + w4, nil
 }
 
-func (*Pi) WriteTo(out io.Writer) (int, error) {
-	return 0, errors.New("unimplemented")
+func (pi *Pi) WriteTo(out io.Writer) (int, error) {
+	w1, err := fmt.Fprintf(out, "∀(%s : ", pi.Label)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	w2, err := pi.Type.WriteTo(out)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	w3, err := fmt.Fprint(out, ") → ")
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	w4, err := pi.Body.WriteTo(out)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	return w1 + w2 + w3 + w4, nil
 }
 
 func (natural) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Natural") }
@@ -108,11 +154,50 @@ func (v Var) TypeWith(ctx TypeContext) (Expr, error) {
 }
 
 func (lam *LambdaExpr) TypeWith(ctx TypeContext) (Expr, error) {
-	return nil, errors.New("Unimplemented")
+	// FIXME: proper de bruijn indices to avoid variable capture
+	// FIXME: modifying context in place is.. icky
+	argType := lam.Type.Normalize()
+	(*ctx)[lam.Label] = append([]Expr{argType}, (*ctx)[lam.Label]...)
+	bodyType, err := lam.Body.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// Restore ctx to how it was before
+	(*ctx)[lam.Label] = (*ctx)[lam.Label][1:len((*ctx)[lam.Label])]
+
+	p := &Pi{Label: lam.Label, Type: argType, Body: bodyType}
+	_, err2 := p.TypeWith(ctx)
+	if err2 != nil {
+		return nil, err2
+	}
+
+	return p, nil
 }
 
 func (pi *Pi) TypeWith(ctx TypeContext) (Expr, error) {
-	return nil, errors.New("Unimplemented")
+	argType, err := pi.Type.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tA := argType.Normalize()
+	// FIXME return error rather than panic if tA isn't a
+	// Const
+	kA := tA.(Const)
+	// FIXME: proper de bruijn indices to avoid variable capture
+	// FIXME: modifying context in place is.. icky
+	(*ctx)[pi.Label] = append([]Expr{pi.Type.Normalize()}, (*ctx)[pi.Label]...)
+	bodyType, err := pi.Body.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tB := bodyType.Normalize()
+	// FIXME return error rather than panic if tA isn't a
+	// Const
+	kB := tB.(Const)
+	// Restore ctx to how it was before
+	(*ctx)[pi.Label] = (*ctx)[pi.Label][1:len((*ctx)[pi.Label])]
+
+	return Rule(kA, kB)
 }
 
 func (natural) TypeWith(TypeContext) (Expr, error) { return Type, nil }
