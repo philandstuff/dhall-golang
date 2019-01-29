@@ -1,0 +1,117 @@
+{
+package parser
+
+import "github.com/philandstuff/dhall-golang/ast"
+}
+
+CompleteExpression ← Whitespace e:Expression Whitespace EOF { return e, nil }
+
+EOL ← "\n" / "\r\n"
+
+NotEOL ← [\t\u0020-\U0010ffff]
+
+LineComment ← "--" content:(NotEOL* { return string(c.text), nil}) EOL { return content, nil }
+
+WhitespaceChunk ← ' ' / '\t' / EOL / LineComment // / BlockComment
+
+Whitespace ← WhitespaceChunk*
+
+NonemptyWhitespace ← WhitespaceChunk+
+
+SimpleLabel ← [A-Za-z_] [A-Za-z0-9_/-]* { return string(c.text), nil }
+
+// QuotedLabel
+
+Label ← label:SimpleLabel Whitespace { return label, nil }
+
+ReservedRaw ← "Bool"
+  / "Optional"
+  / "None"
+  / "Natural" { return ast.Natural, nil }
+  / "Integer"
+  / "Double"
+  / "Text"
+  / "List"
+  / "True"
+  / "False"
+  / "NaN"
+  / "Infinity"
+  / "Type" { return ast.Type, nil }
+  / "Kind" { return ast.Kind, nil }
+  / "Sort" { return ast.Sort, nil }
+
+Reserved ← word:ReservedRaw Whitespace { return word, nil }
+
+OpenParens ← '(' Whitespace
+CloseParens ← ')' Whitespace
+At ← '@' Whitespace
+Colon ← ':' NonemptyWhitespace
+
+Lambda ← ('\\' / 'λ') Whitespace
+Forall ← ("forall" / '∀') Whitespace
+Arrow ← ("->" / '→') Whitespace
+
+// TODO: hex & octal 0x1f 0o17
+
+NaturalLiteral ← [0-9]+ {
+      i, err := strconv.Atoi(string(c.text))
+      if err != nil {
+         return nil, err
+      }
+      return ast.NaturalLit(i), nil
+}
+
+DeBruijn ← '@' index:NaturalLiteral Whitespace { return index.(int), nil }
+
+Identifier ← name:Label index:DeBruijn? {
+    if index != nil {
+        return ast.Var{Name:name.(string), Index:index.(int)}, nil
+    } else {
+        return ast.Var{Name:name.(string)}, nil
+    }
+}
+
+IdentifierReservedPrefix ← reserved:ReservedRaw suffix:([A-Za-z0-9/_-]+ { return string(c.text), nil }) Whitespace index:DeBruijn? {
+    name := reserved.(string) + suffix.(string)
+    if index != nil {
+        return ast.Var{Name:name, Index:index.(int)}, nil
+    } else {
+        return ast.Var{Name:name}, nil
+    }
+}
+
+// NOTE: Every rule past this point should only reference rules that end with
+// whitespace.  This ensures consistent handling of whitespace in the absence of
+// a separate lexing step
+
+Expression ←
+      Lambda OpenParens label:Label Colon t:Expression CloseParens Arrow body:Expression {
+          return &ast.LambdaExpr{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
+      }
+    / Forall OpenParens label:Label Colon t:Expression CloseParens Arrow body:Expression {
+          return &ast.Pi{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
+      }
+    / AnnotatedExpression
+
+AnnotatedExpression ← OperatorExpression
+
+OperatorExpression ← ImportAltExpression
+
+ImportAltExpression ← // we've skipped some steps here...
+      ApplicationExpression
+
+ApplicationExpression ←
+      e:ImportExpression (WhitespaceChunk ImportExpression)* { return e,nil } // FIXME
+
+ImportExpression ← SelectorExpression
+
+SelectorExpression ← PrimitiveExpression
+
+PrimitiveExpression ←
+      NaturalLiteral
+    / IdentifierReservedPrefix
+    / Reserved
+    / Identifier
+    / OpenParens e:Expression CloseParens { return e, nil }
+
+EOF ← !.

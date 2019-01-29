@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -13,12 +12,11 @@ import (
 func load(e ast.Expr) ast.Expr { return e }
 
 func main() {
-	text, err := ioutil.ReadAll(os.Stdin)
+	expr, err := parser.ParseReader("-", os.Stdin)
 	if err != nil {
-		log.Fatalf("Error reading from stdin: %v", err)
+		log.Fatalf("Parse error: %v", err)
 	}
-	expr := parser.ParseExpression(text)
-	resolvedExpr := load(expr)
+	resolvedExpr := load(expr.(ast.Expr))
 	inferredType, err := resolvedExpr.TypeWith(ast.EmptyContext())
 	if err != nil {
 		log.Fatalf("Type error: %v", err)
