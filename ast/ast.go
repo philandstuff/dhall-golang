@@ -39,6 +39,11 @@ type (
 		Body  Expr
 	}
 
+	App struct {
+		Fn  Expr
+		Arg Expr
+	}
+
 	natural struct{}
 
 	NaturalLit int
@@ -49,6 +54,59 @@ const (
 	Kind Const = Const(iota)
 	Sort Const = Const(iota)
 )
+
+// FIXME placeholder before we actually implement it
+func shift(d int, v Var, e Expr) Expr {
+	return e
+}
+
+// subst(x, C, B) == B[x := C]
+func subst(v Var, c Expr, b Expr) Expr {
+	switch e := b.(type) {
+	case Const:
+		return e
+	case Var:
+		if e == v {
+			return c
+		} else {
+			return b
+		}
+	case *LambdaExpr:
+		substType := subst(v, c, e.Type)
+		v2 := v
+		if v.Name == e.Label {
+			v2.Index++
+		}
+		substBody := subst(v2, shift(1, Var{Name: e.Label}, c), e.Body)
+		return &LambdaExpr{
+			Label: e.Label,
+			Type:  substType,
+			Body:  substBody,
+		}
+	case *Pi:
+		substType := subst(v, c, e.Type)
+		v2 := v
+		if v.Name == e.Label {
+			v2.Index++
+		}
+		substBody := subst(v2, shift(1, Var{Name: e.Label}, c), e.Body)
+		return &Pi{
+			Label: e.Label,
+			Type:  substType,
+			Body:  substBody,
+		}
+	case *App:
+		return &App{
+			Fn:  subst(v, c, e.Fn),
+			Arg: subst(v, c, e.Arg),
+		}
+	case natural:
+		return e
+	case NaturalLit:
+		return e
+	}
+	panic("missing switch case in subst()")
+}
 
 func Rule(a Const, b Const) (Const, error) {
 	if b == Type {
@@ -72,6 +130,7 @@ var (
 	_ Expr = &Var{}
 	_ Expr = &LambdaExpr{}
 	_ Expr = &Pi{}
+	_ Expr = &App{}
 	_ Expr = Natural
 	_ Expr = NaturalLit(3)
 )
@@ -130,6 +189,22 @@ func (pi *Pi) WriteTo(out io.Writer) (int, error) {
 		log.Fatalf("Fatal error %v", err)
 	}
 	return w1 + w2 + w3 + w4, nil
+}
+
+func (app *App) WriteTo(out io.Writer) (int, error) {
+	w1, err := app.Fn.WriteTo(out)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	w2, err := fmt.Fprint(out, " ")
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	w3, err := app.Arg.WriteTo(out)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	return w1 + w2 + w3, nil
 }
 
 func (natural) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Natural") }
@@ -200,6 +275,30 @@ func (pi *Pi) TypeWith(ctx TypeContext) (Expr, error) {
 	return Rule(kA, kB)
 }
 
+func (app *App) TypeWith(ctx TypeContext) (Expr, error) {
+	fnType, err := app.Fn.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tF := fnType.Normalize()
+	// FIXME return error rather than panic if tF isn't a
+	// *Pi
+	pF := tF.(*Pi)
+
+	argType, err := app.Arg.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// FIXME replace == with a JudgmentallyEqual() fn here
+	if pF.Type == argType {
+		a := shift(1, Var{Name: pF.Label}, app.Arg)
+		b := subst(Var{Name: pF.Label}, a, app.Fn)
+		return shift(-1, Var{Name: pF.Label}, b), nil
+	} else {
+		return nil, errors.New("type mismatch between lambda and applied value")
+	}
+}
+
 func (natural) TypeWith(TypeContext) (Expr, error) { return Type, nil }
 
 func (n NaturalLit) TypeWith(TypeContext) (Expr, error) { return Natural, nil }
@@ -220,6 +319,18 @@ func (pi *Pi) Normalize() Expr {
 		Type:  pi.Type.Normalize(),
 		Body:  pi.Body.Normalize(),
 	}
+}
+func (app *App) Normalize() Expr {
+	f := app.Fn.Normalize()
+	a := app.Arg.Normalize()
+	if l, ok := f.(*LambdaExpr); ok {
+		v := Var{Name: l.Label}
+		a2 := shift(1, v, a)
+		b1 := subst(v, a2, l.Body)
+		b2 := shift(-1, v, b1)
+		return b2.Normalize()
+	}
+	panic("got stuck in (*App).Normalize()")
 }
 
 func (n natural) Normalize() Expr    { return n }
