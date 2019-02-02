@@ -292,7 +292,7 @@ func (app *App) TypeWith(ctx TypeContext) (Expr, error) {
 	// FIXME replace == with a JudgmentallyEqual() fn here
 	if pF.Type == argType {
 		a := shift(1, Var{Name: pF.Label}, app.Arg)
-		b := subst(Var{Name: pF.Label}, a, app.Fn)
+		b := subst(Var{Name: pF.Label}, a, pF.Body)
 		return shift(-1, Var{Name: pF.Label}, b), nil
 	} else {
 		return nil, errors.New("type mismatch between lambda and applied value")

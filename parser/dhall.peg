@@ -1,10 +1,23 @@
 {
 package parser
 
+import (
+"bytes"
+"errors"
+"fmt"
+"io"
+"io/ioutil"
+"os"
+"strconv"
+"strings"
+"unicode"
+"unicode/utf8"
+)
 import "github.com/philandstuff/dhall-golang/ast"
+
 }
 
-CompleteExpression ← Whitespace e:Expression Whitespace EOF { return e, nil }
+CompleteExpression ← _ e:Expression _ EOF { return e, nil }
 
 EOL ← "\n" / "\r\n"
 
@@ -14,7 +27,7 @@ LineComment ← "--" content:(NotEOL* { return string(c.text), nil}) EOL { retur
 
 WhitespaceChunk ← ' ' / '\t' / EOL / LineComment // / BlockComment
 
-Whitespace ← WhitespaceChunk*
+_ ← WhitespaceChunk*
 
 NonemptyWhitespace ← WhitespaceChunk+
 
@@ -22,9 +35,9 @@ SimpleLabel ← [A-Za-z_] [A-Za-z0-9_/-]* { return string(c.text), nil }
 
 // QuotedLabel
 
-Label ← label:SimpleLabel Whitespace { return label, nil }
+Label ← label:SimpleLabel { return label, nil }
 
-ReservedRaw ← "Bool"
+Reserved ← "Bool"
   / "Optional"
   / "None"
   / "Natural" { return ast.Natural, nil }
@@ -40,16 +53,11 @@ ReservedRaw ← "Bool"
   / "Kind" { return ast.Kind, nil }
   / "Sort" { return ast.Sort, nil }
 
-Reserved ← word:ReservedRaw Whitespace { return word, nil }
+ColonSpace ← ':' NonemptyWhitespace
 
-OpenParens ← '(' Whitespace
-CloseParens ← ')' Whitespace
-At ← '@' Whitespace
-Colon ← ':' NonemptyWhitespace
-
-Lambda ← ('\\' / 'λ') Whitespace
-Forall ← ("forall" / '∀') Whitespace
-Arrow ← ("->" / '→') Whitespace
+Lambda ← ('\\' / 'λ')
+Forall ← ("forall" / '∀')
+Arrow ← ("->" / '→')
 
 // TODO: hex & octal 0x1f 0o17
 
@@ -61,9 +69,9 @@ NaturalLiteral ← [0-9]+ {
       return ast.NaturalLit(i), nil
 }
 
-DeBruijn ← '@' index:NaturalLiteral Whitespace { return index.(int), nil }
+SpaceDeBruijn ← _ '@' _ index:NaturalLiteral { return index.(int), nil }
 
-Identifier ← name:Label index:DeBruijn? {
+Identifier ← name:Label index:SpaceDeBruijn? {
     if index != nil {
         return ast.Var{Name:name.(string), Index:index.(int)}, nil
     } else {
@@ -71,7 +79,7 @@ Identifier ← name:Label index:DeBruijn? {
     }
 }
 
-IdentifierReservedPrefix ← reserved:ReservedRaw suffix:([A-Za-z0-9/_-]+ { return string(c.text), nil }) Whitespace index:DeBruijn? {
+IdentifierReservedPrefix ← reserved:Reserved suffix:([A-Za-z0-9/_-]+ { return string(c.text), nil }) index:SpaceDeBruijn? {
     name := reserved.(string) + suffix.(string)
     if index != nil {
         return ast.Var{Name:name, Index:index.(int)}, nil
@@ -80,15 +88,20 @@ IdentifierReservedPrefix ← reserved:ReservedRaw suffix:([A-Za-z0-9/_-]+ { retu
     }
 }
 
-// NOTE: Every rule past this point should only reference rules that end with
+// NOTE: Every rule past this point should pad all rules with (required or optional)
 // whitespace.  This ensures consistent handling of whitespace in the absence of
-// a separate lexing step
+// a separate lexing step.
+//
+// Note that we can't do what the dhall-lang dhall.abnf does, and refer to
+// rules which end with Whitespace, because this causes parsing problems with
+// pigeon when we want to enforce nonempty whitespace (such as in ImportExpression)
+// but the previous Whitespace rule has greedily consumed all the whitespace.
 
 Expression ←
-      Lambda OpenParens label:Label Colon t:Expression CloseParens Arrow body:Expression {
+      Lambda _ '(' _ label:Label _ ColonSpace t:Expression _ ')' _ Arrow _ body:Expression {
           return &ast.LambdaExpr{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
       }
-    / Forall OpenParens label:Label Colon t:Expression CloseParens Arrow body:Expression {
+    / Forall _ '(' _ label:Label _ ColonSpace t:Expression _ ')' _ Arrow _ body:Expression {
           return &ast.Pi{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
       }
     / AnnotatedExpression
@@ -100,8 +113,16 @@ OperatorExpression ← ImportAltExpression
 ImportAltExpression ← // we've skipped some steps here...
       ApplicationExpression
 
-ApplicationExpression ←
-      e:ImportExpression (WhitespaceChunk ImportExpression)* { return e,nil } // FIXME
+AnArg = NonemptyWhitespace e:ImportExpression { return e, nil }
+
+ApplicationExpression ← f:ImportExpression rest:AnArg* {
+          e := f.(ast.Expr)
+          if rest == nil { return e, nil }
+          for _, arg := range rest.([]interface{}) {
+              e = &ast.App{Fn:e, Arg: arg.(ast.Expr)}
+          }
+          return e,nil
+      }
 
 ImportExpression ← SelectorExpression
 
@@ -112,6 +133,6 @@ PrimitiveExpression ←
     / IdentifierReservedPrefix
     / Reserved
     / Identifier
-    / OpenParens e:Expression CloseParens { return e, nil }
+    / '(' _ e:Expression _ ')' { return e, nil }
 
 EOF ← !.

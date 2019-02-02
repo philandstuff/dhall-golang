@@ -9,6 +9,8 @@ import (
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
+//go:generate pigeon -o parser/dhall.go parser/dhall.peg
+
 func load(e ast.Expr) ast.Expr { return e }
 
 func main() {

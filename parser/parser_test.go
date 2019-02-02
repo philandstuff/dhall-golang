@@ -54,4 +54,18 @@ var _ = Describe("Expression", func() {
 			&ast.Pi{
 				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
 	)
+	DescribeTable("applications", ParseAndCompare,
+		Entry("identifier application",
+			[]byte(`foo bar`),
+			&ast.App{
+				Fn:  Var("foo"),
+				Arg: Var("bar"),
+			}),
+		Entry("lambda application",
+			[]byte(`(λ(foo : bar) → baz) quux`),
+			&ast.App{
+				Fn: &ast.LambdaExpr{
+					Label: "foo", Type: Var("bar"), Body: Var("baz")},
+				Arg: Var("quux")}),
+	)
 })

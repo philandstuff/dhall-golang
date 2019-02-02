@@ -43,6 +43,10 @@ var _ = DescribeTable("TypeCheck in empty context",
 	Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
 		&ast.LambdaExpr{Label: "x", Type: ast.Natural, Body: ast.Var{Name: "x"}},
 		&ast.Pi{Label: "x", Type: ast.Natural, Body: ast.Natural}),
+	Entry("(λ(x : Natural) → x) 3 : Natural",
+		&ast.App{Fn: &ast.LambdaExpr{Label: "x", Type: ast.Natural, Body: ast.Var{Name: "x"}},
+			Arg: ast.NaturalLit(3)},
+		ast.Natural),
 )
 
 // TODO: Normalize() when it does anything interesting
