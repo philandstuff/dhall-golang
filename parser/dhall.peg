@@ -59,7 +59,6 @@ Lambda ← ('\\' / 'λ')
 Forall ← ("forall" / '∀')
 Arrow ← ("->" / '→')
 
-// TODO: hex & octal 0x1f 0o17
 
 NaturalLiteral ← [0-9]+ {
       i, err := strconv.Atoi(string(c.text))
