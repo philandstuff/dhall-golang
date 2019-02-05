@@ -75,9 +75,14 @@ type (
 		Arg Expr
 	}
 
-	natural struct{}
+	double    struct{}
+	DoubleLit float64
 
+	natural    struct{}
 	NaturalLit int
+
+	integer    struct{}
+	IntegerLit int
 )
 
 const (
@@ -126,9 +131,17 @@ func Shift(d int, v Var, e Expr) Expr {
 			Fn:  Shift(d, v, e.Fn),
 			Arg: Shift(d, v, e.Arg),
 		}
+	case double:
+		return e
+	case DoubleLit:
+		return e
 	case natural:
 		return e
 	case NaturalLit:
+		return e
+	case integer:
+		return e
+	case IntegerLit:
 		return e
 	}
 	panic("missing switch case in Shift()")
@@ -174,9 +187,17 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Fn:  Subst(v, c, e.Fn),
 			Arg: Subst(v, c, e.Arg),
 		}
+	case double:
+		return e
+	case DoubleLit:
+		return e
 	case natural:
 		return e
 	case NaturalLit:
+		return e
+	case integer:
+		return e
+	case IntegerLit:
 		return e
 	}
 	panic("missing switch case in Subst()")
@@ -196,7 +217,9 @@ func Rule(a Const, b Const) (Const, error) {
 }
 
 var (
+	Double  double  = double(struct{}{})
 	Natural natural = natural(struct{}{})
+	Integer integer = integer(struct{}{})
 )
 
 var (
@@ -205,8 +228,12 @@ var (
 	_ Expr = &LambdaExpr{}
 	_ Expr = &Pi{}
 	_ Expr = &App{}
+	_ Expr = Double
+	_ Expr = DoubleLit(3.0)
 	_ Expr = Natural
 	_ Expr = NaturalLit(3)
+	_ Expr = Integer
+	_ Expr = IntegerLit(3)
 )
 
 func (c Const) WriteTo(out io.Writer) (int, error) {
@@ -281,9 +308,17 @@ func (app *App) WriteTo(out io.Writer) (int, error) {
 	return w1 + w2 + w3, nil
 }
 
+func (double) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Double") }
+
+func (d DoubleLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%f", d) }
+
 func (natural) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Natural") }
 
 func (n NaturalLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", n) }
+
+func (integer) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Integer") }
+
+func (i IntegerLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", i) }
 
 func (c Const) TypeWith(*TypeContext) (Expr, error) {
 	if c == Type {
@@ -372,9 +407,17 @@ func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 	}
 }
 
+func (double) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
+
+func (DoubleLit) TypeWith(*TypeContext) (Expr, error) { return Double, nil }
+
 func (natural) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
-func (n NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
+func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
+
+func (integer) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
+
+func (IntegerLit) TypeWith(*TypeContext) (Expr, error) { return Integer, nil }
 
 func (c Const) Normalize() Expr { return c }
 func (v Var) Normalize() Expr   { return v }
@@ -406,8 +449,14 @@ func (app *App) Normalize() Expr {
 	panic("got stuck in (*App).Normalize()")
 }
 
+func (d double) Normalize() Expr    { return d }
+func (d DoubleLit) Normalize() Expr { return d }
+
 func (n natural) Normalize() Expr    { return n }
 func (n NaturalLit) Normalize() Expr { return n }
+
+func (i integer) Normalize() Expr    { return i }
+func (i IntegerLit) Normalize() Expr { return i }
 
 func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {
 	return &LambdaExpr{

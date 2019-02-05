@@ -41,8 +41,8 @@ Reserved ← "Bool"
   / "Optional"
   / "None"
   / "Natural" { return ast.Natural, nil }
-  / "Integer"
-  / "Double"
+  / "Integer" { return ast.Integer, nil }
+  / "Double" { return ast.Double, nil }
   / "Text"
   / "List"
   / "True"
@@ -59,6 +59,15 @@ Lambda ← ('\\' / 'λ')
 Forall ← ("forall" / '∀')
 Arrow ← ("->" / '→')
 
+Exponent ← "e"i [+-]? [0-9]+
+
+DoubleLiteral ← [+-]? [0-9]+ ( "." [0-9]+ Exponent? / Exponent) {
+      d, err := strconv.ParseFloat(string(c.text), 64)
+      if err != nil {
+         return nil, err
+      }
+      return ast.DoubleLit(d), nil
+}
 
 NaturalLiteral ← [0-9]+ {
       i, err := strconv.Atoi(string(c.text))
@@ -66,6 +75,14 @@ NaturalLiteral ← [0-9]+ {
          return nil, err
       }
       return ast.NaturalLit(i), nil
+}
+
+IntegerLiteral ← [+-][0-9]+ {
+      i, err := strconv.Atoi(string(c.text))
+      if err != nil {
+         return nil, err
+      }
+      return ast.IntegerLit(i), nil
 }
 
 SpaceDeBruijn ← _ '@' _ index:NaturalLiteral { return index.(int), nil }
@@ -128,7 +145,10 @@ ImportExpression ← SelectorExpression
 SelectorExpression ← PrimitiveExpression
 
 PrimitiveExpression ←
-      NaturalLiteral
+      DoubleLiteral
+    / NaturalLiteral
+    / IntegerLiteral
+    / '-' Infinity
     / IdentifierReservedPrefix
     / Reserved
     / Identifier
