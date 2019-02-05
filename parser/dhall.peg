@@ -7,6 +7,7 @@ import (
 "fmt"
 "io"
 "io/ioutil"
+"math"
 "os"
 "strconv"
 "strings"
@@ -47,8 +48,8 @@ Reserved ← "Bool"
   / "List"
   / "True"
   / "False"
-  / "NaN"
-  / "Infinity"
+  / "NaN" { return ast.DoubleLit(math.NaN()), nil }
+  / "Infinity" { return ast.DoubleLit(math.Inf(1)), nil }
   / "Type" { return ast.Type, nil }
   / "Kind" { return ast.Kind, nil }
   / "Sort" { return ast.Sort, nil }
@@ -148,7 +149,7 @@ PrimitiveExpression ←
       DoubleLiteral
     / NaturalLiteral
     / IntegerLiteral
-    / '-' Infinity
+    / "-Infinity" { return ast.DoubleLit(math.Inf(-1)), nil }
     / IdentifierReservedPrefix
     / Reserved
     / Identifier

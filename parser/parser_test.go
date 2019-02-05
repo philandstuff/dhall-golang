@@ -1,6 +1,8 @@
 package parser_test
 
 import (
+	"math"
+
 	"github.com/philandstuff/dhall-golang/ast"
 	"github.com/philandstuff/dhall-golang/parser"
 
@@ -29,6 +31,8 @@ var _ = Describe("Expression", func() {
 		Entry("DoubleLit with exponent", []byte(`3E5`), ast.DoubleLit(3e5)),
 		Entry("DoubleLit with sign", []byte(`+3.0`), ast.DoubleLit(3.0)),
 		Entry("DoubleLit with everything", []byte(`-5.0e1`), ast.DoubleLit(-50.0)),
+		Entry("Infinity", []byte(`Infinity`), ast.DoubleLit(math.Inf(1))),
+		Entry("-Infinity", []byte(`-Infinity`), ast.DoubleLit(math.Inf(-1))),
 		Entry("Natural", []byte(`Natural`), ast.Natural),
 		Entry("NaturalLit", []byte(`1234`), ast.NaturalLit(1234)),
 		Entry("NaturalLit", []byte(`3`), ast.NaturalLit(3)),
@@ -36,6 +40,13 @@ var _ = Describe("Expression", func() {
 		Entry("IntegerLit", []byte(`+1234`), ast.IntegerLit(1234)),
 		Entry("IntegerLit", []byte(`-3`), ast.IntegerLit(-3)),
 	)
+	// can't test NaN using ParseAndCompare because NaN ≠ NaN
+	It("handles NaN correctly", func() {
+		root, err := parser.Parse("test", []byte(`NaN`))
+		Expect(err).ToNot(HaveOccurred())
+		f := float64(root.(ast.DoubleLit))
+		Expect(math.IsNaN(f)).To(BeTrue())
+	})
 	DescribeTable("lambda expressions", ParseAndCompare,
 		Entry("simple λ",
 			[]byte(`λ(foo : bar) → baz`),
