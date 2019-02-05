@@ -7,16 +7,47 @@ import (
 	"log"
 )
 
-type TypeContext *map[string][]Expr
+type TypeContext map[string][]Expr
 
-func EmptyContext() TypeContext {
-	return &map[string][]Expr{}
+func (ctx *TypeContext) Insert(name string, val Expr) *TypeContext {
+	newctx := make(TypeContext)
+	for k, v := range *ctx {
+		newctx[k] = v
+	}
+	newctx[name] = append(newctx[name], val)
+	return &newctx
+}
+
+func (ctx *TypeContext) Lookup(name string, i int) (Expr, bool) {
+	slice := (*ctx)[name]
+	if i >= len(slice) {
+		return nil, false
+	}
+	// we index from the right of the slices
+	return slice[len(slice)-1-i], true
+}
+
+//TODO: make this lazy
+func (ctx *TypeContext) Map(f func(Expr) Expr) *TypeContext {
+	newctx := make(TypeContext)
+	for k, vs := range *ctx {
+		a := make([]Expr, len(vs))
+		for i, v := range vs {
+			a[i] = f(v)
+		}
+		newctx[k] = a
+	}
+	return &newctx
+}
+
+func EmptyContext() *TypeContext {
+	return &TypeContext{}
 }
 
 type (
 	Expr interface {
 		Normalize() Expr
-		TypeWith(TypeContext) (Expr, error)
+		TypeWith(*TypeContext) (Expr, error)
 		WriteTo(io.Writer) (int, error)
 	}
 
@@ -56,12 +87,55 @@ const (
 )
 
 // FIXME placeholder before we actually implement it
-func shift(d int, v Var, e Expr) Expr {
-	return e
+func Shift(d int, v Var, e Expr) Expr {
+	switch e := e.(type) {
+	case Const:
+		return e
+	case Var:
+		if v.Name == e.Name && v.Index <= e.Index {
+			return Var{Name: e.Name, Index: e.Index + d}
+		} else {
+			return e
+		}
+	case *LambdaExpr:
+		var body Expr
+		if e.Label == v.Name {
+			body = Shift(d, Var{Name: v.Name, Index: v.Index + 1}, e.Body)
+		} else {
+			body = Shift(d, v, e.Body)
+		}
+		return &LambdaExpr{
+			Label: e.Label,
+			Type:  Shift(d, v, e.Type),
+			Body:  body,
+		}
+	case *Pi:
+		var body Expr
+		if e.Label == v.Name {
+			body = Shift(d, Var{Name: v.Name, Index: v.Index + 1}, e.Body)
+		} else {
+			body = Shift(d, v, e.Body)
+		}
+		return &Pi{
+			Label: e.Label,
+			Type:  Shift(d, v, e.Type),
+			Body:  body,
+		}
+	case *App:
+		return &App{
+			Fn:  Shift(d, v, e.Fn),
+			Arg: Shift(d, v, e.Arg),
+		}
+	case natural:
+		return e
+	case NaturalLit:
+		return e
+	}
+	panic("missing switch case in Shift()")
 }
 
-// subst(x, C, B) == B[x := C]
-func subst(v Var, c Expr, b Expr) Expr {
+// Subst(x, C, B) == B[x := C]
+func Subst(v Var, c Expr, b Expr) Expr {
 	switch e := b.(type) {
 	case Const:
 		return e
@@ -72,24 +146,24 @@ func subst(v Var, c Expr, b Expr) Expr {
 			return b
 		}
 	case *LambdaExpr:
-		substType := subst(v, c, e.Type)
+		substType := Subst(v, c, e.Type)
 		v2 := v
 		if v.Name == e.Label {
 			v2.Index++
 		}
-		substBody := subst(v2, shift(1, Var{Name: e.Label}, c), e.Body)
+		substBody := Subst(v2, Shift(1, Var{Name: e.Label}, c), e.Body)
 		return &LambdaExpr{
 			Label: e.Label,
 			Type:  substType,
 			Body:  substBody,
 		}
 	case *Pi:
-		substType := subst(v, c, e.Type)
+		substType := Subst(v, c, e.Type)
 		v2 := v
 		if v.Name == e.Label {
 			v2.Index++
 		}
-		substBody := subst(v2, shift(1, Var{Name: e.Label}, c), e.Body)
+		substBody := Subst(v2, Shift(1, Var{Name: e.Label}, c), e.Body)
 		return &Pi{
 			Label: e.Label,
 			Type:  substType,
@@ -97,15 +171,15 @@ func subst(v Var, c Expr, b Expr) Expr {
 		}
 	case *App:
 		return &App{
-			Fn:  subst(v, c, e.Fn),
-			Arg: subst(v, c, e.Arg),
+			Fn:  Subst(v, c, e.Fn),
+			Arg: Subst(v, c, e.Arg),
 		}
 	case natural:
 		return e
 	case NaturalLit:
 		return e
 	}
-	panic("missing switch case in subst()")
+	panic("missing switch case in Subst()")
 }
 
 func Rule(a Const, b Const) (Const, error) {
@@ -211,7 +285,7 @@ func (natural) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Nat
 
 func (n NaturalLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", n) }
 
-func (c Const) TypeWith(TypeContext) (Expr, error) {
+func (c Const) TypeWith(*TypeContext) (Expr, error) {
 	if c == Type {
 		return Kind, nil
 	}
@@ -221,24 +295,23 @@ func (c Const) TypeWith(TypeContext) (Expr, error) {
 	return nil, errors.New("Sort has no type")
 }
 
-func (v Var) TypeWith(ctx TypeContext) (Expr, error) {
-	if t, ok := (*ctx)[v.Name]; ok {
-		return t[0], nil
+func (v Var) TypeWith(ctx *TypeContext) (Expr, error) {
+	if t, ok := ctx.Lookup(v.Name, 0); ok {
+		return t, nil
 	}
-	return nil, fmt.Errorf("Unbound variable %s", v.Name)
+	return nil, fmt.Errorf("Unbound variable %s, context was %+v", v.Name, ctx)
 }
 
-func (lam *LambdaExpr) TypeWith(ctx TypeContext) (Expr, error) {
-	// FIXME: proper de bruijn indices to avoid variable capture
-	// FIXME: modifying context in place is.. icky
+func (lam *LambdaExpr) TypeWith(ctx *TypeContext) (Expr, error) {
+	if _, err := lam.Type.TypeWith(ctx); err != nil {
+		return nil, err
+	}
 	argType := lam.Type.Normalize()
-	(*ctx)[lam.Label] = append([]Expr{argType}, (*ctx)[lam.Label]...)
-	bodyType, err := lam.Body.TypeWith(ctx)
+	newctx := ctx.Insert(lam.Label, argType).Map(func(e Expr) Expr { return Shift(1, Var{Name: lam.Label}, e) })
+	bodyType, err := lam.Body.TypeWith(newctx)
 	if err != nil {
 		return nil, err
 	}
-	// Restore ctx to how it was before
-	(*ctx)[lam.Label] = (*ctx)[lam.Label][1:len((*ctx)[lam.Label])]
 
 	p := &Pi{Label: lam.Label, Type: argType, Body: bodyType}
 	_, err2 := p.TypeWith(ctx)
@@ -249,7 +322,7 @@ func (lam *LambdaExpr) TypeWith(ctx TypeContext) (Expr, error) {
 	return p, nil
 }
 
-func (pi *Pi) TypeWith(ctx TypeContext) (Expr, error) {
+func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 	argType, err := pi.Type.TypeWith(ctx)
 	if err != nil {
 		return nil, err
@@ -275,7 +348,7 @@ func (pi *Pi) TypeWith(ctx TypeContext) (Expr, error) {
 	return Rule(kA, kB)
 }
 
-func (app *App) TypeWith(ctx TypeContext) (Expr, error) {
+func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 	fnType, err := app.Fn.TypeWith(ctx)
 	if err != nil {
 		return nil, err
@@ -291,17 +364,17 @@ func (app *App) TypeWith(ctx TypeContext) (Expr, error) {
 	}
 	// FIXME replace == with a JudgmentallyEqual() fn here
 	if pF.Type == argType {
-		a := shift(1, Var{Name: pF.Label}, app.Arg)
-		b := subst(Var{Name: pF.Label}, a, pF.Body)
-		return shift(-1, Var{Name: pF.Label}, b), nil
+		a := Shift(1, Var{Name: pF.Label}, app.Arg)
+		b := Subst(Var{Name: pF.Label}, a, pF.Body)
+		return Shift(-1, Var{Name: pF.Label}, b), nil
 	} else {
 		return nil, errors.New("type mismatch between lambda and applied value")
 	}
 }
 
-func (natural) TypeWith(TypeContext) (Expr, error) { return Type, nil }
+func (natural) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
-func (n NaturalLit) TypeWith(TypeContext) (Expr, error) { return Natural, nil }
+func (n NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
 
 func (c Const) Normalize() Expr { return c }
 func (v Var) Normalize() Expr   { return v }
@@ -325,9 +398,9 @@ func (app *App) Normalize() Expr {
 	a := app.Arg.Normalize()
 	if l, ok := f.(*LambdaExpr); ok {
 		v := Var{Name: l.Label}
-		a2 := shift(1, v, a)
-		b1 := subst(v, a2, l.Body)
-		b2 := shift(-1, v, b1)
+		a2 := Shift(1, v, a)
+		b1 := Subst(v, a2, l.Body)
+		b2 := Shift(-1, v, b1)
 		return b2.Normalize()
 	}
 	panic("got stuck in (*App).Normalize()")
