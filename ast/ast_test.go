@@ -90,7 +90,7 @@ var _ = DescribeTable("TypeCheck in empty context",
 		&ast.App{Fn: &ast.LambdaExpr{Label: "x", Type: ast.Natural, Body: ast.Var{Name: "x"}},
 			Arg: ast.NaturalLit(3)},
 		ast.Natural),
-	FEntry("(λ(x : Type) → λ(x : x) → x) : ∀(x : Type) → ∀(x : x) → x@1",
+	Entry("(λ(x : Type) → λ(x : x) → x) : ∀(x : Type) → ∀(x : x) → x@1",
 		&ast.LambdaExpr{
 			Label: "x",
 			Type:  ast.Type,
