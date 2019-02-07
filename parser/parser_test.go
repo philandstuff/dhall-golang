@@ -21,6 +21,11 @@ func ParseAndCompare(input []byte, expected interface{}) {
 	Expect(root).To(Equal(expected))
 }
 
+func ParseAndFail(input []byte) {
+	_, err := parser.Parse("test", input)
+	Expect(err).To(HaveOccurred())
+}
+
 var _ = Describe("Expression", func() {
 	DescribeTable("simple expressions", ParseAndCompare,
 		Entry("Type", []byte(`Type`), ast.Type),
@@ -86,5 +91,19 @@ var _ = Describe("Expression", func() {
 				Fn: &ast.LambdaExpr{
 					Label: "foo", Type: Var("bar"), Body: Var("baz")},
 				Arg: Var("quux")}),
+	)
+	// these keywords should fail to parse unless they're part of
+	// a larger expression
+	DescribeTable("keywords", ParseAndFail,
+		Entry("if", []byte(`if`)),
+		Entry("then", []byte(`then`)),
+		Entry("else", []byte(`else`)),
+		Entry("let", []byte(`let`)),
+		Entry("in", []byte(`in`)),
+		Entry("as", []byte(`as`)),
+		Entry("using", []byte(`using`)),
+		Entry("merge", []byte(`merge`)),
+		Entry("constructors", []byte(`constructors`)),
+		Entry("Some", []byte(`Some`)),
 	)
 })

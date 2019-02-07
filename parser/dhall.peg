@@ -32,7 +32,8 @@ _ ← WhitespaceChunk*
 
 NonemptyWhitespace ← WhitespaceChunk+
 
-SimpleLabel ← [A-Za-z_] [A-Za-z0-9_/-]* { return string(c.text), nil }
+SimpleLabel ← !Keyword
+            [A-Za-z_] [A-Za-z0-9_/-]* { return string(c.text), nil }
 
 // QuotedLabel
 
@@ -53,6 +54,17 @@ Reserved ← "Bool"
   / "Type" { return ast.Type, nil }
   / "Kind" { return ast.Kind, nil }
   / "Sort" { return ast.Sort, nil }
+
+Keyword ← "if"
+  / "then"
+  / "else"
+  / "let"
+  / "in"
+  / "as"
+  / "using"
+  / "merge"
+  / "constructors"
+  / "Some"
 
 ColonSpace ← ':' NonemptyWhitespace
 
