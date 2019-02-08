@@ -65,6 +65,10 @@ var _ = Describe("Expression", func() {
 			[]byte("λ(foo : bar) --asdf\n → baz"),
 			&ast.LambdaExpr{
 				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+		Entry("with block comment",
+			[]byte("λ(foo : bar) {-asdf\n-} → baz"),
+			&ast.LambdaExpr{
+				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
 		Entry("simple ∀",
 			[]byte(`∀(foo : bar) → baz`),
 			&ast.Pi{

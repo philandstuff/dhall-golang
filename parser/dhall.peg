@@ -22,11 +22,20 @@ CompleteExpression ← _ e:Expression _ EOF { return e, nil }
 
 EOL ← "\n" / "\r\n"
 
+BlockComment ← "{-" BlockCommentContinue
+
+BlockCommentChunk ←
+    BlockComment
+  / [\t\u0020-\U0010ffff]
+  / EOL
+
+BlockCommentContinue ← "-}" / BlockCommentChunk BlockCommentContinue
+
 NotEOL ← [\t\u0020-\U0010ffff]
 
 LineComment ← "--" content:(NotEOL* { return string(c.text), nil}) EOL { return content, nil }
 
-WhitespaceChunk ← ' ' / '\t' / EOL / LineComment // / BlockComment
+WhitespaceChunk ← ' ' / '\t' / EOL / LineComment / BlockComment
 
 _ ← WhitespaceChunk*
 
