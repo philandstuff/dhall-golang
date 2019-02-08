@@ -44,6 +44,8 @@ var _ = Describe("Expression", func() {
 		Entry("Integer", []byte(`Integer`), ast.Integer),
 		Entry("IntegerLit", []byte(`+1234`), ast.IntegerLit(1234)),
 		Entry("IntegerLit", []byte(`-3`), ast.IntegerLit(-3)),
+		Entry("Identifier", []byte(`x`), ast.Var{Name: "x"}),
+		Entry("Identifier with index", []byte(`x@1`), ast.Var{Name: "x", Index: 1}),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {

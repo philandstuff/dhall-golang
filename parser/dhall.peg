@@ -107,7 +107,7 @@ IntegerLiteral ← [+-][0-9]+ {
       return ast.IntegerLit(i), nil
 }
 
-SpaceDeBruijn ← _ '@' _ index:NaturalLiteral { return index.(int), nil }
+SpaceDeBruijn ← _ '@' _ index:NaturalLiteral { return int(index.(ast.NaturalLit)), nil }
 
 Identifier ← name:Label index:SpaceDeBruijn? {
     if index != nil {
