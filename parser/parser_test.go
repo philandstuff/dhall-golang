@@ -38,7 +38,8 @@ var _ = Describe("Expression", func() {
 		Entry("IntegerLit", `+1234`, IntegerLit(1234)),
 		Entry("IntegerLit", `-3`, IntegerLit(-3)),
 		Entry("Identifier", `x`, Var{"x", 0}),
-		Entry("Identifier with index", (`x@1`), Var{"x", 1}),
+		Entry("Identifier with index", `x@1`, Var{"x", 1}),
+		Entry("Annotated expression", `3 : Natural`, Annot{NaturalLit(3), Natural}),
 	)
 	DescribeTable("naturals", ParseAndCompare,
 		Entry("Natural", `Natural`, Natural),
@@ -115,6 +116,9 @@ var _ = Describe("Expression", func() {
 			Entry("merge", `merge`),
 			Entry("constructors", `constructors`),
 			Entry("Some", `Some`),
+		)
+		DescribeTable("other failures", ParseAndFail,
+			Entry("annotation without required space", `3 :Natural`),
 		)
 	})
 })

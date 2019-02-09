@@ -144,7 +144,12 @@ Expression ←
       }
     / AnnotatedExpression
 
-AnnotatedExpression ← OperatorExpression
+Annotation ← _ ColonSpace a:Expression { return a, nil }
+
+AnnotatedExpression ← e:OperatorExpression a:Annotation? {
+    if a == nil { return e, nil }
+    return ast.Annot{e.(ast.Expr), a.(ast.Expr)}, nil
+}
 
 OperatorExpression ← ImportAltExpression
 
