@@ -186,9 +186,23 @@ PrimitiveExpression ←
     / NaturalLiteral
     / IntegerLiteral
     / "-Infinity" { return ast.DoubleLit(math.Inf(-1)), nil }
+    / NonEmptyListLiteral
     / IdentifierReservedPrefix
     / Reserved
     / Identifier
     / '(' _ e:Expression _ ')' { return e, nil }
+
+CommaExpression ← (',' _ e:Expression _) {return e, nil}
+
+NonEmptyListLiteral ←
+      '[' _ first:Expression _ rest:CommaExpression* ']' {
+          exprs := rest.([]interface{})
+          content := make([]ast.Expr, len(exprs)+1)
+          content[0] = first.(ast.Expr)
+          for i, expr := range(exprs) {
+              content[i+1] = expr.(ast.Expr)
+          }
+          return ast.MakeList(content...), nil
+      }
 
 EOF ← !.

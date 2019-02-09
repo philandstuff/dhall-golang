@@ -53,6 +53,10 @@ var _ = Describe("Expression", func() {
 	)
 	DescribeTable("lists", ParseAndCompare,
 		Entry("List Natural", `List Natural`, &App{List, Natural}),
+		Entry("[3]", `[3]`, MakeList(NaturalLit(3))),
+		Entry("[3,4]", `[3,4]`, MakeList(NaturalLit(3), NaturalLit(4))),
+		PEntry("[] : List Natural", `[] : List Natural`, MakeAnnotatedList(Natural)),
+		PEntry("[3] : List Natural", `[3] : List Natural`, MakeAnnotatedList(Natural, NaturalLit(3))),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {
@@ -120,8 +124,9 @@ var _ = Describe("Expression", func() {
 			Entry("constructors", `constructors`),
 			Entry("Some", `Some`),
 		)
-		DescribeTable("other failures", ParseAndFail,
+		DescribeTable("other expected failures", ParseAndFail,
 			Entry("annotation without required space", `3 :Natural`),
+			Entry("unannotated list", `[]`),
 		)
 	})
 })

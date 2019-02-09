@@ -1236,45 +1236,49 @@ var g = &grammar {
 },
 &ruleRefExpr{
 	pos: position{line: 189, col: 7, offset: 4995},
+	name: "NonEmptyListLiteral",
+},
+&ruleRefExpr{
+	pos: position{line: 190, col: 7, offset: 5021},
 	name: "IdentifierReservedPrefix",
 },
 &ruleRefExpr{
-	pos: position{line: 190, col: 7, offset: 5026},
+	pos: position{line: 191, col: 7, offset: 5052},
 	name: "Reserved",
 },
 &ruleRefExpr{
-	pos: position{line: 191, col: 7, offset: 5041},
+	pos: position{line: 192, col: 7, offset: 5067},
 	name: "Identifier",
 },
 &actionExpr{
-	pos: position{line: 192, col: 7, offset: 5058},
-	run: (*parser).callonPrimitiveExpression10,
+	pos: position{line: 193, col: 7, offset: 5084},
+	run: (*parser).callonPrimitiveExpression11,
 	expr: &seqExpr{
-	pos: position{line: 192, col: 7, offset: 5058},
+	pos: position{line: 193, col: 7, offset: 5084},
 	exprs: []interface{}{
 &litMatcher{
-	pos: position{line: 192, col: 7, offset: 5058},
+	pos: position{line: 193, col: 7, offset: 5084},
 	val: "(",
 	ignoreCase: false,
 },
 &ruleRefExpr{
-	pos: position{line: 192, col: 11, offset: 5062},
+	pos: position{line: 193, col: 11, offset: 5088},
 	name: "_",
 },
 &labeledExpr{
-	pos: position{line: 192, col: 13, offset: 5064},
+	pos: position{line: 193, col: 13, offset: 5090},
 	label: "e",
 	expr: &ruleRefExpr{
-	pos: position{line: 192, col: 15, offset: 5066},
+	pos: position{line: 193, col: 15, offset: 5092},
 	name: "Expression",
 },
 },
 &ruleRefExpr{
-	pos: position{line: 192, col: 26, offset: 5077},
+	pos: position{line: 193, col: 26, offset: 5103},
 	name: "_",
 },
 &litMatcher{
-	pos: position{line: 192, col: 28, offset: 5079},
+	pos: position{line: 193, col: 28, offset: 5105},
 	val: ")",
 	ignoreCase: false,
 },
@@ -1285,12 +1289,96 @@ var g = &grammar {
 },
 },
 {
+	name: "CommaExpression",
+	pos: position{line: 195, col: 1, offset: 5128},
+	expr: &actionExpr{
+	pos: position{line: 195, col: 19, offset: 5148},
+	run: (*parser).callonCommaExpression1,
+	expr: &seqExpr{
+	pos: position{line: 195, col: 20, offset: 5149},
+	exprs: []interface{}{
+&litMatcher{
+	pos: position{line: 195, col: 20, offset: 5149},
+	val: ",",
+	ignoreCase: false,
+},
+&ruleRefExpr{
+	pos: position{line: 195, col: 24, offset: 5153},
+	name: "_",
+},
+&labeledExpr{
+	pos: position{line: 195, col: 26, offset: 5155},
+	label: "e",
+	expr: &ruleRefExpr{
+	pos: position{line: 195, col: 28, offset: 5157},
+	name: "Expression",
+},
+},
+&ruleRefExpr{
+	pos: position{line: 195, col: 39, offset: 5168},
+	name: "_",
+},
+	},
+},
+},
+},
+{
+	name: "NonEmptyListLiteral",
+	pos: position{line: 197, col: 1, offset: 5188},
+	expr: &actionExpr{
+	pos: position{line: 198, col: 7, offset: 5218},
+	run: (*parser).callonNonEmptyListLiteral1,
+	expr: &seqExpr{
+	pos: position{line: 198, col: 7, offset: 5218},
+	exprs: []interface{}{
+&litMatcher{
+	pos: position{line: 198, col: 7, offset: 5218},
+	val: "[",
+	ignoreCase: false,
+},
+&ruleRefExpr{
+	pos: position{line: 198, col: 11, offset: 5222},
+	name: "_",
+},
+&labeledExpr{
+	pos: position{line: 198, col: 13, offset: 5224},
+	label: "first",
+	expr: &ruleRefExpr{
+	pos: position{line: 198, col: 19, offset: 5230},
+	name: "Expression",
+},
+},
+&ruleRefExpr{
+	pos: position{line: 198, col: 30, offset: 5241},
+	name: "_",
+},
+&labeledExpr{
+	pos: position{line: 198, col: 32, offset: 5243},
+	label: "rest",
+	expr: &zeroOrMoreExpr{
+	pos: position{line: 198, col: 37, offset: 5248},
+	expr: &ruleRefExpr{
+	pos: position{line: 198, col: 37, offset: 5248},
+	name: "CommaExpression",
+},
+},
+},
+&litMatcher{
+	pos: position{line: 198, col: 54, offset: 5265},
+	val: "]",
+	ignoreCase: false,
+},
+	},
+},
+},
+},
+{
 	name: "EOF",
-	pos: position{line: 194, col: 1, offset: 5102},
+	pos: position{line: 208, col: 1, offset: 5556},
 	expr: &notExpr{
-	pos: position{line: 194, col: 7, offset: 5110},
+	pos: position{line: 208, col: 7, offset: 5564},
 	expr: &anyMatcher{
-	line: 194, col: 8, offset: 5111,
+	line: 208, col: 8, offset: 5565,
 },
 },
 },
@@ -1632,14 +1720,41 @@ func (p *parser) callonPrimitiveExpression5() (interface{}, error) {
 	return p.cur.onPrimitiveExpression5()
 }
 
-func (c *current) onPrimitiveExpression10(e interface{}) (interface{}, error) {
+func (c *current) onPrimitiveExpression11(e interface{}) (interface{}, error) {
  return e, nil 
 }
 
-func (p *parser) callonPrimitiveExpression10() (interface{}, error) {
+func (p *parser) callonPrimitiveExpression11() (interface{}, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onPrimitiveExpression10(stack["e"])
+	return p.cur.onPrimitiveExpression11(stack["e"])
+}
+
+func (c *current) onCommaExpression1(e interface{}) (interface{}, error) {
+return e, nil
+}
+
+func (p *parser) callonCommaExpression1() (interface{}, error) {
+	stack := p.vstack[len(p.vstack)-1]
+	_ = stack
+	return p.cur.onCommaExpression1(stack["e"])
+}
+
+func (c *current) onNonEmptyListLiteral1(first, rest interface{}) (interface{}, error) {
+          exprs := rest.([]interface{})
+          content := make([]ast.Expr, len(exprs)+1)
+          content[0] = first.(ast.Expr)
+          for i, expr := range(exprs) {
+              content[i+1] = expr.(ast.Expr)
+          }
+          return ast.MakeList(content...), nil
+      
+}
+
+func (p *parser) callonNonEmptyListLiteral1() (interface{}, error) {
+	stack := p.vstack[len(p.vstack)-1]
+	_ = stack
+	return p.cur.onNonEmptyListLiteral1(stack["first"], stack["rest"])
 }
 
 
