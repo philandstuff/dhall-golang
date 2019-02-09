@@ -38,14 +38,21 @@ var _ = Describe("Expression", func() {
 		Entry("DoubleLit with everything", []byte(`-5.0e1`), ast.DoubleLit(-50.0)),
 		Entry("Infinity", []byte(`Infinity`), ast.DoubleLit(math.Inf(1))),
 		Entry("-Infinity", []byte(`-Infinity`), ast.DoubleLit(math.Inf(-1))),
-		Entry("Natural", []byte(`Natural`), ast.Natural),
-		Entry("NaturalLit", []byte(`1234`), ast.NaturalLit(1234)),
-		Entry("NaturalLit", []byte(`3`), ast.NaturalLit(3)),
 		Entry("Integer", []byte(`Integer`), ast.Integer),
 		Entry("IntegerLit", []byte(`+1234`), ast.IntegerLit(1234)),
 		Entry("IntegerLit", []byte(`-3`), ast.IntegerLit(-3)),
 		Entry("Identifier", []byte(`x`), ast.Var{Name: "x"}),
 		Entry("Identifier with index", []byte(`x@1`), ast.Var{Name: "x", Index: 1}),
+	)
+	DescribeTable("naturals", ParseAndCompare,
+		Entry("Natural", []byte(`Natural`), ast.Natural),
+		Entry("NaturalLit", []byte(`1234`), ast.NaturalLit(1234)),
+		Entry("NaturalLit", []byte(`3`), ast.NaturalLit(3)),
+		Entry("NaturalPlus", []byte(`3 + 5`), ast.NaturalPlus{L: ast.NaturalLit(3), R: ast.NaturalLit(5)}),
+		// Check that if we skip whitespace, it parses
+		// correctly as function application, not natural
+		// addition
+		Entry("Plus without whitespace", []byte(`3 +5`), &ast.App{Fn: ast.NaturalLit(3), Arg: ast.IntegerLit(5)}),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {
@@ -98,18 +105,20 @@ var _ = Describe("Expression", func() {
 					Label: "foo", Type: Var("bar"), Body: Var("baz")},
 				Arg: Var("quux")}),
 	)
-	// these keywords should fail to parse unless they're part of
-	// a larger expression
-	DescribeTable("keywords", ParseAndFail,
-		Entry("if", []byte(`if`)),
-		Entry("then", []byte(`then`)),
-		Entry("else", []byte(`else`)),
-		Entry("let", []byte(`let`)),
-		Entry("in", []byte(`in`)),
-		Entry("as", []byte(`as`)),
-		Entry("using", []byte(`using`)),
-		Entry("merge", []byte(`merge`)),
-		Entry("constructors", []byte(`constructors`)),
-		Entry("Some", []byte(`Some`)),
-	)
+	Describe("Expected failures", func() {
+		// these keywords should fail to parse unless they're part of
+		// a larger expression
+		DescribeTable("keywords", ParseAndFail,
+			Entry("if", []byte(`if`)),
+			Entry("then", []byte(`then`)),
+			Entry("else", []byte(`else`)),
+			Entry("let", []byte(`let`)),
+			Entry("in", []byte(`in`)),
+			Entry("as", []byte(`as`)),
+			Entry("using", []byte(`using`)),
+			Entry("merge", []byte(`merge`)),
+			Entry("constructors", []byte(`constructors`)),
+			Entry("Some", []byte(`Some`)),
+		)
+	})
 })

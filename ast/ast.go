@@ -78,8 +78,12 @@ type (
 	double    struct{}
 	DoubleLit float64
 
-	natural    struct{}
-	NaturalLit int
+	natural     struct{}
+	NaturalLit  int
+	NaturalPlus struct {
+		L Expr
+		R Expr
+	}
 
 	integer    struct{}
 	IntegerLit int
@@ -139,6 +143,8 @@ func Shift(d int, v Var, e Expr) Expr {
 		return e
 	case NaturalLit:
 		return e
+	case NaturalPlus:
+		return NaturalPlus{L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
 	case integer:
 		return e
 	case IntegerLit:
@@ -195,6 +201,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return e
 	case NaturalLit:
 		return e
+	case NaturalPlus:
+		return NaturalPlus{L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
 	case integer:
 		return e
 	case IntegerLit:
@@ -232,6 +240,7 @@ var (
 	_ Expr = DoubleLit(3.0)
 	_ Expr = Natural
 	_ Expr = NaturalLit(3)
+	_ Expr = NaturalPlus{}
 	_ Expr = Integer
 	_ Expr = IntegerLit(3)
 )
@@ -316,6 +325,15 @@ func (natural) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Nat
 
 func (n NaturalLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", n) }
 
+func (p NaturalPlus) WriteTo(out io.Writer) (int, error) {
+	_, err := p.L.WriteTo(out)
+	if err != nil {
+		log.Fatalf("Fatal error %v", err)
+	}
+	fmt.Fprint(out, " + ")
+	return p.R.WriteTo(out)
+}
+
 func (integer) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Integer") }
 
 func (i IntegerLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", i) }
@@ -389,9 +407,10 @@ func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, err
 	}
 	tF := fnType.Normalize()
-	// FIXME return error rather than panic if tF isn't a
-	// *Pi
-	pF := tF.(*Pi)
+	pF, ok := tF.(*Pi)
+	if !ok {
+		return nil, fmt.Errorf("Expected %s to be a function type", tF)
+	}
 
 	argType, err := app.Arg.TypeWith(ctx)
 	if err != nil {
@@ -414,6 +433,26 @@ func (DoubleLit) TypeWith(*TypeContext) (Expr, error) { return Double, nil }
 func (natural) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
 func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
+
+func (p NaturalPlus) TypeWith(ctx *TypeContext) (Expr, error) {
+	L, err := p.L.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	L = L.Normalize()
+	if L != Natural {
+		return nil, fmt.Errorf("Expecting a Natural, can't add %s", L)
+	}
+	R, err := p.R.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	R = R.Normalize()
+	if R != Natural {
+		return nil, fmt.Errorf("Expecting a Natural, can't add %s", R)
+	}
+	return Natural, nil
+}
 
 func (integer) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
@@ -454,6 +493,11 @@ func (d DoubleLit) Normalize() Expr { return d }
 
 func (n natural) Normalize() Expr    { return n }
 func (n NaturalLit) Normalize() Expr { return n }
+func (p NaturalPlus) Normalize() Expr {
+	L := p.L.Normalize().(NaturalLit)
+	R := p.R.Normalize().(NaturalLit)
+	return NaturalLit(int(L) + int(R))
+}
 
 func (i integer) Normalize() Expr    { return i }
 func (i IntegerLit) Normalize() Expr { return i }

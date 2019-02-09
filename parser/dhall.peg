@@ -148,8 +148,18 @@ AnnotatedExpression ← OperatorExpression
 
 OperatorExpression ← ImportAltExpression
 
-ImportAltExpression ← // we've skipped some steps here...
-      ApplicationExpression
+ImportAltExpression ← PlusExpression
+
+MorePlus ← _ '+' NonemptyWhitespace e:ApplicationExpression { return e, nil }
+PlusExpression ←
+      first:ApplicationExpression rest:MorePlus* {
+          a := first.(ast.Expr)
+          if rest == nil { return a, nil }
+          for _, b := range rest.([]interface{}) {
+              a = ast.NaturalPlus{L: a, R: b.(ast.Expr)}
+          }
+          return a, nil
+      }
 
 AnArg = NonemptyWhitespace e:ImportExpression { return e, nil }
 

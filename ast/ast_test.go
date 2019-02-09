@@ -3,7 +3,7 @@ package ast_test
 import (
 	"github.com/philandstuff/dhall-golang/ast"
 
-	// . "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
@@ -56,13 +56,19 @@ var _ = DescribeTable("Shift",
 	Entry("Shift(5, x, ∀(x : Natural) -> x@1)) = λ(x : Natural) -> x@6)",
 		ast.Shift(5, x(0), &ast.Pi{Label: "x", Type: ast.Natural, Body: x(1)}),
 		&ast.Pi{Label: "x", Type: ast.Natural, Body: x(6)}),
+	Entry("Shift(1, x, Natural) = Natural", ast.Shift(1, x(0), ast.Natural), ast.Natural),
+	Entry("Shift(1, x, 3) = 3", ast.Shift(1, x(0), ast.NaturalLit(3)), ast.NaturalLit(3)),
+	Entry("Shift(1, x, x + 3) = x@1 + 3", ast.Shift(1, x(0), ast.NaturalPlus{L: x(0), R: ast.NaturalLit(3)}), ast.NaturalPlus{L: x(1), R: ast.NaturalLit(3)}),
 )
 
 var _ = DescribeTable("Subst",
 	func(actual ast.Expr, expected ast.Expr) {
 		Expect(actual).To(Equal(expected))
 	},
-	Entry("Subst(_, _, Type) = Type", ast.Subst(x(0), ast.Natural, ast.Type), ast.Type),
+	Entry("Subst(_, _, Type) = Type", ast.Subst(x(0), ast.Sort, ast.Type), ast.Type),
+	Entry("Subst(_, _, Natural) = Natural", ast.Subst(x(0), ast.Sort, ast.Natural), ast.Natural),
+	Entry("Subst(_, _, 3) = Natural", ast.Subst(x(0), ast.Sort, ast.NaturalLit(3)), ast.NaturalLit(3)),
+	Entry("Subst(x, 10, x + 3) = 10 + 3", ast.Subst(x(0), ast.NaturalLit(10), ast.NaturalPlus{L: x(0), R: ast.NaturalLit(3)}), ast.NaturalPlus{L: ast.NaturalLit(10), R: ast.NaturalLit(3)}),
 	Entry("Subst(x, Natural, x) = Natural", ast.Subst(x(0), ast.Natural, x(0)), ast.Natural),
 	Entry("Subst(x@1, Natural, x) = x", ast.Subst(x(1), ast.Natural, x(0)), x(0)),
 	Entry("Subst(x, Natural, x@1) = x@1", ast.Subst(x(0), ast.Natural, x(1)), x(1)),
@@ -74,60 +80,70 @@ var _ = DescribeTable("Subst",
 		&ast.App{Fn: &ast.LambdaExpr{Label: "x", Type: ast.Natural, Body: x(0)}, Arg: ast.NaturalLit(3)}),
 )
 
-var _ = DescribeTable("TypeCheck in empty context",
-	func(in ast.Expr, expectedType ast.Expr) {
-		actualType, err := in.TypeWith(ast.EmptyContext())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(actualType).To(Equal(expectedType))
-	},
-	Entry("Type : Kind", ast.Type, ast.Kind),
-	Entry("Kind : Sort", ast.Kind, ast.Sort),
-	Entry("3 : Natural", ast.NaturalLit(3), ast.Natural),
-	Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
-		&ast.LambdaExpr{Label: "x", Type: ast.Natural, Body: ast.Var{Name: "x"}},
-		&ast.Pi{Label: "x", Type: ast.Natural, Body: ast.Natural}),
-	Entry("(λ(x : Natural) → x) 3 : Natural",
-		&ast.App{Fn: &ast.LambdaExpr{Label: "x", Type: ast.Natural, Body: ast.Var{Name: "x"}},
-			Arg: ast.NaturalLit(3)},
-		ast.Natural),
-	Entry("(λ(x : Type) → λ(x : x) → x) : ∀(x : Type) → ∀(x : x) → x@1",
-		&ast.LambdaExpr{
-			Label: "x",
-			Type:  ast.Type,
-			Body: &ast.LambdaExpr{
-				Label: "x",
-				Type:  x(0),
-				Body:  x(0)}},
-		&ast.Pi{Label: "x", Type: ast.Type,
-			Body: &ast.Pi{Label: "x", Type: x(0),
-				Body: x(1)}}),
-	Entry("(λ(x : Type) → λ(x : x) → x) Natural : ∀(x : Natural) → Natural",
-		&ast.App{
-			Fn: &ast.LambdaExpr{
+var _ = Describe("TypeCheck in empty context", func() {
+	DescribeTable("Successful typechecks",
+		func(in ast.Expr, expectedType ast.Expr) {
+			actualType, err := in.TypeWith(ast.EmptyContext())
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actualType).To(Equal(expectedType))
+		},
+		Entry("Type : Kind", ast.Type, ast.Kind),
+		Entry("Kind : Sort", ast.Kind, ast.Sort),
+		Entry("3 : Natural", ast.NaturalLit(3), ast.Natural),
+		Entry("3 + 5 : Natural", ast.NaturalPlus{L: ast.NaturalLit(3), R: ast.NaturalLit(5)}, ast.Natural),
+		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
+			&ast.LambdaExpr{Label: "x", Type: ast.Natural, Body: ast.Var{Name: "x"}},
+			&ast.Pi{Label: "x", Type: ast.Natural, Body: ast.Natural}),
+		Entry("(λ(x : Natural) → x) 3 : Natural",
+			&ast.App{Fn: &ast.LambdaExpr{Label: "x", Type: ast.Natural, Body: ast.Var{Name: "x"}},
+				Arg: ast.NaturalLit(3)},
+			ast.Natural),
+		Entry("(λ(x : Type) → λ(x : x) → x) : ∀(x : Type) → ∀(x : x) → x@1",
+			&ast.LambdaExpr{
 				Label: "x",
 				Type:  ast.Type,
 				Body: &ast.LambdaExpr{
 					Label: "x",
 					Type:  x(0),
 					Body:  x(0)}},
-			Arg: ast.Natural,
-		},
-		&ast.Pi{Label: "x", Type: ast.Natural, Body: ast.Natural}),
-	Entry("(λ(x : Type) → λ(x : x) → x) Natural 3 : Natural",
-		&ast.App{
-			Fn: &ast.App{
+			&ast.Pi{Label: "x", Type: ast.Type,
+				Body: &ast.Pi{Label: "x", Type: x(0),
+					Body: x(1)}}),
+		Entry("(λ(x : Type) → λ(x : x) → x) Natural : ∀(x : Natural) → Natural",
+			&ast.App{
 				Fn: &ast.LambdaExpr{
 					Label: "x",
 					Type:  ast.Type,
 					Body: &ast.LambdaExpr{
 						Label: "x",
-						Type:  ast.Var{Name: "x"},
-						Body:  ast.Var{Name: "x"}}},
+						Type:  x(0),
+						Body:  x(0)}},
 				Arg: ast.Natural,
 			},
-			Arg: ast.NaturalLit(3),
+			&ast.Pi{Label: "x", Type: ast.Natural, Body: ast.Natural}),
+		Entry("(λ(x : Type) → λ(x : x) → x) Natural 3 : Natural",
+			&ast.App{
+				Fn: &ast.App{
+					Fn: &ast.LambdaExpr{
+						Label: "x",
+						Type:  ast.Type,
+						Body: &ast.LambdaExpr{
+							Label: "x",
+							Type:  ast.Var{Name: "x"},
+							Body:  ast.Var{Name: "x"}}},
+					Arg: ast.Natural,
+				},
+				Arg: ast.NaturalLit(3),
+			},
+			ast.Natural),
+	)
+	DescribeTable("Type errors",
+		func(in ast.Expr) {
+			_, err := in.TypeWith(ast.EmptyContext())
+			Expect(err).To(HaveOccurred())
 		},
-		ast.Natural),
-)
+		Entry("3 +5", &ast.App{Fn: ast.NaturalLit(3), Arg: ast.IntegerLit(5)}),
+	)
+})
 
 // TODO: Normalize() when it does anything interesting
