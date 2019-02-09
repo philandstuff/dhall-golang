@@ -3,13 +3,15 @@ package ast
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
 )
 
 func judgmentallyEqual(e1 Expr, e2 Expr) bool {
 	// TODO: alpha-normalization
 	ne1 := e1.Normalize()
 	ne2 := e2.Normalize()
-	return ne1 == ne2
+	return reflect.DeepEqual(ne1, ne2)
 }
 
 func (c Const) TypeWith(*TypeContext) (Expr, error) {
@@ -110,7 +112,12 @@ func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, err
 	}
 	if !judgmentallyEqual(a.Annotation, t2) {
-		return nil, fmt.Errorf("Annotation mismatch")
+		var b strings.Builder
+		b.WriteString("Annotation mismatch: inferred type ")
+		t2.WriteTo(&b)
+		b.WriteString(" but annotated ")
+		a.Annotation.WriteTo(&b)
+		return nil, errors.New(b.String())
 	}
 	return t2, nil
 }
@@ -149,32 +156,21 @@ func (IntegerLit) TypeWith(*TypeContext) (Expr, error) { return Integer, nil }
 
 func (list) TypeWith(*TypeContext) (Expr, error) { return &Pi{"_", Type, Type}, nil }
 
-func (l ListLit) TypeWith(ctx *TypeContext) (Expr, error) {
-	if l.Annotation != nil {
-		t := l.Annotation
-		k, err := t.TypeWith(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if k.Normalize() != Type {
-			return nil, fmt.Errorf("List annotation %s is not a Type", t)
-		}
-		for _, elem := range l.Content {
-			t2, err := elem.TypeWith(ctx)
-			if err != nil {
-				return nil, err
-			}
-			if !judgmentallyEqual(t, t2) {
-				return nil, fmt.Errorf("Types %s and %s don't match", t, t2)
-			}
-		}
-		return &App{List, t}, nil
+func (l EmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
+	t := l.Type
+	k, err := t.TypeWith(ctx)
+	if err != nil {
+		return nil, err
 	}
-	// Annotation is nil, we have to infer type
-	if l.Content == nil {
-		return nil, fmt.Errorf("Empty lists must be annotated with type")
+	if k.Normalize() != Type {
+		return nil, fmt.Errorf("List annotation %s is not a Type", t)
 	}
-	t, err := l.Content[0].TypeWith(ctx)
+	return &App{List, t}, nil
+}
+
+func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
+	exprs := []Expr(l)
+	t, err := exprs[0].TypeWith(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +178,7 @@ func (l ListLit) TypeWith(ctx *TypeContext) (Expr, error) {
 	if k.Normalize() != Type {
 		return nil, fmt.Errorf("Invalid type for List elements")
 	}
-	for _, elem := range l.Content[1:] {
+	for _, elem := range exprs[1:] {
 		t2, err := elem.TypeWith(ctx)
 		if err != nil {
 			return nil, err

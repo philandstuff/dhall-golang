@@ -56,13 +56,13 @@ var _ = Describe("TypeCheck in empty context", func() {
 			},
 			Natural),
 		Entry("([] : List Natural) : List Natural",
-			MakeAnnotatedList(Natural),
-			&App{List, Natural}),
-		Entry("([3] : List Natural) : List Natural",
-			MakeAnnotatedList(Natural, NaturalLit(3)),
+			EmptyList{Natural},
 			&App{List, Natural}),
 		Entry("[3] : List Natural",
 			MakeList(NaturalLit(3)),
+			&App{List, Natural}),
+		Entry("([3] : List Natural) : List Natural",
+			Annot{MakeList(NaturalLit(3)), &App{List, Natural}},
 			&App{List, Natural}),
 	)
 	DescribeTable("Type errors",
@@ -72,6 +72,5 @@ var _ = Describe("TypeCheck in empty context", func() {
 		},
 		Entry("3 +5", &App{NaturalLit(3), IntegerLit(5)}),
 		Entry("3 : Integer", Annot{NaturalLit(3), Integer}),
-		Entry("[]", MakeList()),
 	)
 })

@@ -92,12 +92,11 @@ type (
 	integer    struct{}
 	IntegerLit int
 
-	list    struct{}
-	ListLit struct {
-		// Content must not be empty (use nil for no content)
-		Content    []Expr
-		Annotation Expr
-	}
+	list struct{}
+	// `[] : List Natural` == EmptyList{Natural}
+	EmptyList struct{ Type Expr }
+	// `[2,3,4]` == NonEmptyList(2,3,4)
+	NonEmptyList []Expr
 )
 
 const (
@@ -164,15 +163,14 @@ func Shift(d int, v Var, e Expr) Expr {
 		return e
 	case list:
 		return e
-	case ListLit:
-		if e.Content == nil {
-			return e
-		}
-		exprs := make([]Expr, len(e.Content))
-		for i, expr := range e.Content {
+	case EmptyList:
+		return e
+	case NonEmptyList:
+		exprs := make([]Expr, len([]Expr(e)))
+		for i, expr := range []Expr(e) {
 			exprs[i] = Shift(d, v, expr)
 		}
-		return MakeAnnotatedList(e.Annotation, exprs...)
+		return NonEmptyList(exprs)
 	}
 	panic("missing switch case in Shift()")
 }
@@ -235,15 +233,14 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return e
 	case list:
 		return e
-	case ListLit:
-		if e.Content == nil {
-			return e
-		}
-		exprs := make([]Expr, len(e.Content))
-		for i, expr := range e.Content {
+	case EmptyList:
+		return e
+	case NonEmptyList:
+		exprs := make([]Expr, len([]Expr(e)))
+		for i, expr := range []Expr(e) {
 			exprs[i] = Subst(v, c, expr)
 		}
-		return MakeAnnotatedList(e.Annotation, exprs...)
+		return NonEmptyList(exprs)
 	}
 	panic("missing switch case in Subst()")
 }
@@ -268,15 +265,8 @@ var (
 	List    list    = list(struct{}{})
 )
 
-func MakeList(content ...Expr) ListLit {
-	return ListLit{Content: content}
-}
-
-func MakeAnnotatedList(annotation Expr, content ...Expr) ListLit {
-	return ListLit{
-		Content:    content,
-		Annotation: annotation,
-	}
+func MakeList(first Expr, rest ...Expr) NonEmptyList {
+	return NonEmptyList(append([]Expr{first}, rest...))
 }
 
 var (
@@ -294,7 +284,8 @@ var (
 	_ Expr = Integer
 	_ Expr = IntegerLit(3)
 	_ Expr = List
-	_ Expr = ListLit{}
+	_ Expr = EmptyList{Natural}
+	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
 )
 
 func (c Const) WriteTo(out io.Writer) (int64, error) {
@@ -428,9 +419,43 @@ func (list) WriteTo(out io.Writer) (int64, error) {
 	return int64(n), err
 }
 
-func (l ListLit) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(out, "%d", l)
-	return int64(n), err
+func (l EmptyList) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprint(out, "[] : ")
+	if err != nil {
+		return int64(n), err
+	}
+	n2, err := l.Type.WriteTo(out)
+	return int64(n) + int64(n2), err
+}
+
+func (l NonEmptyList) WriteTo(out io.Writer) (int64, error) {
+	var written int64
+	i, err := fmt.Fprint(out, "[", l)
+	written += int64(i)
+	if err != nil {
+		return written, err
+	}
+	exprs := []Expr(l)
+	i6, err := exprs[0].WriteTo(out)
+	written += i6
+	if err != nil {
+		return written, err
+	}
+	for _, expr := range exprs[1:] {
+		i, err = fmt.Fprint(out, "]", l)
+		written += int64(i)
+		if err != nil {
+			return written, err
+		}
+		i6, err := expr.WriteTo(out)
+		written += i6
+		if err != nil {
+			return written, err
+		}
+	}
+	i, err = fmt.Fprint(out, "]", l)
+	written += int64(i)
+	return written, err
 }
 
 func (c Const) Normalize() Expr { return c }
@@ -479,16 +504,15 @@ func (p NaturalPlus) Normalize() Expr {
 func (i integer) Normalize() Expr    { return i }
 func (i IntegerLit) Normalize() Expr { return i }
 
-func (l list) Normalize() Expr { return l }
-func (l ListLit) Normalize() Expr {
-	if l.Content == nil {
-		return MakeAnnotatedList(l.Annotation.Normalize())
-	}
-	vals := make([]Expr, len(l.Content))
-	for i, expr := range l.Content {
+func (l list) Normalize() Expr      { return l }
+func (l EmptyList) Normalize() Expr { return EmptyList{l.Type.Normalize()} }
+func (l NonEmptyList) Normalize() Expr {
+	exprs := []Expr(l)
+	vals := make([]Expr, len(exprs))
+	for i, expr := range exprs {
 		vals[i] = expr.Normalize()
 	}
-	return MakeList(vals...)
+	return NonEmptyList(vals)
 }
 
 func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {

@@ -1374,11 +1374,11 @@ var g = &grammar {
 },
 {
 	name: "EOF",
-	pos: position{line: 208, col: 1, offset: 5556},
+	pos: position{line: 208, col: 1, offset: 5557},
 	expr: &notExpr{
-	pos: position{line: 208, col: 7, offset: 5564},
+	pos: position{line: 208, col: 7, offset: 5565},
 	expr: &anyMatcher{
-	line: 208, col: 8, offset: 5565,
+	line: 208, col: 8, offset: 5566,
 },
 },
 },
@@ -1747,7 +1747,7 @@ func (c *current) onNonEmptyListLiteral1(first, rest interface{}) (interface{}, 
           for i, expr := range(exprs) {
               content[i+1] = expr.(ast.Expr)
           }
-          return ast.MakeList(content...), nil
+          return ast.NonEmptyList(content), nil
       
 }
 

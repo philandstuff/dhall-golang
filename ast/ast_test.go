@@ -60,9 +60,8 @@ var _ = DescribeTable("Shift",
 	Entry("Shift(1, x, 3) = 3", Shift(1, x(0), NaturalLit(3)), NaturalLit(3)),
 	Entry("Shift(1, x, x : Natural) = x@1 : Natural", Shift(1, x(0), Annot{x(0), Natural}), Annot{x(1), Natural}),
 	Entry("Shift(1, x, x + 3) = x@1 + 3", Shift(1, x(0), NaturalPlus{x(0), NaturalLit(3)}), NaturalPlus{x(1), NaturalLit(3)}),
-	Entry("Shift(1, x, [] : List Natural) = [] : List Natural", Shift(1, x(0), MakeAnnotatedList(Natural)), MakeAnnotatedList(Natural)),
+	Entry("Shift(1, x, [] : List Natural) = [] : List Natural", Shift(1, x(0), EmptyList{Natural}), EmptyList{Natural}),
 	Entry("Shift(1, x, [x]) = [x@1]", Shift(1, x(0), MakeList(Var{"x", 0})), MakeList(Var{"x", 1})),
-	Entry("Shift(1, x, [x] : List Natural) = [x@1] : List Natural", Shift(1, x(0), MakeAnnotatedList(Natural, Var{"x", 0})), MakeAnnotatedList(Natural, Var{"x", 1})),
 )
 
 var _ = DescribeTable("Subst",
@@ -84,9 +83,8 @@ var _ = DescribeTable("Subst",
 		&App{&LambdaExpr{"x", Natural, x(0)}, NaturalLit(3)}),
 	Entry("Subst(x, Natural, y : x) = y : Natural", Subst(x(0), Natural, Annot{y(0), x(0)}), Annot{y(0), Natural}),
 	Entry("Subst(x, Natural, x : y) = Natural : y", Subst(x(0), Natural, Annot{x(0), y(0)}), Annot{Natural, y(0)}),
-	Entry("Subst(x, 3, [] : List Natural) = [] : List Type", Subst(x(0), NaturalLit(3), MakeAnnotatedList(Natural)), MakeAnnotatedList(Natural)),
+	Entry("Subst(x, 3, [] : List Natural) = [] : List Type", Subst(x(0), NaturalLit(3), EmptyList{Natural}), EmptyList{Natural}),
 	Entry("Subst(x, 3, [x]) = [3]", Subst(x(0), NaturalLit(3), MakeList(x(0))), MakeList(NaturalLit(3))),
-	Entry("Subst(x, 3, [x] : List Natural) = [3] : List Natural", Subst(x(0), NaturalLit(3), MakeAnnotatedList(Natural, x(0))), MakeAnnotatedList(Natural, NaturalLit(3))),
 )
 
 var _ = Describe("Normalize", func() {
@@ -107,10 +105,9 @@ var _ = Describe("Normalize", func() {
 		Entry("(λ(x : Natural) → x) 3 » 3", &App{&LambdaExpr{"x", Natural, x(0)}, NaturalLit(3)}, NaturalLit(3)),
 		Entry("λ(x : Natural) → 2 + 3 » λ(x : Natural) → 5", &LambdaExpr{"x", Natural, NaturalPlus{NaturalLit(2), NaturalLit(3)}}, &LambdaExpr{"x", Natural, NaturalLit(5)}),
 		Entry("[3 + 5] » [8]", MakeList(NaturalPlus{NaturalLit(3), NaturalLit(5)}), MakeList(NaturalLit(8))),
-		Entry("[3 + 5] : List Natural » [8]", MakeAnnotatedList(Natural, NaturalPlus{NaturalLit(3), NaturalLit(5)}), MakeList(NaturalLit(8))),
-		Entry("[] : List Natural", MakeAnnotatedList(Natural, NaturalPlus{NaturalLit(3), NaturalLit(5)}), MakeList(NaturalLit(8))),
+		Entry("[] : List Natural", EmptyList{Natural}, EmptyList{Natural}),
 		Entry("[] : List ((λ(x : Type) → x) Natural) → [] : List Natural",
-			MakeAnnotatedList(&App{&LambdaExpr{"x", Type, x(0)}, Natural}),
-			MakeAnnotatedList(Natural)),
+			EmptyList{&App{&LambdaExpr{"x", Type, x(0)}, Natural}},
+			EmptyList{Natural}),
 	)
 })
