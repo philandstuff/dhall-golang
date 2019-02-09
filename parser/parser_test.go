@@ -3,17 +3,13 @@ package parser_test
 import (
 	"math"
 
-	"github.com/philandstuff/dhall-golang/ast"
+	. "github.com/philandstuff/dhall-golang/ast"
 	"github.com/philandstuff/dhall-golang/parser"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
-
-func Var(value string) ast.Var {
-	return ast.Var{Name: value}
-}
 
 func ParseAndCompare(input []byte, expected interface{}) {
 	root, err := parser.Parse("test", input)
@@ -28,82 +24,82 @@ func ParseAndFail(input []byte) {
 
 var _ = Describe("Expression", func() {
 	DescribeTable("simple expressions", ParseAndCompare,
-		Entry("Type", []byte(`Type`), ast.Type),
-		Entry("Kind", []byte(`Kind`), ast.Kind),
-		Entry("Sort", []byte(`Sort`), ast.Sort),
-		Entry("Double", []byte(`Double`), ast.Double),
-		Entry("DoubleLit", []byte(`3.0`), ast.DoubleLit(3.0)),
-		Entry("DoubleLit with exponent", []byte(`3E5`), ast.DoubleLit(3e5)),
-		Entry("DoubleLit with sign", []byte(`+3.0`), ast.DoubleLit(3.0)),
-		Entry("DoubleLit with everything", []byte(`-5.0e1`), ast.DoubleLit(-50.0)),
-		Entry("Infinity", []byte(`Infinity`), ast.DoubleLit(math.Inf(1))),
-		Entry("-Infinity", []byte(`-Infinity`), ast.DoubleLit(math.Inf(-1))),
-		Entry("Integer", []byte(`Integer`), ast.Integer),
-		Entry("IntegerLit", []byte(`+1234`), ast.IntegerLit(1234)),
-		Entry("IntegerLit", []byte(`-3`), ast.IntegerLit(-3)),
-		Entry("Identifier", []byte(`x`), ast.Var{Name: "x"}),
-		Entry("Identifier with index", []byte(`x@1`), ast.Var{Name: "x", Index: 1}),
+		Entry("Type", []byte(`Type`), Type),
+		Entry("Kind", []byte(`Kind`), Kind),
+		Entry("Sort", []byte(`Sort`), Sort),
+		Entry("Double", []byte(`Double`), Double),
+		Entry("DoubleLit", []byte(`3.0`), DoubleLit(3.0)),
+		Entry("DoubleLit with exponent", []byte(`3E5`), DoubleLit(3e5)),
+		Entry("DoubleLit with sign", []byte(`+3.0`), DoubleLit(3.0)),
+		Entry("DoubleLit with everything", []byte(`-5.0e1`), DoubleLit(-50.0)),
+		Entry("Infinity", []byte(`Infinity`), DoubleLit(math.Inf(1))),
+		Entry("-Infinity", []byte(`-Infinity`), DoubleLit(math.Inf(-1))),
+		Entry("Integer", []byte(`Integer`), Integer),
+		Entry("IntegerLit", []byte(`+1234`), IntegerLit(1234)),
+		Entry("IntegerLit", []byte(`-3`), IntegerLit(-3)),
+		Entry("Identifier", []byte(`x`), Var{"x", 0}),
+		Entry("Identifier with index", []byte(`x@1`), Var{"x", 1}),
 	)
 	DescribeTable("naturals", ParseAndCompare,
-		Entry("Natural", []byte(`Natural`), ast.Natural),
-		Entry("NaturalLit", []byte(`1234`), ast.NaturalLit(1234)),
-		Entry("NaturalLit", []byte(`3`), ast.NaturalLit(3)),
-		Entry("NaturalPlus", []byte(`3 + 5`), ast.NaturalPlus{L: ast.NaturalLit(3), R: ast.NaturalLit(5)}),
+		Entry("Natural", []byte(`Natural`), Natural),
+		Entry("NaturalLit", []byte(`1234`), NaturalLit(1234)),
+		Entry("NaturalLit", []byte(`3`), NaturalLit(3)),
+		Entry("NaturalPlus", []byte(`3 + 5`), NaturalPlus{NaturalLit(3), NaturalLit(5)}),
 		// Check that if we skip whitespace, it parses
 		// correctly as function application, not natural
 		// addition
-		Entry("Plus without whitespace", []byte(`3 +5`), &ast.App{Fn: ast.NaturalLit(3), Arg: ast.IntegerLit(5)}),
+		Entry("Plus without whitespace", []byte(`3 +5`), &App{NaturalLit(3), IntegerLit(5)}),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {
 		root, err := parser.Parse("test", []byte(`NaN`))
 		Expect(err).ToNot(HaveOccurred())
-		f := float64(root.(ast.DoubleLit))
+		f := float64(root.(DoubleLit))
 		Expect(math.IsNaN(f)).To(BeTrue())
 	})
 	DescribeTable("lambda expressions", ParseAndCompare,
 		Entry("simple λ",
 			[]byte(`λ(foo : bar) → baz`),
-			&ast.LambdaExpr{
-				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+			&LambdaExpr{
+				"foo", Var{"bar", 0}, Var{"baz", 0}}),
 		Entry(`simple \`,
 			[]byte(`\(foo : bar) → baz`),
-			&ast.LambdaExpr{
-				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+			&LambdaExpr{
+				"foo", Var{"bar", 0}, Var{"baz", 0}}),
 		Entry("with line comment",
 			[]byte("λ(foo : bar) --asdf\n → baz"),
-			&ast.LambdaExpr{
-				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+			&LambdaExpr{
+				"foo", Var{"bar", 0}, Var{"baz", 0}}),
 		Entry("with block comment",
 			[]byte("λ(foo : bar) {-asdf\n-} → baz"),
-			&ast.LambdaExpr{
-				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+			&LambdaExpr{
+				"foo", Var{"bar", 0}, Var{"baz", 0}}),
 		Entry("simple ∀",
 			[]byte(`∀(foo : bar) → baz`),
-			&ast.Pi{
-				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+			&Pi{
+				"foo", Var{"bar", 0}, Var{"baz", 0}}),
 		Entry(`simple forall`,
 			[]byte(`forall(foo : bar) → baz`),
-			&ast.Pi{
-				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+			&Pi{
+				"foo", Var{"bar", 0}, Var{"baz", 0}}),
 		Entry("with line comment",
 			[]byte("∀(foo : bar) --asdf\n → baz"),
-			&ast.Pi{
-				Label: "foo", Type: Var("bar"), Body: Var("baz")}),
+			&Pi{
+				"foo", Var{"bar", 0}, Var{"baz", 0}}),
 	)
 	DescribeTable("applications", ParseAndCompare,
 		Entry("identifier application",
 			[]byte(`foo bar`),
-			&ast.App{
-				Fn:  Var("foo"),
-				Arg: Var("bar"),
+			&App{
+				Var{"foo", 0},
+				Var{"bar", 0},
 			}),
 		Entry("lambda application",
 			[]byte(`(λ(foo : bar) → baz) quux`),
-			&ast.App{
-				Fn: &ast.LambdaExpr{
-					Label: "foo", Type: Var("bar"), Body: Var("baz")},
-				Arg: Var("quux")}),
+			&App{
+				&LambdaExpr{
+					"foo", Var{"bar", 0}, Var{"baz", 0}},
+				Var{"quux", 0}}),
 	)
 	Describe("Expected failures", func() {
 		// these keywords should fail to parse unless they're part of
