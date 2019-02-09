@@ -45,9 +45,9 @@ func EmptyContext() *TypeContext {
 
 type (
 	Expr interface {
+		io.WriterTo
 		Normalize() Expr
 		TypeWith(*TypeContext) (Expr, error)
-		WriteTo(io.Writer) (int, error)
 	}
 
 	Const int
@@ -244,93 +244,118 @@ var (
 	_ Expr = IntegerLit(3)
 )
 
-func (c Const) WriteTo(out io.Writer) (int, error) {
+func (c Const) WriteTo(out io.Writer) (int64, error) {
+	var n int
+	var err error
 	if c == Type {
-		return fmt.Fprint(out, "Type")
+		n, err = fmt.Fprint(out, "Type")
 	} else if c == Kind {
-		return fmt.Fprint(out, "Kind")
+		n, err = fmt.Fprint(out, "Kind")
+	} else {
+		n, err = fmt.Fprint(out, "Sort")
 	}
-	return fmt.Fprint(out, "Sort")
+	return int64(n), err
 }
 
-func (v Var) WriteTo(out io.Writer) (int, error) {
+func (v Var) WriteTo(out io.Writer) (int64, error) {
+	var n int
+	var err error
 	if v.Index == 0 {
-		return fmt.Fprint(out, v.Name)
+		n, err = fmt.Fprint(out, v.Name)
 	}
-	return fmt.Fprintf(out, "%s@%d", v.Name, v.Index)
+	n, err = fmt.Fprintf(out, "%s@%d", v.Name, v.Index)
+	return int64(n), err
 }
 
-func (lam *LambdaExpr) WriteTo(out io.Writer) (int, error) {
+func (lam *LambdaExpr) WriteTo(out io.Writer) (int64, error) {
 	w1, err := fmt.Fprintf(out, "λ(%s : ", lam.Label)
 	if err != nil {
-		return w1, err
+		return int64(w1), err
 	}
 	w2, err := lam.Type.WriteTo(out)
 	if err != nil {
-		return w1 + w2, err
+		return int64(w1) + int64(w2), err
 	}
 	w3, err := fmt.Fprint(out, ") → ")
 	if err != nil {
-		return w1 + w2 + w3, err
+		return int64(w1) + int64(w2) + int64(w3), err
 	}
 	w4, err := lam.Body.WriteTo(out)
-	return w1 + w2 + w3 + w4, err
+	return int64(w1) + int64(w2) + int64(w3) + int64(w4), err
 }
 
-func (pi *Pi) WriteTo(out io.Writer) (int, error) {
+func (pi *Pi) WriteTo(out io.Writer) (int64, error) {
 	w1, err := fmt.Fprintf(out, "∀(%s : ", pi.Label)
 	if err != nil {
-		return w1, err
+		return int64(w1), err
 	}
 	w2, err := pi.Type.WriteTo(out)
 	if err != nil {
-		return w1 + w2, err
+		return int64(w1) + int64(w2), err
 	}
 	w3, err := fmt.Fprint(out, ") → ")
 	if err != nil {
-		return w1 + w2 + w3, err
+		return int64(w1) + int64(w2) + int64(w3), err
 	}
 	w4, err := pi.Body.WriteTo(out)
-	return w1 + w2 + w3 + w4, err
+	return int64(w1) + int64(w2) + int64(w3) + int64(w4), err
 }
 
-func (app *App) WriteTo(out io.Writer) (int, error) {
+func (app *App) WriteTo(out io.Writer) (int64, error) {
 	w1, err := app.Fn.WriteTo(out)
 	if err != nil {
-		return w1, err
+		return int64(w1), err
 	}
 	w2, err := fmt.Fprint(out, " ")
 	if err != nil {
-		return w1 + w2, err
+		return int64(w1) + int64(w2), err
 	}
 	w3, err := app.Arg.WriteTo(out)
-	return w1 + w2 + w3, err
+	return int64(w1) + int64(w2) + int64(w3), err
 }
 
-func (double) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Double") }
+func (double) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprint(out, "Double")
+	return int64(n), err
+}
 
-func (d DoubleLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%f", d) }
+func (d DoubleLit) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(out, "%f", d)
+	return int64(n), err
+}
 
-func (natural) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Natural") }
+func (natural) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprint(out, "Natural")
+	return int64(n), err
+}
 
-func (n NaturalLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", n) }
+func (nl NaturalLit) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(out, "%d", nl)
+	return int64(n), err
+}
 
-func (p NaturalPlus) WriteTo(out io.Writer) (int, error) {
+func (p NaturalPlus) WriteTo(out io.Writer) (int64, error) {
 	w1, err := p.L.WriteTo(out)
 	if err != nil {
-		return w1, err
+		return int64(w1), err
 	}
 	w2, err := fmt.Fprint(out, " + ")
 	if err != nil {
-		return w1 + w2, err
+		return int64(w1) + int64(w2), err
 	}
 	w3, err := p.R.WriteTo(out)
-	return w1 + w2 + w3, err
+	return int64(w1) + int64(w2) + int64(w3), err
 }
 
-func (integer) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Integer") }
+func (integer) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprint(out, "Integer")
+	return int64(n), err
+}
 
-func (i IntegerLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", i) }
+func (i IntegerLit) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(out, "%d", i)
+	return int64(n), err
+}
 
 func (c Const) TypeWith(*TypeContext) (Expr, error) {
 	if c == Type {
