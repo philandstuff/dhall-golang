@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 )
 
 type TypeContext map[string][]Expr
@@ -264,57 +263,48 @@ func (v Var) WriteTo(out io.Writer) (int, error) {
 func (lam *LambdaExpr) WriteTo(out io.Writer) (int, error) {
 	w1, err := fmt.Fprintf(out, "λ(%s : ", lam.Label)
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1, err
 	}
 	w2, err := lam.Type.WriteTo(out)
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1 + w2, err
 	}
 	w3, err := fmt.Fprint(out, ") → ")
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1 + w2 + w3, err
 	}
 	w4, err := lam.Body.WriteTo(out)
-	if err != nil {
-		log.Fatalf("Fatal error %v", err)
-	}
-	return w1 + w2 + w3 + w4, nil
+	return w1 + w2 + w3 + w4, err
 }
 
 func (pi *Pi) WriteTo(out io.Writer) (int, error) {
 	w1, err := fmt.Fprintf(out, "∀(%s : ", pi.Label)
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1, err
 	}
 	w2, err := pi.Type.WriteTo(out)
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1 + w2, err
 	}
 	w3, err := fmt.Fprint(out, ") → ")
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1 + w2 + w3, err
 	}
 	w4, err := pi.Body.WriteTo(out)
-	if err != nil {
-		log.Fatalf("Fatal error %v", err)
-	}
-	return w1 + w2 + w3 + w4, nil
+	return w1 + w2 + w3 + w4, err
 }
 
 func (app *App) WriteTo(out io.Writer) (int, error) {
 	w1, err := app.Fn.WriteTo(out)
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1, err
 	}
 	w2, err := fmt.Fprint(out, " ")
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1 + w2, err
 	}
 	w3, err := app.Arg.WriteTo(out)
-	if err != nil {
-		log.Fatalf("Fatal error %v", err)
-	}
-	return w1 + w2 + w3, nil
+	return w1 + w2 + w3, err
 }
 
 func (double) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Double") }
@@ -326,12 +316,16 @@ func (natural) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Nat
 func (n NaturalLit) WriteTo(out io.Writer) (int, error) { return fmt.Fprintf(out, "%d", n) }
 
 func (p NaturalPlus) WriteTo(out io.Writer) (int, error) {
-	_, err := p.L.WriteTo(out)
+	w1, err := p.L.WriteTo(out)
 	if err != nil {
-		log.Fatalf("Fatal error %v", err)
+		return w1, err
 	}
-	fmt.Fprint(out, " + ")
-	return p.R.WriteTo(out)
+	w2, err := fmt.Fprint(out, " + ")
+	if err != nil {
+		return w1 + w2, err
+	}
+	w3, err := p.R.WriteTo(out)
+	return w1 + w2 + w3, err
 }
 
 func (integer) WriteTo(out io.Writer) (int, error) { return fmt.Fprint(out, "Integer") }
