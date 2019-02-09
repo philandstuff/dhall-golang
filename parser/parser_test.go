@@ -55,7 +55,7 @@ var _ = Describe("Expression", func() {
 		Entry("List Natural", `List Natural`, &App{List, Natural}),
 		Entry("[3]", `[3]`, MakeList(NaturalLit(3))),
 		Entry("[3,4]", `[3,4]`, MakeList(NaturalLit(3), NaturalLit(4))),
-		PEntry("[] : List Natural", `[] : List Natural`, EmptyList{Natural}),
+		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Natural}),
 		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), &App{List, Natural}}),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
