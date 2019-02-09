@@ -55,7 +55,7 @@ Reserved ← "Bool"
   / "Integer" { return ast.Integer, nil }
   / "Double" { return ast.Double, nil }
   / "Text"
-  / "List"
+  / "List" { return ast.List, nil }
   / "True"
   / "False"
   / "NaN" { return ast.DoubleLit(math.NaN()), nil }

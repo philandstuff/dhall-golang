@@ -51,6 +51,9 @@ var _ = Describe("Expression", func() {
 		// addition
 		Entry("Plus without whitespace", `3 +5`, &App{NaturalLit(3), IntegerLit(5)}),
 	)
+	DescribeTable("lists", ParseAndCompare,
+		Entry("List Natural", `List Natural`, &App{List, Natural}),
+	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {
 		root, err := parser.Parse("test", []byte(`NaN`))
