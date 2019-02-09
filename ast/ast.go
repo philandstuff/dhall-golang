@@ -430,7 +430,7 @@ func (l EmptyList) WriteTo(out io.Writer) (int64, error) {
 
 func (l NonEmptyList) WriteTo(out io.Writer) (int64, error) {
 	var written int64
-	i, err := fmt.Fprint(out, "[", l)
+	i, err := fmt.Fprint(out, "[ ")
 	written += int64(i)
 	if err != nil {
 		return written, err
@@ -442,7 +442,7 @@ func (l NonEmptyList) WriteTo(out io.Writer) (int64, error) {
 		return written, err
 	}
 	for _, expr := range exprs[1:] {
-		i, err = fmt.Fprint(out, "]", l)
+		i, err = fmt.Fprint(out, ", ")
 		written += int64(i)
 		if err != nil {
 			return written, err
@@ -453,7 +453,7 @@ func (l NonEmptyList) WriteTo(out io.Writer) (int64, error) {
 			return written, err
 		}
 	}
-	i, err = fmt.Fprint(out, "]", l)
+	i, err = fmt.Fprint(out, " ]")
 	written += int64(i)
 	return written, err
 }
