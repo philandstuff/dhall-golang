@@ -146,4 +146,20 @@ var _ = Describe("TypeCheck in empty context", func() {
 	)
 })
 
-// TODO: Normalize() when it does anything interesting
+var _ = Describe("Normalize", func() {
+	DescribeTable("Normalize",
+		func(in Expr, expected Expr) {
+			actual := in.Normalize()
+			Expect(actual).To(Equal(expected))
+		},
+		Entry("Sort", Sort, Sort),
+		Entry("Kind", Kind, Kind),
+		Entry("Type", Type, Type),
+		Entry("Natural", Natural, Natural),
+		Entry("Integer", Integer, Integer),
+		Entry("3", NaturalLit(3), NaturalLit(3)),
+		Entry("3 + 5", NaturalPlus{NaturalLit(3), NaturalLit(5)}, NaturalLit(8)),
+		Entry("(λ(x : Natural) → x) 3", &App{&LambdaExpr{"x", Natural, x(0)}, NaturalLit(3)}, NaturalLit(3)),
+		Entry("λ(x : Natural) → 2 + 3", &LambdaExpr{"x", Natural, NaturalPlus{NaturalLit(2), NaturalLit(3)}}, &LambdaExpr{"x", Natural, NaturalLit(5)}),
+	)
+})
