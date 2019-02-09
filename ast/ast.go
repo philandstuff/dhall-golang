@@ -86,6 +86,13 @@ type (
 
 	integer    struct{}
 	IntegerLit int
+
+	list    struct{}
+	ListLit struct {
+		// Content must not be empty (use nil for no content)
+		Content    []Expr
+		Annotation Expr
+	}
 )
 
 const (
@@ -148,6 +155,17 @@ func Shift(d int, v Var, e Expr) Expr {
 		return e
 	case IntegerLit:
 		return e
+	case list:
+		return e
+	case ListLit:
+		if e.Content == nil {
+			return e
+		}
+		exprs := make([]Expr, len(e.Content))
+		for i, expr := range e.Content {
+			exprs[i] = Shift(d, v, expr)
+		}
+		return MakeAnnotatedList(e.Annotation, exprs...)
 	}
 	panic("missing switch case in Shift()")
 }
@@ -206,6 +224,17 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return e
 	case IntegerLit:
 		return e
+	case list:
+		return e
+	case ListLit:
+		if e.Content == nil {
+			return e
+		}
+		exprs := make([]Expr, len(e.Content))
+		for i, expr := range e.Content {
+			exprs[i] = Subst(v, c, expr)
+		}
+		return MakeAnnotatedList(e.Annotation, exprs...)
 	}
 	panic("missing switch case in Subst()")
 }
@@ -227,7 +256,19 @@ var (
 	Double  double  = double(struct{}{})
 	Natural natural = natural(struct{}{})
 	Integer integer = integer(struct{}{})
+	List    list    = list(struct{}{})
 )
+
+func MakeList(content ...Expr) ListLit {
+	return ListLit{Content: content}
+}
+
+func MakeAnnotatedList(annotation Expr, content ...Expr) ListLit {
+	return ListLit{
+		Content:    content,
+		Annotation: annotation,
+	}
+}
 
 var (
 	_ Expr = Type
@@ -242,6 +283,8 @@ var (
 	_ Expr = NaturalPlus{}
 	_ Expr = Integer
 	_ Expr = IntegerLit(3)
+	_ Expr = List
+	_ Expr = ListLit{}
 )
 
 func (c Const) WriteTo(out io.Writer) (int64, error) {
@@ -356,6 +399,18 @@ func (i IntegerLit) WriteTo(out io.Writer) (int64, error) {
 	n, err := fmt.Fprintf(out, "%d", i)
 	return int64(n), err
 }
+
+func (list) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprint(out, "List")
+	return int64(n), err
+}
+
+func (l ListLit) WriteTo(out io.Writer) (int64, error) {
+	n, err := fmt.Fprintf(out, "%d", l)
+	return int64(n), err
+}
+
+func judgmentallyEqual(e1 Expr, e2 Expr) bool { return e1 == e2 }
 
 func (c Const) TypeWith(*TypeContext) (Expr, error) {
 	if c == Type {
@@ -477,6 +532,53 @@ func (integer) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
 func (IntegerLit) TypeWith(*TypeContext) (Expr, error) { return Integer, nil }
 
+func (list) TypeWith(*TypeContext) (Expr, error) { return &Pi{"_", Type, Type}, nil }
+
+func (l ListLit) TypeWith(ctx *TypeContext) (Expr, error) {
+	if l.Annotation != nil {
+		t := l.Annotation
+		k, err := t.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if k.Normalize() != Type {
+			return nil, fmt.Errorf("List annotation %s is not a Type", t)
+		}
+		for _, elem := range l.Content {
+			t2, err := elem.TypeWith(ctx)
+			if err != nil {
+				return nil, err
+			}
+			if !judgmentallyEqual(t, t2) {
+				return nil, fmt.Errorf("Types %s and %s don't match", t, t2)
+			}
+		}
+		return &App{List, t}, nil
+	}
+	// Annotation is nil, we have to infer type
+	if l.Content == nil {
+		return nil, fmt.Errorf("Empty lists must be annotated with type")
+	}
+	t, err := l.Content[0].TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	k, err := t.TypeWith(ctx)
+	if k.Normalize() != Type {
+		return nil, fmt.Errorf("Invalid type for List elements")
+	}
+	for _, elem := range l.Content[1:] {
+		t2, err := elem.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if !judgmentallyEqual(t, t2) {
+			return nil, fmt.Errorf("All List elements must have same type, but types %s and %s don't match", t, t2)
+		}
+	}
+	return &App{List, t}, nil
+}
+
 func (c Const) Normalize() Expr { return c }
 func (v Var) Normalize() Expr   { return v }
 
@@ -504,7 +606,7 @@ func (app *App) Normalize() Expr {
 		b2 := Shift(-1, v, b1)
 		return b2.Normalize()
 	}
-	panic("got stuck in (*App).Normalize()")
+	return app
 }
 
 func (d double) Normalize() Expr    { return d }
@@ -520,6 +622,18 @@ func (p NaturalPlus) Normalize() Expr {
 
 func (i integer) Normalize() Expr    { return i }
 func (i IntegerLit) Normalize() Expr { return i }
+
+func (l list) Normalize() Expr { return l }
+func (l ListLit) Normalize() Expr {
+	if l.Content == nil {
+		return MakeAnnotatedList(l.Annotation.Normalize())
+	}
+	vals := make([]Expr, len(l.Content))
+	for i, expr := range l.Content {
+		vals[i] = expr.Normalize()
+	}
+	return MakeList(vals...)
+}
 
 func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {
 	return &LambdaExpr{
