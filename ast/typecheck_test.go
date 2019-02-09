@@ -13,11 +13,13 @@ var _ = Describe("TypeCheck in empty context", func() {
 		func(in Expr, expectedType Expr) {
 			actualType, err := in.TypeWith(EmptyContext())
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actualType).To(Equal(expectedType))
+			Expect(actualType.Normalize()).To(Equal(expectedType))
 		},
 		Entry("Type : Kind", Type, Kind),
 		Entry("Kind : Sort", Kind, Sort),
 		Entry("3 : Natural", NaturalLit(3), Natural),
+		Entry("(3 : Natural) : Natural", Annot{NaturalLit(3), Natural}, Natural),
+		Entry("(3 : (λ(x : Type) → x) Natural) : Natural", Annot{NaturalLit(3), &App{&LambdaExpr{"x", Type, x(0)}, Natural}}, Natural),
 		Entry("3 + 5 : Natural", NaturalPlus{NaturalLit(3), NaturalLit(5)}, Natural),
 		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
 			&LambdaExpr{"x", Natural, x(0)},
@@ -69,6 +71,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 			Expect(err).To(HaveOccurred())
 		},
 		Entry("3 +5", &App{NaturalLit(3), IntegerLit(5)}),
+		Entry("3 : Integer", Annot{NaturalLit(3), Integer}),
 		Entry("[]", MakeList()),
 	)
 })

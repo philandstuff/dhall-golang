@@ -5,7 +5,12 @@ import (
 	"fmt"
 )
 
-func judgmentallyEqual(e1 Expr, e2 Expr) bool { return e1 == e2 }
+func judgmentallyEqual(e1 Expr, e2 Expr) bool {
+	// TODO: alpha-normalization
+	ne1 := e1.Normalize()
+	ne2 := e2.Normalize()
+	return ne1 == ne2
+}
 
 func (c Const) TypeWith(*TypeContext) (Expr, error) {
 	if c == Type {
@@ -93,6 +98,21 @@ func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 	} else {
 		return nil, errors.New("type mismatch between lambda and applied value")
 	}
+}
+
+func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
+	_, err := a.Annotation.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	t2, err := a.Expr.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !judgmentallyEqual(a.Annotation, t2) {
+		return nil, fmt.Errorf("Annotation mismatch")
+	}
+	return t2, nil
 }
 
 func (double) TypeWith(*TypeContext) (Expr, error) { return Type, nil }

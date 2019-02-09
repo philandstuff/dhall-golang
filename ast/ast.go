@@ -74,6 +74,11 @@ type (
 		Arg Expr
 	}
 
+	Annot struct {
+		Expr       Expr
+		Annotation Expr
+	}
+
 	double    struct{}
 	DoubleLit float64
 
@@ -141,6 +146,8 @@ func Shift(d int, v Var, e Expr) Expr {
 			Fn:  Shift(d, v, e.Fn),
 			Arg: Shift(d, v, e.Arg),
 		}
+	case Annot:
+		return Annot{Shift(d, v, e.Expr), Shift(d, v, e.Annotation)}
 	case double:
 		return e
 	case DoubleLit:
@@ -210,6 +217,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Fn:  Subst(v, c, e.Fn),
 			Arg: Subst(v, c, e.Arg),
 		}
+	case Annot:
+		return Annot{Subst(v, c, e.Expr), Subst(v, c, e.Annotation)}
 	case double:
 		return e
 	case DoubleLit:
@@ -276,6 +285,7 @@ var (
 	_ Expr = &LambdaExpr{}
 	_ Expr = &Pi{}
 	_ Expr = &App{}
+	_ Expr = Annot{}
 	_ Expr = Double
 	_ Expr = DoubleLit(3.0)
 	_ Expr = Natural
@@ -354,6 +364,19 @@ func (app *App) WriteTo(out io.Writer) (int64, error) {
 		return int64(w1) + int64(w2), err
 	}
 	w3, err := app.Arg.WriteTo(out)
+	return int64(w1) + int64(w2) + int64(w3), err
+}
+
+func (a Annot) WriteTo(out io.Writer) (int64, error) {
+	w1, err := a.Expr.WriteTo(out)
+	if err != nil {
+		return int64(w1), err
+	}
+	w2, err := fmt.Fprint(out, " : ")
+	if err != nil {
+		return int64(w1) + int64(w2), err
+	}
+	w3, err := a.Annotation.WriteTo(out)
 	return int64(w1) + int64(w2) + int64(w3), err
 }
 
@@ -439,6 +462,8 @@ func (app *App) Normalize() Expr {
 	}
 	return app
 }
+
+func (a Annot) Normalize() Expr { return a.Expr.Normalize() }
 
 func (d double) Normalize() Expr    { return d }
 func (d DoubleLit) Normalize() Expr { return d }
