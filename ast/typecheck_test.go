@@ -17,6 +17,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 		},
 		Entry("Type : Kind", Type, Kind),
 		Entry("Kind : Sort", Kind, Sort),
+		Entry("True : Bool", BoolLit(true), Bool),
 		Entry("3 : Natural", NaturalLit(3), Natural),
 		Entry("(3 : Natural) : Natural", Annot{NaturalLit(3), Natural}, Natural),
 		Entry("(3 : (λ(x : Type) → x) Natural) : Natural", Annot{NaturalLit(3), &App{&LambdaExpr{"x", Type, x(0)}, Natural}}, Natural),

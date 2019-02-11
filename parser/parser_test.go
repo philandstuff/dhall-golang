@@ -39,6 +39,11 @@ var _ = Describe("Expression", func() {
 		Entry("IntegerLit", `-3`, IntegerLit(-3)),
 		Entry("Annotated expression", `3 : Natural`, Annot{NaturalLit(3), Natural}),
 	)
+	DescribeTable("bools", ParseAndCompare,
+		Entry("Bool", `Bool`, Bool),
+		Entry("True", `True`, BoolLit(true)),
+		Entry("False", `False`, BoolLit(false)),
+	)
 	DescribeTable("naturals", ParseAndCompare,
 		Entry("Natural", `Natural`, Natural),
 		Entry("NaturalLit", `1234`, NaturalLit(1234)),

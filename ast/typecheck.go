@@ -126,6 +126,10 @@ func (double) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
 func (DoubleLit) TypeWith(*TypeContext) (Expr, error) { return Double, nil }
 
+func (boolean) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
+
+func (BoolLit) TypeWith(*TypeContext) (Expr, error) { return Bool, nil }
+
 func (natural) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
 func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }

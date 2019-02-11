@@ -48,7 +48,7 @@ SimpleLabel ← !Keyword
 
 Label ← label:SimpleLabel { return label, nil }
 
-Reserved ← "Bool"
+Reserved ← "Bool" { return ast.Bool, nil }
   / "Optional"
   / "None"
   / "Natural" { return ast.Natural, nil }
@@ -56,8 +56,8 @@ Reserved ← "Bool"
   / "Double" { return ast.Double, nil }
   / "Text"
   / "List" { return ast.List, nil }
-  / "True"
-  / "False"
+  / "True" { return ast.True, nil }
+  / "False" { return ast.False, nil }
   / "NaN" { return ast.DoubleLit(math.NaN()), nil }
   / "Infinity" { return ast.DoubleLit(math.Inf(1)), nil }
   / "Type" { return ast.Type, nil }
