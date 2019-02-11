@@ -142,9 +142,23 @@ func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
+	ttType, err := tType.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if ttType != Type {
+		return nil, errors.New("if branches must have terms, not types")
+	}
 	fType, err := b.F.TypeWith(ctx)
 	if err != nil {
 		return nil, err
+	}
+	ftType, err := fType.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if ftType != Type {
+		return nil, errors.New("if branches must have terms, not types")
 	}
 	if !judgmentallyEqual(tType, fType) {
 		return nil, errors.New("if branches must have matching types")

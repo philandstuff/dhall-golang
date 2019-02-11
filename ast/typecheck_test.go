@@ -77,5 +77,6 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("3 : Integer", Annot{NaturalLit(3), Integer}),
 		Entry("if True then 3 else +4", BoolIf{True, NaturalLit(3), IntegerLit(4)}),
 		Entry("if 2 then 3 else 4", BoolIf{NaturalLit(3), NaturalLit(3), NaturalLit(4)}),
+		Entry("if True then Type else (Type -> Type)", BoolIf{True, Type, &Pi{"_", Type, Type}}),
 	)
 })
