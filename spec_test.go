@@ -20,7 +20,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/escapedDoubleQuotedStringA.dhall",
 	"TestParserAccepts/escapedSingleQuotedStringA.dhall",
 	"TestParserAccepts/fieldsA.dhall",
-	"TestParserAccepts/functionTypeA.dhall", // requires arrow-expression (ie Bool -> Bool instead of forall (_ : Bool) -> Bool)
+	"TestParserAccepts/functionTypeA.dhall", // requires Bool type
 	"TestParserAccepts/ifThenElseA.dhall",
 	"TestParserAccepts/importAltA.dhall",
 	"TestParserAccepts/interpolatedDoubleQuotedStringA.dhall",

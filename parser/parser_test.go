@@ -88,16 +88,16 @@ var _ = Describe("Expression", func() {
 				"foo", Var{"bar", 0}, Var{"baz", 0}}),
 		Entry("simple ∀",
 			`∀(foo : bar) → baz`,
-			&Pi{
-				"foo", Var{"bar", 0}, Var{"baz", 0}}),
+			&Pi{"foo", Var{"bar", 0}, Var{"baz", 0}}),
+		Entry("arrow type has implicit _ var",
+			`foo → bar`,
+			&Pi{"_", Var{"foo", 0}, Var{"bar", 0}}),
 		Entry(`simple forall`,
 			`forall(foo : bar) → baz`,
-			&Pi{
-				"foo", Var{"bar", 0}, Var{"baz", 0}}),
+			&Pi{"foo", Var{"bar", 0}, Var{"baz", 0}}),
 		Entry("with line comment",
 			"∀(foo : bar) --asdf\n → baz",
-			&Pi{
-				"foo", Var{"bar", 0}, Var{"baz", 0}}),
+			&Pi{"foo", Var{"bar", 0}, Var{"baz", 0}}),
 	)
 	DescribeTable("applications", ParseAndCompare,
 		Entry("identifier application",

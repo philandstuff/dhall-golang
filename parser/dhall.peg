@@ -143,6 +143,7 @@ Expression ←
     / Forall _ '(' _ label:Label _ ColonSpace t:Expression _ ')' _ Arrow _ body:Expression {
           return &ast.Pi{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
       }
+    / o:OperatorExpression _ Arrow _ e:Expression { return &ast.Pi{"_",o.(ast.Expr),e.(ast.Expr)}, nil }
     / AnnotatedExpression
 
 Annotation ← _ ColonSpace a:Expression { return a, nil }
