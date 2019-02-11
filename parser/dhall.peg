@@ -117,12 +117,13 @@ Identifier ← name:Label index:SpaceDeBruijn? {
     }
 }
 
-IdentifierReservedPrefix ← reserved:Reserved suffix:([A-Za-z0-9/_-]+ { return string(c.text), nil }) index:SpaceDeBruijn? {
-    name := reserved.(string) + suffix.(string)
+IdentifierReservedPrefix ←
+         name:(Reserved [A-Za-z0-9/_-]+ { return string(c.text),nil })
+         index:SpaceDeBruijn? {
     if index != nil {
-        return ast.Var{Name:name, Index:index.(int)}, nil
+        return ast.Var{Name:name.(string), Index:index.(int)}, nil
     } else {
-        return ast.Var{Name:name}, nil
+        return ast.Var{Name:name.(string)}, nil
     }
 }
 

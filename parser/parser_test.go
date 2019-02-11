@@ -37,8 +37,6 @@ var _ = Describe("Expression", func() {
 		Entry("Integer", `Integer`, Integer),
 		Entry("IntegerLit", `+1234`, IntegerLit(1234)),
 		Entry("IntegerLit", `-3`, IntegerLit(-3)),
-		Entry("Identifier", `x`, Var{"x", 0}),
-		Entry("Identifier with index", `x@1`, Var{"x", 1}),
 		Entry("Annotated expression", `3 : Natural`, Annot{NaturalLit(3), Natural}),
 	)
 	DescribeTable("naturals", ParseAndCompare,
@@ -50,6 +48,12 @@ var _ = Describe("Expression", func() {
 		// correctly as function application, not natural
 		// addition
 		Entry("Plus without whitespace", `3 +5`, &App{NaturalLit(3), IntegerLit(5)}),
+	)
+	DescribeTable("simple expressions", ParseAndCompare,
+		Entry("Identifier", `x`, Var{"x", 0}),
+		Entry("Identifier with index", `x@1`, Var{"x", 1}),
+		Entry("Identifier with reserved prefix", `Listicle`, Var{"Listicle", 0}),
+		Entry("Identifier with reserved prefix and index", `Listicle@3`, Var{"Listicle", 3}),
 	)
 	DescribeTable("lists", ParseAndCompare,
 		Entry("List Natural", `List Natural`, &App{List, Natural}),
