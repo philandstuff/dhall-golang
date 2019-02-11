@@ -130,6 +130,28 @@ func (boolean) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
 func (BoolLit) TypeWith(*TypeContext) (Expr, error) { return Bool, nil }
 
+func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
+	condType, err := b.Cond.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if condType != Bool {
+		return nil, errors.New("if condition must be type Bool")
+	}
+	tType, err := b.T.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fType, err := b.F.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !judgmentallyEqual(tType, fType) {
+		return nil, errors.New("if branches must have matching types")
+	}
+	return tType, nil
+}
+
 func (natural) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
 func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }

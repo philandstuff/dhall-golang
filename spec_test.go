@@ -20,7 +20,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/escapedDoubleQuotedStringA.dhall",
 	"TestParserAccepts/escapedSingleQuotedStringA.dhall",
 	"TestParserAccepts/fieldsA.dhall",
-	"TestParserAccepts/ifThenElseA.dhall",
 	"TestParserAccepts/importAltA.dhall",
 	"TestParserAccepts/interpolatedDoubleQuotedStringA.dhall",
 	"TestParserAccepts/interpolatedSingleQuotedStringA.dhall",

@@ -140,6 +140,9 @@ Expression ←
       Lambda _ '(' _ label:Label _ ColonSpace t:Expression _ ')' _ Arrow _ body:Expression {
           return &ast.LambdaExpr{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
       }
+    / "if" _ cond:Expression _ "then" _ t:Expression _ "else" _ f:Expression {
+          return ast.BoolIf{cond.(ast.Expr),t.(ast.Expr),f.(ast.Expr)},nil
+      }
     / Forall _ '(' _ label:Label _ ColonSpace t:Expression _ ')' _ Arrow _ body:Expression {
           return &ast.Pi{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
       }

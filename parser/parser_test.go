@@ -43,6 +43,7 @@ var _ = Describe("Expression", func() {
 		Entry("Bool", `Bool`, Bool),
 		Entry("True", `True`, BoolLit(true)),
 		Entry("False", `False`, BoolLit(false)),
+		Entry("if True then x else y", `if True then x else y`, BoolIf{True, Var{"x", 0}, Var{"y", 0}}),
 	)
 	DescribeTable("naturals", ParseAndCompare,
 		Entry("Natural", `Natural`, Natural),

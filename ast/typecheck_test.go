@@ -65,6 +65,8 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("([3] : List Natural) : List Natural",
 			Annot{MakeList(NaturalLit(3)), &App{List, Natural}},
 			&App{List, Natural}),
+		Entry("if True then 3 else 4 : Natural",
+			BoolIf{True, NaturalLit(3), NaturalLit(4)}, Natural),
 	)
 	DescribeTable("Type errors",
 		func(in Expr) {
@@ -73,5 +75,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 		},
 		Entry("3 +5", &App{NaturalLit(3), IntegerLit(5)}),
 		Entry("3 : Integer", Annot{NaturalLit(3), Integer}),
+		Entry("if True then 3 else +4", BoolIf{True, NaturalLit(3), IntegerLit(4)}),
+		Entry("if 2 then 3 else 4", BoolIf{NaturalLit(3), NaturalLit(3), NaturalLit(4)}),
 	)
 })

@@ -62,6 +62,7 @@ var _ = DescribeTable("Shift",
 	Entry("Shift(1, x, x + 3) = x@1 + 3", Shift(1, x(0), NaturalPlus{x(0), NaturalLit(3)}), NaturalPlus{x(1), NaturalLit(3)}),
 	Entry("Shift(1, x, [] : List Natural) = [] : List Natural", Shift(1, x(0), EmptyList{Natural}), EmptyList{Natural}),
 	Entry("Shift(1, x, [x]) = [x@1]", Shift(1, x(0), MakeList(Var{"x", 0})), MakeList(Var{"x", 1})),
+	Entry("Shift(1, x, if x then x else x) = if x@1 then x@1 else x@1", Shift(1, x(0), BoolIf{x(0), x(0), x(0)}), BoolIf{x(1), x(1), x(1)}),
 )
 
 var _ = DescribeTable("Subst",
@@ -85,6 +86,8 @@ var _ = DescribeTable("Subst",
 	Entry("Subst(x, Natural, x : y) = Natural : y", Subst(x(0), Natural, Annot{x(0), y(0)}), Annot{Natural, y(0)}),
 	Entry("Subst(x, 3, [] : List Natural) = [] : List Type", Subst(x(0), NaturalLit(3), EmptyList{Natural}), EmptyList{Natural}),
 	Entry("Subst(x, 3, [x]) = [3]", Subst(x(0), NaturalLit(3), MakeList(x(0))), MakeList(NaturalLit(3))),
+	Entry("Subst(x, 3, if True then x else x) = if True then 3 else 3", Subst(x(0), NaturalLit(3), BoolIf{True, x(0), x(0)}), BoolIf{True, NaturalLit(3), NaturalLit(3)}),
+	Entry("Subst(x, True, if x then 3 else 4) = if True then 3 else 4", Subst(x(0), True, BoolIf{x(0), NaturalLit(3), NaturalLit(4)}), BoolIf{True, NaturalLit(3), NaturalLit(4)}),
 )
 
 var _ = Describe("Normalize", func() {
@@ -109,5 +112,7 @@ var _ = Describe("Normalize", func() {
 		Entry("[] : List ((λ(x : Type) → x) Natural) → [] : List Natural",
 			EmptyList{&App{&LambdaExpr{"x", Type, x(0)}, Natural}},
 			EmptyList{Natural}),
+		Entry("if True then 3 else 4 » 3", BoolIf{True, NaturalLit(3), NaturalLit(4)}, NaturalLit(3)),
+		Entry("if False then 3 else 4 » 4", BoolIf{False, NaturalLit(3), NaturalLit(4)}, NaturalLit(4)),
 	)
 })

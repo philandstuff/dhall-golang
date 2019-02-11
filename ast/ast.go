@@ -85,6 +85,11 @@ type (
 	// 'boolean' to avoid clashing with go's bool type
 	boolean struct{}
 	BoolLit bool
+	BoolIf  struct {
+		Cond Expr
+		T    Expr
+		F    Expr
+	}
 
 	natural     struct{}
 	NaturalLit  int
@@ -159,6 +164,8 @@ func Shift(d int, v Var, e Expr) Expr {
 		return e
 	case BoolLit:
 		return e
+	case BoolIf:
+		return BoolIf{Cond: Shift(d, v, e.Cond), T: Shift(d, v, e.T), F: Shift(d, v, e.F)}
 	case natural:
 		return e
 	case NaturalLit:
@@ -233,6 +240,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return e
 	case BoolLit:
 		return e
+	case BoolIf:
+		return BoolIf{Cond: Subst(v, c, e.Cond), T: Subst(v, c, e.T), F: Subst(v, c, e.F)}
 	case natural:
 		return e
 	case NaturalLit:
@@ -298,6 +307,7 @@ var (
 	_ Expr = DoubleLit(3.0)
 	_ Expr = Bool
 	_ Expr = BoolLit(true)
+	_ Expr = BoolIf{}
 	_ Expr = Natural
 	_ Expr = NaturalLit(3)
 	_ Expr = NaturalPlus{}
@@ -416,6 +426,31 @@ func (bl BoolLit) WriteTo(out io.Writer) (int64, error) {
 	}
 }
 
+func (b BoolIf) WriteTo(out io.Writer) (int64, error) {
+	w1, err := fmt.Fprint(out, "if ")
+	if err != nil {
+		return int64(w1), err
+	}
+	w2, err := b.Cond.WriteTo(out)
+	if err != nil {
+		return int64(w1) + int64(w2), err
+	}
+	w3, err := fmt.Fprint(out, " then ")
+	if err != nil {
+		return int64(w1) + int64(w2) + int64(w3), err
+	}
+	w4, err := b.T.WriteTo(out)
+	if err != nil {
+		return int64(w1) + int64(w2) + int64(w3) + int64(w4), err
+	}
+	w5, err := fmt.Fprint(out, " else ")
+	if err != nil {
+		return int64(w1) + int64(w2) + int64(w3) + int64(w4) + int64(w5), err
+	}
+	w6, err := b.F.WriteTo(out)
+	return int64(w1) + int64(w2) + int64(w3) + int64(w4) + int64(w5) + int64(w6), err
+}
+
 func (natural) WriteTo(out io.Writer) (int64, error) {
 	n, err := fmt.Fprint(out, "Natural")
 	return int64(n), err
@@ -528,8 +563,17 @@ func (a Annot) Normalize() Expr { return a.Expr.Normalize() }
 func (d double) Normalize() Expr    { return d }
 func (d DoubleLit) Normalize() Expr { return d }
 
-func (n boolean) Normalize() Expr    { return n }
-func (n BoolLit) Normalize() Expr    { return n }
+func (n boolean) Normalize() Expr { return n }
+func (n BoolLit) Normalize() Expr { return n }
+func (b BoolIf) Normalize() Expr {
+	cond := b.Cond.Normalize()
+	if bool(cond.(BoolLit)) {
+		return b.T.Normalize()
+	} else {
+		return b.F.Normalize()
+	}
+}
+
 func (n natural) Normalize() Expr    { return n }
 func (n NaturalLit) Normalize() Expr { return n }
 func (p NaturalPlus) Normalize() Expr {
