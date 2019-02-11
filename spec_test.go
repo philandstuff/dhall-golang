@@ -1,5 +1,3 @@
-// +build spec
-
 package main_test
 
 import (
