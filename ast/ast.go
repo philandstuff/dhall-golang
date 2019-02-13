@@ -79,11 +79,10 @@ type (
 		Annotation Expr
 	}
 
-	double    struct{}
+	BuiltinType int
+
 	DoubleLit float64
 
-	// 'boolean' to avoid clashing with go's bool type
-	boolean struct{}
 	BoolLit bool
 	BoolIf  struct {
 		Cond Expr
@@ -91,17 +90,14 @@ type (
 		F    Expr
 	}
 
-	natural     struct{}
 	NaturalLit  int
 	NaturalPlus struct {
 		L Expr
 		R Expr
 	}
 
-	integer    struct{}
 	IntegerLit int
 
-	list struct{}
 	// `[] : List Natural` == EmptyList{Natural}
 	EmptyList struct{ Type Expr }
 	// `[2,3,4]` == NonEmptyList(2,3,4)
@@ -156,27 +152,19 @@ func Shift(d int, v Var, e Expr) Expr {
 		}
 	case Annot:
 		return Annot{Shift(d, v, e.Expr), Shift(d, v, e.Annotation)}
-	case double:
+	case BuiltinType:
 		return e
 	case DoubleLit:
-		return e
-	case boolean:
 		return e
 	case BoolLit:
 		return e
 	case BoolIf:
 		return BoolIf{Cond: Shift(d, v, e.Cond), T: Shift(d, v, e.T), F: Shift(d, v, e.F)}
-	case natural:
-		return e
 	case NaturalLit:
 		return e
 	case NaturalPlus:
 		return NaturalPlus{L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
-	case integer:
-		return e
 	case IntegerLit:
-		return e
-	case list:
 		return e
 	case EmptyList:
 		return e
@@ -232,27 +220,19 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		}
 	case Annot:
 		return Annot{Subst(v, c, e.Expr), Subst(v, c, e.Annotation)}
-	case double:
+	case BuiltinType:
 		return e
 	case DoubleLit:
-		return e
-	case boolean:
 		return e
 	case BoolLit:
 		return e
 	case BoolIf:
 		return BoolIf{Cond: Subst(v, c, e.Cond), T: Subst(v, c, e.T), F: Subst(v, c, e.F)}
-	case natural:
-		return e
 	case NaturalLit:
 		return e
 	case NaturalPlus:
 		return NaturalPlus{L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
-	case integer:
-		return e
 	case IntegerLit:
-		return e
-	case list:
 		return e
 	case EmptyList:
 		return e
@@ -279,12 +259,12 @@ func Rule(a Const, b Const) (Const, error) {
 	return Const(0), errors.New("Dependent types are not allowed")
 }
 
-var (
-	Double  double  = double(struct{}{})
-	Bool    boolean = boolean(struct{}{})
-	Natural natural = natural(struct{}{})
-	Integer integer = integer(struct{}{})
-	List    list    = list(struct{}{})
+const (
+	Double  = BuiltinType(iota)
+	Bool    = BuiltinType(iota)
+	Natural = BuiltinType(iota)
+	Integer = BuiltinType(iota)
+	List    = BuiltinType(iota)
 )
 
 const (
@@ -401,18 +381,28 @@ func (a Annot) WriteTo(out io.Writer) (int64, error) {
 	return int64(w1) + int64(w2) + int64(w3), err
 }
 
-func (double) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprint(out, "Double")
+func (t BuiltinType) WriteTo(out io.Writer) (int64, error) {
+	var n int
+	var err error
+	switch t {
+	case Double:
+		n, err = fmt.Fprint(out, "Double")
+	case Bool:
+		n, err = fmt.Fprint(out, "Bool")
+	case Natural:
+		n, err = fmt.Fprint(out, "Natural")
+	case Integer:
+		n, err = fmt.Fprint(out, "Integer")
+	case List:
+		n, err = fmt.Fprint(out, "List")
+	default:
+		panic(fmt.Sprintf("unknown type %d\n", t))
+	}
 	return int64(n), err
 }
 
 func (d DoubleLit) WriteTo(out io.Writer) (int64, error) {
 	n, err := fmt.Fprintf(out, "%f", d)
-	return int64(n), err
-}
-
-func (boolean) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprint(out, "Bool")
 	return int64(n), err
 }
 
@@ -451,11 +441,6 @@ func (b BoolIf) WriteTo(out io.Writer) (int64, error) {
 	return int64(w1) + int64(w2) + int64(w3) + int64(w4) + int64(w5) + int64(w6), err
 }
 
-func (natural) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprint(out, "Natural")
-	return int64(n), err
-}
-
 func (nl NaturalLit) WriteTo(out io.Writer) (int64, error) {
 	n, err := fmt.Fprintf(out, "%d", nl)
 	return int64(n), err
@@ -474,18 +459,8 @@ func (p NaturalPlus) WriteTo(out io.Writer) (int64, error) {
 	return int64(w1) + int64(w2) + int64(w3), err
 }
 
-func (integer) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprint(out, "Integer")
-	return int64(n), err
-}
-
 func (i IntegerLit) WriteTo(out io.Writer) (int64, error) {
 	n, err := fmt.Fprintf(out, "%d", i)
-	return int64(n), err
-}
-
-func (list) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprint(out, "List")
 	return int64(n), err
 }
 
@@ -560,10 +535,10 @@ func (app *App) Normalize() Expr {
 
 func (a Annot) Normalize() Expr { return a.Expr.Normalize() }
 
-func (d double) Normalize() Expr    { return d }
+func (t BuiltinType) Normalize() Expr { return t }
+
 func (d DoubleLit) Normalize() Expr { return d }
 
-func (n boolean) Normalize() Expr { return n }
 func (n BoolLit) Normalize() Expr { return n }
 func (b BoolIf) Normalize() Expr {
 	cond := b.Cond.Normalize()
@@ -574,7 +549,6 @@ func (b BoolIf) Normalize() Expr {
 	}
 }
 
-func (n natural) Normalize() Expr    { return n }
 func (n NaturalLit) Normalize() Expr { return n }
 func (p NaturalPlus) Normalize() Expr {
 	L := p.L.Normalize().(NaturalLit)
@@ -582,10 +556,8 @@ func (p NaturalPlus) Normalize() Expr {
 	return NaturalLit(int(L) + int(R))
 }
 
-func (i integer) Normalize() Expr    { return i }
 func (i IntegerLit) Normalize() Expr { return i }
 
-func (l list) Normalize() Expr      { return l }
 func (l EmptyList) Normalize() Expr { return EmptyList{l.Type.Normalize()} }
 func (l NonEmptyList) Normalize() Expr {
 	exprs := []Expr(l)

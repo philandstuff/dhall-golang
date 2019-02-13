@@ -122,11 +122,24 @@ func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
 	return t2, nil
 }
 
-func (double) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
+func (t BuiltinType) TypeWith(*TypeContext) (Expr, error) {
+	switch t {
+	case Double:
+		return Type, nil
+	case Bool:
+		return Type, nil
+	case Natural:
+		return Type, nil
+	case Integer:
+		return Type, nil
+	case List:
+		return &Pi{"_", Type, Type}, nil
+	default:
+		panic(fmt.Sprintf("unknown type %d\n", t))
+	}
+}
 
 func (DoubleLit) TypeWith(*TypeContext) (Expr, error) { return Double, nil }
-
-func (boolean) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
 
 func (BoolLit) TypeWith(*TypeContext) (Expr, error) { return Bool, nil }
 
@@ -166,8 +179,6 @@ func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
 	return tType, nil
 }
 
-func (natural) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
-
 func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
 
 func (p NaturalPlus) TypeWith(ctx *TypeContext) (Expr, error) {
@@ -190,11 +201,7 @@ func (p NaturalPlus) TypeWith(ctx *TypeContext) (Expr, error) {
 	return Natural, nil
 }
 
-func (integer) TypeWith(*TypeContext) (Expr, error) { return Type, nil }
-
 func (IntegerLit) TypeWith(*TypeContext) (Expr, error) { return Integer, nil }
-
-func (list) TypeWith(*TypeContext) (Expr, error) { return &Pi{"_", Type, Type}, nil }
 
 func (l EmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 	t := l.Type
