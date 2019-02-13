@@ -1,12 +1,16 @@
 package main_test
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/ugorji/go/codec"
 )
 
 var expectedFailures = []string{
@@ -15,6 +19,9 @@ var expectedFailures = []string{
 	"TestParserAccepts/builtinsA.dhall",
 	"TestParserAccepts/collectionImportTypeA.dhall",
 	"TestParserAccepts/constructorsA.dhall",
+	// hopefully dhall-lang/dhall-lang#372 will fix this
+	// although I suspect floating-point precision may still bite
+	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/doubleQuotedStringA.dhall",
 	"TestParserAccepts/environmentVariablesA.dhall",
 	"TestParserAccepts/escapedDoubleQuotedStringA.dhall",
@@ -38,6 +45,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/reservedPrefixA.dhall", // requires let
 	"TestParserAccepts/singleQuotedStringA.dhall",
 	"TestParserAccepts/templateA.dhall",
+	"TestParserAccepts/unicodePathsA.dhall",
 	"TestParserAccepts/unicodeDoubleQuotedStringA.dhall",
 	"TestParserAccepts/unionA.dhall",
 	"TestParserAccepts/urlsA.dhall",
@@ -64,16 +72,20 @@ func failf(t *testing.T, format string, args ...interface{}) {
 func expectError(t *testing.T, err error) {
 	if err == nil {
 		failf(t, "Expected file to fail to parse, but it parsed successfully")
-	} else {
-		pass(t)
 	}
 }
 
 func expectNoError(t *testing.T, err error) {
 	if err != nil {
 		failf(t, "Expected file to parse successfully, but got error %v", err)
-	} else {
+	}
+}
+
+func expectEqual(t *testing.T, expected, actual interface{}) {
+	if reflect.DeepEqual(expected, actual) {
 		pass(t)
+	} else {
+		failf(t, "Expected %+v to equal %+v", actual, expected)
 	}
 }
 
@@ -105,19 +117,39 @@ func TestParserAccepts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't read dhall-lang tests: %v\n(Have you pulled submodules?)\n", err)
 	}
+	var cbor codec.CborHandle
+	var json codec.JsonHandle
 
-	for _, f := range files {
-		reader, openerr := os.Open(f)
-		name := filepath.Base(f)
-		defer reader.Close()
-		if openerr != nil {
-			t.Fatal(openerr)
+	for _, aName := range files {
+		name := filepath.Base(aName)
+		bName := strings.Replace(aName, "A.dhall", "B.json", 1)
+		aReader, err := os.Open(aName)
+		defer aReader.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		bReader, err := os.Open(bName)
+		defer bReader.Close()
+		if err != nil {
+			t.Fatal(err)
 		}
 		t.Run(name, func(t *testing.T) {
-
-			_, err := parser.ParseReader(name, reader)
-
+			buf := new(bytes.Buffer)
+			parsed, err := parser.ParseReader(name, aReader)
 			expectNoError(t, err)
+			aEnc := codec.NewEncoder(buf, &cbor)
+			err = aEnc.Encode(parsed)
+			expectNoError(t, err)
+			aDec := codec.NewDecoder(buf, &cbor)
+			var actual interface{}
+			err = aDec.Decode(&actual)
+			expectNoError(t, err)
+
+			bDec := codec.NewDecoder(bReader, &json)
+			var expected interface{}
+			err = bDec.Decode(&expected)
+			expectNoError(t, err)
+			expectEqual(t, expected, actual)
 		})
 	}
 }
