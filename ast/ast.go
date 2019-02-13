@@ -110,7 +110,6 @@ const (
 	Sort Const = Const(iota)
 )
 
-// FIXME placeholder before we actually implement it
 func Shift(d int, v Var, e Expr) Expr {
 	switch e := e.(type) {
 	case Const:
