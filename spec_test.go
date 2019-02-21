@@ -32,7 +32,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/interpolatedSingleQuotedStringA.dhall",
 	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/mergeA.dhall",
-	"TestParserAccepts/multiletA.dhall",
 	"TestParserAccepts/operatorsA.dhall",
 	"TestParserAccepts/parenthesizeUsingA.dhall",
 	"TestParserAccepts/pathTerminationA.dhall",
