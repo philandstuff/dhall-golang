@@ -119,6 +119,19 @@ var _ = Describe("Expression", func() {
 					"foo", Var{"bar", 0}, Var{"baz", 0}},
 				Var{"quux", 0}}),
 	)
+	DescribeTable("lets", ParseAndCompare,
+		Entry("simple let",
+			`let x = y in z`,
+			MakeLet(Var{"z", 0}, Binding{
+				Variable: "x", Value: Var{"y", 0},
+			})),
+		Entry("lambda application",
+			`(λ(foo : bar) → baz) quux`,
+			&App{
+				&LambdaExpr{
+					"foo", Var{"bar", 0}, Var{"baz", 0}},
+				Var{"quux", 0}}),
+	)
 	Describe("Expected failures", func() {
 		// these keywords should fail to parse unless they're part of
 		// a larger expression

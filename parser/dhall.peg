@@ -136,12 +136,34 @@ IdentifierReservedPrefix ←
 // pigeon when we want to enforce nonempty whitespace (such as in ImportExpression)
 // but the previous Whitespace rule has greedily consumed all the whitespace.
 
+LetBinding ← "let" _ label:Label a:Annotation? _ '=' _ v:Expression _ {
+    if a != nil {
+        return ast.Binding{
+            Variable: label.(string),
+            Annotation: a.(ast.Expr),
+            Value: v.(ast.Expr),
+        }, nil
+    } else {
+        return ast.Binding{
+            Variable: label.(string),
+            Value: v.(ast.Expr),
+        }, nil
+    }
+}
+
 Expression ←
       Lambda _ '(' _ label:Label _ ColonSpace t:Expression _ ')' _ Arrow _ body:Expression {
           return &ast.LambdaExpr{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
       }
     / "if" _ cond:Expression _ "then" _ t:Expression _ "else" _ f:Expression {
           return ast.BoolIf{cond.(ast.Expr),t.(ast.Expr),f.(ast.Expr)},nil
+      }
+    / bindings:LetBinding* "in" _ b:Expression {
+        bs := make([]ast.Binding, len(bindings.([]interface{})))
+        for i, binding := range bindings.([]interface{}) {
+            bs[i] = binding.(ast.Binding)
+        }
+        return ast.MakeLet(b.(ast.Expr), bs...), nil
       }
     / Forall _ '(' _ label:Label _ ColonSpace t:Expression _ ')' _ Arrow _ body:Expression {
           return &ast.Pi{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil

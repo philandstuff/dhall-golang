@@ -63,6 +63,15 @@ var _ = DescribeTable("Shift",
 	Entry("Shift(1, x, [] : List Natural) = [] : List Natural", Shift(1, x(0), EmptyList{Natural}), EmptyList{Natural}),
 	Entry("Shift(1, x, [x]) = [x@1]", Shift(1, x(0), MakeList(Var{"x", 0})), MakeList(Var{"x", 1})),
 	Entry("Shift(1, x, if x then x else x) = if x@1 then x@1 else x@1", Shift(1, x(0), BoolIf{x(0), x(0), x(0)}), BoolIf{x(1), x(1), x(1)}),
+	Entry("Shift(1, x, let x = 3 in x) = let x = 3 in x",
+		Shift(1, x(0), MakeLet(x(0), Binding{Variable: "x", Value: NaturalLit(3)})),
+		MakeLet(x(0), Binding{Variable: "x", Value: NaturalLit(3)})),
+	Entry("Shift(1, x, let x = 3 in x@1) = let x = 3 in x@2",
+		Shift(1, x(0), MakeLet(x(1), Binding{Variable: "x", Value: NaturalLit(3)})),
+		MakeLet(x(2), Binding{Variable: "x", Value: NaturalLit(3)})),
+	Entry("Shift(1, x, let y : x = 3 in y) = let y : x@1 = 3 in y",
+		Shift(1, x(0), MakeLet(y(0), Binding{Variable: "y", Annotation: x(0), Value: NaturalLit(3)})),
+		MakeLet(y(0), Binding{Variable: "y", Annotation: x(1), Value: NaturalLit(3)})),
 )
 
 var _ = DescribeTable("Subst",
@@ -88,6 +97,15 @@ var _ = DescribeTable("Subst",
 	Entry("Subst(x, 3, [x]) = [3]", Subst(x(0), NaturalLit(3), MakeList(x(0))), MakeList(NaturalLit(3))),
 	Entry("Subst(x, 3, if True then x else x) = if True then 3 else 3", Subst(x(0), NaturalLit(3), BoolIf{True, x(0), x(0)}), BoolIf{True, NaturalLit(3), NaturalLit(3)}),
 	Entry("Subst(x, True, if x then 3 else 4) = if True then 3 else 4", Subst(x(0), True, BoolIf{x(0), NaturalLit(3), NaturalLit(4)}), BoolIf{True, NaturalLit(3), NaturalLit(4)}),
+	Entry("Subst(x, 10, let x = 3 in x) = let x = 3 in x",
+		Subst(x(0), NaturalLit(10), MakeLet(x(0), Binding{Variable: "x", Value: NaturalLit(3)})),
+		MakeLet(x(0), Binding{Variable: "x", Value: NaturalLit(3)})),
+	Entry("Subst(x, 10, let x = 3 in x@1) = let x = 3 in 10",
+		Subst(x(0), NaturalLit(10), MakeLet(x(1), Binding{Variable: "x", Value: NaturalLit(3)})),
+		MakeLet(NaturalLit(10), Binding{Variable: "x", Value: NaturalLit(3)})),
+	Entry("Subst(x, Natural, let y : x = 3 in y) = let y : Natural = 3 in y",
+		Subst(x(0), Natural, MakeLet(y(0), Binding{Variable: "y", Annotation: x(0), Value: NaturalLit(3)})),
+		MakeLet(y(0), Binding{Variable: "y", Annotation: Natural, Value: NaturalLit(3)})),
 )
 
 var _ = Describe("Normalize", func() {
@@ -114,5 +132,8 @@ var _ = Describe("Normalize", func() {
 			EmptyList{Natural}),
 		Entry("if True then 3 else 4 » 3", BoolIf{True, NaturalLit(3), NaturalLit(4)}, NaturalLit(3)),
 		Entry("if False then 3 else 4 » 4", BoolIf{False, NaturalLit(3), NaturalLit(4)}, NaturalLit(4)),
+		Entry("let x = 3 in x » 3", MakeLet(x(0), Binding{Variable: "x", Value: NaturalLit(3)}), NaturalLit(3)),
+		Entry("let x = 3 let y = x in y » 3",
+			MakeLet(y(0), Binding{Variable: "x", Value: NaturalLit(3)}, Binding{Variable: "y", Value: x(0)}), NaturalLit(3)),
 	)
 })

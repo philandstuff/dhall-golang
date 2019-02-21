@@ -74,6 +74,16 @@ type (
 		Arg Expr
 	}
 
+	Binding struct {
+		Variable   string
+		Annotation Expr // may be nil
+		Value      Expr
+	}
+	Let struct {
+		Bindings []Binding
+		Body     Expr
+	}
+
 	Annot struct {
 		Expr       Expr
 		Annotation Expr
@@ -149,6 +159,19 @@ func Shift(d int, v Var, e Expr) Expr {
 			Fn:  Shift(d, v, e.Fn),
 			Arg: Shift(d, v, e.Arg),
 		}
+	case Let:
+		newBindings := make([]Binding, len(e.Bindings))
+		for i, binding := range e.Bindings {
+			newBindings[i].Variable = binding.Variable
+			if binding.Annotation != nil {
+				newBindings[i].Annotation = Shift(d, v, binding.Annotation)
+			}
+			newBindings[i].Value = Shift(d, v, binding.Value)
+			if v.Name == binding.Variable {
+				v.Index++
+			}
+		}
+		return Let{Bindings: newBindings, Body: Shift(d, v, e.Body)}
 	case Annot:
 		return Annot{Shift(d, v, e.Expr), Shift(d, v, e.Annotation)}
 	case BuiltinType:
@@ -217,6 +240,19 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Fn:  Subst(v, c, e.Fn),
 			Arg: Subst(v, c, e.Arg),
 		}
+	case Let:
+		newBindings := make([]Binding, len(e.Bindings))
+		for i, binding := range e.Bindings {
+			newBindings[i].Variable = binding.Variable
+			if binding.Annotation != nil {
+				newBindings[i].Annotation = Subst(v, c, binding.Annotation)
+			}
+			newBindings[i].Value = Subst(v, c, binding.Value)
+			if v.Name == binding.Variable {
+				v.Index++
+			}
+		}
+		return Let{Bindings: newBindings, Body: Subst(v, c, e.Body)}
 	case Annot:
 		return Annot{Subst(v, c, e.Expr), Subst(v, c, e.Annotation)}
 	case BuiltinType:
@@ -275,12 +311,17 @@ func MakeList(first Expr, rest ...Expr) NonEmptyList {
 	return NonEmptyList(append([]Expr{first}, rest...))
 }
 
+func MakeLet(body Expr, bindings ...Binding) Let {
+	return Let{Bindings: bindings, Body: body}
+}
+
 var (
 	_ Expr = Type
 	_ Expr = &Var{}
 	_ Expr = &LambdaExpr{}
 	_ Expr = &Pi{}
 	_ Expr = &App{}
+	_ Expr = Let{}
 	_ Expr = Annot{}
 	_ Expr = Double
 	_ Expr = DoubleLit(3.0)
@@ -365,6 +406,10 @@ func (app *App) WriteTo(out io.Writer) (int64, error) {
 	}
 	w3, err := app.Arg.WriteTo(out)
 	return int64(w1) + int64(w2) + int64(w3), err
+}
+
+func (l Let) WriteTo(out io.Writer) (int64, error) {
+	panic("unimplemented")
 }
 
 func (a Annot) WriteTo(out io.Writer) (int64, error) {
@@ -530,6 +575,23 @@ func (app *App) Normalize() Expr {
 		return b2.Normalize()
 	}
 	return app
+}
+
+func (l Let) Normalize() Expr {
+	binding := l.Bindings[0]
+	x := binding.Variable
+	a1 := binding.Value.Normalize()
+	a2 := Shift(1, Var{x, 0}, a1)
+
+	rest := l.Body
+	if len(l.Bindings) > 1 {
+		rest = Let{Bindings: l.Bindings[1:], Body: l.Body}
+	}
+	rest = rest.Normalize()
+
+	b1 := Subst(Var{x, 0}, a2, rest)
+	b2 := Shift(-1, Var{x, 0}, b1)
+	return b2.Normalize()
 }
 
 func (a Annot) Normalize() Expr { return a.Expr.Normalize() }

@@ -30,9 +30,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/importAltA.dhall",
 	"TestParserAccepts/interpolatedDoubleQuotedStringA.dhall",
 	"TestParserAccepts/interpolatedSingleQuotedStringA.dhall",
-	"TestParserAccepts/labelA.dhall", // requires let
 	"TestParserAccepts/largeExpressionA.dhall",
-	"TestParserAccepts/letA.dhall",
 	"TestParserAccepts/mergeA.dhall",
 	"TestParserAccepts/multiletA.dhall",
 	"TestParserAccepts/operatorsA.dhall",
@@ -42,7 +40,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/quotedLabelA.dhall",
 	"TestParserAccepts/quotedPathsA.dhall",
 	"TestParserAccepts/recordA.dhall",
-	"TestParserAccepts/reservedPrefixA.dhall", // requires let
 	"TestParserAccepts/singleQuotedStringA.dhall",
 	"TestParserAccepts/templateA.dhall",
 	"TestParserAccepts/unicodePathsA.dhall",

@@ -67,6 +67,16 @@ var _ = Describe("TypeCheck in empty context", func() {
 			&App{List, Natural}),
 		Entry("if True then 3 else 4 : Natural",
 			BoolIf{True, NaturalLit(3), NaturalLit(4)}, Natural),
+		Entry("let x = 3 in x : Natural",
+			MakeLet(Var{"x", 0}, Binding{Variable: "x", Value: NaturalLit(3)}),
+			Natural),
+		Entry("let x = True in 3 : Natural",
+			MakeLet(NaturalLit(3), Binding{Variable: "x", Value: True}),
+			Natural),
+		// Below case from https://github.com/dhall-lang/dhall-lang/pull/69
+		Entry("(let x = Natural in 1 : x) : Natural",
+			MakeLet(Annot{NaturalLit(1), Var{"x", 0}}, Binding{Variable: "x", Value: Natural}),
+			Natural),
 	)
 	DescribeTable("Type errors",
 		func(in Expr) {
@@ -78,5 +88,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("if True then 3 else +4", BoolIf{True, NaturalLit(3), IntegerLit(4)}),
 		Entry("if 2 then 3 else 4", BoolIf{NaturalLit(3), NaturalLit(3), NaturalLit(4)}),
 		Entry("if True then Type else (Type -> Type)", BoolIf{True, Type, &Pi{"_", Type, Type}}),
+		Entry("let x : Bool = 3 in 5", MakeLet(NaturalLit(5),
+			Binding{Variable: "x", Annotation: Bool, Value: NaturalLit(3)})),
 	)
 })

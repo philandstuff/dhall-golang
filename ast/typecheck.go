@@ -102,6 +102,41 @@ func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 	}
 }
 
+func (l Let) TypeWith(ctx *TypeContext) (Expr, error) {
+	binding := l.Bindings[0]
+	x := binding.Variable
+	a1 := binding.Value.Normalize()
+	valueType, err := binding.Value.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if binding.Annotation != nil {
+		_, err := binding.Annotation.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if !judgmentallyEqual(binding.Annotation, valueType) {
+			return nil, errors.New("type doesn't match annotation in let")
+		}
+	}
+
+	// TODO: optimization where binding.Value is a term
+	a2 := Shift(1, Var{x, 0}, a1)
+
+	rest := l.Body
+	if len(l.Bindings) > 1 {
+		rest = Let{Bindings: l.Bindings[1:], Body: l.Body}
+	}
+
+	b1 := Subst(Var{x, 0}, a2, rest)
+	b2 := Shift(-1, Var{x, 0}, b1)
+	retval, err := b2.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return retval, nil
+}
+
 func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
 	_, err := a.Annotation.TypeWith(ctx)
 	if err != nil {

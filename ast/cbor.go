@@ -11,6 +11,7 @@ var _ codec.Selfer = Var{}
 var _ codec.Selfer = &LambdaExpr{}
 var _ codec.Selfer = &Pi{}
 var _ codec.Selfer = &App{}
+var _ codec.Selfer = Let{}
 var _ codec.Selfer = Annot{}
 var _ codec.Selfer = Double // BuiltinType
 var _ codec.Selfer = BoolIf{}
@@ -62,6 +63,18 @@ func (a *App) CodecEncodeSelf(e *codec.Encoder) {
 	args := []interface{}{a.Arg}
 	// FIXME: support multi-arg application
 	e.Encode(append([]interface{}{0, a.Fn}, args...))
+}
+
+func (l Let) CodecEncodeSelf(e *codec.Encoder) {
+	output := make([]interface{}, len(l.Bindings)*3+2)
+	output[0] = 25
+	for i, binding := range l.Bindings {
+		output[3*i+1] = binding.Variable
+		output[3*i+2] = binding.Annotation
+		output[3*i+3] = binding.Value
+	}
+	output[len(output)-1] = l.Body
+	e.Encode(output)
 }
 
 func (a Annot) CodecEncodeSelf(e *codec.Encoder) {
@@ -118,6 +131,7 @@ func (Var) CodecDecodeSelf(*codec.Decoder)          {}
 func (*LambdaExpr) CodecDecodeSelf(*codec.Decoder)  {}
 func (*Pi) CodecDecodeSelf(*codec.Decoder)          {}
 func (*App) CodecDecodeSelf(*codec.Decoder)         {}
+func (Let) CodecDecodeSelf(*codec.Decoder)          {}
 func (Annot) CodecDecodeSelf(*codec.Decoder)        {}
 func (BuiltinType) CodecDecodeSelf(*codec.Decoder)  {}
 func (BoolIf) CodecDecodeSelf(*codec.Decoder)       {}
