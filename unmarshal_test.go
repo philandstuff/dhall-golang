@@ -22,8 +22,12 @@ var _ = Describe("Unmarshal", func() {
 	DescribeTable("Simple types", UnmarshalAndCompare,
 		Entry("unmarshals NaturalLit into *int",
 			ast.NaturalLit(5), new(int), 5),
+		Entry("unmarshals NaturalLit into *int64",
+			ast.NaturalLit(5), new(int64), int64(5)),
 		Entry("unmarshals IntegerLit into *int",
 			ast.IntegerLit(5), new(int), 5),
+		Entry("unmarshals IntegerLit into *int",
+			ast.IntegerLit(5), new(int64), int64(5)),
 	)
 	DescribeTable("Compound types", UnmarshalAndCompare,
 		Entry("unmarshals List Integer into slice",
