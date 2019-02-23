@@ -44,5 +44,9 @@ var _ = Describe("Unmarshal", func() {
 			ast.MakeList(ast.True, ast.False),
 			new([]bool),
 			[]bool{true, false}),
+		Entry("unmarshals List (List Bool) into slice",
+			ast.MakeList(ast.MakeList(ast.True, ast.False)),
+			new([][]bool),
+			[][]bool{[]bool{true, false}}),
 	)
 })
