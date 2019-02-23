@@ -115,9 +115,9 @@ type (
 )
 
 const (
-	Type Const = Const(iota)
-	Kind Const = Const(iota)
-	Sort Const = Const(iota)
+	Type Const = iota
+	Kind
+	Sort
 )
 
 func Shift(d int, v Var, e Expr) Expr {
@@ -295,11 +295,11 @@ func Rule(a Const, b Const) (Const, error) {
 }
 
 const (
-	Double  = BuiltinType(iota)
-	Bool    = BuiltinType(iota)
-	Natural = BuiltinType(iota)
-	Integer = BuiltinType(iota)
-	List    = BuiltinType(iota)
+	Double BuiltinType = iota
+	Bool
+	Natural
+	Integer
+	List
 )
 
 const (
