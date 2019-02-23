@@ -20,6 +20,10 @@ func UnmarshalAndCompare(input ast.Expr, ptr interface{}, expected interface{}) 
 
 var _ = Describe("Unmarshal", func() {
 	DescribeTable("Simple types", UnmarshalAndCompare,
+		Entry("unmarshals DoubleLit into *float32",
+			ast.DoubleLit(3.5), new(float32), float32(3.5)),
+		Entry("unmarshals DoubleLit into *float64",
+			ast.DoubleLit(3.5), new(float64), float64(3.5)),
 		Entry("unmarshals True into *bool",
 			ast.True, new(bool), true),
 		Entry("unmarshals NaturalLit into *int",

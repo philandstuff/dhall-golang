@@ -49,6 +49,8 @@ func unmarshal(e ast.Expr, v reflect.Value) {
 		return
 	}
 	switch e := e.(type) {
+	case ast.DoubleLit:
+		v.SetFloat(float64(e))
 	case ast.BoolLit:
 		v.SetBool(bool(e))
 	case ast.NaturalLit:
