@@ -48,13 +48,22 @@ func reflectValToDhallVal(val reflect.Value, typ ast.Expr) ast.Expr {
 	}
 }
 
+func argNType(fn *ast.LambdaExpr, n int) ast.Expr {
+	if n == 0 {
+		return fn.Type
+	}
+	return argNType(fn.Body.(*ast.LambdaExpr), n-1)
+}
+
 func dhallShim(in []reflect.Type, out reflect.Type, dhallFunc *ast.LambdaExpr) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
-		arg := args[0]
-		dhallArg := reflectValToDhallVal(arg, dhallFunc.Type)
-		app := &ast.App{Fn: dhallFunc, Arg: dhallArg}
+		var expr ast.Expr = dhallFunc
+		for i, arg := range args {
+			dhallArg := reflectValToDhallVal(arg, argNType(dhallFunc, i))
+			expr = &ast.App{Fn: expr, Arg: dhallArg}
+		}
 		ptr := reflect.New(out)
-		unmarshal(app.Normalize(), ptr.Elem())
+		unmarshal(expr.Normalize(), ptr.Elem())
 		return []reflect.Value{ptr.Elem()}
 	}
 }

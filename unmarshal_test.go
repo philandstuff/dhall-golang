@@ -90,5 +90,23 @@ var _ = Describe("Unmarshal", func() {
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(3)).To(Equal(4))
 		})
+		It("Unmarshals the natural sum function", func() {
+			var fn func(int, int) int
+			dhallFn := &ast.LambdaExpr{
+				Label: "x",
+				Type:  ast.Natural,
+				Body: &ast.LambdaExpr{
+					Label: "y",
+					Type:  ast.Natural,
+					Body: ast.NaturalPlus{
+						L: ast.Var{Name: "x"},
+						R: ast.Var{Name: "y"},
+					},
+				},
+			}
+			Unmarshal(dhallFn, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn(3, 4)).To(Equal(7))
+		})
 	})
 })
