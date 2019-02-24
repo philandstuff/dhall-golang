@@ -55,7 +55,7 @@ func argNType(fn *ast.LambdaExpr, n int) ast.Expr {
 	return argNType(fn.Body.(*ast.LambdaExpr), n-1)
 }
 
-func dhallShim(in []reflect.Type, out reflect.Type, dhallFunc *ast.LambdaExpr) func([]reflect.Value) []reflect.Value {
+func dhallShim(out reflect.Type, dhallFunc *ast.LambdaExpr) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
 		var expr ast.Expr = dhallFunc
 		for i, arg := range args {
@@ -72,9 +72,8 @@ func unmarshal(e ast.Expr, v reflect.Value) {
 	switch e := e.(type) {
 	case *ast.LambdaExpr:
 		fnType := v.Type()
-		argType := fnType.In(0)
 		returnType := fnType.Out(0)
-		fn := reflect.MakeFunc(fnType, dhallShim([]reflect.Type{argType}, returnType, e))
+		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e))
 		v.Set(fn)
 	case ast.DoubleLit:
 		v.SetFloat(float64(e))
