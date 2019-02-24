@@ -612,9 +612,21 @@ func (b BoolIf) Normalize() Expr {
 
 func (n NaturalLit) Normalize() Expr { return n }
 func (p NaturalPlus) Normalize() Expr {
-	L := p.L.Normalize().(NaturalLit)
-	R := p.R.Normalize().(NaturalLit)
-	return NaturalLit(int(L) + int(R))
+	L := p.L.Normalize()
+	R := p.R.Normalize()
+
+	Ln, Lok := L.(NaturalLit)
+	Rn, Rok := R.(NaturalLit)
+
+	if Lok && Rok {
+		return NaturalLit(int(Ln) + int(Rn))
+	} else if Lok && int(Ln) == 0 {
+		return R
+	} else if Rok && int(Rn) == 0 {
+		return L
+	} else {
+		return NaturalPlus{L: L, R: R}
+	}
 }
 
 func (i IntegerLit) Normalize() Expr { return i }

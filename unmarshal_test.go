@@ -53,4 +53,42 @@ var _ = Describe("Unmarshal", func() {
 			new([][]bool),
 			[][]bool{[]bool{true, false}}),
 	)
+	Describe("Function types", func() {
+		It("Unmarshals the identity int function", func() {
+			var fn func(int) int
+			dhallFn := &ast.LambdaExpr{
+				Label: "x",
+				Type:  ast.Natural,
+				Body:  ast.Var{Name: "x"},
+			}
+			Unmarshal(dhallFn, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn(3)).To(Equal(3))
+		})
+		It("Unmarshals the identity int64 function", func() {
+			var fn func(int64) int64
+			dhallFn := &ast.LambdaExpr{
+				Label: "x",
+				Type:  ast.Natural,
+				Body:  ast.Var{Name: "x"},
+			}
+			Unmarshal(dhallFn, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn(int64(3))).To(Equal(int64(3)))
+		})
+		It("Unmarshals the int successor function", func() {
+			var fn func(int) int
+			dhallFn := &ast.LambdaExpr{
+				Label: "x",
+				Type:  ast.Natural,
+				Body: ast.NaturalPlus{
+					L: ast.Var{Name: "x"},
+					R: ast.NaturalLit(1),
+				},
+			}
+			Unmarshal(dhallFn, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn(3)).To(Equal(4))
+		})
+	})
 })
