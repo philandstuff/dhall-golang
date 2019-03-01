@@ -27,7 +27,8 @@ func main() {
 	}
 	inferredType.WriteTo(os.Stderr)
 	fmt.Fprintln(os.Stderr)
-	//resolvedExpr.Normalize().WriteTo(os.Stdout)
+	resolvedExpr.Normalize().WriteTo(os.Stdout)
+	fmt.Println()
 	var ch codec.CborHandle
 	var buf = new(bytes.Buffer)
 	enc := codec.NewEncoder(buf, &ch)
