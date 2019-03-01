@@ -19,9 +19,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/builtinsA.dhall",
 	"TestParserAccepts/collectionImportTypeA.dhall",
 	"TestParserAccepts/constructorsA.dhall",
-	// hopefully dhall-lang/dhall-lang#372 will fix this
-	// although I suspect floating-point precision may still bite
-	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/doubleQuotedStringA.dhall",
 	"TestParserAccepts/environmentVariablesA.dhall",
 	"TestParserAccepts/escapedDoubleQuotedStringA.dhall",
