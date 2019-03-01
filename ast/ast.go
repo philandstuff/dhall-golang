@@ -356,8 +356,9 @@ func (v Var) WriteTo(out io.Writer) (int64, error) {
 	var err error
 	if v.Index == 0 {
 		n, err = fmt.Fprint(out, v.Name)
+	} else {
+		n, err = fmt.Fprintf(out, "%s@%d", v.Name, v.Index)
 	}
-	n, err = fmt.Fprintf(out, "%s@%d", v.Name, v.Index)
 	return int64(n), err
 }
 
