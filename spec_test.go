@@ -108,6 +108,20 @@ func expectEqual(t *testing.T, expected, actual interface{}) {
 	}
 }
 
+func expectEqualExprs(t *testing.T, expected, actual ast.Expr) {
+	t.Helper()
+	if reflect.DeepEqual(expected, actual) {
+		pass(t)
+	} else {
+		buf := new(bytes.Buffer)
+		buf.Write([]byte("Expected "))
+		actual.WriteTo(buf)
+		buf.Write([]byte(" to equal "))
+		expected.WriteTo(buf)
+		failf(t, buf.String())
+	}
+}
+
 func runTestOnEachFile(
 	t *testing.T,
 	dir string,
@@ -238,6 +252,6 @@ func TestTypechecks(t *testing.T) {
 
 			typeOfA, err := parsedA.(ast.Expr).TypeWith(ast.EmptyContext())
 			expectNoError(t, err)
-			expectEqual(t, typeOfA, parsedB)
+			expectEqualExprs(t, parsedB.(ast.Expr), typeOfA)
 		})
 }
