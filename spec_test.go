@@ -47,8 +47,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/duplicateFields.dhall",
 	"TestTypecheckFails/mixedUnions.dhall",
 	"TestTypecheckFails/preferMixedRecords.dhall",
-	// FIXME: accessEncodedTypeA parses, so why doesn't it typecheck?
-	"TestTypechecks/accessEncodedTypeA.dhall",
 	"TestTypechecks/accessTypeA.dhall",
 	"TestTypechecks/prelude",
 	"TestTypechecks/recordOfRecordOfTypesA.dhall",
@@ -86,6 +84,7 @@ func expectError(t *testing.T, err error) {
 	if err == nil {
 		failf(t, "Expected file to fail to parse, but it parsed successfully")
 	}
+	pass(t)
 }
 
 func expectNoError(t *testing.T, err error) {
@@ -93,6 +92,7 @@ func expectNoError(t *testing.T, err error) {
 	if err != nil {
 		failf(t, "Expected file to parse successfully, but got error %v", err)
 	}
+	pass(t)
 }
 
 func expectEqual(t *testing.T, expected, actual interface{}) {
