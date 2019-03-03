@@ -13,6 +13,20 @@ func judgmentallyEqual(e1 Expr, e2 Expr) bool {
 	return reflect.DeepEqual(ne1, ne2)
 }
 
+// assert that a type is exactly expectedType (no judgmentallyEqual
+// here)
+func assertSimpleType(ctx *TypeContext, expr, expectedType Expr) error {
+	actualType, err := expr.TypeWith(ctx)
+	if err != nil {
+		return err
+	}
+	actualType = actualType.Normalize()
+	if actualType != expectedType {
+		return fmt.Errorf("Expecting a %v, got %v", expectedType, actualType)
+	}
+	return nil
+}
+
 func (c Const) TypeWith(*TypeContext) (Expr, error) {
 	if c == Type {
 		return Kind, nil
@@ -215,21 +229,13 @@ func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
 func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
 
 func (p NaturalPlus) TypeWith(ctx *TypeContext) (Expr, error) {
-	L, err := p.L.TypeWith(ctx)
+	err := assertSimpleType(ctx, p.L, Natural)
 	if err != nil {
 		return nil, err
 	}
-	L = L.Normalize()
-	if L != Natural {
-		return nil, fmt.Errorf("Expecting a Natural, can't add %s", L)
-	}
-	R, err := p.R.TypeWith(ctx)
+	err = assertSimpleType(ctx, p.R, Natural)
 	if err != nil {
 		return nil, err
-	}
-	R = R.Normalize()
-	if R != Natural {
-		return nil, fmt.Errorf("Expecting a Natural, can't add %s", R)
 	}
 	return Natural, nil
 }
@@ -238,12 +244,9 @@ func (IntegerLit) TypeWith(*TypeContext) (Expr, error) { return Integer, nil }
 
 func (l EmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 	t := l.Type
-	k, err := t.TypeWith(ctx)
+	err := assertSimpleType(ctx, t, Type)
 	if err != nil {
 		return nil, err
-	}
-	if k.Normalize() != Type {
-		return nil, fmt.Errorf("List annotation %s is not a Type", t)
 	}
 	return &App{List, t}, nil
 }
@@ -254,9 +257,10 @@ func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	k, err := t.TypeWith(ctx)
-	if k.Normalize() != Type {
-		return nil, fmt.Errorf("Invalid type for List elements")
+
+	err = assertSimpleType(ctx, t, Type)
+	if err != nil {
+		return nil, err
 	}
 	for _, elem := range exprs[1:] {
 		t2, err := elem.TypeWith(ctx)
