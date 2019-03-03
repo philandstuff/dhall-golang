@@ -14,16 +14,13 @@ func expectType(in, expectedType Expr) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
-var _ = Describe("TypeCheck in empty context", func() {
-	It("Kind : Sort", func() {
-		// We can't typecheck this using expectType because it
-		// will fail by not finding a type for Sort
-		// so we have a custom test for this case
+func expectSort(in Expr) {
+	typ, err := in.TypeWith(EmptyContext())
+	Expect(err).ToNot(HaveOccurred())
+	Expect(typ).To(Equal(Sort))
+}
 
-		typ, err := Kind.TypeWith(EmptyContext())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(typ).To(Equal(Sort))
-	})
+var _ = Describe("TypeCheck in empty context", func() {
 	DescribeTable("Simple types",
 		expectType,
 		Entry("Type : Kind", Type, Kind),
@@ -90,6 +87,27 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("([3] : List Natural) : List Natural",
 			Annot{MakeList(NaturalLit(3)), &App{List, Natural}},
 			&App{List, Natural}),
+	)
+	DescribeTable("Records",
+		expectType,
+		Entry("{=} : {}",
+			RecordLit(map[string]Expr{}),
+			Record(map[string]Expr{})),
+		Entry("{} : Type",
+			Record(map[string]Expr{}),
+			Type),
+		Entry("{foo = 3} : {foo : Natural}",
+			RecordLit(map[string]Expr{"foo": NaturalLit(3)}),
+			Record(map[string]Expr{"foo": Natural})),
+		Entry("{foo = 3, bar = +4} : {foo : Natural, bar : Integer}",
+			RecordLit(map[string]Expr{"foo": NaturalLit(3), "bar": IntegerLit(4)}),
+			Record(map[string]Expr{"foo": Natural, "bar": Integer})),
+		Entry("{foo : Type} : Kind",
+			Record(map[string]Expr{"foo": Type}),
+			Kind),
+	)
+	DescribeTable("Other",
+		expectType,
 		Entry("if True then 3 else 4 : Natural",
 			BoolIf{True, NaturalLit(3), NaturalLit(4)}, Natural),
 		Entry("let x = 3 in x : Natural",
@@ -103,6 +121,15 @@ var _ = Describe("TypeCheck in empty context", func() {
 			MakeLet(Annot{NaturalLit(1), Var{"x", 0}}, Binding{Variable: "x", Value: Natural}),
 			Natural),
 	)
+	DescribeTable("Sorts",
+		// We can't typecheck sorts using expectType because
+		// it will fail by not finding a type for Sort so we
+		// have a custom function (expectSort instead of
+		// expectType) for this case
+		expectSort,
+		Entry("Kind", Kind),
+		Entry("{foo : Kind}", Record(map[string]Expr{"foo": Kind})),
+	)
 	DescribeTable("Type errors",
 		func(in Expr) {
 			_, err := in.TypeWith(EmptyContext())
@@ -115,5 +142,12 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("if True then Type else (Type -> Type)", BoolIf{True, Type, &Pi{"_", Type, Type}}),
 		Entry("let x : Bool = 3 in 5", MakeLet(NaturalLit(5),
 			Binding{Variable: "x", Annotation: Bool, Value: NaturalLit(3)})),
+		Entry("record types can't have Kind->Kind fields", Record(map[string]Expr{"foo": &Pi{Label: "_", Type: Kind, Body: Kind}})),
+		Entry("record types can't have terms as types", Record(map[string]Expr{"foo": NaturalLit(3)})),
+		Entry("record types can't mix types and kinds", Record(map[string]Expr{"foo": Natural, "bar": Type})),
+		Entry("record types can't mix kinds and sorts", Record(map[string]Expr{"foo": Type, "bar": Kind})),
+		Entry("record literals can't have Kind->Kind fields", RecordLit(map[string]Expr{"foo": &LambdaExpr{Label: "x", Type: Kind, Body: x(0)}})),
+		Entry("record literals can't mix types and kinds", RecordLit(map[string]Expr{"foo": NaturalLit(3), "bar": Natural})),
+		Entry("record literals can't mix kinds and sorts", RecordLit(map[string]Expr{"foo": Natural, "bar": Type})),
 	)
 })

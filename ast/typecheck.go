@@ -285,3 +285,70 @@ func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 	}
 	return &App{List, t}, nil
 }
+
+func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {
+	fields := map[string]Expr(r)
+	if len(fields) == 0 {
+		return Type, nil
+	}
+	var c Expr
+	first := true
+	for _, typ := range fields {
+		k, err := typ.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if first {
+			c = k
+			if _, ok := c.(Const); !ok {
+				return nil, errors.New("Invalid field type")
+			}
+		} else {
+			if c.Normalize() != k.Normalize() {
+				return nil, fmt.Errorf("can't mix %s and %s", c, k)
+			}
+		}
+		if c == Sort {
+			if typ.Normalize() != Kind {
+				return nil, errors.New("Invalid field type")
+			}
+		}
+		first = false
+	}
+	return c, nil
+}
+
+func (r RecordLit) TypeWith(ctx *TypeContext) (Expr, error) {
+	fields := map[string]Expr(r)
+	if len(fields) == 0 {
+		return Record(fields), nil
+	}
+	fieldTypes := make(map[string]Expr, len(fields))
+	var c Expr
+	first := true
+	for name, val := range fields {
+		typ, err := val.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		k, err := typ.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if first {
+			c = k
+		} else {
+			if c.Normalize() != k.Normalize() {
+				return nil, fmt.Errorf("can't mix %s and %s", c, k)
+			}
+		}
+		if c == Sort {
+			if typ.Normalize() != Kind {
+				return nil, errors.New("Invalid field type")
+			}
+		}
+		fieldTypes[name] = typ
+		first = false
+	}
+	return Record(fieldTypes), nil
+}

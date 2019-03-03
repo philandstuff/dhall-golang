@@ -39,7 +39,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/pathsA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
 	"TestParserAccepts/quotedPathsA.dhall",
-	"TestParserAccepts/recordA.dhall",
 	"TestParserAccepts/singleQuotedStringA.dhall",
 	"TestParserAccepts/templateA.dhall",
 	"TestParserAccepts/unicodePathsA.dhall",
@@ -216,7 +215,7 @@ func TestParserRejects(t *testing.T) {
 }
 
 func TestParserAccepts(t *testing.T) {
-	var cbor codec.CborHandle
+	cbor := ast.NewCborHandle()
 	runTestOnFilePairs(t, "dhall-lang/tests/parser/success/",
 		"A.dhall", "B.dhallb",
 		func(t *testing.T, aReader, bReader io.Reader) {

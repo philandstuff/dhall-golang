@@ -20,6 +20,14 @@ var _ codec.Selfer = NonEmptyList{}
 var _ codec.Selfer = NaturalLit(0)
 var _ codec.Selfer = NaturalPlus{}
 var _ codec.Selfer = IntegerLit(0)
+var _ codec.Selfer = Record(map[string]Expr{})
+var _ codec.Selfer = RecordLit(map[string]Expr{})
+
+func NewCborHandle() codec.CborHandle {
+	var h codec.CborHandle
+	h.Canonical = true
+	return h
+}
 
 func (t Const) CodecEncodeSelf(e *codec.Encoder) {
 	switch t {
@@ -130,6 +138,22 @@ func (l NonEmptyList) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode(output)
 }
 
+func (r Record) CodecEncodeSelf(e *codec.Encoder) {
+	items := map[string]Expr(r)
+	// we rely on the EncodeOptions having Canonical set
+	// so that we get sorted keys in our map
+	output := []interface{}{7, items}
+	e.Encode(output)
+}
+
+func (r RecordLit) CodecEncodeSelf(e *codec.Encoder) {
+	items := map[string]Expr(r)
+	// we rely on the EncodeOptions having Canonical set
+	// so that we get sorted keys in our map
+	output := []interface{}{8, items}
+	e.Encode(output)
+}
+
 // ignored
 func (Const) CodecDecodeSelf(*codec.Decoder)        {}
 func (Var) CodecDecodeSelf(*codec.Decoder)          {}
@@ -145,3 +169,5 @@ func (NaturalPlus) CodecDecodeSelf(*codec.Decoder)  {}
 func (IntegerLit) CodecDecodeSelf(*codec.Decoder)   {}
 func (EmptyList) CodecDecodeSelf(*codec.Decoder)    {}
 func (NonEmptyList) CodecDecodeSelf(*codec.Decoder) {}
+func (Record) CodecDecodeSelf(*codec.Decoder)       {}
+func (RecordLit) CodecDecodeSelf(*codec.Decoder)    {}

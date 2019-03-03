@@ -71,6 +71,14 @@ var _ = Describe("Expression", func() {
 		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Natural}),
 		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), &App{List, Natural}}),
 	)
+	DescribeTable("records", ParseAndCompare,
+		Entry("{}", `{}`, Record(map[string]Expr{})),
+		Entry("{=}", `{=}`, RecordLit(map[string]Expr{})),
+		Entry("{foo : Natural}", `{foo : Natural}`, Record(map[string]Expr{"foo": Natural})),
+		Entry("{foo = 3}", `{foo = 3}`, RecordLit(map[string]Expr{"foo": NaturalLit(3)})),
+		Entry("{foo : Natural, bar : Integer}", `{foo : Natural, bar: Integer}`, Record(map[string]Expr{"foo": Natural, "bar": Integer})),
+		Entry("{foo = 3 , bar = +3}", `{foo = 3 , bar = +3}`, RecordLit(map[string]Expr{"foo": NaturalLit(3), "bar": IntegerLit(3)})),
+	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {
 		root, err := parser.Parse("test", []byte(`NaN`))

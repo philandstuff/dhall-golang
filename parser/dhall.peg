@@ -230,16 +230,53 @@ PrimitiveExpression ←
     / NaturalLiteral
     / IntegerLiteral
     / "-Infinity" { return ast.DoubleLit(math.Inf(-1)), nil }
+    / '{' _ r:RecordTypeOrLiteral _ '}' { return r, nil }
     / NonEmptyListLiteral
     / IdentifierReservedPrefix
     / Reserved
     / Identifier
     / '(' _ e:Expression _ ')' { return e, nil }
 
-CommaExpression ← (',' _ e:Expression _) {return e, nil}
+RecordTypeOrLiteral ←
+      '=' { return ast.RecordLit(map[string]ast.Expr{}), nil }
+    / NonEmptyRecordType
+    / NonEmptyRecordLiteral
+    / "" { return ast.Record(map[string]ast.Expr{}), nil }
+
+RecordTypeField ← name:Label _ ColonSpace expr:Expression {
+    return []interface{}{name, expr}, nil
+}
+MoreRecordType ← _ ',' _ f:RecordTypeField {return f, nil}
+NonEmptyRecordType ←
+      first:RecordTypeField rest:MoreRecordType* {
+          fields := rest.([]interface{})
+          content := make(map[string]ast.Expr, len(fields)+1)
+          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(ast.Expr)
+          for _, field := range(fields) {
+              content[field.([]interface{})[0].(string)] = field.([]interface{})[1].(ast.Expr)
+          }
+          return ast.Record(content), nil
+      }
+
+RecordLiteralField ← name:Label _ '=' _ expr:Expression {
+    return []interface{}{name, expr}, nil
+}
+MoreRecordLiteral ← _ ',' _ f:RecordLiteralField {return f, nil}
+NonEmptyRecordLiteral ←
+      first:RecordLiteralField rest:MoreRecordLiteral* {
+          fields := rest.([]interface{})
+          content := make(map[string]ast.Expr, len(fields)+1)
+          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(ast.Expr)
+          for _, field := range(fields) {
+              content[field.([]interface{})[0].(string)] = field.([]interface{})[1].(ast.Expr)
+          }
+          return ast.RecordLit(content), nil
+      }
+
+MoreList ← ',' _ e:Expression _ {return e, nil}
 
 NonEmptyListLiteral ←
-      '[' _ first:Expression _ rest:CommaExpression* ']' {
+      '[' _ first:Expression _ rest:MoreList* ']' {
           exprs := rest.([]interface{})
           content := make([]ast.Expr, len(exprs)+1)
           content[0] = first.(ast.Expr)

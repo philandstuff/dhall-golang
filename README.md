@@ -39,7 +39,7 @@ Go bindings for dhall.
    - [ ] Text/show standard functions
  - [ ] Optionals
    - [ ] Optional/fold and Optional/build
- - [ ] Records
+ - [x] Records
    - [ ] `f.a`
    - [ ] `f.{ xs… }`
    - [ ] `l ∧ r`

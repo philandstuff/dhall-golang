@@ -117,6 +117,9 @@ type (
 	EmptyList struct{ Type Expr }
 	// `[2,3,4]` == NonEmptyList(2,3,4)
 	NonEmptyList []Expr
+
+	Record    map[string]Expr
+	RecordLit map[string]Expr
 )
 
 const (
@@ -203,6 +206,18 @@ func Shift(d int, v Var, e Expr) Expr {
 			exprs[i] = Shift(d, v, expr)
 		}
 		return NonEmptyList(exprs)
+	case Record:
+		fields := make(map[string]Expr, len(map[string]Expr(e)))
+		for name, val := range map[string]Expr(e) {
+			fields[name] = Shift(d, v, val)
+		}
+		return Record(fields)
+	case RecordLit:
+		fields := make(map[string]Expr, len(map[string]Expr(e)))
+		for name, val := range map[string]Expr(e) {
+			fields[name] = Shift(d, v, val)
+		}
+		return RecordLit(fields)
 	}
 	panic("missing switch case in Shift()")
 }
@@ -286,6 +301,18 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			exprs[i] = Subst(v, c, expr)
 		}
 		return NonEmptyList(exprs)
+	case Record:
+		fields := make(map[string]Expr, len(map[string]Expr(e)))
+		for name, val := range map[string]Expr(e) {
+			fields[name] = Subst(v, c, val)
+		}
+		return Record(fields)
+	case RecordLit:
+		fields := make(map[string]Expr, len(map[string]Expr(e)))
+		for name, val := range map[string]Expr(e) {
+			fields[name] = Subst(v, c, val)
+		}
+		return RecordLit(fields)
 	}
 	panic("missing switch case in Subst()")
 }
@@ -346,6 +373,8 @@ var (
 	_ Expr = List
 	_ Expr = EmptyList{Natural}
 	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
+	_ Expr = Record(map[string]Expr{})
+	_ Expr = RecordLit(map[string]Expr{})
 )
 
 func (c Const) WriteTo(out io.Writer) (int64, error) {
@@ -571,6 +600,74 @@ func (l NonEmptyList) WriteTo(out io.Writer) (int64, error) {
 	return written, err
 }
 
+func (r Record) WriteTo(out io.Writer) (int64, error) {
+	var written int64
+	i, err := fmt.Fprint(out, "{ ")
+	written += int64(i)
+	if err != nil {
+		return written, err
+	}
+	fields := map[string]Expr(r)
+	first := true
+	for name, expr := range fields {
+		if !first {
+			i, err = fmt.Fprint(out, ", ")
+			written += int64(i)
+			if err != nil {
+				return written, err
+			}
+		}
+		first = false
+		i, err = fmt.Fprintf(out, "%s : ", name)
+		written += int64(i)
+		if err != nil {
+			return written, err
+		}
+		i64, err := expr.WriteTo(out)
+		written += i64
+		if err != nil {
+			return written, err
+		}
+	}
+	i, err = fmt.Fprint(out, " }")
+	written += int64(i)
+	return written, err
+}
+
+func (r RecordLit) WriteTo(out io.Writer) (int64, error) {
+	var written int64
+	i, err := fmt.Fprint(out, "{ ")
+	written += int64(i)
+	if err != nil {
+		return written, err
+	}
+	fields := map[string]Expr(r)
+	first := true
+	for name, expr := range fields {
+		if !first {
+			i, err = fmt.Fprint(out, ", ")
+			written += int64(i)
+			if err != nil {
+				return written, err
+			}
+		}
+		first = false
+		i, err = fmt.Fprintf(out, "%s = ", name)
+		written += int64(i)
+		if err != nil {
+			return written, err
+		}
+		i64, err := expr.WriteTo(out)
+		written += i64
+		if err != nil {
+			return written, err
+		}
+	}
+	i, err = fmt.Fprint(out, " }")
+	written += int64(i)
+	return written, err
+}
+
 func (c Const) Normalize() Expr { return c }
 func (v Var) Normalize() Expr   { return v }
 
@@ -685,6 +782,22 @@ func (l NonEmptyList) Normalize() Expr {
 		vals[i] = expr.Normalize()
 	}
 	return NonEmptyList(vals)
+}
+
+func (r Record) Normalize() Expr {
+	fields := make(map[string]Expr, len(map[string]Expr(r)))
+	for name, val := range map[string]Expr(r) {
+		fields[name] = val.Normalize()
+	}
+	return Record(fields)
+}
+
+func (r RecordLit) Normalize() Expr {
+	fields := make(map[string]Expr, len(map[string]Expr(r)))
+	for name, val := range map[string]Expr(r) {
+		fields[name] = val.Normalize()
+	}
+	return RecordLit(fields)
 }
 
 func (c Const) AlphaNormalize() Expr { return c }
@@ -813,6 +926,22 @@ func (l NonEmptyList) AlphaNormalize() Expr {
 		vals[i] = expr.AlphaNormalize()
 	}
 	return NonEmptyList(vals)
+}
+
+func (r Record) AlphaNormalize() Expr {
+	fields := make(map[string]Expr, len(map[string]Expr(r)))
+	for name, val := range map[string]Expr(r) {
+		fields[name] = val.AlphaNormalize()
+	}
+	return Record(fields)
+}
+
+func (r RecordLit) AlphaNormalize() Expr {
+	fields := make(map[string]Expr, len(map[string]Expr(r)))
+	for name, val := range map[string]Expr(r) {
+		fields[name] = val.AlphaNormalize()
+	}
+	return RecordLit(fields)
 }
 
 func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {
