@@ -67,8 +67,6 @@ var expectedFailures = []string{
 	"TestNormalization/simple/doubleShowA.dhall",
 	"TestNormalization/simple/integerShowA.dhall",
 	"TestNormalization/simple/integerToDoubleA.dhall",
-	// requires natural multiplication
-	"TestNormalization/simple/letletA.dhall",
 	"TestNormalization/simple/listBuildA.dhall",
 	"TestNormalization/simple/multiLineA.dhall",
 	"TestNormalization/simple/naturalBuildA.dhall",

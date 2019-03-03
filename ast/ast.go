@@ -106,6 +106,10 @@ type (
 		L Expr
 		R Expr
 	}
+	NaturalTimes struct {
+		L Expr
+		R Expr
+	}
 
 	IntegerLit int
 
@@ -187,6 +191,8 @@ func Shift(d int, v Var, e Expr) Expr {
 		return e
 	case NaturalPlus:
 		return NaturalPlus{L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
+	case NaturalTimes:
+		return NaturalTimes{L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
 	case IntegerLit:
 		return e
 	case EmptyList:
@@ -268,6 +274,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return e
 	case NaturalPlus:
 		return NaturalPlus{L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
+	case NaturalTimes:
+		return NaturalTimes{L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
 	case IntegerLit:
 		return e
 	case EmptyList:
@@ -332,6 +340,7 @@ var (
 	_ Expr = Natural
 	_ Expr = NaturalLit(3)
 	_ Expr = NaturalPlus{}
+	_ Expr = NaturalTimes{}
 	_ Expr = Integer
 	_ Expr = IntegerLit(3)
 	_ Expr = List
@@ -505,6 +514,19 @@ func (p NaturalPlus) WriteTo(out io.Writer) (int64, error) {
 	return int64(w1) + int64(w2) + int64(w3), err
 }
 
+func (p NaturalTimes) WriteTo(out io.Writer) (int64, error) {
+	w1, err := p.L.WriteTo(out)
+	if err != nil {
+		return int64(w1), err
+	}
+	w2, err := fmt.Fprint(out, " * ")
+	if err != nil {
+		return int64(w1) + int64(w2), err
+	}
+	w3, err := p.R.WriteTo(out)
+	return int64(w1) + int64(w2) + int64(w3), err
+}
+
 func (i IntegerLit) WriteTo(out io.Writer) (int64, error) {
 	n, err := fmt.Fprintf(out, "%d", i)
 	return int64(n), err
@@ -631,6 +653,28 @@ func (p NaturalPlus) Normalize() Expr {
 	}
 }
 
+func (p NaturalTimes) Normalize() Expr {
+	L := p.L.Normalize()
+	R := p.R.Normalize()
+
+	Ln, Lok := L.(NaturalLit)
+	Rn, Rok := R.(NaturalLit)
+
+	if Lok && Rok {
+		return NaturalLit(int(Ln) * int(Rn))
+	} else if Lok && int(Ln) == 0 {
+		return NaturalLit(0)
+	} else if Lok && int(Ln) == 1 {
+		return R
+	} else if Rok && int(Rn) == 0 {
+		return NaturalLit(0)
+	} else if Rok && int(Rn) == 1 {
+		return L
+	} else {
+		return NaturalTimes{L: L, R: R}
+	}
+}
+
 func (i IntegerLit) Normalize() Expr { return i }
 
 func (l EmptyList) Normalize() Expr { return EmptyList{l.Type.Normalize()} }
@@ -750,6 +794,13 @@ func (p NaturalPlus) AlphaNormalize() Expr {
 	R := p.R.AlphaNormalize()
 
 	return NaturalPlus{L: L, R: R}
+}
+
+func (p NaturalTimes) AlphaNormalize() Expr {
+	L := p.L.AlphaNormalize()
+	R := p.R.AlphaNormalize()
+
+	return NaturalTimes{L: L, R: R}
 }
 
 func (i IntegerLit) AlphaNormalize() Expr { return i }

@@ -50,6 +50,9 @@ var _ = Describe("Expression", func() {
 		Entry("NaturalLit", `1234`, NaturalLit(1234)),
 		Entry("NaturalLit", `3`, NaturalLit(3)),
 		Entry("NaturalPlus", `3 + 5`, NaturalPlus{NaturalLit(3), NaturalLit(5)}),
+		Entry("NaturalTimes", `3 * 5`, NaturalTimes{NaturalLit(3), NaturalLit(5)}),
+		Entry("Natural op order #1", `3 * 4 + 5`, NaturalPlus{NaturalTimes{NaturalLit(3), NaturalLit(4)}, NaturalLit(5)}),
+		Entry("Natural op order #2", `3 + 4 * 5`, NaturalPlus{NaturalLit(3), NaturalTimes{NaturalLit(4), NaturalLit(5)}}),
 		// Check that if we skip whitespace, it parses
 		// correctly as function application, not natural
 		// addition

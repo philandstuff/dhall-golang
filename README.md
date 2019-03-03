@@ -23,7 +23,7 @@ Go bindings for dhall.
    - [ ] `==`, `!=`
  - [X] Naturals
    - [X] `l + r` Natural addition
-   - [ ] `l * r` Natural multiplication
+   - [x] `l * r` Natural multiplication
    - [ ] Natural/* standard functions
  - [X] Integers
    - [ ] Integer/toDouble and Integer/show

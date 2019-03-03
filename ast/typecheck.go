@@ -240,6 +240,18 @@ func (p NaturalPlus) TypeWith(ctx *TypeContext) (Expr, error) {
 	return Natural, nil
 }
 
+func (p NaturalTimes) TypeWith(ctx *TypeContext) (Expr, error) {
+	err := assertSimpleType(ctx, p.L, Natural)
+	if err != nil {
+		return nil, err
+	}
+	err = assertSimpleType(ctx, p.R, Natural)
+	if err != nil {
+		return nil, err
+	}
+	return Natural, nil
+}
+
 func (IntegerLit) TypeWith(*TypeContext) (Expr, error) { return Integer, nil }
 
 func (l EmptyList) TypeWith(ctx *TypeContext) (Expr, error) {

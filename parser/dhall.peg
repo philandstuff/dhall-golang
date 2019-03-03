@@ -188,13 +188,24 @@ OperatorExpression ← ImportAltExpression
 
 ImportAltExpression ← PlusExpression
 
-MorePlus ← _ '+' NonemptyWhitespace e:ApplicationExpression { return e, nil }
+MorePlus ← _ '+' NonemptyWhitespace e:TimesExpression { return e, nil }
 PlusExpression ←
-      first:ApplicationExpression rest:MorePlus* {
+      first:TimesExpression rest:MorePlus* {
           a := first.(ast.Expr)
           if rest == nil { return a, nil }
           for _, b := range rest.([]interface{}) {
               a = ast.NaturalPlus{L: a, R: b.(ast.Expr)}
+          }
+          return a, nil
+      }
+
+MoreTimes ← _ '*' _ e:ApplicationExpression { return e, nil }
+TimesExpression ←
+      first:ApplicationExpression rest:MoreTimes* {
+          a := first.(ast.Expr)
+          if rest == nil { return a, nil }
+          for _, b := range rest.([]interface{}) {
+              a = ast.NaturalTimes{L: a, R: b.(ast.Expr)}
           }
           return a, nil
       }

@@ -32,6 +32,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("(3 : Natural) : Natural", Annot{NaturalLit(3), Natural}, Natural),
 		Entry("(3 : (λ(x : Type) → x) Natural) : Natural", Annot{NaturalLit(3), &App{&LambdaExpr{"x", Type, x(0)}, Natural}}, Natural),
 		Entry("3 + 5 : Natural", NaturalPlus{NaturalLit(3), NaturalLit(5)}, Natural),
+		Entry("3 * 5 : Natural", NaturalTimes{NaturalLit(3), NaturalLit(5)}, Natural),
 	)
 	DescribeTable("Function types",
 		expectType,
