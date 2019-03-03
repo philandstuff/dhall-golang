@@ -31,8 +31,9 @@ var _ = DescribeTable("Rule",
 	Entry("Sort → Sort : Type", Sort, Sort, Sort),
 )
 
-func x(i int) Var { return Var{"x", i} }
-func y(i int) Var { return Var{"y", i} }
+func __(i int) Var { return Var{"_", i} }
+func x(i int) Var  { return Var{"x", i} }
+func y(i int) Var  { return Var{"y", i} }
 
 var _ = DescribeTable("Shift",
 	func(actual Expr, expected Expr) {
@@ -138,5 +139,56 @@ var _ = Describe("Normalize", func() {
 		Entry("let x = 3 in x » 3", MakeLet(x(0), Binding{Variable: "x", Value: NaturalLit(3)}), NaturalLit(3)),
 		Entry("let x = 3 let y = x in y » 3",
 			MakeLet(y(0), Binding{Variable: "x", Value: NaturalLit(3)}, Binding{Variable: "y", Value: x(0)}), NaturalLit(3)),
+	)
+})
+
+var _ = Describe("AlphaNormalize", func() {
+	DescribeTable("AlphaNormalize",
+		func(in Expr, expected Expr) {
+			actual := in.AlphaNormalize()
+			Expect(actual).To(Equal(expected))
+		},
+		Entry("Sort", Sort, Sort),
+		Entry("Kind", Kind, Kind),
+		Entry("Type", Type, Type),
+		Entry("Natural", Natural, Natural),
+		Entry("Integer", Integer, Integer),
+		Entry("List Integer", &App{List, Integer}, &App{List, Integer}),
+		Entry("3", NaturalLit(3), NaturalLit(3)),
+		Entry("3 + 5 » 3 + 5", NaturalPlus{NaturalLit(3), NaturalLit(5)}, NaturalPlus{NaturalLit(3), NaturalLit(5)}),
+		Entry("3 + x » 3 + x", NaturalPlus{NaturalLit(3), x(0)}, NaturalPlus{NaturalLit(3), x(0)}),
+		Entry("x + 0 » x + 0", NaturalPlus{x(0), NaturalLit(0)}, NaturalPlus{x(0), NaturalLit(0)}),
+		Entry("0 + x » 0 + x", NaturalPlus{NaturalLit(0), x(0)}, NaturalPlus{NaturalLit(0), x(0)}),
+		Entry("(λ(x : Natural) → x) 3 » (λ(_ : Natural) → _) 3",
+			&App{&LambdaExpr{"x", Natural, x(0)}, NaturalLit(3)},
+			&App{&LambdaExpr{"_", Natural, __(0)}, NaturalLit(3)}),
+		Entry("λ(x : Natural) → 2 + 3 » λ(_ : Natural) → 2 + 3",
+			&LambdaExpr{"x", Natural, NaturalPlus{NaturalLit(2), NaturalLit(3)}},
+			&LambdaExpr{"_", Natural, NaturalPlus{NaturalLit(2), NaturalLit(3)}}),
+		Entry("∀(x : Natural) → Natural » ∀(_ : Natural) → Natural",
+			&Pi{"x", Natural, Natural},
+			&Pi{"_", Natural, Natural}),
+		Entry("[3 + 5] » [3 + 5]",
+			MakeList(NaturalPlus{NaturalLit(3), NaturalLit(5)}),
+			MakeList(NaturalPlus{NaturalLit(3), NaturalLit(5)})),
+		Entry("[] : List Natural", EmptyList{Natural}, EmptyList{Natural}),
+		Entry("[] : List ((λ(x : Type) → x) Natural) → [] : List ((λ(_ : Type) → x) Natural)",
+			EmptyList{&App{&LambdaExpr{"x", Type, x(0)}, Natural}},
+			EmptyList{&App{&LambdaExpr{"_", Type, Var{"_", 0}}, Natural}}),
+		Entry("if True then 3 else 4 » if True then 3 else 4",
+			BoolIf{True, NaturalLit(3), NaturalLit(4)},
+			BoolIf{True, NaturalLit(3), NaturalLit(4)}),
+		Entry("let x = 3 in x » let _ = 3 in _",
+			MakeLet(x(0), Binding{Variable: "x", Value: NaturalLit(3)}),
+			MakeLet(__(0), Binding{Variable: "_", Value: NaturalLit(3)})),
+		Entry("let x = 3 in λ(x : Type) → x » let _ = 3 in λ(_ : Type) → _",
+			MakeLet(&LambdaExpr{"x", Type, x(0)}, Binding{Variable: "x", Value: NaturalLit(3)}),
+			MakeLet(&LambdaExpr{"_", Type, __(0)}, Binding{Variable: "_", Value: NaturalLit(3)})),
+		Entry("let x = 3 let y = x in y » let _ = 3 let _ = _ in _",
+			MakeLet(y(0), Binding{Variable: "x", Value: NaturalLit(3)}, Binding{Variable: "y", Value: x(0)}),
+			MakeLet(__(0), Binding{Variable: "_", Value: NaturalLit(3)}, Binding{Variable: "_", Value: __(0)})),
+		Entry("let x = 3 let y = y in x » let _ = 3 let _ = _ in _@1",
+			MakeLet(y(0), Binding{Variable: "x", Value: NaturalLit(3)}, Binding{Variable: "y", Value: y(0)}),
+			MakeLet(__(0), Binding{Variable: "_", Value: NaturalLit(3)}, Binding{Variable: "_", Value: __(1)})),
 	)
 })

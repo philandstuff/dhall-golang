@@ -8,13 +8,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+func expectType(in, expectedType Expr) {
+	actualType, err := in.TypeWith(EmptyContext())
+	Expect(err).ToNot(HaveOccurred())
+	Expect(actualType.Normalize().AlphaNormalize()).To(Equal(expectedType.AlphaNormalize()))
+}
+
 var _ = Describe("TypeCheck in empty context", func() {
-	DescribeTable("Successful typechecks",
-		func(in Expr, expectedType Expr) {
-			actualType, err := in.TypeWith(EmptyContext())
-			Expect(err).ToNot(HaveOccurred())
-			Expect(actualType.Normalize()).To(Equal(expectedType))
-		},
+	DescribeTable("Simple types",
+		expectType,
 		Entry("Type : Kind", Type, Kind),
 		Entry("Kind : Sort", Kind, Sort),
 		Entry("True : Bool", BoolLit(true), Bool),
@@ -22,9 +24,15 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("(3 : Natural) : Natural", Annot{NaturalLit(3), Natural}, Natural),
 		Entry("(3 : (λ(x : Type) → x) Natural) : Natural", Annot{NaturalLit(3), &App{&LambdaExpr{"x", Type, x(0)}, Natural}}, Natural),
 		Entry("3 + 5 : Natural", NaturalPlus{NaturalLit(3), NaturalLit(5)}, Natural),
+	)
+	DescribeTable("Function types",
+		expectType,
 		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
 			&LambdaExpr{"x", Natural, x(0)},
 			&Pi{"x", Natural, Natural}),
+		Entry("λ(x : Natural) → x : Natural → Natural",
+			&LambdaExpr{"x", Natural, x(0)},
+			&Pi{"_", Natural, Natural}),
 		Entry("(λ(x : Natural) → x) 3 : Natural",
 			&App{&LambdaExpr{"x", Natural, x(0)},
 				NaturalLit(3)},
@@ -56,6 +64,9 @@ var _ = Describe("TypeCheck in empty context", func() {
 				NaturalLit(3),
 			},
 			Natural),
+	)
+	DescribeTable("List types",
+		expectType,
 		Entry("([] : List Natural) : List Natural",
 			EmptyList{Natural},
 			&App{List, Natural}),

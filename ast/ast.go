@@ -46,6 +46,7 @@ func EmptyContext() *TypeContext {
 type (
 	Expr interface {
 		io.WriterTo
+		AlphaNormalize() Expr
 		Normalize() Expr
 		TypeWith(*TypeContext) (Expr, error)
 	}
@@ -638,6 +639,127 @@ func (l NonEmptyList) Normalize() Expr {
 	vals := make([]Expr, len(exprs))
 	for i, expr := range exprs {
 		vals[i] = expr.Normalize()
+	}
+	return NonEmptyList(vals)
+}
+
+func (c Const) AlphaNormalize() Expr { return c }
+func (v Var) AlphaNormalize() Expr   { return v }
+
+func (lam *LambdaExpr) AlphaNormalize() Expr {
+	if lam.Label == "_" {
+		return &LambdaExpr{
+			Label: "_",
+			Type:  lam.Type.AlphaNormalize(),
+			Body:  lam.Body.AlphaNormalize(),
+		}
+	} else {
+		b1 := Shift(1, Var{"_", 0}, lam.Body)
+		b2 := Subst(Var{lam.Label, 0}, Var{"_", 0}, b1)
+		b3 := Shift(-1, Var{"x", 0}, b2)
+		return &LambdaExpr{
+			Label: "_",
+			Type:  lam.Type.AlphaNormalize(),
+			Body:  b3.AlphaNormalize(),
+		}
+	}
+}
+func (pi *Pi) AlphaNormalize() Expr {
+	if pi.Label == "_" {
+		return &Pi{
+			Label: "_",
+			Type:  pi.Type.AlphaNormalize(),
+			Body:  pi.Body.AlphaNormalize(),
+		}
+	} else {
+		b1 := Shift(1, Var{"_", 0}, pi.Body)
+		b2 := Subst(Var{pi.Label, 0}, Var{"_", 0}, b1)
+		b3 := Shift(-1, Var{"x", 0}, b2)
+		return &Pi{
+			Label: "_",
+			Type:  pi.Type.AlphaNormalize(),
+			Body:  b3.AlphaNormalize(),
+		}
+	}
+}
+func (app *App) AlphaNormalize() Expr {
+	return &App{
+		Fn:  app.Fn.AlphaNormalize(),
+		Arg: app.Arg.AlphaNormalize(),
+	}
+}
+
+func (l Let) AlphaNormalize() Expr {
+	binding := l.Bindings[0]
+	if binding.Annotation != nil {
+		binding.Annotation = binding.Annotation.AlphaNormalize()
+	}
+	x := binding.Variable
+	if x == "_" {
+		binding.Value = binding.Value.AlphaNormalize()
+	} else {
+		v1 := Shift(1, Var{"_", 0}, binding.Value)
+		v2 := Subst(Var{x, 0}, Var{"_", 0}, v1)
+		v3 := Shift(-1, Var{x, 0}, v2)
+		binding.Value = v3.AlphaNormalize()
+		binding.Variable = "_"
+	}
+
+	rest := l.Body
+	if len(l.Bindings) > 1 {
+		rest = Let{Bindings: l.Bindings[1:], Body: l.Body}
+	}
+	rest = rest.AlphaNormalize()
+
+	b0 := Shift(1, Var{"_", 0}, rest)
+	b1 := Subst(Var{x, 0}, Var{"_", 0}, b0)
+	b2 := Shift(-1, Var{x, 0}, b1)
+	b3 := b2.AlphaNormalize()
+	b4, ok := b3.(Let)
+	if ok {
+		return Let{
+			Bindings: append([]Binding{binding}, b4.Bindings...),
+			Body:     b4.Body,
+		}
+	} else {
+		return Let{
+			Bindings: []Binding{binding},
+			Body:     b3,
+		}
+	}
+}
+
+func (a Annot) AlphaNormalize() Expr { return a.Expr.AlphaNormalize() }
+
+func (t BuiltinType) AlphaNormalize() Expr { return t }
+
+func (d DoubleLit) AlphaNormalize() Expr { return d }
+
+func (n BoolLit) AlphaNormalize() Expr { return n }
+func (b BoolIf) AlphaNormalize() Expr {
+	return BoolIf{
+		Cond: b.Cond.AlphaNormalize(),
+		T:    b.T.AlphaNormalize(),
+		F:    b.F.AlphaNormalize(),
+	}
+}
+
+func (n NaturalLit) AlphaNormalize() Expr { return n }
+func (p NaturalPlus) AlphaNormalize() Expr {
+	L := p.L.AlphaNormalize()
+	R := p.R.AlphaNormalize()
+
+	return NaturalPlus{L: L, R: R}
+}
+
+func (i IntegerLit) AlphaNormalize() Expr { return i }
+
+func (l EmptyList) AlphaNormalize() Expr { return EmptyList{l.Type.AlphaNormalize()} }
+func (l NonEmptyList) AlphaNormalize() Expr {
+	exprs := []Expr(l)
+	vals := make([]Expr, len(exprs))
+	for i, expr := range exprs {
+		vals[i] = expr.AlphaNormalize()
 	}
 	return NonEmptyList(vals)
 }
