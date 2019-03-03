@@ -3,6 +3,7 @@ package main_test
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -74,6 +75,7 @@ var expectedFailures = []string{
 	"TestNormalization/simple/optional",
 	"TestNormalization/simple/sortOperatorA.dhall",
 	"TestNormalization/simplifications",
+	"TestBinary",
 }
 
 func pass(t *testing.T) {
@@ -126,6 +128,13 @@ func expectEqualExprs(t *testing.T, expected, actual ast.Expr) {
 		buf.Write([]byte(" to equal "))
 		expected.WriteTo(buf)
 		failf(t, buf.String())
+	}
+}
+
+func expectEqualBytes(t *testing.T, expected, actual []byte) {
+	t.Helper()
+	if !reflect.DeepEqual(expected, actual) {
+		failf(t, "Expected %x to equal %x", actual, expected)
 	}
 }
 
@@ -285,5 +294,25 @@ func TestNormalization(t *testing.T) {
 			normB := parsedB.(ast.Expr).Normalize()
 
 			expectEqualExprs(t, normB, normA)
+		})
+}
+
+func TestBinary(t *testing.T) {
+	var cbor codec.CborHandle
+	runTestOnFilePairs(t, "dhall-lang/tests/binary/success/",
+		"A.dhall", "B.dhallb",
+		func(t *testing.T, aReader, bReader io.Reader) {
+			parsedA, err := parser.ParseReader(t.Name(), aReader)
+			expectNoError(t, err)
+
+			buf := new(bytes.Buffer)
+			aEnc := codec.NewEncoder(buf, &cbor)
+			err = aEnc.Encode(parsedA)
+			expectNoError(t, err)
+
+			bytesB, err := ioutil.ReadAll(bReader)
+			expectNoError(t, err)
+
+			expectEqualBytes(t, bytesB, buf.Bytes())
 		})
 }
