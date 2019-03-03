@@ -57,6 +57,23 @@ var expectedFailures = []string{
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
 	"TestTypechecks/simple/mixedFieldAccessA.dhall",
 	"TestTypechecks/simple/unionsOfTypesA.dhall",
+	"TestNormalization/haskell-tutorial",
+	"TestNormalization/multiline",
+	"TestNormalization/prelude",
+	"TestNormalization/remoteSystemsA.dhall",
+	"TestNormalization/simple/doubleShowA.dhall",
+	"TestNormalization/simple/integerShowA.dhall",
+	"TestNormalization/simple/integerToDoubleA.dhall",
+	// requires natural multiplication
+	"TestNormalization/simple/letletA.dhall",
+	"TestNormalization/simple/listBuildA.dhall",
+	"TestNormalization/simple/multiLineA.dhall",
+	"TestNormalization/simple/naturalBuildA.dhall",
+	"TestNormalization/simple/naturalShowA.dhall",
+	"TestNormalization/simple/naturalToIntegerA.dhall",
+	"TestNormalization/simple/optional",
+	"TestNormalization/simple/sortOperatorA.dhall",
+	"TestNormalization/simplifications",
 }
 
 func pass(t *testing.T) {
@@ -84,7 +101,6 @@ func expectError(t *testing.T, err error) {
 	if err == nil {
 		failf(t, "Expected file to fail to parse, but it parsed successfully")
 	}
-	pass(t)
 }
 
 func expectNoError(t *testing.T, err error) {
@@ -92,23 +108,18 @@ func expectNoError(t *testing.T, err error) {
 	if err != nil {
 		failf(t, "Expected file to parse successfully, but got error %v", err)
 	}
-	pass(t)
 }
 
 func expectEqual(t *testing.T, expected, actual interface{}) {
 	t.Helper()
-	if reflect.DeepEqual(expected, actual) {
-		pass(t)
-	} else {
+	if !reflect.DeepEqual(expected, actual) {
 		failf(t, "Expected %+v to equal %+v", actual, expected)
 	}
 }
 
 func expectEqualExprs(t *testing.T, expected, actual ast.Expr) {
 	t.Helper()
-	if reflect.DeepEqual(expected, actual) {
-		pass(t)
-	} else {
+	if !reflect.DeepEqual(expected, actual) {
 		buf := new(bytes.Buffer)
 		buf.Write([]byte("Expected "))
 		actual.WriteTo(buf)
@@ -139,6 +150,7 @@ func runTestOnEachFile(
 			name := strings.Replace(path, dir, "", 1)
 			t.Run(name, func(t *testing.T) {
 				test(t, reader)
+				pass(t)
 			})
 			return nil
 		})
@@ -160,6 +172,7 @@ func runTestOnFilePair(t *testing.T, name, pathA, pathB string, test func(*testi
 	}
 	t.Run(name, func(t *testing.T) {
 		test(t, aReader, bReader)
+		pass(t)
 	})
 }
 
@@ -252,5 +265,25 @@ func TestTypechecks(t *testing.T) {
 			}
 			_, err = annot.TypeWith(ast.EmptyContext())
 			expectNoError(t, err)
+		})
+}
+
+func TestNormalization(t *testing.T) {
+	runTestOnFilePairs(t, "dhall-lang/tests/normalization/success/",
+		"A.dhall", "B.dhall",
+		func(t *testing.T, aReader, bReader io.Reader) {
+			parsedA, err := parser.ParseReader(t.Name(), aReader)
+			expectNoError(t, err)
+
+			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			expectNoError(t, err)
+
+			_, err = parsedA.(ast.Expr).TypeWith(ast.EmptyContext())
+			expectNoError(t, err)
+
+			normA := parsedA.(ast.Expr).Normalize()
+			normB := parsedB.(ast.Expr).Normalize()
+
+			expectEqualExprs(t, normB, normA)
 		})
 }
