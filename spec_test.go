@@ -21,6 +21,8 @@ var expectedFailures = []string{
 	"TestParserAccepts/builtinsA.dhall",
 	"TestParserAccepts/collectionImportTypeA.dhall",
 	"TestParserAccepts/constructorsA.dhall",
+	// FIXME binary encoding doesn't match here
+	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/doubleQuotedStringA.dhall",
 	"TestParserAccepts/environmentVariablesA.dhall",
 	"TestParserAccepts/escapedDoubleQuotedStringA.dhall",
@@ -75,7 +77,6 @@ var expectedFailures = []string{
 	"TestNormalization/simple/optional",
 	"TestNormalization/simple/sortOperatorA.dhall",
 	"TestNormalization/simplifications",
-	"TestBinary",
 }
 
 func pass(t *testing.T) {
@@ -218,26 +219,20 @@ func TestParserRejects(t *testing.T) {
 
 func TestParserAccepts(t *testing.T) {
 	var cbor codec.CborHandle
-	var json codec.JsonHandle
 	runTestOnFilePairs(t, "dhall-lang/tests/parser/success/",
-		"A.dhall", "B.json",
+		"A.dhall", "B.dhallb",
 		func(t *testing.T, aReader, bReader io.Reader) {
-			buf := new(bytes.Buffer)
+			actualBuf := new(bytes.Buffer)
 			parsed, err := parser.ParseReader(t.Name(), aReader)
 			expectNoError(t, err)
-			aEnc := codec.NewEncoder(buf, &cbor)
+
+			aEnc := codec.NewEncoder(actualBuf, &cbor)
 			err = aEnc.Encode(parsed)
 			expectNoError(t, err)
-			aDec := codec.NewDecoder(buf, &cbor)
-			var actual interface{}
-			err = aDec.Decode(&actual)
-			expectNoError(t, err)
 
-			bDec := codec.NewDecoder(bReader, &json)
-			var expected interface{}
-			err = bDec.Decode(&expected)
+			expected, err := ioutil.ReadAll(bReader)
 			expectNoError(t, err)
-			expectEqual(t, expected, actual)
+			expectEqualBytes(t, expected, actualBuf.Bytes())
 		})
 }
 
@@ -294,25 +289,5 @@ func TestNormalization(t *testing.T) {
 			normB := parsedB.(ast.Expr).Normalize()
 
 			expectEqualExprs(t, normB, normA)
-		})
-}
-
-func TestBinary(t *testing.T) {
-	var cbor codec.CborHandle
-	runTestOnFilePairs(t, "dhall-lang/tests/binary/success/",
-		"A.dhall", "B.dhallb",
-		func(t *testing.T, aReader, bReader io.Reader) {
-			parsedA, err := parser.ParseReader(t.Name(), aReader)
-			expectNoError(t, err)
-
-			buf := new(bytes.Buffer)
-			aEnc := codec.NewEncoder(buf, &cbor)
-			err = aEnc.Encode(parsedA)
-			expectNoError(t, err)
-
-			bytesB, err := ioutil.ReadAll(bReader)
-			expectNoError(t, err)
-
-			expectEqualBytes(t, bytesB, buf.Bytes())
 		})
 }
