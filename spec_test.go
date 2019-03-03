@@ -55,8 +55,6 @@ var expectedFailures = []string{
 	"TestTypechecks/recordOfTypesA.dhall",
 	"TestTypechecks/simple/access",
 	"TestTypechecks/simple/alternativesAreTypesA.dhall",
-	// breaks because no alpha normalization yet
-	"TestTypechecks/simple/anonymousFunctionsInTypesA.dhall",
 	"TestTypechecks/simple/fieldsAreTypesA.dhall",
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
 	"TestTypechecks/simple/mixedFieldAccessA.dhall",

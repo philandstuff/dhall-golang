@@ -91,8 +91,7 @@ func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	// FIXME replace == with a JudgmentallyEqual() fn here
-	if pF.Type == argType {
+	if judgmentallyEqual(pF.Type, argType) {
 		a := Shift(1, Var{Name: pF.Label}, app.Arg)
 		b := Subst(Var{Name: pF.Label}, a, pF.Body)
 		return Shift(-1, Var{Name: pF.Label}, b), nil

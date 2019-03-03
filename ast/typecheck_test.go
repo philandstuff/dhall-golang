@@ -45,6 +45,11 @@ var _ = Describe("TypeCheck in empty context", func() {
 			&App{&LambdaExpr{"x", Natural, x(0)},
 				NaturalLit(3)},
 			Natural),
+		Entry("(λ(f : Natural → Natural) → f 3) λ(n : Natural) → n+1 : Natural",
+			&App{
+				Fn:  &LambdaExpr{"f", &Pi{"_", Natural, Natural}, &App{Var{"f", 0}, NaturalLit(3)}},
+				Arg: &LambdaExpr{"n", Natural, NaturalPlus{Var{"n", 0}, NaturalLit(1)}}},
+			Natural),
 		Entry("(λ(x : Type) → λ(x : x) → x) : ∀(x : Type) → ∀(x : x) → x@1",
 			&LambdaExpr{
 				"x",
