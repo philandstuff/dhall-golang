@@ -58,8 +58,6 @@ var expectedFailures = []string{
 	// breaks because no alpha normalization yet
 	"TestTypechecks/simple/anonymousFunctionsInTypesA.dhall",
 	"TestTypechecks/simple/fieldsAreTypesA.dhall",
-	// breaks because no alpha normalization yet
-	"TestTypechecks/simple/kindParameterA.dhall",
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
 	"TestTypechecks/simple/mixedFieldAccessA.dhall",
 	"TestTypechecks/simple/unionsOfTypesA.dhall",
@@ -250,8 +248,11 @@ func TestTypechecks(t *testing.T) {
 			parsedB, err := parser.ParseReader(t.Name(), bReader)
 			expectNoError(t, err)
 
-			typeOfA, err := parsedA.(ast.Expr).TypeWith(ast.EmptyContext())
+			annot := ast.Annot{
+				Expr:       parsedA.(ast.Expr),
+				Annotation: parsedB.(ast.Expr),
+			}
+			_, err = annot.TypeWith(ast.EmptyContext())
 			expectNoError(t, err)
-			expectEqualExprs(t, parsedB.(ast.Expr), typeOfA)
 		})
 }

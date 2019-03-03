@@ -9,16 +9,24 @@ import (
 )
 
 func expectType(in, expectedType Expr) {
-	actualType, err := in.TypeWith(EmptyContext())
+	annot := Annot{Expr: in, Annotation: expectedType}
+	_, err := annot.TypeWith(EmptyContext())
 	Expect(err).ToNot(HaveOccurred())
-	Expect(actualType.Normalize().AlphaNormalize()).To(Equal(expectedType.AlphaNormalize()))
 }
 
 var _ = Describe("TypeCheck in empty context", func() {
+	It("Kind : Sort", func() {
+		// We can't typecheck this using expectType because it
+		// will fail by not finding a type for Sort
+		// so we have a custom test for this case
+
+		typ, err := Kind.TypeWith(EmptyContext())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(typ).To(Equal(Sort))
+	})
 	DescribeTable("Simple types",
 		expectType,
 		Entry("Type : Kind", Type, Kind),
-		Entry("Kind : Sort", Kind, Sort),
 		Entry("True : Bool", BoolLit(true), Bool),
 		Entry("3 : Natural", NaturalLit(3), Natural),
 		Entry("(3 : Natural) : Natural", Annot{NaturalLit(3), Natural}, Natural),
@@ -30,6 +38,9 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
 			&LambdaExpr{"x", Natural, x(0)},
 			&Pi{"x", Natural, Natural}),
+		Entry("λ(x : Natural) → x : Natural → Natural",
+			&LambdaExpr{"x", Natural, x(0)},
+			&Pi{"_", Natural, Natural}),
 		Entry("λ(x : Natural) → x : Natural → Natural",
 			&LambdaExpr{"x", Natural, x(0)},
 			&Pi{"_", Natural, Natural}),

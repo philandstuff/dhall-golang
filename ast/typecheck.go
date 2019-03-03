@@ -8,9 +8,8 @@ import (
 )
 
 func judgmentallyEqual(e1 Expr, e2 Expr) bool {
-	// TODO: alpha-normalization
-	ne1 := e1.Normalize()
-	ne2 := e2.Normalize()
+	ne1 := e1.Normalize().AlphaNormalize()
+	ne2 := e2.Normalize().AlphaNormalize()
 	return reflect.DeepEqual(ne1, ne2)
 }
 
