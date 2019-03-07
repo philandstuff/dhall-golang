@@ -724,11 +724,21 @@ func (d DoubleLit) Normalize() Expr { return d }
 func (n BoolLit) Normalize() Expr { return n }
 func (b BoolIf) Normalize() Expr {
 	cond := b.Cond.Normalize()
-	if bool(cond.(BoolLit)) {
-		return b.T.Normalize()
-	} else {
-		return b.F.Normalize()
+	t := b.T.Normalize()
+	f := b.F.Normalize()
+	if cond == True {
+		return t
 	}
+	if cond == False {
+		return f
+	}
+	if t == True && f == False {
+		return cond
+	}
+	if judgmentallyEqual(t, f) {
+		return t
+	}
+	return b
 }
 
 func (n NaturalLit) Normalize() Expr { return n }
