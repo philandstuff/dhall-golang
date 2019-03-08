@@ -18,7 +18,9 @@ import "github.com/philandstuff/dhall-golang/ast"
 
 }
 
-CompleteExpression ← _ e:Expression _ EOF { return e, nil }
+DhallFile ← e:CompleteExpression EOF { return e, nil }
+
+CompleteExpression ← _ e:Expression _ { return e, nil }
 
 EOL ← "\n" / "\r\n"
 
@@ -41,6 +43,8 @@ _ ← WhitespaceChunk*
 
 NonemptyWhitespace ← WhitespaceChunk+
 
+HexDig ← [0-9a-f]i
+
 SimpleLabel ← !Keyword
             [A-Za-z_] [A-Za-z0-9_/-]* { return string(c.text), nil }
 
@@ -48,13 +52,73 @@ SimpleLabel ← !Keyword
 
 Label ← label:SimpleLabel { return label, nil }
 
+// DoubleQuoteInterpolation ←
+
+EscapedChar ←
+  '\\'
+  ( '"'
+       / '$'
+       / '\\'
+       / '/'
+       / 'b'
+       / 'f'
+       / 'n'
+       / 'r'
+       / 't'
+       / 'u' HexDig HexDig HexDig HexDig
+       ) {
+    switch c.text[1] {
+    case 'b':
+        return []byte("\b"), nil
+    case 'f':
+        return []byte("\f"), nil
+    case 'n':
+        return []byte("\n"), nil
+    case 'r':
+        return []byte("\r"), nil
+    case 't':
+        return []byte("\t"), nil
+    case 'u':
+        i, err := strconv.ParseInt(string(c.text[2:]), 16, 32)
+        return []byte(string([]rune{rune(i)})), err
+    }
+    return c.text[1:2], nil
+}
+
+
+DoubleQuoteChunk ←
+     "${" e:CompleteExpression "}" { return e, nil }
+   / EscapedChar
+   / [\x20-\x21]
+   / [\x23-\x5b]
+   / [\x5d-\U0010ffff]
+
+DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
+    var str strings.Builder
+    var outChunks ast.Chunks
+    for _, chunk := range chunks.([]interface{}) {
+        switch e := chunk.(type) {
+        case []byte:
+                str.Write(e)
+        case ast.Expr:
+                outChunks = append(outChunks, ast.Chunk{str.String(), e})
+                str.Reset()
+        default:
+                return nil, errors.New("can't happen")
+        }
+    }
+    return ast.TextLit{Chunks: outChunks, Suffix: str.String()}, nil
+}
+
+TextLiteral ← DoubleQuoteLiteral
+
 Reserved ← "Bool" { return ast.Bool, nil }
   / "Optional"
   / "None"
   / "Natural" { return ast.Natural, nil }
   / "Integer" { return ast.Integer, nil }
   / "Double" { return ast.Double, nil }
-  / "Text"
+  / "Text" { return ast.Text, nil }
   / "List" { return ast.List, nil }
   / "True" { return ast.True, nil }
   / "False" { return ast.False, nil }
@@ -230,6 +294,7 @@ PrimitiveExpression ←
     / NaturalLiteral
     / IntegerLiteral
     / "-Infinity" { return ast.DoubleLit(math.Inf(-1)), nil }
+    / TextLiteral
     / '{' _ r:RecordTypeOrLiteral _ '}' { return r, nil }
     / NonEmptyListLiteral
     / IdentifierReservedPrefix

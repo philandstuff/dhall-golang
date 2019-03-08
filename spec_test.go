@@ -52,10 +52,8 @@ var expectedFailures = []string{
 	"TestTypechecks/accessTypeA.dhall",
 	"TestTypechecks/prelude",
 	"TestTypechecks/recordOfRecordOfTypesA.dhall",
-	"TestTypechecks/recordOfTypesA.dhall",
 	"TestTypechecks/simple/access",
 	"TestTypechecks/simple/alternativesAreTypesA.dhall",
-	"TestTypechecks/simple/fieldsAreTypesA.dhall",
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
 	"TestTypechecks/simple/mixedFieldAccessA.dhall",
 	"TestTypechecks/simple/unionsOfTypesA.dhall",
@@ -73,7 +71,10 @@ var expectedFailures = []string{
 	"TestNormalization/simple/naturalToIntegerA.dhall",
 	"TestNormalization/simple/optional",
 	"TestNormalization/simple/sortOperatorA.dhall",
-	"TestNormalization/simplifications",
+	"TestNormalization/simplifications/andA.dhall",
+	"TestNormalization/simplifications/eqA.dhall",
+	"TestNormalization/simplifications/neA.dhall",
+	"TestNormalization/simplifications/orA.dhall",
 }
 
 func pass(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 )
 
 type TypeContext map[string][]Expr
@@ -93,6 +94,16 @@ type (
 	BuiltinType int
 
 	DoubleLit float64
+
+	Chunk struct {
+		Prefix string
+		Expr   Expr
+	}
+	Chunks  []Chunk
+	TextLit struct {
+		Chunks Chunks
+		Suffix string
+	}
 
 	BoolLit bool
 	BoolIf  struct {
@@ -186,6 +197,13 @@ func Shift(d int, v Var, e Expr) Expr {
 		return e
 	case DoubleLit:
 		return e
+	case TextLit:
+		newTextLit := TextLit{make(Chunks, len(e.Chunks)), e.Suffix}
+		for i, chunk := range e.Chunks {
+			newTextLit.Chunks[i].Prefix = chunk.Prefix
+			newTextLit.Chunks[i].Expr = Shift(d, v, chunk.Expr)
+		}
+		return newTextLit
 	case BoolLit:
 		return e
 	case BoolIf:
@@ -281,6 +299,13 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return e
 	case DoubleLit:
 		return e
+	case TextLit:
+		newTextLit := TextLit{make(Chunks, len(e.Chunks)), e.Suffix}
+		for i, chunk := range e.Chunks {
+			newTextLit.Chunks[i].Prefix = chunk.Prefix
+			newTextLit.Chunks[i].Expr = Subst(v, c, chunk.Expr)
+		}
+		return newTextLit
 	case BoolLit:
 		return e
 	case BoolIf:
@@ -332,6 +357,7 @@ func Rule(a Const, b Const) (Const, error) {
 
 const (
 	Double BuiltinType = iota
+	Text
 	Bool
 	Natural
 	Integer
@@ -361,6 +387,8 @@ var (
 	_ Expr = Annot{}
 	_ Expr = Double
 	_ Expr = DoubleLit(3.0)
+	_ Expr = Text
+	_ Expr = TextLit{}
 	_ Expr = Bool
 	_ Expr = BoolLit(true)
 	_ Expr = BoolIf{}
@@ -471,6 +499,8 @@ func (t BuiltinType) WriteTo(out io.Writer) (int64, error) {
 	switch t {
 	case Double:
 		n, err = fmt.Fprint(out, "Double")
+	case Text:
+		n, err = fmt.Fprint(out, "Text")
 	case Bool:
 		n, err = fmt.Fprint(out, "Bool")
 	case Natural:
@@ -488,6 +518,42 @@ func (t BuiltinType) WriteTo(out io.Writer) (int64, error) {
 func (d DoubleLit) WriteTo(out io.Writer) (int64, error) {
 	n, err := fmt.Fprintf(out, "%f", d)
 	return int64(n), err
+}
+
+func (t TextLit) WriteTo(out io.Writer) (int64, error) {
+	var written int64
+	n, err := fmt.Fprint(out, "\"")
+	written += int64(n)
+	if err != nil {
+		return written, err
+	}
+	for _, chunk := range t.Chunks {
+		// TODO: properly deserialise string here
+		n, err := fmt.Fprint(out, chunk.Prefix)
+		written += int64(n)
+		if err != nil {
+			return written, err
+		}
+		n, err = fmt.Fprint(out, "${")
+		written += int64(n)
+		if err != nil {
+			return written, err
+		}
+		n64, err := chunk.Expr.WriteTo(out)
+		written += n64
+		if err != nil {
+			return written, err
+		}
+		n, err = fmt.Fprint(out, "}")
+		written += int64(n)
+		if err != nil {
+			return written, err
+		}
+	}
+	// TODO: properly deserialise string here
+	n, err = fmt.Fprint(out, t.Suffix)
+	written += int64(n)
+	return written, err
 }
 
 func (bl BoolLit) WriteTo(out io.Writer) (int64, error) {
@@ -721,6 +787,16 @@ func (t BuiltinType) Normalize() Expr { return t }
 
 func (d DoubleLit) Normalize() Expr { return d }
 
+func (t TextLit) Normalize() Expr {
+	var str strings.Builder
+	for _, chunk := range t.Chunks {
+		str.WriteString(chunk.Prefix)
+		str.WriteString(chunk.Expr.Normalize().(TextLit).Suffix)
+	}
+	str.WriteString(t.Suffix)
+	return TextLit{Suffix: str.String()}
+}
+
 func (n BoolLit) Normalize() Expr { return n }
 func (b BoolIf) Normalize() Expr {
 	cond := b.Cond.Normalize()
@@ -901,6 +977,15 @@ func (a Annot) AlphaNormalize() Expr { return a.Expr.AlphaNormalize() }
 func (t BuiltinType) AlphaNormalize() Expr { return t }
 
 func (d DoubleLit) AlphaNormalize() Expr { return d }
+
+func (t TextLit) AlphaNormalize() Expr {
+	newTextLit := TextLit{make(Chunks, len(t.Chunks)), t.Suffix}
+	for i, chunk := range t.Chunks {
+		newTextLit.Chunks[i].Prefix = chunk.Prefix
+		newTextLit.Chunks[i].Expr = chunk.Expr.AlphaNormalize()
+	}
+	return newTextLit
+}
 
 func (n BoolLit) AlphaNormalize() Expr { return n }
 func (b BoolIf) AlphaNormalize() Expr {

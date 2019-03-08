@@ -173,6 +173,8 @@ func (t BuiltinType) TypeWith(*TypeContext) (Expr, error) {
 	switch t {
 	case Double:
 		return Type, nil
+	case Text:
+		return Type, nil
 	case Bool:
 		return Type, nil
 	case Natural:
@@ -187,6 +189,19 @@ func (t BuiltinType) TypeWith(*TypeContext) (Expr, error) {
 }
 
 func (DoubleLit) TypeWith(*TypeContext) (Expr, error) { return Double, nil }
+
+func (t TextLit) TypeWith(ctx *TypeContext) (Expr, error) {
+	for _, chunk := range t.Chunks {
+		chunkT, err := chunk.Expr.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if chunkT != Text {
+			return nil, errors.New("Interpolated expression is not Text")
+		}
+	}
+	return Text, nil
+}
 
 func (BoolLit) TypeWith(*TypeContext) (Expr, error) { return Bool, nil }
 

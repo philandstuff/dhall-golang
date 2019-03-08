@@ -32,7 +32,9 @@ Go bindings for dhall.
  - [X] Lists
    - [ ] `l # r` list append
    - [ ] List/* functions
- - [ ] Text
+ - [x] Text
+   - [x] double quote literals
+   - [ ] single quote literals
    - [ ] text interpolation
    - [ ] multiline strings
    - [ ] `l ++ r` text append
