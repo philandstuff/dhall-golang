@@ -42,7 +42,7 @@ Go bindings for dhall.
  - [ ] Optionals
    - [ ] Optional/fold and Optional/build
  - [x] Records
-   - [ ] `f.a`
+   - [x] `f.a`
    - [ ] `f.{ xs… }`
    - [ ] `l ∧ r`
    - [ ] `l ⫽ r`

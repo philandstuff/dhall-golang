@@ -287,7 +287,15 @@ ApplicationExpression ← f:ImportExpression rest:AnArg* {
 
 ImportExpression ← SelectorExpression
 
-SelectorExpression ← PrimitiveExpression
+SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Label)* {
+    expr := e.(ast.Expr)
+    labels := ls.([]interface{})
+    for _, labelSelector := range labels {
+        label := labelSelector.([]interface{})[3]
+        expr = ast.Field{expr, label.(string)}
+    }
+    return expr, nil
+}
 
 PrimitiveExpression ←
       DoubleLiteral

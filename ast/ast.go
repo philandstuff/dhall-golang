@@ -129,8 +129,14 @@ type (
 	// `[2,3,4]` == NonEmptyList(2,3,4)
 	NonEmptyList []Expr
 
-	Record    map[string]Expr
-	RecordLit map[string]Expr
+	Record    map[string]Expr // { x : Natural }
+	RecordLit map[string]Expr // { x = 3 }
+
+	// e.x
+	Field struct {
+		Record    Expr
+		FieldName string
+	}
 )
 
 const (
@@ -236,6 +242,11 @@ func Shift(d int, v Var, e Expr) Expr {
 			fields[name] = Shift(d, v, val)
 		}
 		return RecordLit(fields)
+	case Field:
+		return Field{
+			Record:    Shift(d, v, e.Record),
+			FieldName: e.FieldName,
+		}
 	}
 	panic("missing switch case in Shift()")
 }
@@ -338,6 +349,11 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			fields[name] = Subst(v, c, val)
 		}
 		return RecordLit(fields)
+	case Field:
+		return Field{
+			Record:    Subst(v, c, e.Record),
+			FieldName: e.FieldName,
+		}
 	}
 	panic("missing switch case in Subst()")
 }
@@ -403,6 +419,7 @@ var (
 	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
 	_ Expr = Record(map[string]Expr{})
 	_ Expr = RecordLit(map[string]Expr{})
+	_ Expr = Field{}
 )
 
 func (c Const) WriteTo(out io.Writer) (int64, error) {
@@ -734,6 +751,20 @@ func (r RecordLit) WriteTo(out io.Writer) (int64, error) {
 	return written, err
 }
 
+func (f Field) WriteTo(out io.Writer) (int64, error) {
+	written, err := f.Record.WriteTo(out)
+	if err != nil {
+		return written, err
+	}
+	i, err := out.Write([]byte("."))
+	written += int64(i)
+	if err != nil {
+		return written, err
+	}
+	i, err = out.Write([]byte(f.FieldName))
+	return written + int64(i), err
+}
+
 func (c Const) Normalize() Expr { return c }
 func (v Var) Normalize() Expr   { return v }
 
@@ -884,6 +915,15 @@ func (r RecordLit) Normalize() Expr {
 		fields[name] = val.Normalize()
 	}
 	return RecordLit(fields)
+}
+
+func (f Field) Normalize() Expr {
+	r := f.Record.Normalize()
+	if rl, ok := r.(RecordLit); ok {
+		val := rl[f.FieldName]
+		return val.Normalize()
+	}
+	return f
 }
 
 func (c Const) AlphaNormalize() Expr { return c }
@@ -1037,6 +1077,13 @@ func (r RecordLit) AlphaNormalize() Expr {
 		fields[name] = val.AlphaNormalize()
 	}
 	return RecordLit(fields)
+}
+
+func (f Field) AlphaNormalize() Expr {
+	return Field{
+		Record:    f.Record.AlphaNormalize(),
+		FieldName: f.FieldName,
+	}
 }
 
 func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {

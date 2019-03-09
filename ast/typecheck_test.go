@@ -108,6 +108,9 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("{foo : Type} : Kind",
 			Record(map[string]Expr{"foo": Type}),
 			Kind),
+		Entry(`\(x : {y : Natural}) → x.y : {y : Natural} → Natural`,
+			&LambdaExpr{"x", Record(map[string]Expr{"y": Natural}), Field{x(0), "y"}},
+			&Pi{"_", Record(map[string]Expr{"y": Natural}), Natural}),
 	)
 	DescribeTable("Other",
 		expectType,
@@ -153,5 +156,8 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("record literals can't have Kind->Kind fields", RecordLit(map[string]Expr{"foo": &LambdaExpr{Label: "x", Type: Kind, Body: x(0)}})),
 		Entry("record literals can't mix types and kinds", RecordLit(map[string]Expr{"foo": NaturalLit(3), "bar": Natural})),
 		Entry("record literals can't mix kinds and sorts", RecordLit(map[string]Expr{"foo": Natural, "bar": Type})),
+		Entry("you can't select from non-records", Field{NaturalLit(3), "y"}),
+		Entry("you can't select from record types, only record literals", Field{Record(map[string]Expr{"y": Natural}), "y"}),
+		Entry("you can't select nonexistent fields", Field{RecordLit(map[string]Expr{"foo": Natural}), "y"}),
 	)
 })

@@ -367,3 +367,27 @@ func (r RecordLit) TypeWith(ctx *TypeContext) (Expr, error) {
 	}
 	return Record(fieldTypes), nil
 }
+
+func (f Field) TypeWith(ctx *TypeContext) (Expr, error) {
+	rt, err := f.Record.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rtt, err := rt.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if rtt != Type && rtt != Kind && rtt != Sort {
+		return nil, fmt.Errorf("Expected Type, Kind or Sort, but got %+v", rt)
+	}
+	rt = rt.Normalize()
+	rtRecord, ok := rt.(Record)
+	if !ok {
+		return nil, fmt.Errorf("Tried to access field from non-record type")
+	}
+	ft, ok := rtRecord[f.FieldName]
+	if !ok {
+		return nil, fmt.Errorf("Tried to access nonexistent field %s", f.FieldName)
+	}
+	return ft, nil
+}

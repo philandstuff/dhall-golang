@@ -99,6 +99,8 @@ var _ = Describe("Expression", func() {
 		Entry("{foo = 3}", `{foo = 3}`, RecordLit(map[string]Expr{"foo": NaturalLit(3)})),
 		Entry("{foo : Natural, bar : Integer}", `{foo : Natural, bar: Integer}`, Record(map[string]Expr{"foo": Natural, "bar": Integer})),
 		Entry("{foo = 3 , bar = +3}", `{foo = 3 , bar = +3}`, RecordLit(map[string]Expr{"foo": NaturalLit(3), "bar": IntegerLit(3)})),
+		Entry("t.x", `t.x`, Field{Var{"t", 0}, "x"}),
+		Entry("t.x.y", `t.x.y`, Field{Field{Var{"t", 0}, "x"}, "y"}),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {
