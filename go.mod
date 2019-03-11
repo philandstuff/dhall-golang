@@ -1,6 +1,7 @@
 module github.com/philandstuff/dhall-golang
 
 require (
+	github.com/leanovate/gopter v0.2.4
 	github.com/maxbrunsfeld/counterfeiter v0.0.0-20190111051351-d7285d544cff // indirect
 	github.com/mna/pigeon v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.7.0
