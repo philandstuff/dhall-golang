@@ -14,7 +14,7 @@ Go bindings for dhall.
  - [X] Variables
    - [X] de bruijn indices
  - [X] Lambdas, Pis, function application
-   - [ ] Alpha normalization
+   - [x] Alpha normalization
  - [X] Let bindings
  - [X] Type annotations
  - [X] Bools
