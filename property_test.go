@@ -15,14 +15,14 @@ import (
 )
 
 var (
-	NaturalLit = gen.Int32Range(0, math.MaxInt32).
-			Map(func(i int32) ast.Expr {
-			return ast.NaturalLit(i)
-		}).WithLabel("NaturalLit")
-	IntegerLit = gen.Int32().
-			Map(func(i int32) ast.Expr {
-			return ast.IntegerLit(i)
-		}).WithLabel("IntegerLit")
+	NaturalLit = gopter.DeriveGen(
+		func(n int) ast.NaturalLit { return ast.NaturalLit(n) },
+		func(n ast.NaturalLit) int { return int(n) },
+		gen.IntRange(0, math.MaxInt32)).WithLabel("NaturalLit")
+	IntegerLit = gopter.DeriveGen(
+		func(i int) ast.IntegerLit { return ast.IntegerLit(i) },
+		func(i ast.IntegerLit) int { return int(i) },
+		gen.Int()).WithLabel("IntegerLit")
 	Expr = gen.OneGenOf(NaturalLit, IntegerLit)
 )
 
