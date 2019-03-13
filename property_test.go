@@ -23,8 +23,28 @@ var (
 		func(i int) ast.IntegerLit { return ast.IntegerLit(i) },
 		func(i ast.IntegerLit) int { return int(i) },
 		gen.Int()).WithLabel("IntegerLit")
-	Expr = gen.OneGenOf(NaturalLit, IntegerLit)
+	Expr = gen.OneGenOf(NaturalLit, IntegerLit, AnyType)
 )
+var BasicType = gen.OneConstOf(ast.Double, ast.Text, ast.Bool, ast.Natural, ast.Integer)
+
+func ListType(in *gopter.GenParameters) *gopter.GenResult {
+	return gopter.DeriveGen(
+		func(e ast.Expr) *ast.App { return &ast.App{Fn: ast.List, Arg: e} },
+		func(a *ast.App) ast.Expr { return a.Arg },
+		BasicType,
+	)(in)
+}
+
+func AnyType(in *gopter.GenParameters) *gopter.GenResult {
+	return gen.Weighted([]gen.WeightedGen{
+		gen.WeightedGen{Weight: 4,
+			Gen: BasicType,
+		},
+		gen.WeightedGen{Weight: 1,
+			Gen: ListType,
+		},
+	})(in)
+}
 
 func TestParseWhatYouWrite(t *testing.T) {
 	properties := gopter.NewProperties(nil)
