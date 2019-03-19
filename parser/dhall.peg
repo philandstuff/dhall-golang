@@ -221,11 +221,39 @@ IdentifierReservedPrefix ←
     }
 }
 
-Env ← "env:" v:BashEnvironmentVariable _ { return v, nil }
+Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) _ { return v, nil }
 
 BashEnvironmentVariable ← [A-Za-z_][A-Za-z0-9_]* {
   return ast.Embed(ast.Import{EnvVar: string(c.text)}), nil
 }
+
+PosixEnvironmentVariable ← '"' v:PosixEnvironmentVariableContent '"' {
+  return v, nil
+}
+
+PosixEnvironmentVariableContent ← v:PosixEnvironmentVariableCharacter+ {
+  var b strings.Builder
+  for _, c := range v.([]interface{}) {
+    _, err := b.Write(c.([]byte))
+    if err != nil { return nil, err }
+  }
+  return ast.Embed(ast.Import{EnvVar: b.String()}), nil
+}
+
+PosixEnvironmentVariableCharacter ←
+      `\"` { return []byte{0x22}, nil }
+    / `\\` { return []byte{0x5c}, nil }
+    / `\a` { return []byte{0x07}, nil }
+    / `\b` { return []byte{0x08}, nil }
+    / `\f` { return []byte{0x0c}, nil }
+    / `\n` { return []byte{0x0a}, nil }
+    / `\r` { return []byte{0x0d}, nil }
+    / `\t` { return []byte{0x09}, nil }
+    / `\v` { return []byte{0x0b}, nil }
+    / [\x20-\x21]
+    / [\x23-\x3c]
+    / [\x3e-\x5b]
+    / [\x5d-\x7e]
 
 ImportType ← Env
 

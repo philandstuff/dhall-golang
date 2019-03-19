@@ -103,7 +103,9 @@ var _ = Describe("Expression", func() {
 		Entry("t.x.y", `t.x.y`, Field{Field{Var{"t", 0}, "x"}, "y"}),
 	)
 	DescribeTable("imports", ParseAndCompare,
-		Entry("environment variable imports", `env:FOO as Text`, Embed(Import{EnvVar: "FOO"})),
+		Entry("bash envvar imports", `env:FOO as Text`, Embed(Import{EnvVar: "FOO"})),
+		Entry("posix envvar imports", `env:"FOO" as Text`, Embed(Import{EnvVar: "FOO"})),
+		Entry("posix envvar imports", `env:"foo\nbar\a!" as Text`, Embed(Import{EnvVar: "foo\nbar\a!"})),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {
