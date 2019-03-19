@@ -7,20 +7,22 @@ import (
 	"os"
 
 	"github.com/philandstuff/dhall-golang/ast"
+	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
 	"github.com/ugorji/go/codec"
 )
 
 //go:generate pigeon -o parser/dhall.go parser/dhall.peg
 
-func load(e ast.Expr) ast.Expr { return e }
-
 func main() {
 	expr, err := parser.ParseReader("-", os.Stdin)
 	if err != nil {
 		log.Fatalf("Parse error: %v", err)
 	}
-	resolvedExpr := load(expr.(ast.Expr))
+	resolvedExpr, err := imports.Load(expr.(ast.Expr))
+	if err != nil {
+		log.Fatalf("Import resolve error: %v", err)
+	}
 	inferredType, err := resolvedExpr.TypeWith(ast.EmptyContext())
 	if err != nil {
 		log.Fatalf("Type error: %v", err)

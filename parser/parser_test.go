@@ -102,6 +102,9 @@ var _ = Describe("Expression", func() {
 		Entry("t.x", `t.x`, Field{Var{"t", 0}, "x"}),
 		Entry("t.x.y", `t.x.y`, Field{Field{Var{"t", 0}, "x"}, "y"}),
 	)
+	DescribeTable("imports", ParseAndCompare,
+		Entry("environment variable imports", `env:FOO as Text`, Embed(Import{EnvVar: "FOO"})),
+	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {
 		root, err := parser.Parse("test", []byte(`NaN`))

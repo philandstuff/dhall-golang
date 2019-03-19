@@ -221,6 +221,18 @@ IdentifierReservedPrefix ←
     }
 }
 
+Env ← "env:" v:BashEnvironmentVariable _ { return v, nil }
+
+BashEnvironmentVariable ← [A-Za-z_][A-Za-z0-9_]* {
+  return ast.Embed(ast.Import{EnvVar: string(c.text)}), nil
+}
+
+ImportType ← Env
+
+ImportHashed ← ImportType
+
+Import ← i:ImportHashed As Text { return i, nil }
+
 // NOTE: Every rule past this point should only reference rules that end with
 // whitespace.  This ensures consistent handling of whitespace in the absence of
 // a separate lexing step
@@ -308,7 +320,7 @@ ApplicationExpression ← f:ImportExpression rest:ImportExpression* {
           return e,nil
       }
 
-ImportExpression ← SelectorExpression
+ImportExpression ← Import / SelectorExpression
 
 SelectorExpression ← e:PrimitiveExpression ls:(Dot Label)* {
     expr := e.(ast.Expr)

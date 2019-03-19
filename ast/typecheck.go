@@ -391,3 +391,7 @@ func (f Field) TypeWith(ctx *TypeContext) (Expr, error) {
 	}
 	return ft, nil
 }
+
+func (e Embed) TypeWith(ctx *TypeContext) (Expr, error) {
+	return nil, errors.New("Cannot typecheck an expression with unresolved imports")
+}

@@ -137,6 +137,8 @@ type (
 		Record    Expr
 		FieldName string
 	}
+
+	Embed Import
 )
 
 const (
@@ -144,6 +146,10 @@ const (
 	Kind
 	Sort
 )
+
+type Import struct {
+	EnvVar string
+}
 
 func Shift(d int, v Var, e Expr) Expr {
 	switch e := e.(type) {
@@ -247,6 +253,8 @@ func Shift(d int, v Var, e Expr) Expr {
 			Record:    Shift(d, v, e.Record),
 			FieldName: e.FieldName,
 		}
+	case Embed:
+		return e
 	}
 	panic("missing switch case in Shift()")
 }
@@ -354,6 +362,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Record:    Subst(v, c, e.Record),
 			FieldName: e.FieldName,
 		}
+	case Embed:
+		return e
 	}
 	panic("missing switch case in Subst()")
 }
@@ -420,6 +430,7 @@ var (
 	_ Expr = Record(map[string]Expr{})
 	_ Expr = RecordLit(map[string]Expr{})
 	_ Expr = Field{}
+	_ Expr = Embed(Import{})
 )
 
 func (c Const) WriteTo(out io.Writer) (int64, error) {
@@ -765,6 +776,10 @@ func (f Field) WriteTo(out io.Writer) (int64, error) {
 	return written + int64(i), err
 }
 
+func (e Embed) WriteTo(out io.Writer) (int64, error) {
+	return 0, errors.New("unimplemented")
+}
+
 func (c Const) Normalize() Expr { return c }
 func (v Var) Normalize() Expr   { return v }
 
@@ -926,6 +941,10 @@ func (f Field) Normalize() Expr {
 	return f
 }
 
+func (e Embed) Normalize() Expr {
+	panic("Can't normalize an expression with unresolved imports")
+}
+
 func (c Const) AlphaNormalize() Expr { return c }
 func (v Var) AlphaNormalize() Expr   { return v }
 
@@ -1084,6 +1103,10 @@ func (f Field) AlphaNormalize() Expr {
 		Record:    f.Record.AlphaNormalize(),
 		FieldName: f.FieldName,
 	}
+}
+
+func (e Embed) AlphaNormalize() Expr {
+	panic("Can't normalize an expression with unresolved imports")
 }
 
 func NewLambdaExpr(arg string, argType Expr, body Expr) *LambdaExpr {
