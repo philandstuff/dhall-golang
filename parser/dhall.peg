@@ -14,7 +14,7 @@ import (
 "unicode"
 "unicode/utf8"
 )
-import "github.com/philandstuff/dhall-golang/ast"
+import . "github.com/philandstuff/dhall-golang/ast"
 
 }
 
@@ -95,38 +95,38 @@ DoubleQuoteChunk ←
 
 DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
     var str strings.Builder
-    var outChunks ast.Chunks
+    var outChunks Chunks
     for _, chunk := range chunks.([]interface{}) {
         switch e := chunk.(type) {
         case []byte:
                 str.Write(e)
-        case ast.Expr:
-                outChunks = append(outChunks, ast.Chunk{str.String(), e})
+        case Expr:
+                outChunks = append(outChunks, Chunk{str.String(), e})
                 str.Reset()
         default:
                 return nil, errors.New("can't happen")
         }
     }
-    return ast.TextLit{Chunks: outChunks, Suffix: str.String()}, nil
+    return TextLit{Chunks: outChunks, Suffix: str.String()}, nil
 }
 
 TextLiteral ← t:DoubleQuoteLiteral _ { return t, nil }
 
-ReservedRaw ← "Bool" { return ast.Bool, nil }
+ReservedRaw ← "Bool" { return Bool, nil }
   / "Optional"
   / "None"
-  / "Natural" { return ast.Natural, nil }
-  / "Integer" { return ast.Integer, nil }
-  / "Double" { return ast.Double, nil }
-  / "Text" { return ast.Text, nil }
-  / "List" { return ast.List, nil }
-  / "True" { return ast.True, nil }
-  / "False" { return ast.False, nil }
-  / "NaN" { return ast.DoubleLit(math.NaN()), nil }
-  / "Infinity" { return ast.DoubleLit(math.Inf(1)), nil }
-  / "Type" { return ast.Type, nil }
-  / "Kind" { return ast.Kind, nil }
-  / "Sort" { return ast.Sort, nil }
+  / "Natural" { return Natural, nil }
+  / "Integer" { return Integer, nil }
+  / "Double" { return Double, nil }
+  / "Text" { return Text, nil }
+  / "List" { return List, nil }
+  / "True" { return True, nil }
+  / "False" { return False, nil }
+  / "NaN" { return DoubleLit(math.NaN()), nil }
+  / "Infinity" { return DoubleLit(math.Inf(1)), nil }
+  / "Type" { return Type, nil }
+  / "Kind" { return Kind, nil }
+  / "Sort" { return Sort, nil }
 
 Reserved ← r:ReservedRaw _ { return r, nil }
 
@@ -179,14 +179,14 @@ DoubleLiteralRaw ← [+-]? [0-9]+ ( "." [0-9]+ Exponent? / Exponent) {
       if err != nil {
          return nil, err
       }
-      return ast.DoubleLit(d), nil
+      return DoubleLit(d), nil
 }
 
 DoubleLiteral ← d:DoubleLiteralRaw _ { return d, nil }
 
 NaturalLiteralRaw ← [0-9]+ {
       i, err := strconv.Atoi(string(c.text))
-      return ast.NaturalLit(i), err
+      return NaturalLit(i), err
 }
 
 NaturalLiteral ← n:NaturalLiteralRaw _ { return n, nil }
@@ -196,18 +196,18 @@ IntegerLiteralRaw ← [+-][0-9]+ {
       if err != nil {
          return nil, err
       }
-      return ast.IntegerLit(i), nil
+      return IntegerLit(i), nil
 }
 
 IntegerLiteral ← i: IntegerLiteralRaw _ { return i, nil }
 
-DeBruijn ← At index:NaturalLiteral { return int(index.(ast.NaturalLit)), nil }
+DeBruijn ← At index:NaturalLiteral { return int(index.(NaturalLit)), nil }
 
 Identifier ← name:Label index:DeBruijn? {
     if index != nil {
-        return ast.Var{Name:name.(string), Index:index.(int)}, nil
+        return Var{Name:name.(string), Index:index.(int)}, nil
     } else {
-        return ast.Var{Name:name.(string)}, nil
+        return Var{Name:name.(string)}, nil
     }
 }
 
@@ -215,16 +215,16 @@ IdentifierReservedPrefix ←
          name:(ReservedRaw [A-Za-z0-9/_-]+ { return string(c.text),nil }) _
          index:DeBruijn? {
     if index != nil {
-        return ast.Var{Name:name.(string), Index:index.(int)}, nil
+        return Var{Name:name.(string), Index:index.(int)}, nil
     } else {
-        return ast.Var{Name:name.(string)}, nil
+        return Var{Name:name.(string)}, nil
     }
 }
 
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) _ { return v, nil }
 
 BashEnvironmentVariable ← [A-Za-z_][A-Za-z0-9_]* {
-  return ast.Embed(ast.Import{EnvVar: string(c.text)}), nil
+  return Embed(Import{EnvVar: string(c.text)}), nil
 }
 
 PosixEnvironmentVariable ← '"' v:PosixEnvironmentVariableContent '"' {
@@ -237,7 +237,7 @@ PosixEnvironmentVariableContent ← v:PosixEnvironmentVariableCharacter+ {
     _, err := b.Write(c.([]byte))
     if err != nil { return nil, err }
   }
-  return ast.Embed(ast.Import{EnvVar: b.String()}), nil
+  return Embed(Import{EnvVar: b.String()}), nil
 }
 
 PosixEnvironmentVariableCharacter ←
@@ -267,37 +267,37 @@ Import ← i:ImportHashed As Text { return i, nil }
 
 LetBinding ← Let label:Label a:Annotation? Equal v:Expression {
     if a != nil {
-        return ast.Binding{
+        return Binding{
             Variable: label.(string),
-            Annotation: a.(ast.Expr),
-            Value: v.(ast.Expr),
+            Annotation: a.(Expr),
+            Value: v.(Expr),
         }, nil
     } else {
-        return ast.Binding{
+        return Binding{
             Variable: label.(string),
-            Value: v.(ast.Expr),
+            Value: v.(Expr),
         }, nil
     }
 }
 
 Expression ←
       Lambda OpenParens label:Label Colon t:Expression CloseParens Arrow body:Expression {
-          return &ast.LambdaExpr{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
+          return &LambdaExpr{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
     / If cond:Expression Then t:Expression Else f:Expression {
-          return ast.BoolIf{cond.(ast.Expr),t.(ast.Expr),f.(ast.Expr)},nil
+          return BoolIf{cond.(Expr),t.(Expr),f.(Expr)},nil
       }
     / bindings:LetBinding* In b:Expression {
-        bs := make([]ast.Binding, len(bindings.([]interface{})))
+        bs := make([]Binding, len(bindings.([]interface{})))
         for i, binding := range bindings.([]interface{}) {
-            bs[i] = binding.(ast.Binding)
+            bs[i] = binding.(Binding)
         }
-        return ast.MakeLet(b.(ast.Expr), bs...), nil
+        return MakeLet(b.(Expr), bs...), nil
       }
     / Forall OpenParens label:Label Colon t:Expression CloseParens Arrow body:Expression {
-          return &ast.Pi{Label:label.(string), Type:t.(ast.Expr), Body: body.(ast.Expr)}, nil
+          return &Pi{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
-    / o:OperatorExpression Arrow e:Expression { return &ast.Pi{"_",o.(ast.Expr),e.(ast.Expr)}, nil }
+    / o:OperatorExpression Arrow e:Expression { return &Pi{"_",o.(Expr),e.(Expr)}, nil }
     / AnnotatedExpression
 
 Annotation ← Colon a:Expression { return a, nil }
@@ -306,11 +306,11 @@ AnnotatedExpression ←
     EmptyList
   / e:OperatorExpression a:Annotation? {
         if a == nil { return e, nil }
-        return ast.Annot{e.(ast.Expr), a.(ast.Expr)}, nil
+        return Annot{e.(Expr), a.(Expr)}, nil
     }
 
 EmptyList ← OpenBracket CloseBracket Colon List a:ImportExpression {
-          return ast.EmptyList{a.(ast.Expr)},nil
+          return EmptyList{a.(Expr)},nil
 }
 
 OperatorExpression ← ImportAltExpression
@@ -320,10 +320,10 @@ ImportAltExpression ← PlusExpression
 MorePlus ← Plus e:TimesExpression { return e, nil }
 PlusExpression ←
       first:TimesExpression rest:MorePlus* {
-          a := first.(ast.Expr)
+          a := first.(Expr)
           if rest == nil { return a, nil }
           for _, b := range rest.([]interface{}) {
-              a = ast.NaturalPlus{L: a, R: b.(ast.Expr)}
+              a = NaturalPlus{L: a, R: b.(Expr)}
           }
           return a, nil
       }
@@ -331,19 +331,19 @@ PlusExpression ←
 MoreTimes ← Times e:ApplicationExpression { return e, nil }
 TimesExpression ←
       first:ApplicationExpression rest:MoreTimes* {
-          a := first.(ast.Expr)
+          a := first.(Expr)
           if rest == nil { return a, nil }
           for _, b := range rest.([]interface{}) {
-              a = ast.NaturalTimes{L: a, R: b.(ast.Expr)}
+              a = NaturalTimes{L: a, R: b.(Expr)}
           }
           return a, nil
       }
 
 ApplicationExpression ← f:ImportExpression rest:ImportExpression* {
-          e := f.(ast.Expr)
+          e := f.(Expr)
           if rest == nil { return e, nil }
           for _, arg := range rest.([]interface{}) {
-              e = &ast.App{Fn:e, Arg: arg.(ast.Expr)}
+              e = &App{Fn:e, Arg: arg.(Expr)}
           }
           return e,nil
       }
@@ -351,11 +351,11 @@ ApplicationExpression ← f:ImportExpression rest:ImportExpression* {
 ImportExpression ← Import / SelectorExpression
 
 SelectorExpression ← e:PrimitiveExpression ls:(Dot Label)* {
-    expr := e.(ast.Expr)
+    expr := e.(Expr)
     labels := ls.([]interface{})
     for _, labelSelector := range labels {
         label := labelSelector.([]interface{})[1]
-        expr = ast.Field{expr, label.(string)}
+        expr = Field{expr, label.(string)}
     }
     return expr, nil
 }
@@ -364,7 +364,7 @@ PrimitiveExpression ←
       DoubleLiteral
     / NaturalLiteral
     / IntegerLiteral
-    / "-Infinity" { return ast.DoubleLit(math.Inf(-1)), nil }
+    / "-Infinity" { return DoubleLit(math.Inf(-1)), nil }
     / TextLiteral
     / OpenBrace r:RecordTypeOrLiteral CloseBrace { return r, nil }
     / NonEmptyListLiteral
@@ -374,10 +374,10 @@ PrimitiveExpression ←
     / OpenParens e:Expression CloseParens { return e, nil }
 
 RecordTypeOrLiteral ←
-      Equal { return ast.RecordLit(map[string]ast.Expr{}), nil }
+      Equal { return RecordLit(map[string]Expr{}), nil }
     / NonEmptyRecordType
     / NonEmptyRecordLiteral
-    / "" { return ast.Record(map[string]ast.Expr{}), nil }
+    / "" { return Record(map[string]Expr{}), nil }
 
 RecordTypeField ← name:Label Colon expr:Expression {
     return []interface{}{name, expr}, nil
@@ -386,12 +386,12 @@ MoreRecordType ← Comma f:RecordTypeField {return f, nil}
 NonEmptyRecordType ←
       first:RecordTypeField rest:MoreRecordType* {
           fields := rest.([]interface{})
-          content := make(map[string]ast.Expr, len(fields)+1)
-          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(ast.Expr)
+          content := make(map[string]Expr, len(fields)+1)
+          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Expr)
           for _, field := range(fields) {
-              content[field.([]interface{})[0].(string)] = field.([]interface{})[1].(ast.Expr)
+              content[field.([]interface{})[0].(string)] = field.([]interface{})[1].(Expr)
           }
-          return ast.Record(content), nil
+          return Record(content), nil
       }
 
 RecordLiteralField ← name:Label Equal expr:Expression {
@@ -401,12 +401,12 @@ MoreRecordLiteral ← Comma f:RecordLiteralField {return f, nil}
 NonEmptyRecordLiteral ←
       first:RecordLiteralField rest:MoreRecordLiteral* {
           fields := rest.([]interface{})
-          content := make(map[string]ast.Expr, len(fields)+1)
-          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(ast.Expr)
+          content := make(map[string]Expr, len(fields)+1)
+          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Expr)
           for _, field := range(fields) {
-              content[field.([]interface{})[0].(string)] = field.([]interface{})[1].(ast.Expr)
+              content[field.([]interface{})[0].(string)] = field.([]interface{})[1].(Expr)
           }
-          return ast.RecordLit(content), nil
+          return RecordLit(content), nil
       }
 
 MoreList ← Comma e:Expression {return e, nil}
@@ -414,12 +414,12 @@ MoreList ← Comma e:Expression {return e, nil}
 NonEmptyListLiteral ←
       OpenBracket first:Expression rest:MoreList* CloseBracket {
           exprs := rest.([]interface{})
-          content := make([]ast.Expr, len(exprs)+1)
-          content[0] = first.(ast.Expr)
+          content := make([]Expr, len(exprs)+1)
+          content[0] = first.(Expr)
           for i, expr := range(exprs) {
-              content[i+1] = expr.(ast.Expr)
+              content[i+1] = expr.(Expr)
           }
-          return ast.NonEmptyList(content), nil
+          return NonEmptyList(content), nil
       }
 
 EOF ← !.
