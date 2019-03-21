@@ -5,7 +5,23 @@ import (
 	"os"
 
 	. "github.com/philandstuff/dhall-golang/ast"
+	"github.com/philandstuff/dhall-golang/parser"
 )
+
+func ResolveEnvVarAsCode(name string) (Expr, error) {
+	val, ok := os.LookupEnv(name)
+	if !ok {
+		return nil, fmt.Errorf("Unset environment variable %s", val)
+	}
+	expr, err := parser.Parse(name, []byte(val))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = expr.(Expr).TypeWith(EmptyContext())
+
+	return expr.(Expr), err
+}
 
 func ResolveEnvVarAsText(name string) (Expr, error) {
 	val, ok := os.LookupEnv(name)
@@ -19,7 +35,11 @@ func Load(e Expr) (Expr, error) {
 	switch e := e.(type) {
 	case Embed:
 		i := Import(e)
-		return ResolveEnvVarAsText(i.EnvVar)
+		if i.ImportMode == RawText {
+			return ResolveEnvVarAsText(i.EnvVar)
+		} else {
+			return ResolveEnvVarAsCode(i.EnvVar)
+		}
 	case *LambdaExpr:
 		resolvedType, err := Load(e.Type)
 		if err != nil {

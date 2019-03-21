@@ -54,7 +54,7 @@ Go bindings for dhall.
    - [ ] remote imports
    - [x] environment variable imports
    - [ ] import caching
-   - [ ] importing expressions
+   - [x] importing expressions
    - [x] importing `as Text`
    - [ ] `x ? y` alternate import operator
    - [ ] `missing`

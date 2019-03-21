@@ -224,7 +224,7 @@ IdentifierReservedPrefix ←
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) _ { return v, nil }
 
 BashEnvironmentVariable ← [A-Za-z_][A-Za-z0-9_]* {
-  return Embed(Import{EnvVar: string(c.text)}), nil
+  return ImportType{EnvVar: string(c.text)}, nil
 }
 
 PosixEnvironmentVariable ← '"' v:PosixEnvironmentVariableContent '"' {
@@ -237,7 +237,7 @@ PosixEnvironmentVariableContent ← v:PosixEnvironmentVariableCharacter+ {
     _, err := b.Write(c.([]byte))
     if err != nil { return nil, err }
   }
-  return Embed(Import{EnvVar: b.String()}), nil
+  return ImportType{EnvVar: b.String()}, nil
 }
 
 PosixEnvironmentVariableCharacter ←
@@ -257,9 +257,10 @@ PosixEnvironmentVariableCharacter ←
 
 ImportType ← Env
 
-ImportHashed ← ImportType
+ImportHashed ← i:ImportType { return ImportHashed{ImportType: i.(ImportType)}, nil }
 
-Import ← i:ImportHashed As Text { return i, nil }
+Import ← i:ImportHashed As Text { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}), nil }
+       / i:ImportHashed { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Code}), nil }
 
 // NOTE: Every rule past this point should only reference rules that end with
 // whitespace.  This ensures consistent handling of whitespace in the absence of

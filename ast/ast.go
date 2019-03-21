@@ -147,8 +147,33 @@ const (
 	Sort
 )
 
-type Import struct {
+type ImportType struct {
 	EnvVar string
+}
+
+type ImportHashed struct {
+	ImportType
+}
+
+type ImportMode byte
+
+const (
+	Code ImportMode = iota
+	RawText
+)
+
+type Import struct {
+	ImportHashed
+	ImportMode
+}
+
+func MakeEnvVarImport(envvar string, mode ImportMode) Import {
+	return Import{
+		ImportHashed: ImportHashed{
+			ImportType: ImportType{EnvVar: envvar},
+		},
+		ImportMode: mode,
+	}
 }
 
 func Shift(d int, v Var, e Expr) Expr {
