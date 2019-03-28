@@ -27,10 +27,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Type error: %v", err)
 	}
-	inferredType.WriteTo(os.Stderr)
+	fmt.Fprint(os.Stderr, inferredType)
 	fmt.Fprintln(os.Stderr)
-	resolvedExpr.Normalize().WriteTo(os.Stdout)
-	fmt.Println()
+	fmt.Println(resolvedExpr.Normalize())
 	var ch codec.CborHandle
 	var buf = new(bytes.Buffer)
 	enc := codec.NewEncoder(buf, &ch)

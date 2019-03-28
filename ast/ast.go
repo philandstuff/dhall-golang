@@ -3,7 +3,6 @@ package ast
 import (
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 )
 
@@ -46,7 +45,6 @@ func EmptyContext() *TypeContext {
 
 type (
 	Expr interface {
-		io.WriterTo
 		AlphaNormalize() Expr
 		Normalize() Expr
 		TypeWith(*TypeContext) (Expr, error)
@@ -458,351 +456,166 @@ var (
 	_ Expr = Embed(Import{})
 )
 
-func (c Const) WriteTo(out io.Writer) (int64, error) {
-	var n int
-	var err error
+func (c Const) String() string {
 	if c == Type {
-		n, err = fmt.Fprint(out, "Type")
+		return "Type"
 	} else if c == Kind {
-		n, err = fmt.Fprint(out, "Kind")
+		return "Kind"
 	} else {
-		n, err = fmt.Fprint(out, "Sort")
+		return "Sort"
 	}
-	return int64(n), err
 }
 
-func (v Var) WriteTo(out io.Writer) (int64, error) {
-	var n int
-	var err error
+func (v Var) String() string {
 	if v.Index == 0 {
-		n, err = fmt.Fprint(out, v.Name)
+		return v.Name
 	} else {
-		n, err = fmt.Fprintf(out, "%s@%d", v.Name, v.Index)
+		return fmt.Sprintf("%s@%d", v.Name, v.Index)
 	}
-	return int64(n), err
 }
 
-func (lam *LambdaExpr) WriteTo(out io.Writer) (int64, error) {
-	w1, err := fmt.Fprintf(out, "λ(%s : ", lam.Label)
-	if err != nil {
-		return int64(w1), err
-	}
-	w2, err := lam.Type.WriteTo(out)
-	if err != nil {
-		return int64(w1) + int64(w2), err
-	}
-	w3, err := fmt.Fprint(out, ") → ")
-	if err != nil {
-		return int64(w1) + int64(w2) + int64(w3), err
-	}
-	w4, err := lam.Body.WriteTo(out)
-	return int64(w1) + int64(w2) + int64(w3) + int64(w4), err
+func (lam *LambdaExpr) String() string {
+	return fmt.Sprintf("λ(%s : %v) → %v", lam.Label, lam.Type, lam.Body)
 }
 
-func (pi *Pi) WriteTo(out io.Writer) (int64, error) {
-	w1, err := fmt.Fprintf(out, "∀(%s : ", pi.Label)
-	if err != nil {
-		return int64(w1), err
-	}
-	w2, err := pi.Type.WriteTo(out)
-	if err != nil {
-		return int64(w1) + int64(w2), err
-	}
-	w3, err := fmt.Fprint(out, ") → ")
-	if err != nil {
-		return int64(w1) + int64(w2) + int64(w3), err
-	}
-	w4, err := pi.Body.WriteTo(out)
-	return int64(w1) + int64(w2) + int64(w3) + int64(w4), err
+func (pi *Pi) String() string {
+	return fmt.Sprintf("∀(%s : %v) → %v", pi.Label, pi.Type, pi.Body)
 }
 
-func (app *App) WriteTo(out io.Writer) (int64, error) {
-	w1, err := app.Fn.WriteTo(out)
-	if err != nil {
-		return int64(w1), err
-	}
-	w2, err := fmt.Fprint(out, " ")
-	if err != nil {
-		return int64(w1) + int64(w2), err
-	}
-	w3, err := app.Arg.WriteTo(out)
-	return int64(w1) + int64(w2) + int64(w3), err
+func (app *App) String() string {
+	return fmt.Sprintf("%v %v", app.Fn, app.Arg)
 }
 
-func (l Let) WriteTo(out io.Writer) (int64, error) {
+func (l Let) String() string {
 	panic("unimplemented")
 }
 
-func (a Annot) WriteTo(out io.Writer) (int64, error) {
-	w1, err := a.Expr.WriteTo(out)
-	if err != nil {
-		return int64(w1), err
-	}
-	w2, err := fmt.Fprint(out, " : ")
-	if err != nil {
-		return int64(w1) + int64(w2), err
-	}
-	w3, err := a.Annotation.WriteTo(out)
-	return int64(w1) + int64(w2) + int64(w3), err
+func (a Annot) String() string {
+	return fmt.Sprintf("%v : %v", a.Expr, a.Annotation)
 }
 
-func (t BuiltinType) WriteTo(out io.Writer) (int64, error) {
-	var n int
-	var err error
+func (t BuiltinType) String() string {
 	switch t {
 	case Double:
-		n, err = fmt.Fprint(out, "Double")
+		return "Double"
 	case Text:
-		n, err = fmt.Fprint(out, "Text")
+		return "Text"
 	case Bool:
-		n, err = fmt.Fprint(out, "Bool")
+		return "Bool"
 	case Natural:
-		n, err = fmt.Fprint(out, "Natural")
+		return "Natural"
 	case Integer:
-		n, err = fmt.Fprint(out, "Integer")
+		return "Integer"
 	case List:
-		n, err = fmt.Fprint(out, "List")
+		return "List"
 	default:
 		panic(fmt.Sprintf("unknown type %d\n", t))
 	}
-	return int64(n), err
 }
 
-func (d DoubleLit) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(out, "%f", d)
-	return int64(n), err
+func (d DoubleLit) String() string {
+	return fmt.Sprintf("%f", d)
 }
 
-func (t TextLit) WriteTo(out io.Writer) (int64, error) {
-	var written int64
-	n, err := fmt.Fprint(out, "\"")
-	written += int64(n)
-	if err != nil {
-		return written, err
-	}
+func (t TextLit) String() string {
+	var out strings.Builder
+	out.WriteString(`"`)
 	for _, chunk := range t.Chunks {
 		// TODO: properly deserialise string here
-		n, err := fmt.Fprint(out, chunk.Prefix)
-		written += int64(n)
-		if err != nil {
-			return written, err
-		}
-		n, err = fmt.Fprint(out, "${")
-		written += int64(n)
-		if err != nil {
-			return written, err
-		}
-		n64, err := chunk.Expr.WriteTo(out)
-		written += n64
-		if err != nil {
-			return written, err
-		}
-		n, err = fmt.Fprint(out, "}")
-		written += int64(n)
-		if err != nil {
-			return written, err
-		}
+		out.WriteString(chunk.Prefix)
+		out.WriteString("${")
+		out.WriteString(fmt.Sprint(chunk.Expr))
+		out.WriteString("}")
 	}
 	// TODO: properly deserialise string here
-	n, err = fmt.Fprint(out, t.Suffix)
-	written += int64(n)
-	return written, err
+	out.WriteString(t.Suffix)
+	out.WriteString(`"`)
+	return out.String()
 }
 
-func (bl BoolLit) WriteTo(out io.Writer) (int64, error) {
+func (bl BoolLit) String() string {
 	if bool(bl) {
-		n, err := fmt.Fprint(out, "True")
-		return int64(n), err
+		return "True"
 	} else {
-		n, err := fmt.Fprint(out, "True")
-		return int64(n), err
+		return "False"
 	}
 }
 
-func (b BoolIf) WriteTo(out io.Writer) (int64, error) {
-	w1, err := fmt.Fprint(out, "if ")
-	if err != nil {
-		return int64(w1), err
-	}
-	w2, err := b.Cond.WriteTo(out)
-	if err != nil {
-		return int64(w1) + int64(w2), err
-	}
-	w3, err := fmt.Fprint(out, " then ")
-	if err != nil {
-		return int64(w1) + int64(w2) + int64(w3), err
-	}
-	w4, err := b.T.WriteTo(out)
-	if err != nil {
-		return int64(w1) + int64(w2) + int64(w3) + int64(w4), err
-	}
-	w5, err := fmt.Fprint(out, " else ")
-	if err != nil {
-		return int64(w1) + int64(w2) + int64(w3) + int64(w4) + int64(w5), err
-	}
-	w6, err := b.F.WriteTo(out)
-	return int64(w1) + int64(w2) + int64(w3) + int64(w4) + int64(w5) + int64(w6), err
+func (b BoolIf) String() string {
+	return fmt.Sprintf("if %v then %v else %v", b.Cond, b.T, b.F)
 }
 
-func (nl NaturalLit) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(out, "%d", nl)
-	return int64(n), err
+func (nl NaturalLit) String() string {
+	return fmt.Sprintf("%d", nl)
 }
 
-func (p NaturalPlus) WriteTo(out io.Writer) (int64, error) {
-	w1, err := p.L.WriteTo(out)
-	if err != nil {
-		return int64(w1), err
-	}
-	w2, err := fmt.Fprint(out, " + ")
-	if err != nil {
-		return int64(w1) + int64(w2), err
-	}
-	w3, err := p.R.WriteTo(out)
-	return int64(w1) + int64(w2) + int64(w3), err
+func (p NaturalPlus) String() string {
+	return fmt.Sprintf("%v + %v", p.L, p.R)
 }
 
-func (p NaturalTimes) WriteTo(out io.Writer) (int64, error) {
-	w1, err := p.L.WriteTo(out)
-	if err != nil {
-		return int64(w1), err
-	}
-	w2, err := fmt.Fprint(out, " * ")
-	if err != nil {
-		return int64(w1) + int64(w2), err
-	}
-	w3, err := p.R.WriteTo(out)
-	return int64(w1) + int64(w2) + int64(w3), err
+func (t NaturalTimes) String() string {
+	return fmt.Sprintf("%v * %v", t.L, t.R)
 }
 
-func (i IntegerLit) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(out, "%d", i)
-	return int64(n), err
+func (i IntegerLit) String() string {
+	return fmt.Sprintf("%d", i)
 }
 
-func (l EmptyList) WriteTo(out io.Writer) (int64, error) {
-	n, err := fmt.Fprint(out, "[] : ")
-	if err != nil {
-		return int64(n), err
-	}
-	n2, err := l.Type.WriteTo(out)
-	return int64(n) + int64(n2), err
+func (l EmptyList) String() string {
+	return fmt.Sprintf("[] : %v", l.Type)
 }
 
-func (l NonEmptyList) WriteTo(out io.Writer) (int64, error) {
-	var written int64
-	i, err := fmt.Fprint(out, "[ ")
-	written += int64(i)
-	if err != nil {
-		return written, err
-	}
+func (l NonEmptyList) String() string {
+	var out strings.Builder
+	out.WriteString("[ ")
 	exprs := []Expr(l)
-	i6, err := exprs[0].WriteTo(out)
-	written += i6
-	if err != nil {
-		return written, err
-	}
+	out.WriteString(fmt.Sprint(exprs[0]))
 	for _, expr := range exprs[1:] {
-		i, err = fmt.Fprint(out, ", ")
-		written += int64(i)
-		if err != nil {
-			return written, err
-		}
-		i6, err := expr.WriteTo(out)
-		written += i6
-		if err != nil {
-			return written, err
-		}
+		out.WriteString(", ")
+		out.WriteString(fmt.Sprint(expr))
 	}
-	i, err = fmt.Fprint(out, " ]")
-	written += int64(i)
-	return written, err
+	out.WriteString(" ]")
+	return out.String()
 }
 
-func (r Record) WriteTo(out io.Writer) (int64, error) {
-	var written int64
-	i, err := fmt.Fprint(out, "{ ")
-	written += int64(i)
-	if err != nil {
-		return written, err
-	}
+func (r Record) String() string {
+	var out strings.Builder
+	out.WriteString("{ ")
 	fields := map[string]Expr(r)
 	first := true
 	for name, expr := range fields {
 		if !first {
-			i, err = fmt.Fprint(out, ", ")
-			written += int64(i)
-			if err != nil {
-				return written, err
-			}
+			out.WriteString(", ")
 		}
 		first = false
-		i, err = fmt.Fprintf(out, "%s : ", name)
-		written += int64(i)
-		if err != nil {
-			return written, err
-		}
-		i64, err := expr.WriteTo(out)
-		written += i64
-		if err != nil {
-			return written, err
-		}
+		out.WriteString(fmt.Sprintf("%s : %v", name, expr))
 	}
-	i, err = fmt.Fprint(out, " }")
-	written += int64(i)
-	return written, err
+	out.WriteString(" }")
+	return out.String()
 }
 
-func (r RecordLit) WriteTo(out io.Writer) (int64, error) {
-	var written int64
-	i, err := fmt.Fprint(out, "{ ")
-	written += int64(i)
-	if err != nil {
-		return written, err
-	}
+func (r RecordLit) String() string {
+	var out strings.Builder
+	out.WriteString("{ ")
 	fields := map[string]Expr(r)
 	first := true
 	for name, expr := range fields {
 		if !first {
-			i, err = fmt.Fprint(out, ", ")
-			written += int64(i)
-			if err != nil {
-				return written, err
-			}
+			out.WriteString(", ")
 		}
 		first = false
-		i, err = fmt.Fprintf(out, "%s = ", name)
-		written += int64(i)
-		if err != nil {
-			return written, err
-		}
-		i64, err := expr.WriteTo(out)
-		written += i64
-		if err != nil {
-			return written, err
-		}
+		out.WriteString(fmt.Sprintf("%s = %v", name, expr))
 	}
-	i, err = fmt.Fprint(out, " }")
-	written += int64(i)
-	return written, err
+	out.WriteString(" }")
+	return out.String()
 }
 
-func (f Field) WriteTo(out io.Writer) (int64, error) {
-	written, err := f.Record.WriteTo(out)
-	if err != nil {
-		return written, err
-	}
-	i, err := out.Write([]byte("."))
-	written += int64(i)
-	if err != nil {
-		return written, err
-	}
-	i, err = out.Write([]byte(f.FieldName))
-	return written + int64(i), err
+func (f Field) String() string {
+	return fmt.Sprintf("%v.%s", f.Record, f.FieldName)
 }
 
-func (e Embed) WriteTo(out io.Writer) (int64, error) {
-	return 0, errors.New("unimplemented")
+func (e Embed) String() string {
+	panic("unimplemented")
 }
 
 func (c Const) Normalize() Expr { return c }

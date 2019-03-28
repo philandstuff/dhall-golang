@@ -123,12 +123,7 @@ func expectEqual(t *testing.T, expected, actual interface{}) {
 func expectEqualExprs(t *testing.T, expected, actual ast.Expr) {
 	t.Helper()
 	if !reflect.DeepEqual(expected, actual) {
-		buf := new(bytes.Buffer)
-		buf.Write([]byte("Expected "))
-		actual.WriteTo(buf)
-		buf.Write([]byte(" to equal "))
-		expected.WriteTo(buf)
-		failf(t, buf.String())
+		failf(t, "Expected %v to equal %v", actual, expected)
 	}
 }
 

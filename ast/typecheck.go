@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 )
 
 func judgmentallyEqual(e1 Expr, e2 Expr) bool {
@@ -159,12 +158,7 @@ func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, err
 	}
 	if !judgmentallyEqual(a.Annotation, t2) {
-		var b strings.Builder
-		b.WriteString("Annotation mismatch: inferred type ")
-		t2.WriteTo(&b)
-		b.WriteString(" but annotated ")
-		a.Annotation.WriteTo(&b)
-		return nil, errors.New(b.String())
+		return nil, fmt.Errorf("Annotation mismatch: inferred type %v but annotated %v", t2, a.Annotation)
 	}
 	return t2, nil
 }
