@@ -1,7 +1,7 @@
 package main_test
 
 import (
-	"bytes"
+	"fmt"
 	"math"
 	"reflect"
 	"testing"
@@ -16,35 +16,60 @@ import (
 
 var (
 	NaturalLit = gopter.DeriveGen(
-		func(n int) ast.NaturalLit { return ast.NaturalLit(n) },
-		func(n ast.NaturalLit) int { return int(n) },
-		gen.IntRange(0, math.MaxInt32)).WithLabel("NaturalLit")
+		func(n int) ast.Expr { var x ast.Expr = ast.NaturalLit(n); return x },
+		func(n ast.Expr) int { return int(n.(ast.NaturalLit)) },
+		gen.IntRange(0, math.MaxInt32).WithLabel("NaturalLit"),
+	)
 	IntegerLit = gopter.DeriveGen(
-		func(i int) ast.IntegerLit { return ast.IntegerLit(i) },
-		func(i ast.IntegerLit) int { return int(i) },
+		func(i int) ast.Expr { return ast.IntegerLit(i) },
+		func(i ast.Expr) int { return int(i.(ast.IntegerLit)) },
 		gen.Int()).WithLabel("IntegerLit")
-	Expr = gen.OneGenOf(NaturalLit, IntegerLit, AnyType)
+	LeafExpr = gen.OneGenOf(NaturalLit, IntegerLit, BasicType).WithLabel("LeafExpr")
 )
-var BasicType = gen.OneConstOf(ast.Double, ast.Text, ast.Bool, ast.Natural, ast.Integer)
 
-func ListType(in *gopter.GenParameters) *gopter.GenResult {
+func PlusOf(inner gopter.Gen) gopter.Gen {
+	return gen.Struct(reflect.TypeOf(ast.NaturalPlus{}), map[string]gopter.Gen{
+		"L": inner,
+		"R": inner,
+	}).WithLabel("NaturalPlus")
+}
+
+func TimesOf(inner gopter.Gen) gopter.Gen {
+	return gen.Struct(reflect.TypeOf(ast.NaturalTimes{}), map[string]gopter.Gen{
+		"L": inner,
+		"R": inner,
+	}).WithLabel("NaturalTimes")
+}
+
+func ExprOf(inner gopter.Gen) gopter.Gen {
+	return gen.OneGenOf(
+		LeafExpr,
+		PlusOf(inner),
+		TimesOf(inner),
+		ListOf(inner),
+	).WithLabel("ExprOf")
+}
+
+var BasicType = gen.OneConstOf(ast.Double, ast.Text, ast.Bool, ast.Natural, ast.Integer).WithLabel("BasicType")
+
+func ListOf(inner gopter.Gen) gopter.Gen {
 	return gopter.DeriveGen(
-		func(e ast.Expr) *ast.App { return &ast.App{Fn: ast.List, Arg: e} },
-		func(a *ast.App) ast.Expr { return a.Arg },
-		BasicType,
-	)(in)
+		func(expr ast.Expr) ast.Expr { return &ast.App{Fn: ast.List, Arg: expr} },
+		func(listType ast.Expr) ast.Expr { return listType.(*ast.App).Arg },
+		inner,
+	)
 }
 
-func AnyType(in *gopter.GenParameters) *gopter.GenResult {
-	return gen.Weighted([]gen.WeightedGen{
-		gen.WeightedGen{Weight: 4,
-			Gen: BasicType,
-		},
-		gen.WeightedGen{Weight: 1,
-			Gen: ListType,
-		},
-	})(in)
-}
+// func AnyType(in *gopter.GenParameters) *gopter.GenResult {
+// 	return gen.Weighted([]gen.WeightedGen{
+// 		gen.WeightedGen{Weight: 4,
+// 			Gen: BasicType,
+// 		},
+// 		gen.WeightedGen{Weight: 1,
+// 			Gen: ListType,
+// 		},
+// 	})(in)
+// }
 
 func TestParseWhatYouWrite(t *testing.T) {
 	properties := gopter.NewProperties(nil)
@@ -52,18 +77,13 @@ func TestParseWhatYouWrite(t *testing.T) {
 	properties.Property("written expressions parse back as themselves",
 		prop.ForAll(
 			func(e ast.Expr) bool {
-				buf := new(bytes.Buffer)
-				_, err := e.WriteTo(buf)
-				if err != nil {
-					return false
-				}
-				expr, err := parser.ParseReader("-", buf)
+				expr, err := parser.Parse("-", []byte(fmt.Sprint(e)))
 				if err != nil {
 					return false
 				}
 				return reflect.DeepEqual(e, expr)
 			},
-			Expr,
+			ExprOf(ExprOf(LeafExpr)),
 		))
 
 	properties.TestingRun(t)

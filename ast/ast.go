@@ -483,7 +483,7 @@ func (pi *Pi) String() string {
 }
 
 func (app *App) String() string {
-	return fmt.Sprintf("%v %v", app.Fn, app.Arg)
+	return fmt.Sprintf("(%v %v)", app.Fn, app.Arg)
 }
 
 func (l Let) String() string {
@@ -550,15 +550,15 @@ func (nl NaturalLit) String() string {
 }
 
 func (p NaturalPlus) String() string {
-	return fmt.Sprintf("%v + %v", p.L, p.R)
+	return fmt.Sprintf("(%v + %v)", p.L, p.R)
 }
 
 func (t NaturalTimes) String() string {
-	return fmt.Sprintf("%v * %v", t.L, t.R)
+	return fmt.Sprintf("(%v * %v)", t.L, t.R)
 }
 
 func (i IntegerLit) String() string {
-	return fmt.Sprintf("%d", i)
+	return fmt.Sprintf("%+d", i)
 }
 
 func (l EmptyList) String() string {
