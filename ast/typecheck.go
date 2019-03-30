@@ -164,7 +164,7 @@ func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
 	return t2, nil
 }
 
-func (t BuiltinType) TypeWith(*TypeContext) (Expr, error) {
+func (t Builtin) TypeWith(*TypeContext) (Expr, error) {
 	switch t {
 	case Double:
 		return Type, nil

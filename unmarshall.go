@@ -14,7 +14,7 @@ func Unmarshal(e ast.Expr, out interface{}) {
 func reflectValToDhallVal(val reflect.Value, typ ast.Expr) ast.Expr {
 	typ = typ.Normalize()
 	switch e := typ.(type) {
-	case ast.BuiltinType:
+	case ast.Builtin:
 		switch typ {
 		case ast.Double:
 			return ast.DoubleLit(val.Float())
@@ -27,7 +27,7 @@ func reflectValToDhallVal(val reflect.Value, typ ast.Expr) ast.Expr {
 		case ast.List:
 			panic("wrong Kind")
 		default:
-			panic("unknown BuiltinType")
+			panic("unknown Builtin")
 		}
 	case *ast.App:
 		switch e.Fn {

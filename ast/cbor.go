@@ -13,7 +13,7 @@ var _ codec.Selfer = &Pi{}
 var _ codec.Selfer = &App{}
 var _ codec.Selfer = Let{}
 var _ codec.Selfer = Annot{}
-var _ codec.Selfer = Double // BuiltinType
+var _ codec.Selfer = Double // Builtin
 var _ codec.Selfer = BoolIf{}
 var _ codec.Selfer = EmptyList{}
 var _ codec.Selfer = NonEmptyList{}
@@ -91,7 +91,7 @@ func (a Annot) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode([]interface{}{26, a.Expr, a.Annotation})
 }
 
-func (t BuiltinType) CodecEncodeSelf(e *codec.Encoder) {
+func (t Builtin) CodecEncodeSelf(e *codec.Encoder) {
 	switch t {
 	case Double:
 		e.Encode("Double")
@@ -172,7 +172,7 @@ func (*Pi) CodecDecodeSelf(*codec.Decoder)          {}
 func (*App) CodecDecodeSelf(*codec.Decoder)         {}
 func (Let) CodecDecodeSelf(*codec.Decoder)          {}
 func (Annot) CodecDecodeSelf(*codec.Decoder)        {}
-func (BuiltinType) CodecDecodeSelf(*codec.Decoder)  {}
+func (Builtin) CodecDecodeSelf(*codec.Decoder)  {}
 func (BoolIf) CodecDecodeSelf(*codec.Decoder)       {}
 func (TextLit) CodecDecodeSelf(*codec.Decoder)      {}
 func (NaturalLit) CodecDecodeSelf(*codec.Decoder)   {}

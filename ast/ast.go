@@ -89,7 +89,7 @@ type (
 		Annotation Expr
 	}
 
-	BuiltinType int
+	Builtin int
 
 	DoubleLit float64
 
@@ -143,6 +143,71 @@ const (
 	Type Const = iota
 	Kind
 	Sort
+)
+
+func Rule(a Const, b Const) (Const, error) {
+	if b == Type {
+		return Type, nil
+	}
+	if a == Kind && b == Kind {
+		return Kind, nil
+	}
+	if a == Sort && (b == Kind || b == Sort) {
+		return Sort, nil
+	}
+	return Const(0), errors.New("Dependent types are not allowed")
+}
+
+const (
+	Double Builtin = iota
+	Text
+	Bool
+	Natural
+	Integer
+	List
+)
+
+const (
+	True  = BoolLit(true)
+	False = BoolLit(false)
+)
+
+func MakeList(first Expr, rest ...Expr) NonEmptyList {
+	return NonEmptyList(append([]Expr{first}, rest...))
+}
+
+func MakeLet(body Expr, bindings ...Binding) Let {
+	return Let{Bindings: bindings, Body: body}
+}
+
+var (
+	_ Expr = Type
+	_ Expr = &Var{}
+	_ Expr = &LambdaExpr{}
+	_ Expr = &Pi{}
+	_ Expr = &App{}
+	_ Expr = Let{}
+	_ Expr = Annot{}
+	_ Expr = Double
+	_ Expr = DoubleLit(3.0)
+	_ Expr = Text
+	_ Expr = TextLit{}
+	_ Expr = Bool
+	_ Expr = BoolLit(true)
+	_ Expr = BoolIf{}
+	_ Expr = Natural
+	_ Expr = NaturalLit(3)
+	_ Expr = NaturalPlus{}
+	_ Expr = NaturalTimes{}
+	_ Expr = Integer
+	_ Expr = IntegerLit(3)
+	_ Expr = List
+	_ Expr = EmptyList{Natural}
+	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
+	_ Expr = Record(map[string]Expr{})
+	_ Expr = RecordLit(map[string]Expr{})
+	_ Expr = Field{}
+	_ Expr = Embed(Import{})
 )
 
 type ImportType struct {
@@ -228,7 +293,7 @@ func Shift(d int, v Var, e Expr) Expr {
 		return Let{Bindings: newBindings, Body: Shift(d, v, e.Body)}
 	case Annot:
 		return Annot{Shift(d, v, e.Expr), Shift(d, v, e.Annotation)}
-	case BuiltinType:
+	case Builtin:
 		return e
 	case DoubleLit:
 		return e
@@ -337,7 +402,7 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return Let{Bindings: newBindings, Body: Subst(v, c, e.Body)}
 	case Annot:
 		return Annot{Subst(v, c, e.Expr), Subst(v, c, e.Annotation)}
-	case BuiltinType:
+	case Builtin:
 		return e
 	case DoubleLit:
 		return e
@@ -391,71 +456,6 @@ func Subst(v Var, c Expr, b Expr) Expr {
 	panic("missing switch case in Subst()")
 }
 
-func Rule(a Const, b Const) (Const, error) {
-	if b == Type {
-		return Type, nil
-	}
-	if a == Kind && b == Kind {
-		return Kind, nil
-	}
-	if a == Sort && (b == Kind || b == Sort) {
-		return Sort, nil
-	}
-	return Const(0), errors.New("Dependent types are not allowed")
-}
-
-const (
-	Double BuiltinType = iota
-	Text
-	Bool
-	Natural
-	Integer
-	List
-)
-
-const (
-	True  = BoolLit(true)
-	False = BoolLit(false)
-)
-
-func MakeList(first Expr, rest ...Expr) NonEmptyList {
-	return NonEmptyList(append([]Expr{first}, rest...))
-}
-
-func MakeLet(body Expr, bindings ...Binding) Let {
-	return Let{Bindings: bindings, Body: body}
-}
-
-var (
-	_ Expr = Type
-	_ Expr = &Var{}
-	_ Expr = &LambdaExpr{}
-	_ Expr = &Pi{}
-	_ Expr = &App{}
-	_ Expr = Let{}
-	_ Expr = Annot{}
-	_ Expr = Double
-	_ Expr = DoubleLit(3.0)
-	_ Expr = Text
-	_ Expr = TextLit{}
-	_ Expr = Bool
-	_ Expr = BoolLit(true)
-	_ Expr = BoolIf{}
-	_ Expr = Natural
-	_ Expr = NaturalLit(3)
-	_ Expr = NaturalPlus{}
-	_ Expr = NaturalTimes{}
-	_ Expr = Integer
-	_ Expr = IntegerLit(3)
-	_ Expr = List
-	_ Expr = EmptyList{Natural}
-	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
-	_ Expr = Record(map[string]Expr{})
-	_ Expr = RecordLit(map[string]Expr{})
-	_ Expr = Field{}
-	_ Expr = Embed(Import{})
-)
-
 func (c Const) String() string {
 	if c == Type {
 		return "Type"
@@ -494,7 +494,7 @@ func (a Annot) String() string {
 	return fmt.Sprintf("%v : %v", a.Expr, a.Annotation)
 }
 
-func (t BuiltinType) String() string {
+func (t Builtin) String() string {
 	switch t {
 	case Double:
 		return "Double"
@@ -667,7 +667,7 @@ func (l Let) Normalize() Expr {
 
 func (a Annot) Normalize() Expr { return a.Expr.Normalize() }
 
-func (t BuiltinType) Normalize() Expr { return t }
+func (t Builtin) Normalize() Expr { return t }
 
 func (d DoubleLit) Normalize() Expr { return d }
 
@@ -888,7 +888,7 @@ func (l Let) AlphaNormalize() Expr {
 
 func (a Annot) AlphaNormalize() Expr { return a.Expr.AlphaNormalize() }
 
-func (t BuiltinType) AlphaNormalize() Expr { return t }
+func (t Builtin) AlphaNormalize() Expr { return t }
 
 func (d DoubleLit) AlphaNormalize() Expr { return d }
 
