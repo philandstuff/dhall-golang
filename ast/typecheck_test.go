@@ -24,6 +24,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 	DescribeTable("Simple types",
 		expectType,
 		Entry("Type : Kind", Type, Kind),
+		// Kind : Sort is handled using expectSort elsewhere
 		Entry("True : Bool", BoolLit(true), Bool),
 		Entry("3.3 : Double", DoubleLit(3.3), Double),
 		Entry(`"" : Text`, TextLit{}, Text),
@@ -33,6 +34,17 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("(3 : (λ(x : Type) → x) Natural) : Natural", Annot{NaturalLit(3), &App{&LambdaExpr{"x", Type, x(0)}, Natural}}, Natural),
 		Entry("3 + 5 : Natural", NaturalPlus{NaturalLit(3), NaturalLit(5)}, Natural),
 		Entry("3 * 5 : Natural", NaturalTimes{NaturalLit(3), NaturalLit(5)}, Natural),
+	)
+	DescribeTable("Builtins",
+		expectType,
+		Entry("Double : Type", Double, Type),
+		Entry("Text : Type", Text, Type),
+		Entry("Bool : Type", Bool, Type),
+		Entry("Natural : Type", Natural, Type),
+		Entry("Integer : Type", Integer, Type),
+		Entry("List : Type → Type", List, &Pi{"_", Type, Type}),
+		Entry("Optional : Type → Type", Optional, &Pi{"_", Type, Type}),
+		Entry("None : ∀(A: Type) → Optional A", None, &Pi{"A", Type, &App{Optional, Var{"A", 0}}}),
 	)
 	DescribeTable("Function types",
 		expectType,
@@ -90,6 +102,15 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("([3] : List Natural) : List Natural",
 			Annot{MakeList(NaturalLit(3)), &App{List, Natural}},
 			&App{List, Natural}),
+	)
+	DescribeTable("Optional types",
+		expectType,
+		Entry("None Natural : Optional Natural",
+			&App{None, Natural},
+			&App{Optional, Natural}),
+		Entry("Some 3 : Optional Natural",
+			Some{NaturalLit(3)},
+			&App{Optional, Natural}),
 	)
 	DescribeTable("Records",
 		expectType,

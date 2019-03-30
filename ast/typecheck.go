@@ -178,8 +178,12 @@ func (t Builtin) TypeWith(*TypeContext) (Expr, error) {
 		return Type, nil
 	case List:
 		return &Pi{"_", Type, Type}, nil
+	case Optional:
+		return &Pi{"_", Type, Type}, nil
+	case None:
+		return &Pi{"A", Type, &App{Optional, Var{"A", 0}}}, nil
 	default:
-		panic(fmt.Sprintf("unknown type %d\n", t))
+		return nil, fmt.Errorf("unknown type %d", t)
 	}
 }
 
@@ -294,6 +298,11 @@ func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 		}
 	}
 	return &App{List, t}, nil
+}
+
+func (s Some) TypeWith(ctx *TypeContext) (Expr, error) {
+	typ, err := s.Val.TypeWith(ctx)
+	return &App{Optional, typ}, err
 }
 
 func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {

@@ -92,6 +92,11 @@ var _ = Describe("Expression", func() {
 		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Natural}),
 		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), &App{List, Natural}}),
 	)
+	DescribeTable("optionals", ParseAndCompare,
+		Entry("Optional Natural", `Optional Natural`, &App{Optional, Natural}),
+		Entry("Some 3", `Some 3`, Some{NaturalLit(3)}),
+		Entry("None Natural", `None Natural`, &App{None, Natural}),
+	)
 	DescribeTable("records", ParseAndCompare,
 		Entry("{}", `{}`, Record(map[string]Expr{})),
 		Entry("{=}", `{=}`, RecordLit(map[string]Expr{})),

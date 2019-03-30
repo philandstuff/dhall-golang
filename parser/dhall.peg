@@ -115,8 +115,8 @@ DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
 TextLiteral ← t:DoubleQuoteLiteral _ { return t, nil }
 
 ReservedRaw ← "Bool" { return Bool, nil }
-  / "Optional"
-  / "None"
+  / "Optional" { return Optional, nil }
+  / "None" { return None, nil }
   / "Natural" { return Natural, nil }
   / "Integer" { return Integer, nil }
   / "Double" { return Double, nil }
@@ -342,11 +342,14 @@ TimesExpression ←
           return a, nil
       }
 
-ApplicationExpression ← f:ImportExpression rest:ImportExpression* {
+ApplicationExpression ← s:Some? f:ImportExpression rest:ImportExpression* {
           e := f.(Expr)
           if rest == nil { return e, nil }
           for _, arg := range rest.([]interface{}) {
               e = &App{Fn:e, Arg: arg.(Expr)}
+          }
+          if s != nil {
+             return Some{e}, nil
           }
           return e,nil
       }

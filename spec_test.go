@@ -124,14 +124,13 @@ var expectedFailures = []string{
 	"TestNormalization/unit/NaturalOddZero",
 	"TestNormalization/unit/NaturalShowOne",
 	"TestNormalization/unit/NaturalToIntegerOne",
-	"TestNormalization/unit/None",
+	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/OperatorAnd",
 	"TestNormalization/unit/OperatorEqual",
 	"TestNormalization/unit/OperatorListConcatenate",
 	"TestNormalization/unit/OperatorNotEqual",
 	"TestNormalization/unit/OperatorOr",
 	"TestNormalization/unit/OperatorTextConcatenate",
-	"TestNormalization/unit/OptionalA",
 	"TestNormalization/unit/OptionalBuildFoldFusion",
 	"TestNormalization/unit/OptionalBuildImplementation",
 	"TestNormalization/unit/OptionalFoldNone",
@@ -140,9 +139,11 @@ var expectedFailures = []string{
 	"TestNormalization/unit/RecursiveRecordMerge",
 	"TestNormalization/unit/RecursiveRecordTypeMerge",
 	"TestNormalization/unit/RightBiasedRecordMerge",
-	"TestNormalization/unit/SomeNormalizeArguments",
 	"TestNormalization/unit/TextShowAllEscapes",
-	"TestNormalization/unit/Union",
+	"TestNormalization/unit/UnionNormalize",
+	"TestNormalization/unit/UnionProjectConstructorA",
+	"TestNormalization/unit/UnionSort",
+	"TestNormalization/unit/UnionType",
 }
 
 func pass(t *testing.T) {

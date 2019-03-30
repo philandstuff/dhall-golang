@@ -39,7 +39,7 @@ Go bindings for dhall.
    - [ ] multiline strings
    - [ ] `l ++ r` text append
    - [ ] Text/show standard functions
- - [ ] Optionals
+ - [x] Optionals
    - [ ] Optional/fold and Optional/build
  - [x] Records
    - [x] `f.a`

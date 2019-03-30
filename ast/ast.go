@@ -126,6 +126,9 @@ type (
 	EmptyList struct{ Type Expr }
 	// `[2,3,4]` == NonEmptyList(2,3,4)
 	NonEmptyList []Expr
+	// `Some 3` == Some(3)
+	Some struct{ Val Expr }
+	// None is a Builtin
 
 	Record    map[string]Expr // { x : Natural }
 	RecordLit map[string]Expr // { x = 3 }
@@ -165,6 +168,8 @@ const (
 	Natural
 	Integer
 	List
+	Optional
+	None
 )
 
 const (
@@ -204,6 +209,8 @@ var (
 	_ Expr = List
 	_ Expr = EmptyList{Natural}
 	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
+	_ Expr = Optional
+	_ Expr = Some{NaturalLit(3)}
 	_ Expr = Record(map[string]Expr{})
 	_ Expr = RecordLit(map[string]Expr{})
 	_ Expr = Field{}
@@ -324,6 +331,8 @@ func Shift(d int, v Var, e Expr) Expr {
 			exprs[i] = Shift(d, v, expr)
 		}
 		return NonEmptyList(exprs)
+	case Some:
+		return Some{Shift(d, v, e.Val)}
 	case Record:
 		fields := make(map[string]Expr, len(map[string]Expr(e)))
 		for name, val := range map[string]Expr(e) {
@@ -433,6 +442,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			exprs[i] = Subst(v, c, expr)
 		}
 		return NonEmptyList(exprs)
+	case Some:
+		return Some{Subst(v, c, e.Val)}
 	case Record:
 		fields := make(map[string]Expr, len(map[string]Expr(e)))
 		for name, val := range map[string]Expr(e) {
@@ -508,6 +519,10 @@ func (t Builtin) String() string {
 		return "Integer"
 	case List:
 		return "List"
+	case Optional:
+		return "Optional"
+	case None:
+		return "None"
 	default:
 		panic(fmt.Sprintf("unknown type %d\n", t))
 	}
@@ -576,6 +591,10 @@ func (l NonEmptyList) String() string {
 	}
 	out.WriteString(" ]")
 	return out.String()
+}
+
+func (s Some) String() string {
+	return fmt.Sprintf("Some %v", s.Val)
 }
 
 func (r Record) String() string {
@@ -771,6 +790,10 @@ func (l NonEmptyList) Normalize() Expr {
 	return NonEmptyList(vals)
 }
 
+func (s Some) Normalize() Expr {
+	return Some{s.Val.Normalize()}
+}
+
 func (r Record) Normalize() Expr {
 	fields := make(map[string]Expr, len(map[string]Expr(r)))
 	for name, val := range map[string]Expr(r) {
@@ -935,6 +958,10 @@ func (l NonEmptyList) AlphaNormalize() Expr {
 		vals[i] = expr.AlphaNormalize()
 	}
 	return NonEmptyList(vals)
+}
+
+func (s Some) AlphaNormalize() Expr {
+	return Some{s.Val.AlphaNormalize()}
 }
 
 func (r Record) AlphaNormalize() Expr {
