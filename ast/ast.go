@@ -203,12 +203,8 @@ var (
 	_ Expr = Embed(Import{})
 )
 
-type ImportType struct {
-	EnvVar string
-}
-
 type ImportHashed struct {
-	ImportType
+	Resolvable
 }
 
 type ImportMode byte
@@ -226,7 +222,7 @@ type Import struct {
 func MakeEnvVarImport(envvar string, mode ImportMode) Import {
 	return Import{
 		ImportHashed: ImportHashed{
-			ImportType: ImportType{EnvVar: envvar},
+			Resolvable: EnvVar(envvar),
 		},
 		ImportMode: mode,
 	}

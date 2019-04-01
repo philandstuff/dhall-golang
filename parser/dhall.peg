@@ -232,7 +232,7 @@ Identifier ← Variable / Reserved
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
 
 BashEnvironmentVariable ← [A-Za-z_][A-Za-z0-9_]* {
-  return ImportType{EnvVar: string(c.text)}, nil
+  return EnvVar(string(c.text)), nil
 }
 
 PosixEnvironmentVariable ← '"' v:PosixEnvironmentVariableContent '"' {
@@ -245,7 +245,7 @@ PosixEnvironmentVariableContent ← v:PosixEnvironmentVariableCharacter+ {
     _, err := b.Write(c.([]byte))
     if err != nil { return nil, err }
   }
-  return ImportType{EnvVar: b.String()}, nil
+  return EnvVar(b.String()), nil
 }
 
 PosixEnvironmentVariableCharacter ←
@@ -265,7 +265,7 @@ PosixEnvironmentVariableCharacter ←
 
 ImportType ← Env
 
-ImportHashed ← i:ImportType { return ImportHashed{ImportType: i.(ImportType)}, nil }
+ImportHashed ← i:ImportType { return ImportHashed{Resolvable: i.(Resolvable)}, nil }
 
 Import ← i:ImportHashed _ As _1 Text { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}), nil }
        / i:ImportHashed { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Code}), nil }
