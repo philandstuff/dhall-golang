@@ -1,10 +1,8 @@
 module github.com/philandstuff/dhall-golang
 
-replace github.com/leanovate/gopter v0.2.4 => ../gopter
-
 require (
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/leanovate/gopter v0.2.4
+	github.com/leanovate/gopter v0.2.5-0.20190402064358-634a59d12406
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.3
 	github.com/ugorji/go/codec v0.0.0-20190204201341-e444a5086c43
