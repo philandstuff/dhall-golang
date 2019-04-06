@@ -69,9 +69,10 @@ func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, err
 	}
 	tA := argType.Normalize()
-	// FIXME return error rather than panic if tA isn't a
-	// Const
-	kA := tA.(Const)
+	kA, ok := tA.(Const)
+	if !ok {
+		return nil, errors.New("Wrong kind for type of pi type")
+	}
 	// FIXME: proper de bruijn indices to avoid variable capture
 	// FIXME: modifying context in place is.. icky
 	(*ctx)[pi.Label] = append([]Expr{pi.Type.Normalize()}, (*ctx)[pi.Label]...)

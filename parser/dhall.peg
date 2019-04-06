@@ -52,6 +52,8 @@ SimpleLabel ← !KeywordRaw
 
 Label ← label:SimpleLabel _ { return label, nil }
 
+NonreservedLabel ← !ReservedRaw label:Label { return label, nil }
+
 // DoubleQuoteInterpolation ←
 
 EscapedChar ←
@@ -266,7 +268,7 @@ Import ← i:ImportHashed As Text { return Embed(Import{ImportHashed: i.(ImportH
 // whitespace.  This ensures consistent handling of whitespace in the absence of
 // a separate lexing step
 
-LetBinding ← Let label:Label a:Annotation? Equal v:Expression {
+LetBinding ← Let label:NonreservedLabel a:Annotation? Equal v:Expression {
     if a != nil {
         return Binding{
             Variable: label.(string),
@@ -282,7 +284,7 @@ LetBinding ← Let label:Label a:Annotation? Equal v:Expression {
 }
 
 Expression ←
-      Lambda OpenParens label:Label Colon t:Expression CloseParens Arrow body:Expression {
+      Lambda OpenParens label:NonreservedLabel Colon t:Expression CloseParens Arrow body:Expression {
           return &LambdaExpr{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
     / If cond:Expression Then t:Expression Else f:Expression {
@@ -295,7 +297,7 @@ Expression ←
         }
         return MakeLet(b.(Expr), bs...), nil
       }
-    / Forall OpenParens label:Label Colon t:Expression CloseParens Arrow body:Expression {
+    / Forall OpenParens label:NonreservedLabel Colon t:Expression CloseParens Arrow body:Expression {
           return &Pi{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
     / o:OperatorExpression Arrow e:Expression { return &Pi{"_",o.(Expr),e.(Expr)}, nil }

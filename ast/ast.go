@@ -645,7 +645,7 @@ func (app *App) Normalize() Expr {
 		b2 := Shift(-1, v, b1)
 		return b2.Normalize()
 	}
-	return app
+	return &App{Fn: f, Arg: a}
 }
 
 func (l Let) Normalize() Expr {
@@ -673,12 +673,29 @@ func (d DoubleLit) Normalize() Expr { return d }
 
 func (t TextLit) Normalize() Expr {
 	var str strings.Builder
+	var newChunks Chunks
 	for _, chunk := range t.Chunks {
 		str.WriteString(chunk.Prefix)
-		str.WriteString(chunk.Expr.Normalize().(TextLit).Suffix)
+		normExpr := chunk.Expr.Normalize()
+		if text, ok := normExpr.(TextLit); ok {
+			if len(text.Chunks) != 0 {
+				// first chunk gets the rest of str
+				str.WriteString(text.Chunks[0].Prefix)
+				newChunks = append(newChunks,
+					Chunk{Prefix: str.String(), Expr: text.Chunks[0].Expr})
+				newChunks = append(newChunks,
+					text.Chunks[1:]...)
+				str.Reset()
+			} else {
+				str.WriteString(text.Suffix)
+			}
+		} else {
+			newChunks = append(newChunks, Chunk{Prefix: str.String(), Expr: normExpr})
+			str.Reset()
+		}
 	}
 	str.WriteString(t.Suffix)
-	return TextLit{Suffix: str.String()}
+	return TextLit{Chunks: newChunks, Suffix: str.String()}
 }
 
 func (n BoolLit) Normalize() Expr { return n }
@@ -698,7 +715,7 @@ func (b BoolIf) Normalize() Expr {
 	if judgmentallyEqual(t, f) {
 		return t
 	}
-	return b
+	return BoolIf{Cond: cond, T: t, F: f}
 }
 
 func (n NaturalLit) Normalize() Expr { return n }
@@ -776,7 +793,7 @@ func (f Field) Normalize() Expr {
 		val := rl[f.FieldName]
 		return val.Normalize()
 	}
-	return f
+	return Field{Record: r, FieldName: f.FieldName}
 }
 
 func (e Embed) Normalize() Expr {

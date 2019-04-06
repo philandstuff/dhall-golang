@@ -17,6 +17,7 @@ var _ codec.Selfer = Double // BuiltinType
 var _ codec.Selfer = BoolIf{}
 var _ codec.Selfer = EmptyList{}
 var _ codec.Selfer = NonEmptyList{}
+var _ codec.Selfer = TextLit{}
 var _ codec.Selfer = NaturalLit(0)
 var _ codec.Selfer = NaturalPlus{}
 var _ codec.Selfer = IntegerLit(0)
@@ -111,6 +112,15 @@ func (bi BoolIf) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode([]interface{}{14, bi.Cond, bi.T, bi.F})
 }
 
+func (t TextLit) CodecEncodeSelf(e *codec.Encoder) {
+	output := []interface{}{18}
+	for _, chunk := range t.Chunks {
+		output = append(output, []interface{}{chunk.Prefix, chunk.Expr})
+	}
+	output = append(output, t.Suffix)
+	e.Encode(output)
+}
+
 func (n NaturalLit) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode(append([]interface{}{15}, int(n)))
 }
@@ -164,6 +174,7 @@ func (Let) CodecDecodeSelf(*codec.Decoder)          {}
 func (Annot) CodecDecodeSelf(*codec.Decoder)        {}
 func (BuiltinType) CodecDecodeSelf(*codec.Decoder)  {}
 func (BoolIf) CodecDecodeSelf(*codec.Decoder)       {}
+func (TextLit) CodecDecodeSelf(*codec.Decoder)      {}
 func (NaturalLit) CodecDecodeSelf(*codec.Decoder)   {}
 func (NaturalPlus) CodecDecodeSelf(*codec.Decoder)  {}
 func (IntegerLit) CodecDecodeSelf(*codec.Decoder)   {}

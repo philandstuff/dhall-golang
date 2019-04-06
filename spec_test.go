@@ -17,38 +17,51 @@ import (
 
 var expectedFailures = []string{
 	"TestParserAccepts/annotationsA.dhall", // requires records, list append, optionals
-	"TestParserAccepts/asTextA.dhall",
 	"TestParserAccepts/builtinsA.dhall",
+	"TestParserAccepts/builtinNameAsFieldA.dhall", // requires remote imports
 	"TestParserAccepts/collectionImportTypeA.dhall",
 	"TestParserAccepts/constructorsA.dhall",
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
-	"TestParserAccepts/doubleQuotedStringA.dhall",
-	"TestParserAccepts/environmentVariablesA.dhall",
-	"TestParserAccepts/escapedDoubleQuotedStringA.dhall",
-	"TestParserAccepts/escapedSingleQuotedStringA.dhall",
 	"TestParserAccepts/fieldsA.dhall",
-	"TestParserAccepts/importAltA.dhall",
-	"TestParserAccepts/interpolatedDoubleQuotedStringA.dhall",
-	"TestParserAccepts/interpolatedSingleQuotedStringA.dhall",
+	"TestParserAccepts/import",
 	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/mergeA.dhall",
 	"TestParserAccepts/operatorsA.dhall",
-	"TestParserAccepts/parenthesizeUsingA.dhall",
-	"TestParserAccepts/pathTerminationA.dhall",
-	"TestParserAccepts/pathsA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
-	"TestParserAccepts/quotedPathsA.dhall",
-	"TestParserAccepts/singleQuotedStringA.dhall",
-	"TestParserAccepts/templateA.dhall",
-	"TestParserAccepts/unicodePathsA.dhall",
-	"TestParserAccepts/unicodeDoubleQuotedStringA.dhall",
+	"TestParserAccepts/reservedPrefixA.dhall",
+	"TestParserAccepts/spaceAfterListAppendA.dhall",
+	"TestParserAccepts/text/escapeA.dhall",
+	"TestParserAccepts/text/escapedSingleQuotedStringA.dhall",
+	"TestParserAccepts/text/interestingA.dhall",
+	"TestParserAccepts/text/interiorIndentA.dhall",
+	"TestParserAccepts/text/interpolatedDoubleQuotedStringA.dhall", // needs Natural/show
+	"TestParserAccepts/text/interpolatedSingleQuotedStringA.dhall",
+	"TestParserAccepts/text/interpolationA.dhall",
+	"TestParserAccepts/text/preserveCommentA.dhall",
+	"TestParserAccepts/text/singleLineA.dhall",
+	"TestParserAccepts/text/singleQuotedStringA.dhall",
+	"TestParserAccepts/text/templateA.dhall",
+	"TestParserAccepts/text/twoLinesA.dhall",
 	"TestParserAccepts/unionA.dhall",
-	"TestParserAccepts/urlsA.dhall",
 	"TestTypecheckFails/combineMixedRecords.dhall",
 	"TestTypecheckFails/duplicateFields.dhall",
 	"TestTypecheckFails/mixedUnions.dhall",
 	"TestTypecheckFails/preferMixedRecords.dhall",
+	"TestTypecheckFails/unit/Merge",
+	"TestTypecheckFails/unit/OperatorAndNotBool.dhall",
+	"TestTypecheckFails/unit/OperatorEqualNotBool.dhall",
+	"TestTypecheckFails/unit/OperatorListConcatenate",
+	"TestTypecheckFails/unit/OperatorNotEqual",
+	"TestTypecheckFails/unit/OperatorOr",
+	"TestTypecheckFails/unit/OperatorTextConcatenate",
+	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
+	"TestTypecheckFails/unit/RecordProjection",
+	"TestTypecheckFails/unit/RecursiveRecordMerge",
+	"TestTypecheckFails/unit/RecursiveRecordTypeMerge",
+	"TestTypecheckFails/unit/RightBiasedRecordMerge",
+	"TestTypecheckFails/unit/Some",
+	"TestTypecheckFails/unit/Union",
 	"TestTypechecks/prelude",
 	"TestTypechecks/recordOfRecordOfTypesA.dhall",
 	"TestTypechecks/simple/access/1A.dhall",
@@ -64,6 +77,7 @@ var expectedFailures = []string{
 	"TestNormalization/prelude",
 	"TestNormalization/remoteSystemsA.dhall",
 	"TestNormalization/simple/doubleShowA.dhall",
+	"TestNormalization/simple/enumA.dhall",
 	"TestNormalization/simple/integerShowA.dhall",
 	"TestNormalization/simple/integerToDoubleA.dhall",
 	"TestNormalization/simple/listBuildA.dhall",
@@ -77,6 +91,58 @@ var expectedFailures = []string{
 	"TestNormalization/simplifications/eqA.dhall",
 	"TestNormalization/simplifications/neA.dhall",
 	"TestNormalization/simplifications/orA.dhall",
+	"TestNormalization/unit/DoubleShowValue",
+	"TestNormalization/unit/EmptyAlternative",
+	"TestNormalization/unit/IntegerShow-12",
+	"TestNormalization/unit/IntegerShow12",
+	"TestNormalization/unit/IntegerToDouble-12",
+	"TestNormalization/unit/IntegerToDouble12",
+	"TestNormalization/unit/ListBuildFoldFusion",
+	"TestNormalization/unit/ListBuildImplementation",
+	"TestNormalization/unit/ListFoldEmpty",
+	"TestNormalization/unit/ListFoldOne",
+	"TestNormalization/unit/ListHeadEmpty",
+	"TestNormalization/unit/ListHeadOne",
+	"TestNormalization/unit/ListIndexedEmpty",
+	"TestNormalization/unit/ListIndexedOne",
+	"TestNormalization/unit/ListLastEmpty",
+	"TestNormalization/unit/ListLastOne",
+	"TestNormalization/unit/ListLengthEmpty",
+	"TestNormalization/unit/ListLengthOne",
+	"TestNormalization/unit/ListReverseEmpty",
+	"TestNormalization/unit/ListReverseTwo",
+	"TestNormalization/unit/Merge",
+	"TestNormalization/unit/NaturalBuildFoldFusion",
+	"TestNormalization/unit/NaturalBuildImplementation",
+	"TestNormalization/unit/NaturalEvenOne",
+	"TestNormalization/unit/NaturalEvenZero",
+	"TestNormalization/unit/NaturalFoldOne",
+	"TestNormalization/unit/NaturalFoldZero",
+	"TestNormalization/unit/NaturalIsZeroOne",
+	"TestNormalization/unit/NaturalIsZeroZero",
+	"TestNormalization/unit/NaturalOddOne",
+	"TestNormalization/unit/NaturalOddZero",
+	"TestNormalization/unit/NaturalShowOne",
+	"TestNormalization/unit/NaturalToIntegerOne",
+	"TestNormalization/unit/None",
+	"TestNormalization/unit/OperatorAnd",
+	"TestNormalization/unit/OperatorEqual",
+	"TestNormalization/unit/OperatorListConcatenate",
+	"TestNormalization/unit/OperatorNotEqual",
+	"TestNormalization/unit/OperatorOr",
+	"TestNormalization/unit/OperatorTextConcatenate",
+	"TestNormalization/unit/OptionalA",
+	"TestNormalization/unit/OptionalBuildFoldFusion",
+	"TestNormalization/unit/OptionalBuildImplementation",
+	"TestNormalization/unit/OptionalFoldNone",
+	"TestNormalization/unit/OptionalFoldSome",
+	"TestNormalization/unit/RecordProjection",
+	"TestNormalization/unit/RecursiveRecordMerge",
+	"TestNormalization/unit/RecursiveRecordTypeMerge",
+	"TestNormalization/unit/RightBiasedRecordMerge",
+	"TestNormalization/unit/SomeNormalizeArguments",
+	"TestNormalization/unit/TextShowAllEscapes",
+	"TestNormalization/unit/Union",
 }
 
 func pass(t *testing.T) {
@@ -102,14 +168,14 @@ func failf(t *testing.T, format string, args ...interface{}) {
 func expectError(t *testing.T, err error) {
 	t.Helper()
 	if err == nil {
-		failf(t, "Expected file to fail to parse, but it parsed successfully")
+		failf(t, "Expected error, but saw none")
 	}
 }
 
 func expectNoError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
-		failf(t, "Expected file to parse successfully, but got error %v", err)
+		failf(t, "Got unexpected error %v", err)
 	}
 }
 
@@ -275,9 +341,6 @@ func TestNormalization(t *testing.T) {
 			expectNoError(t, err)
 
 			parsedB, err := parser.ParseReader(t.Name(), bReader)
-			expectNoError(t, err)
-
-			_, err = parsedA.(ast.Expr).TypeWith(ast.EmptyContext())
 			expectNoError(t, err)
 
 			normA := parsedA.(ast.Expr).Normalize()
