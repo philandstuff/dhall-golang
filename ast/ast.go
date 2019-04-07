@@ -220,9 +220,13 @@ type Import struct {
 }
 
 func MakeEnvVarImport(envvar string, mode ImportMode) Import {
+	return MakeImport(EnvVar(envvar), mode)
+}
+
+func MakeImport(resolvable Resolvable, mode ImportMode) Import {
 	return Import{
 		ImportHashed: ImportHashed{
-			Resolvable: EnvVar(envvar),
+			Resolvable: resolvable,
 		},
 		ImportMode: mode,
 	}

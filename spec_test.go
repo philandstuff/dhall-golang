@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/philandstuff/dhall-golang/ast"
+	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
 	"github.com/ugorji/go/codec"
 )
@@ -128,6 +129,10 @@ var expectedFailures = []string{
 	"TestNormalization/unit/UnionProjectConstructorA",
 	"TestNormalization/unit/UnionSort",
 	"TestNormalization/unit/UnionType",
+	"TestImportFails/alternative",
+	"TestImportFails/cycle",
+	"TestImportFails/referentiallyInsane",
+	"TestImport/",
 }
 
 func pass(t *testing.T) {
@@ -332,5 +337,35 @@ func TestNormalization(t *testing.T) {
 			normB := parsedB.(ast.Expr).Normalize()
 
 			expectEqualExprs(t, normB, normA)
+		})
+}
+
+func TestImportFails(t *testing.T) {
+	runTestOnEachFile(t, "dhall-lang/tests/import/failure/", func(t *testing.T, reader io.Reader) {
+		parsed, err := parser.ParseReader(t.Name(), reader)
+		expectNoError(t, err)
+
+		_, err = imports.Load(parsed.(ast.Expr))
+		expectError(t, err)
+	})
+}
+
+func TestImport(t *testing.T) {
+	runTestOnFilePairs(t, "dhall-lang/tests/import/success/",
+		"A.dhall", "B.dhall",
+		func(t *testing.T, aReader, bReader io.Reader) {
+			parsedA, err := parser.ParseReader(t.Name(), aReader)
+			expectNoError(t, err)
+
+			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			expectNoError(t, err)
+
+			resolvedA, err := imports.Load(parsedA.(ast.Expr))
+			expectNoError(t, err)
+
+			resolvedB, err := imports.Load(parsedB.(ast.Expr))
+			expectNoError(t, err)
+
+			expectEqualExprs(t, resolvedB, resolvedA)
 		})
 }

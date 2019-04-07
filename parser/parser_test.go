@@ -114,6 +114,7 @@ var _ = Describe("Expression", func() {
 		Entry("bash envvar code import", `env:FOO`, Embed(MakeEnvVarImport("FOO", Code))),
 		Entry("posix envvar code import", `env:"FOO"`, Embed(MakeEnvVarImport("FOO", Code))),
 		Entry("posix envvar code import", `env:"foo\nbar\a!"`, Embed(MakeEnvVarImport("foo\nbar\a!", Code))),
+		Entry("missing", `missing`, Embed(MakeImport(Missing(struct{}{}), Code))),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {

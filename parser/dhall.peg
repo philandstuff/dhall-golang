@@ -263,7 +263,9 @@ PosixEnvironmentVariableCharacter ←
     / [\x3e-\x5b]
     / [\x5d-\x7e]
 
-ImportType ← Env
+Missing ← "missing" _ { var m Missing; return m, nil }
+
+ImportType ← Missing / Env
 
 ImportHashed ← i:ImportType { return ImportHashed{Resolvable: i.(Resolvable)}, nil }
 
