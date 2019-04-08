@@ -1,25 +1,28 @@
 package imports
 
 import (
+	"fmt"
+
 	. "github.com/philandstuff/dhall-golang/ast"
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
 func ResolveStringAsExpr(name, content string) (Expr, error) {
 	expr, err := parser.Parse(name, []byte(content))
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = expr.(Expr).TypeWith(EmptyContext())
-
 	return expr.(Expr), err
 }
 
-func Load(e Expr) (Expr, error) {
+func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 	switch e := e.(type) {
 	case Embed:
 		i := Import(e)
+		here := i.ImportHashed
+		for _, ancestor := range ancestors {
+			if ancestor == here {
+				return nil, fmt.Errorf("Detected import cycle in %s", ancestor)
+			}
+		}
+		imports := append(ancestors, here)
 		content, err := i.Resolve()
 		if err != nil {
 			return nil, err
@@ -27,7 +30,24 @@ func Load(e Expr) (Expr, error) {
 		if i.ImportMode == RawText {
 			return TextLit{Suffix: content}, nil
 		} else {
-			return ResolveStringAsExpr(i.Name(), content)
+			// dynamicExpr may contain more imports
+			dynamicExpr, err := ResolveStringAsExpr(i.Name(), content)
+			if err != nil {
+				return nil, err
+			}
+
+			// recursively load any more imports
+			expr, err := Load(dynamicExpr, imports...)
+			if err != nil {
+				return nil, err
+			}
+
+			// ensure that expr typechecks in empty context
+			_, err = expr.TypeWith(EmptyContext())
+			if err != nil {
+				return nil, err
+			}
+			return expr, nil
 		}
 	case *LambdaExpr:
 		resolvedType, err := Load(e.Type)

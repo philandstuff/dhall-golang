@@ -43,6 +43,20 @@ var _ = Describe("Import resolution", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
 	})
+	It("Performs import chaining", func() {
+		os.Setenv("CHAIN1", "env:CHAIN2")
+		os.Setenv("CHAIN2", "2 + 2")
+		actual, err := Load(Embed(MakeEnvVarImport("CHAIN1", Code)))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(actual).To(Equal(NaturalPlus{NaturalLit(2), NaturalLit(2)}))
+	})
+	It("Rejects import cycles", func() {
+		os.Setenv("CYCLE", "env:CYCLE")
+		_, err := Load(Embed(MakeEnvVarImport("CYCLE", Code)))
+
+		Expect(err).To(HaveOccurred())
+	})
 	It("Fails to resolve a code import with free variables", func() {
 		os.Setenv("FOO", "x")
 		_, err := Load(Embed(MakeEnvVarImport("FOO", Code)))
