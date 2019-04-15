@@ -21,6 +21,7 @@ var _ codec.Selfer = TextLit{}
 var _ codec.Selfer = NaturalLit(0)
 var _ codec.Selfer = NaturalPlus{}
 var _ codec.Selfer = IntegerLit(0)
+var _ codec.Selfer = Some{}
 var _ codec.Selfer = Record(map[string]Expr{})
 var _ codec.Selfer = RecordLit(map[string]Expr{})
 
@@ -70,9 +71,17 @@ func (p *Pi) CodecEncodeSelf(e *codec.Encoder) {
 }
 
 func (a *App) CodecEncodeSelf(e *codec.Encoder) {
+	fn := a.Fn
 	args := []interface{}{a.Arg}
-	// FIXME: support multi-arg application
-	e.Encode(append([]interface{}{0, a.Fn}, args...))
+	for true {
+		parentapp, ok := fn.(*App)
+		if !ok {
+			break
+		}
+		fn = parentapp.Fn
+		args = append([]interface{}{parentapp.Arg}, args...)
+	}
+	e.Encode(append([]interface{}{0, fn}, args...))
 }
 
 func (l Let) CodecEncodeSelf(e *codec.Encoder) {
@@ -148,6 +157,10 @@ func (l NonEmptyList) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode(output)
 }
 
+func (s Some) CodecEncodeSelf(e *codec.Encoder) {
+	e.Encode([]interface{}{5, nil, s.Val})
+}
+
 func (r Record) CodecEncodeSelf(e *codec.Encoder) {
 	items := map[string]Expr(r)
 	// we rely on the EncodeOptions having Canonical set
@@ -172,7 +185,7 @@ func (*Pi) CodecDecodeSelf(*codec.Decoder)          {}
 func (*App) CodecDecodeSelf(*codec.Decoder)         {}
 func (Let) CodecDecodeSelf(*codec.Decoder)          {}
 func (Annot) CodecDecodeSelf(*codec.Decoder)        {}
-func (Builtin) CodecDecodeSelf(*codec.Decoder)  {}
+func (Builtin) CodecDecodeSelf(*codec.Decoder)      {}
 func (BoolIf) CodecDecodeSelf(*codec.Decoder)       {}
 func (TextLit) CodecDecodeSelf(*codec.Decoder)      {}
 func (NaturalLit) CodecDecodeSelf(*codec.Decoder)   {}
@@ -180,5 +193,6 @@ func (NaturalPlus) CodecDecodeSelf(*codec.Decoder)  {}
 func (IntegerLit) CodecDecodeSelf(*codec.Decoder)   {}
 func (EmptyList) CodecDecodeSelf(*codec.Decoder)    {}
 func (NonEmptyList) CodecDecodeSelf(*codec.Decoder) {}
+func (Some) CodecDecodeSelf(*codec.Decoder)         {}
 func (Record) CodecDecodeSelf(*codec.Decoder)       {}
 func (RecordLit) CodecDecodeSelf(*codec.Decoder)    {}

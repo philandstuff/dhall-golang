@@ -26,14 +26,30 @@ func assertSimpleType(ctx *TypeContext, expr, expectedType Expr) error {
 	return nil
 }
 
-func (c Const) TypeWith(*TypeContext) (Expr, error) {
-	if c == Type {
+func (c Const) TypeWith(ctx *TypeContext) (Expr, error) {
+	switch c {
+	case Type:
 		return Kind, nil
-	}
-	if c == Kind {
+	case Kind:
 		return Sort, nil
+	case Sort:
+		return nil, errors.New("Sort has no type")
+	default:
+		return nil, fmt.Errorf("Unknown Const %d", c)
 	}
-	return nil, errors.New("Sort has no type")
+}
+
+func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
+	switch b {
+	case Double, Text, Bool, Natural, Integer:
+		return Type, nil
+	case List, Optional:
+		return &Pi{"_", Type, Type}, nil
+	case None:
+		return &Pi{"A", Type, &App{Optional, Var{"A", 0}}}, nil
+	default:
+		return nil, fmt.Errorf("Unknown Builtin %d", b)
+	}
 }
 
 func (v Var) TypeWith(ctx *TypeContext) (Expr, error) {
@@ -63,6 +79,19 @@ func (lam *LambdaExpr) TypeWith(ctx *TypeContext) (Expr, error) {
 	return p, nil
 }
 
+func Rule(a Const, b Const) (Const, error) {
+	if b == Type {
+		return Type, nil
+	}
+	if a == Kind && b == Kind {
+		return Kind, nil
+	}
+	if a == Sort && (b == Kind || b == Sort) {
+		return Sort, nil
+	}
+	return -1, errors.New("Dependent types are not allowed")
+}
+
 func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 	argType, err := pi.Type.TypeWith(ctx)
 	if err != nil {
@@ -73,7 +102,6 @@ func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 	if !ok {
 		return nil, errors.New("Wrong kind for type of pi type")
 	}
-	// FIXME: proper de bruijn indices to avoid variable capture
 	// FIXME: modifying context in place is.. icky
 	(*ctx)[pi.Label] = append([]Expr{pi.Type.Normalize()}, (*ctx)[pi.Label]...)
 	bodyType, err := pi.Body.TypeWith(ctx)
@@ -81,9 +109,10 @@ func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, err
 	}
 	tB := bodyType.Normalize()
-	// FIXME return error rather than panic if tA isn't a
-	// Const
-	kB := tB.(Const)
+	kB, ok := tB.(Const)
+	if !ok {
+		return nil, errors.New("Wrong kind for body of pi type")
+	}
 	// Restore ctx to how it was before
 	(*ctx)[pi.Label] = (*ctx)[pi.Label][1:len((*ctx)[pi.Label])]
 
@@ -162,29 +191,6 @@ func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, fmt.Errorf("Annotation mismatch: inferred type %v but annotated %v", t2, a.Annotation)
 	}
 	return t2, nil
-}
-
-func (t Builtin) TypeWith(*TypeContext) (Expr, error) {
-	switch t {
-	case Double:
-		return Type, nil
-	case Text:
-		return Type, nil
-	case Bool:
-		return Type, nil
-	case Natural:
-		return Type, nil
-	case Integer:
-		return Type, nil
-	case List:
-		return &Pi{"_", Type, Type}, nil
-	case Optional:
-		return &Pi{"_", Type, Type}, nil
-	case None:
-		return &Pi{"A", Type, &App{Optional, Var{"A", 0}}}, nil
-	default:
-		return nil, fmt.Errorf("unknown type %d", t)
-	}
 }
 
 func (DoubleLit) TypeWith(*TypeContext) (Expr, error) { return Double, nil }
@@ -310,7 +316,7 @@ func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {
 	if len(fields) == 0 {
 		return Type, nil
 	}
-	var c Expr
+	var c Const
 	first := true
 	for _, typ := range fields {
 		k, err := typ.TypeWith(ctx)
@@ -318,8 +324,9 @@ func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {
 			return nil, err
 		}
 		if first {
-			c = k
-			if _, ok := c.(Const); !ok {
+			var ok bool
+			c, ok = k.(Const)
+			if !ok {
 				return nil, errors.New("Invalid field type")
 			}
 		} else {

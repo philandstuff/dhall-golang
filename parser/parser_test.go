@@ -188,10 +188,10 @@ var _ = Describe("Expression", func() {
 			Entry("else", `else`),
 			Entry("let", `let`),
 			Entry("in", `in`),
-			Entry("as", `as`),
 			Entry("using", `using`),
+			// Entry("missing", `missing`),
+			Entry("as", `as`),
 			Entry("merge", `merge`),
-			Entry("constructors", `constructors`),
 			Entry("Some", `Some`),
 		)
 		DescribeTable("other expected failures", ParseAndFail,

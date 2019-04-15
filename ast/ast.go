@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -147,19 +146,6 @@ const (
 	Kind
 	Sort
 )
-
-func Rule(a Const, b Const) (Const, error) {
-	if b == Type {
-		return Type, nil
-	}
-	if a == Kind && b == Kind {
-		return Kind, nil
-	}
-	if a == Sort && (b == Kind || b == Sort) {
-		return Sort, nil
-	}
-	return Const(0), errors.New("Dependent types are not allowed")
-}
 
 const (
 	Double Builtin = iota

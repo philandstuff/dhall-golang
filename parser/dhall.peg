@@ -20,7 +20,7 @@ import . "github.com/philandstuff/dhall-golang/ast"
 
 DhallFile ← e:CompleteExpression EOF { return e, nil }
 
-CompleteExpression ← _ e:Expression { return e, nil }
+CompleteExpression ← _ e:Expression _ { return e, nil }
 
 EOL ← "\n" / "\r\n"
 
@@ -41,18 +41,26 @@ WhitespaceChunk ← ' ' / '\t' / EOL / LineComment / BlockComment
 
 _ ← WhitespaceChunk*
 
-NonemptyWhitespace ← WhitespaceChunk+
+_1 ← WhitespaceChunk+
 
 HexDig ← [0-9a-f]i
 
-SimpleLabel ← !KeywordRaw
-            [A-Za-z_] [A-Za-z0-9_/-]* { return string(c.text), nil }
+SimpleLabelFirstChar ← [A-Za-z_]
+SimpleLabelNextChar ← [A-Za-z0-9_/-]
+SimpleLabel ← Keyword SimpleLabelNextChar+ { return string(c.text), nil }
+          / !Keyword SimpleLabelFirstChar SimpleLabelNextChar*
+          {
+            return string(c.text), nil
+          }
 
 // QuotedLabel
 
-Label ← label:SimpleLabel _ { return label, nil }
+Label ← label:SimpleLabel { return label, nil }
 
-NonreservedLabel ← !ReservedRaw label:Label { return label, nil }
+NonreservedLabel ← &(Reserved SimpleLabelNextChar) label:Label { return label, nil }
+                / !Reserved label:Label { return label, nil }
+
+AnyLabel ← Label
 
 // DoubleQuoteInterpolation ←
 
@@ -112,11 +120,32 @@ DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
     return TextLit{Chunks: outChunks, Suffix: str.String()}, nil
 }
 
-TextLiteral ← t:DoubleQuoteLiteral _ { return t, nil }
+TextLiteral ← t:DoubleQuoteLiteral { return t, nil }
 
-ReservedRaw ← "Bool" { return Bool, nil }
+// reserved identifiers from semantics.md, only required for negative lookahed rules
+Reserved ←
+    "Natural/build" { return nil, errors.New("Natural/build unimplemented") }
+  / "Natural/fold" { return nil, errors.New("Natural/fold unimplemented") }
+  / "Natural/isZero" { return nil, errors.New("Natural/isZero unimplemented") }
+  / "Natural/even" { return nil, errors.New("Natural/even unimplemented") }
+  / "Natural/odd" { return nil, errors.New("Natural/odd unimplemented") }
+  / "Natural/toInteger" { return nil, errors.New("Natural/toInteger unimplemented") }
+  / "Natural/show" { return nil, errors.New("Natural/show unimplemented") }
+  / "Integer/toDouble" { return nil, errors.New("Integer/toDouble unimplemented") }
+  / "Integer/show" { return nil, errors.New("Integer/show unimplemented") }
+  / "Double/show" { return nil, errors.New("Double/show unimplemented") }
+  / "List/build" { return nil, errors.New("List/build unimplemented") }
+  / "List/fold" { return nil, errors.New("List/fold unimplemented") }
+  / "List/length" { return nil, errors.New("List/length unimplemented") }
+  / "List/head" { return nil, errors.New("List/head unimplemented") }
+  / "List/last" { return nil, errors.New("List/last unimplemented") }
+  / "List/indexed" { return nil, errors.New("List/indexed unimplemented") }
+  / "List/reverse" { return nil, errors.New("List/reverse unimplemented") }
+  / "Optional/build" { return nil, errors.New("Optional/build unimplemented") }
+  / "Optional/fold" { return nil, errors.New("Optional/fold unimplemented") }
+  / "Text/show" { return nil, errors.New("Text/show unimplemented") }
+  / "Bool" { return Bool, nil }
   / "Optional" { return Optional, nil }
-  / "None" { return None, nil }
   / "Natural" { return Natural, nil }
   / "Integer" { return Integer, nil }
   / "Double" { return Double, nil }
@@ -124,59 +153,47 @@ ReservedRaw ← "Bool" { return Bool, nil }
   / "List" { return List, nil }
   / "True" { return True, nil }
   / "False" { return False, nil }
-  / "NaN" { return DoubleLit(math.NaN()), nil }
-  / "Infinity" { return DoubleLit(math.Inf(1)), nil }
+  / "None" { return None, nil }
   / "Type" { return Type, nil }
   / "Kind" { return Kind, nil }
   / "Sort" { return Sort, nil }
 
-Reserved ← r:ReservedRaw _ { return r, nil }
+If ← "if"
+Then ← "then"
+Else ← "else"
+Let ← "let"
+In ← "in"
+As ← "as"
+Using ← "using"
+Merge ← "merge"
+Missing ← "missing"
+True ← "True"
+False ← "False"
+Infinity ← "Infinity"
+NaN ← "NaN"
+Some ← "Some"
 
-KeywordRaw ← "if"
-  / "then"
-  / "else"
-  / "let"
-  / "in"
-  / "as"
-  / "using"
-  / "merge"
-  / "constructors"
-  / "Some"
+Keyword ←
+    If / Then / Else
+  / Let / In
+  / Using / Missing / As
+  / True / False
+  / Infinity / NaN
+  / Merge / Some
 
-If ← "if" NonemptyWhitespace
-Then ← "then" NonemptyWhitespace
-Else ← "else" NonemptyWhitespace
-Let ← "let" NonemptyWhitespace
-In ← "in" NonemptyWhitespace
-As ← "as" NonemptyWhitespace
-Using ← "using" NonemptyWhitespace
-Merge ← "merge" NonemptyWhitespace
-Some ← "Some" NonemptyWhitespace
-Optional ← "Optional" _
-Text ← "Text" _
-List ← "List" _
+Optional ← "Optional"
+Text ← "Text"
+List ← "List"
 
-Equal ← '=' _
-Plus ← '+' NonemptyWhitespace
-Times ← '*' _
-Dot ← '.' _
-OpenBrace ← '{' _
-CloseBrace ← '}' _
-OpenBracket ← '[' _
-CloseBracket ← ']' _
-Comma ← ',' _
-OpenParens ← '(' _
-CloseParens ← ')' _
-At ← '@' _
-Colon ← ':' NonemptyWhitespace
+Lambda ← ('\\' / 'λ')
+Forall ← ("forall" / '∀')
+Arrow ← ("->" / '→')
 
-Lambda ← ('\\' / 'λ') _
-Forall ← ("forall" / '∀') _
-Arrow ← ("->" / '→') _
+BoolLiteral ← True { return True, nil } / False { return False, nil }
 
 Exponent ← "e"i [+-]? [0-9]+
 
-DoubleLiteralRaw ← [+-]? [0-9]+ ( "." [0-9]+ Exponent? / Exponent) {
+NumericDoubleLiteral ← [+-]? [0-9]+ ( "." [0-9]+ Exponent? / Exponent) {
       d, err := strconv.ParseFloat(string(c.text), 64)
       if err != nil {
          return nil, err
@@ -184,16 +201,17 @@ DoubleLiteralRaw ← [+-]? [0-9]+ ( "." [0-9]+ Exponent? / Exponent) {
       return DoubleLit(d), nil
 }
 
-DoubleLiteral ← d:DoubleLiteralRaw _ { return d, nil }
+DoubleLiteral ← d:NumericDoubleLiteral
+  / Infinity { return DoubleLit(math.Inf(1)), nil }
+  / "-" Infinity { return DoubleLit(math.Inf(-1)), nil }
+  / NaN { return DoubleLit(math.NaN()), nil }
 
-NaturalLiteralRaw ← [0-9]+ {
+NaturalLiteral ← [0-9]+ {
       i, err := strconv.Atoi(string(c.text))
       return NaturalLit(i), err
 }
 
-NaturalLiteral ← n:NaturalLiteralRaw _ { return n, nil }
-
-IntegerLiteralRaw ← [+-][0-9]+ {
+IntegerLiteral ← [+-][0-9]+ {
       i, err := strconv.Atoi(string(c.text))
       if err != nil {
          return nil, err
@@ -201,11 +219,9 @@ IntegerLiteralRaw ← [+-][0-9]+ {
       return IntegerLit(i), nil
 }
 
-IntegerLiteral ← i: IntegerLiteralRaw _ { return i, nil }
+DeBruijn ← _ '@' _ index:NaturalLiteral { return int(index.(NaturalLit)), nil }
 
-DeBruijn ← At index:NaturalLiteral { return int(index.(NaturalLit)), nil }
-
-Identifier ← name:Label index:DeBruijn? {
+Variable ← name:NonreservedLabel index:DeBruijn? {
     if index != nil {
         return Var{Name:name.(string), Index:index.(int)}, nil
     } else {
@@ -213,17 +229,9 @@ Identifier ← name:Label index:DeBruijn? {
     }
 }
 
-IdentifierReservedPrefix ←
-         name:(ReservedRaw [A-Za-z0-9/_-]+ { return string(c.text),nil }) _
-         index:DeBruijn? {
-    if index != nil {
-        return Var{Name:name.(string), Index:index.(int)}, nil
-    } else {
-        return Var{Name:name.(string)}, nil
-    }
-}
+Identifier ← Variable / Reserved
 
-Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) _ { return v, nil }
+Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
 
 BashEnvironmentVariable ← [A-Za-z_][A-Za-z0-9_]* {
   return ImportType{EnvVar: string(c.text)}, nil
@@ -261,18 +269,16 @@ ImportType ← Env
 
 ImportHashed ← i:ImportType { return ImportHashed{ImportType: i.(ImportType)}, nil }
 
-Import ← i:ImportHashed As Text { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}), nil }
+Import ← i:ImportHashed _ As _1 Text { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}), nil }
        / i:ImportHashed { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Code}), nil }
 
-// NOTE: Every rule past this point should only reference rules that end with
-// whitespace.  This ensures consistent handling of whitespace in the absence of
-// a separate lexing step
 
-LetBinding ← Let label:NonreservedLabel a:Annotation? Equal v:Expression {
+LetBinding ← Let _1 label:NonreservedLabel _ a:(Annotation _)?
+            '=' _ v:Expression _ {
     if a != nil {
         return Binding{
             Variable: label.(string),
-            Annotation: a.(Expr),
+            Annotation: a.([]interface{})[0].(Expr),
             Value: v.(Expr),
         }, nil
     } else {
@@ -284,35 +290,35 @@ LetBinding ← Let label:NonreservedLabel a:Annotation? Equal v:Expression {
 }
 
 Expression ←
-      Lambda OpenParens label:NonreservedLabel Colon t:Expression CloseParens Arrow body:Expression {
+      Lambda _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
           return &LambdaExpr{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
-    / If cond:Expression Then t:Expression Else f:Expression {
+    / If _1 cond:Expression _ Then _1 t:Expression _ Else _1 f:Expression {
           return BoolIf{cond.(Expr),t.(Expr),f.(Expr)},nil
       }
-    / bindings:LetBinding* In b:Expression {
+    / bindings:LetBinding+ In _1 b:Expression {
         bs := make([]Binding, len(bindings.([]interface{})))
         for i, binding := range bindings.([]interface{}) {
             bs[i] = binding.(Binding)
         }
         return MakeLet(b.(Expr), bs...), nil
       }
-    / Forall OpenParens label:NonreservedLabel Colon t:Expression CloseParens Arrow body:Expression {
+    / Forall _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
           return &Pi{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
-    / o:OperatorExpression Arrow e:Expression { return &Pi{"_",o.(Expr),e.(Expr)}, nil }
+    / o:OperatorExpression _ Arrow _ e:Expression { return &Pi{"_",o.(Expr),e.(Expr)}, nil }
     / AnnotatedExpression
 
-Annotation ← Colon a:Expression { return a, nil }
+Annotation ← ':' _1 a:Expression { return a, nil }
 
 AnnotatedExpression ←
     EmptyList
-  / e:OperatorExpression a:Annotation? {
+  / e:OperatorExpression a:(_ Annotation)? {
         if a == nil { return e, nil }
-        return Annot{e.(Expr), a.(Expr)}, nil
+        return Annot{e.(Expr), a.([]interface{})[1].(Expr)}, nil
     }
 
-EmptyList ← OpenBracket CloseBracket Colon List a:ImportExpression {
+EmptyList ← '[' _ ']' _ ':' _1 List _ a:ImportExpression {
           return EmptyList{a.(Expr)},nil
 }
 
@@ -320,7 +326,7 @@ OperatorExpression ← ImportAltExpression
 
 ImportAltExpression ← PlusExpression
 
-MorePlus ← Plus e:TimesExpression { return e, nil }
+MorePlus ← _ '+' _1 e:TimesExpression { return e, nil }
 PlusExpression ←
       first:TimesExpression rest:MorePlus* {
           a := first.(Expr)
@@ -331,7 +337,7 @@ PlusExpression ←
           return a, nil
       }
 
-MoreTimes ← Times e:ApplicationExpression { return e, nil }
+MoreTimes ← _ '*' _ e:ApplicationExpression { return e, nil }
 TimesExpression ←
       first:ApplicationExpression rest:MoreTimes* {
           a := first.(Expr)
@@ -342,53 +348,52 @@ TimesExpression ←
           return a, nil
       }
 
-ApplicationExpression ← s:Some? f:ImportExpression rest:ImportExpression* {
+ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression)* {
           e := f.(Expr)
           if rest == nil { return e, nil }
           for _, arg := range rest.([]interface{}) {
-              e = &App{Fn:e, Arg: arg.(Expr)}
-          }
-          if s != nil {
-             return Some{e}, nil
+              e = &App{Fn:e, Arg: arg.([]interface{})[1].(Expr)}
           }
           return e,nil
       }
 
+FirstApplicationExpression ←
+       Some _1 e:ImportExpression { return Some{e.(Expr)}, nil }
+     / ImportExpression
+
 ImportExpression ← Import / SelectorExpression
 
-SelectorExpression ← e:PrimitiveExpression ls:(Dot Label)* {
+SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ AnyLabel)* {
     expr := e.(Expr)
     labels := ls.([]interface{})
     for _, labelSelector := range labels {
-        label := labelSelector.([]interface{})[1]
+        label := labelSelector.([]interface{})[3]
         expr = Field{expr, label.(string)}
     }
     return expr, nil
 }
 
 PrimitiveExpression ←
-      DoubleLiteral
+      BoolLiteral
+    / DoubleLiteral
     / NaturalLiteral
     / IntegerLiteral
-    / "-Infinity" { return DoubleLit(math.Inf(-1)), nil }
     / TextLiteral
-    / OpenBrace r:RecordTypeOrLiteral CloseBrace { return r, nil }
+    / '{' _ r:RecordTypeOrLiteral _ '}' { return r, nil }
     / NonEmptyListLiteral
-    / IdentifierReservedPrefix
-    / Reserved
     / Identifier
-    / OpenParens e:Expression CloseParens { return e, nil }
+    / '(' _  e:Expression _ ')' { return e, nil }
 
 RecordTypeOrLiteral ←
-      Equal { return RecordLit(map[string]Expr{}), nil }
+      '=' { return RecordLit(map[string]Expr{}), nil }
     / NonEmptyRecordType
     / NonEmptyRecordLiteral
     / "" { return Record(map[string]Expr{}), nil }
 
-RecordTypeField ← name:Label Colon expr:Expression {
+RecordTypeField ← name:AnyLabel _ ':' _1 expr:Expression {
     return []interface{}{name, expr}, nil
 }
-MoreRecordType ← Comma f:RecordTypeField {return f, nil}
+MoreRecordType ← _ ',' _ f:RecordTypeField {return f, nil}
 NonEmptyRecordType ←
       first:RecordTypeField rest:MoreRecordType* {
           fields := rest.([]interface{})
@@ -400,10 +405,10 @@ NonEmptyRecordType ←
           return Record(content), nil
       }
 
-RecordLiteralField ← name:Label Equal expr:Expression {
+RecordLiteralField ← name:AnyLabel _ '=' _ expr:Expression {
     return []interface{}{name, expr}, nil
 }
-MoreRecordLiteral ← Comma f:RecordLiteralField {return f, nil}
+MoreRecordLiteral ← _ ',' _ f:RecordLiteralField {return f, nil}
 NonEmptyRecordLiteral ←
       first:RecordLiteralField rest:MoreRecordLiteral* {
           fields := rest.([]interface{})
@@ -415,10 +420,10 @@ NonEmptyRecordLiteral ←
           return RecordLit(content), nil
       }
 
-MoreList ← Comma e:Expression {return e, nil}
+MoreList ← ',' _ e:Expression _ {return e, nil}
 
 NonEmptyListLiteral ←
-      OpenBracket first:Expression rest:MoreList* CloseBracket {
+      '[' _ first:Expression _ rest:MoreList* ']' {
           exprs := rest.([]interface{})
           content := make([]Expr, len(exprs)+1)
           content[0] = first.(Expr)
