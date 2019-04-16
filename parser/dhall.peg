@@ -145,14 +145,14 @@ Reserved ←
   / "Optional/fold" { return nil, errors.New("Optional/fold unimplemented") }
   / "Text/show" { return nil, errors.New("Text/show unimplemented") }
   / "Bool" { return Bool, nil }
+  / "True" { return True, nil }
+  / "False" { return False, nil }
   / "Optional" { return Optional, nil }
   / "Natural" { return Natural, nil }
   / "Integer" { return Integer, nil }
   / "Double" { return Double, nil }
   / "Text" { return Text, nil }
   / "List" { return List, nil }
-  / "True" { return True, nil }
-  / "False" { return False, nil }
   / "None" { return None, nil }
   / "Type" { return Type, nil }
   / "Kind" { return Kind, nil }
@@ -188,8 +188,6 @@ List ← "List"
 Lambda ← ('\\' / 'λ')
 Forall ← ("forall" / '∀')
 Arrow ← ("->" / '→')
-
-BoolLiteral ← True { return True, nil } / False { return False, nil }
 
 Exponent ← "e"i [+-]? [0-9]+
 
@@ -374,8 +372,7 @@ SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ AnyLabel)* {
 }
 
 PrimitiveExpression ←
-      BoolLiteral
-    / DoubleLiteral
+      DoubleLiteral
     / NaturalLiteral
     / IntegerLiteral
     / TextLiteral
