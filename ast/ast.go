@@ -223,6 +223,10 @@ func MakeEnvVarImport(envvar string, mode ImportMode) Import {
 	return MakeImport(EnvVar(envvar), mode)
 }
 
+func MakeHttpImport(url string, mode ImportMode) Import {
+	return MakeImport(Remote(url), mode)
+}
+
 func MakeImport(resolvable Resolvable, mode ImportMode) Import {
 	return Import{
 		ImportHashed: ImportHashed{

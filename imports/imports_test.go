@@ -1,6 +1,7 @@
 package imports_test
 
 import (
+	"net/http"
 	"os"
 
 	. "github.com/philandstuff/dhall-golang/ast"
@@ -9,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/ghttp"
 )
 
 func expectResolves(input, expected Expr) {
@@ -24,21 +26,21 @@ var resolvedFooAsText = TextLit{Suffix: "abcd"}
 
 var _ = Describe("Import resolution", func() {
 	Describe("Environment varibles", func() {
-		It("Resolves an `as Text` import", func() {
+		It("Resolves as Text", func() {
 			os.Setenv("FOO", "abcd")
 			actual, err := Load(importFooAsText)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(resolvedFooAsText))
 		})
-		It("Resolves and parses code import", func() {
+		It("Resolves as code", func() {
 			os.Setenv("FOO", "3 : Natural")
 			actual, err := Load(Embed(MakeEnvVarImport("FOO", Code)))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
 		})
-		It("Fails to resolve a code import with free variables", func() {
+		It("Fails to resolve code with free variables", func() {
 			os.Setenv("FOO", "x")
 			_, err := Load(Embed(MakeEnvVarImport("FOO", Code)))
 
@@ -55,6 +57,43 @@ var _ = Describe("Import resolution", func() {
 		It("Rejects import cycles", func() {
 			os.Setenv("CYCLE", "env:CYCLE")
 			_, err := Load(Embed(MakeEnvVarImport("CYCLE", Code)))
+
+			Expect(err).To(HaveOccurred())
+		})
+	})
+	Describe("http imports", func() {
+		var server *ghttp.Server
+		BeforeEach(func() {
+			var err error
+			server = ghttp.NewServer()
+			Expect(err).ToNot(HaveOccurred())
+		})
+		AfterEach(func() {
+			server.Close()
+		})
+		It("Resolves as Text", func() {
+			server.RouteToHandler("GET", "/",
+				ghttp.RespondWith(http.StatusOK, "abcd"),
+			)
+			actual, err := Load(Embed(MakeHttpImport(server.URL(), RawText)))
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(TextLit{Suffix: "abcd"}))
+		})
+		It("Resolves as code", func() {
+			server.RouteToHandler("GET", "/",
+				ghttp.RespondWith(http.StatusOK, "3 : Natural"),
+			)
+			actual, err := Load(Embed(MakeHttpImport(server.URL(), Code)))
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+		})
+		It("Fails to resolve code with free variables", func() {
+			server.RouteToHandler("GET", "/",
+				ghttp.RespondWith(http.StatusOK, "x"),
+			)
+			_, err := Load(Embed(MakeHttpImport(server.URL(), Code)))
 
 			Expect(err).To(HaveOccurred())
 		})
