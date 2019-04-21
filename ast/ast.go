@@ -227,6 +227,10 @@ func MakeHttpImport(url string, mode ImportMode) Import {
 	return MakeImport(Remote(url), mode)
 }
 
+func MakeLocalImport(path string, mode ImportMode) Import {
+	return MakeImport(Local(path), mode)
+}
+
 func MakeImport(resolvable Resolvable, mode ImportMode) Import {
 	return Import{
 		ImportHashed: ImportHashed{

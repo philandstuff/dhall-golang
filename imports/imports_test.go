@@ -98,6 +98,25 @@ var _ = Describe("Import resolution", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+	Describe("local imports", func() {
+		It("Resolves as Text", func() {
+			actual, err := Load(Embed(MakeLocalImport("./testdata/just_text.txt", RawText)))
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(TextLit{Suffix: "here is some text\n"}))
+		})
+		It("Resolves as code", func() {
+			actual, err := Load(Embed(MakeLocalImport("./testdata/natural.dhall", Code)))
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+		})
+		It("Fails to resolve code with free variables", func() {
+			_, err := Load(Embed(MakeLocalImport("./testdata/free_variable.dhall", Code)))
+
+			Expect(err).To(HaveOccurred())
+		})
+	})
 	DescribeTable("Other subexpressions", expectResolves,
 		Entry("Literal expression", NaturalLit(3), NaturalLit(3)),
 		Entry("Simple import", importFooAsText, resolvedFooAsText),

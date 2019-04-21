@@ -9,6 +9,7 @@ import (
 )
 
 type EnvVar string
+type Local string
 type Remote string
 type Missing struct{}
 
@@ -18,8 +19,9 @@ type Resolvable interface {
 }
 
 var _ Resolvable = EnvVar("")
-var _ Resolvable = Missing(struct{}{})
+var _ Resolvable = Local("")
 var _ Resolvable = Remote("")
+var _ Resolvable = Missing(struct{}{})
 
 func (e EnvVar) Name() string { return string(e) }
 func (e EnvVar) Resolve() (string, error) {
@@ -28,6 +30,12 @@ func (e EnvVar) Resolve() (string, error) {
 		return "", fmt.Errorf("Unset environment variable %s", string(e))
 	}
 	return val, nil
+}
+
+func (l Local) Name() string { return string(l) }
+func (l Local) Resolve() (string, error) {
+	bytes, err := ioutil.ReadFile(string(l))
+	return string(bytes), err
 }
 
 func (r Remote) Name() string { return string(r) }
