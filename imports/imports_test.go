@@ -23,47 +23,44 @@ var importFooAsText = Embed(MakeEnvVarImport("FOO", RawText))
 var resolvedFooAsText = TextLit{Suffix: "abcd"}
 
 var _ = Describe("Import resolution", func() {
-	It("Leaves a literal expression untouched", func() {
-		actual, err := Load(NaturalLit(3))
+	Describe("Environment varibles", func() {
+		It("Resolves an `as Text` import", func() {
+			os.Setenv("FOO", "abcd")
+			actual, err := Load(importFooAsText)
 
-		Expect(err).ToNot(HaveOccurred())
-		Expect(actual).To(Equal(NaturalLit(3)))
-	})
-	It("Resolves an `as Text` import", func() {
-		os.Setenv("FOO", "abcd")
-		actual, err := Load(importFooAsText)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(resolvedFooAsText))
+		})
+		It("Resolves and parses code import", func() {
+			os.Setenv("FOO", "3 : Natural")
+			actual, err := Load(Embed(MakeEnvVarImport("FOO", Code)))
 
-		Expect(err).ToNot(HaveOccurred())
-		Expect(actual).To(Equal(resolvedFooAsText))
-	})
-	It("Resolves and parses code import", func() {
-		os.Setenv("FOO", "3 : Natural")
-		actual, err := Load(Embed(MakeEnvVarImport("FOO", Code)))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+		})
+		It("Fails to resolve a code import with free variables", func() {
+			os.Setenv("FOO", "x")
+			_, err := Load(Embed(MakeEnvVarImport("FOO", Code)))
 
-		Expect(err).ToNot(HaveOccurred())
-		Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
-	})
-	It("Performs import chaining", func() {
-		os.Setenv("CHAIN1", "env:CHAIN2")
-		os.Setenv("CHAIN2", "2 + 2")
-		actual, err := Load(Embed(MakeEnvVarImport("CHAIN1", Code)))
+			Expect(err).To(HaveOccurred())
+		})
+		It("Performs import chaining", func() {
+			os.Setenv("CHAIN1", "env:CHAIN2")
+			os.Setenv("CHAIN2", "2 + 2")
+			actual, err := Load(Embed(MakeEnvVarImport("CHAIN1", Code)))
 
-		Expect(err).ToNot(HaveOccurred())
-		Expect(actual).To(Equal(NaturalPlus{NaturalLit(2), NaturalLit(2)}))
-	})
-	It("Rejects import cycles", func() {
-		os.Setenv("CYCLE", "env:CYCLE")
-		_, err := Load(Embed(MakeEnvVarImport("CYCLE", Code)))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(NaturalPlus{NaturalLit(2), NaturalLit(2)}))
+		})
+		It("Rejects import cycles", func() {
+			os.Setenv("CYCLE", "env:CYCLE")
+			_, err := Load(Embed(MakeEnvVarImport("CYCLE", Code)))
 
-		Expect(err).To(HaveOccurred())
+			Expect(err).To(HaveOccurred())
+		})
 	})
-	It("Fails to resolve a code import with free variables", func() {
-		os.Setenv("FOO", "x")
-		_, err := Load(Embed(MakeEnvVarImport("FOO", Code)))
-
-		Expect(err).To(HaveOccurred())
-	})
-	DescribeTable("Subexpressions to resolve", expectResolves,
+	DescribeTable("Other subexpressions", expectResolves,
+		Entry("Literal expression", NaturalLit(3), NaturalLit(3)),
 		Entry("Simple import", importFooAsText, resolvedFooAsText),
 		Entry("Import within lambda type",
 			&LambdaExpr{Type: importFooAsText},
