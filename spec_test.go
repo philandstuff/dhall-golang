@@ -130,9 +130,10 @@ var expectedFailures = []string{
 	"TestNormalization/unit/UnionSort",
 	"TestNormalization/unit/UnionType",
 	"TestImportFails/alternative",
-	"TestImportFails/cycle",
 	"TestImportFails/referentiallyInsane",
-	"TestImport/",
+	"TestImport/alternative", // needs alternative operator
+	"TestImport/asText",      // needs single-quoted strings
+	"TestImport/fieldOrder",  // needs import hashes
 }
 
 func pass(t *testing.T) {
@@ -333,8 +334,14 @@ func TestNormalization(t *testing.T) {
 			parsedB, err := parser.ParseReader(t.Name(), bReader)
 			expectNoError(t, err)
 
-			normA := parsedA.(ast.Expr).Normalize()
-			normB := parsedB.(ast.Expr).Normalize()
+			resolvedA, err := imports.Load(parsedA.(ast.Expr))
+			expectNoError(t, err)
+
+			resolvedB, err := imports.Load(parsedB.(ast.Expr))
+			expectNoError(t, err)
+
+			normA := resolvedA.(ast.Expr).Normalize()
+			normB := resolvedB.(ast.Expr).Normalize()
 
 			expectEqualExprs(t, normB, normA)
 		})

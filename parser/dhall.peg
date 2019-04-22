@@ -9,6 +9,7 @@ import (
 "io/ioutil"
 "math"
 "os"
+"path"
 "strconv"
 "strings"
 "unicode"
@@ -229,6 +230,36 @@ Variable ← name:NonreservedLabel index:DeBruijn? {
 
 Identifier ← Variable / Reserved
 
+PathCharacter ←
+     '\x21'
+   / [\x24-\x27]
+   / [\x2a-\x2b]
+   / [\x2d-\x2e]
+   / [\x30-\x3b]
+   / '\x3d'
+   / [\x40-\x5a]
+   / [\x5e-\x7a]
+   / '\x7c'
+   / '\x7e'
+
+UnquotedPathComponent ← PathCharacter+ { return string(c.text), nil }
+
+PathComponent ← '/' u:UnquotedPathComponent { return u, nil }
+
+Path ← cs:PathComponent+ {
+    // urgh, have to convert []interface{} to []string
+    components := make([]string, len(cs.([]interface{})))
+    for i, component := range cs.([]interface{}) {
+        components[i] = component.(string)
+    }
+    return path.Join(components...), nil
+}
+
+Local ← ParentPath / HerePath
+
+ParentPath ← ".." p:Path { return Local(path.Join("..", p.(string))), nil }
+HerePath ← '.' p:Path { return Local(p.(string)), nil }
+
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
 
 BashEnvironmentVariable ← [A-Za-z_][A-Za-z0-9_]* {
@@ -265,7 +296,7 @@ PosixEnvironmentVariableCharacter ←
 
 Missing ← "missing" _ { var m Missing; return m, nil }
 
-ImportType ← Missing / Env
+ImportType ← Missing / Local / Env
 
 ImportHashed ← i:ImportType { return ImportHashed{Resolvable: i.(Resolvable)}, nil }
 
