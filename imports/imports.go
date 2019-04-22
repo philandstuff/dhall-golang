@@ -9,7 +9,10 @@ import (
 
 func ResolveStringAsExpr(name, content string) (Expr, error) {
 	expr, err := parser.Parse(name, []byte(content))
-	return expr.(Expr), err
+	if err != nil {
+		return nil, err
+	}
+	return expr.(Expr), nil
 }
 
 func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
@@ -122,16 +125,18 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 		}
 		return Annot{Expr: resolvedExpr, Annotation: resolvedAnnotation}, nil
 	case TextLit:
-		newTextLit := TextLit{make(Chunks, len(e.Chunks)), e.Suffix}
-		for i, chunk := range e.Chunks {
-			newTextLit.Chunks[i].Prefix = chunk.Prefix
+		var newChunks Chunks
+		for _, chunk := range e.Chunks {
 			resolvedExpr, err := Load(chunk.Expr)
 			if err != nil {
 				return nil, err
 			}
-			newTextLit.Chunks[i].Expr = resolvedExpr
+			newChunks = append(newChunks, Chunk{
+				Prefix: chunk.Prefix,
+				Expr:   resolvedExpr,
+			})
 		}
-		return newTextLit, nil
+		return TextLit{newChunks, e.Suffix}, nil
 	case BoolIf:
 		resolvedCond, err := Load(e.Cond)
 		if err != nil {

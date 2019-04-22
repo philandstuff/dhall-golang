@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -69,7 +70,17 @@ var expectedFailures = []string{
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",
 	"TestNormalization/multiline",
-	"TestNormalization/prelude",
+	"TestNormalization/prelude/Bool/and",
+	"TestNormalization/prelude/Bool/even",
+	"TestNormalization/prelude/Bool/not",
+	"TestNormalization/prelude/Bool/odd",
+	"TestNormalization/prelude/Bool/or",
+	"TestNormalization/prelude/Double",
+	"TestNormalization/prelude/Integer",
+	"TestNormalization/prelude/List",
+	"TestNormalization/prelude/Natural",
+	"TestNormalization/prelude/Optional",
+	"TestNormalization/prelude/Text",
 	"TestNormalization/remoteSystemsA.dhall",
 	"TestNormalization/simple/doubleShowA.dhall",
 	"TestNormalization/simple/enumA.dhall",
@@ -125,7 +136,6 @@ var expectedFailures = []string{
 	"TestImportFails/alternative",
 	"TestImportFails/referentiallyInsane",
 	"TestImport/alternative", // needs alternative operator
-	"TestImport/asText",      // needs single-quoted strings
 	"TestImport/fieldOrder",  // needs import hashes
 }
 
@@ -225,10 +235,14 @@ func runTestOnFilePair(t *testing.T, name, pathA, pathB string, test func(*testi
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	wd, _ := os.Getwd()
+	os.Chdir(path.Dir(pathA))
 	t.Run(name, func(t *testing.T) {
 		test(t, aReader, bReader)
 		pass(t)
 	})
+	os.Chdir(wd)
 }
 
 func runTestOnFilePairs(
