@@ -63,44 +63,29 @@ NonreservedLabel ← &(Reserved SimpleLabelNextChar) label:Label { return label,
 
 AnyLabel ← Label
 
-// DoubleQuoteInterpolation ←
-
-EscapedChar ←
-  '\\'
-  ( '"'
-       / '$'
-       / '\\'
-       / '/'
-       / 'b'
-       / 'f'
-       / 'n'
-       / 'r'
-       / 't'
-       / 'u' HexDig HexDig HexDig HexDig
-       ) {
-    switch c.text[1] {
-    case 'b':
-        return []byte("\b"), nil
-    case 'f':
-        return []byte("\f"), nil
-    case 'n':
-        return []byte("\n"), nil
-    case 'r':
-        return []byte("\r"), nil
-    case 't':
-        return []byte("\t"), nil
-    case 'u':
-        i, err := strconv.ParseInt(string(c.text[2:]), 16, 32)
-        return []byte(string([]rune{rune(i)})), err
-    }
-    return c.text[1:2], nil
-}
-
 
 DoubleQuoteChunk ←
-     "${" e:CompleteExpression "}" { return e, nil }
-   / EscapedChar
-   / [\x20-\x21]
+     Interpolation
+   / '\\' e:DoubleQuoteEscaped { return e, nil }
+   / DoubleQuoteChar
+
+DoubleQuoteEscaped ←
+       '"'
+     / '$'
+     / '\\'
+     / '/'
+     / 'b' { return []byte("\b"), nil }
+     / 'f' { return []byte("\f"), nil }
+     / 'n' { return []byte("\n"), nil }
+     / 'r' { return []byte("\r"), nil }
+     / 't' { return []byte("\t"), nil }
+     / 'u' HexDig HexDig HexDig HexDig {
+        i, err := strconv.ParseInt(string(c.text[1:]), 16, 32)
+        return []byte(string([]rune{rune(i)})), err
+     }
+
+DoubleQuoteChar ←
+     [\x20-\x21]
    / [\x23-\x5b]
    / [\x5d-\U0010ffff]
 
@@ -120,6 +105,8 @@ DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
     }
     return TextLit{Chunks: outChunks, Suffix: str.String()}, nil
 }
+
+Interpolation ← "${" e:CompleteExpression "}" { return e, nil }
 
 TextLiteral ← t:DoubleQuoteLiteral { return t, nil }
 
