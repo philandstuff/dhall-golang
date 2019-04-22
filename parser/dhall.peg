@@ -106,9 +106,45 @@ DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
     return TextLit{Chunks: outChunks, Suffix: str.String()}, nil
 }
 
+SingleQuoteContinue ←
+      Interpolation SingleQuoteContinue
+    / EscapedQuotePair SingleQuoteContinue
+    / EscapedInterpolation SingleQuoteContinue
+    / SingleQuoteChar SingleQuoteContinue
+    / "''"
+
+EscapedQuotePair ← "'''" { return []byte("''"), nil }
+
+// \u007b == '{'. This is needed because pigeon gets confused
+// parsing the code block otherwise.
+EscapedInterpolation ← "''${" { return []byte("$\u007b"), nil }
+
+SingleQuoteChar ←
+     [\x20-\U0010ffff]
+   / '\t'
+   / '\n'
+
+SingleQuoteLiteral ← "''" EOL content:SingleQuoteContinue {
+    var str strings.Builder
+    var outChunks Chunks
+    chunk, ok := content.([]interface{})
+    for ; ok; chunk, ok = chunk[1].([]interface{}) {
+        switch e := chunk[0].(type) {
+        case []byte:
+            str.Write(e)
+        case Expr:
+                outChunks = append(outChunks, Chunk{str.String(), e})
+                str.Reset()
+        default:
+            return nil, errors.New("unimplemented")
+        }
+    }
+    return TextLit{Chunks: outChunks, Suffix: str.String()}, nil
+}
+
 Interpolation ← "${" e:CompleteExpression "}" { return e, nil }
 
-TextLiteral ← t:DoubleQuoteLiteral { return t, nil }
+TextLiteral ← DoubleQuoteLiteral / SingleQuoteLiteral
 
 // reserved identifiers from semantics.md, only required for negative lookahed rules
 Reserved ←

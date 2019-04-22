@@ -28,6 +28,7 @@ var _ = Describe("Expression", func() {
 		Entry("Kind", `Kind`, Kind),
 		Entry("Sort", `Sort`, Sort),
 		Entry("Double", `Double`, Double),
+		Entry("Text", `Text`, Text),
 		Entry("DoubleLit", `3.0`, DoubleLit(3.0)),
 		Entry("DoubleLit with exponent", (`3E5`), DoubleLit(3e5)),
 		Entry("DoubleLit with sign", (`+3.0`), DoubleLit(3.0)),
@@ -58,8 +59,7 @@ var _ = Describe("Expression", func() {
 		// addition
 		Entry("Plus without whitespace", `3 +5`, &App{NaturalLit(3), IntegerLit(5)}),
 	)
-	DescribeTable("text", ParseAndCompare,
-		Entry("Text", `Text`, Text),
+	DescribeTable("double-quoted text literals", ParseAndCompare,
 		Entry("Empty TextLit", `""`, TextLit{}),
 		Entry("Simple TextLit", `"foo"`, TextLit{Suffix: "foo"}),
 		Entry(`TextLit escape "`, `"\""`, TextLit{Suffix: `"`}),
@@ -77,6 +77,28 @@ var _ = Describe("Expression", func() {
 		Entry("Interpolated TextLit", `"foo ${"bar"} baz"`,
 			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
 				" baz"},
+		),
+	)
+	DescribeTable("single-quoted text literals", ParseAndCompare,
+		Entry("Empty TextLit", `''
+''`, TextLit{}),
+		Entry("Simple TextLit with no newlines", `''
+foo''`, TextLit{Suffix: "foo"}),
+		Entry("Simple TextLit with newlines", `''
+foo
+''`, TextLit{Suffix: "foo\n"}),
+		Entry(`Escape ''`, `''
+'''
+''`, TextLit{Suffix: "''\n"}),
+		Entry(`Escape ${`, `''
+''${
+''`, TextLit{Suffix: "${\n"}),
+		Entry("Interpolation", `''
+foo ${"bar"}
+baz
+''`,
+			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
+				"\nbaz\n"},
 		),
 	)
 	DescribeTable("simple expressions", ParseAndCompare,
