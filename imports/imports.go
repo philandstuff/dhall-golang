@@ -19,14 +19,23 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 	switch e := e.(type) {
 	case Embed:
 		i := Import(e)
-		here := i.ImportHashed
+		here := i.Resolvable
 		for _, ancestor := range ancestors {
 			if ancestor == here {
 				return nil, fmt.Errorf("Detected import cycle in %s", ancestor)
 			}
 		}
+		var r Resolvable
+		r = i.Resolvable
+		if len(ancestors) >= 1 {
+			var err error
+			r, err = r.ChainOnto(ancestors[len(ancestors)-1])
+			if err != nil {
+				return nil, err
+			}
+		}
 		imports := append(ancestors, here)
-		content, err := i.Resolve()
+		content, err := r.Resolve()
 		if err != nil {
 			return nil, err
 		}
@@ -34,7 +43,7 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 			return TextLit{Suffix: content}, nil
 		} else {
 			// dynamicExpr may contain more imports
-			dynamicExpr, err := ResolveStringAsExpr(i.Name(), content)
+			dynamicExpr, err := ResolveStringAsExpr(r.Name(), content)
 			if err != nil {
 				return nil, err
 			}

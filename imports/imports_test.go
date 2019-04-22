@@ -116,6 +116,17 @@ var _ = Describe("Import resolution", func() {
 
 			Expect(err).To(HaveOccurred())
 		})
+		It("Performs import chaining", func() {
+			actual, err := Load(Embed(MakeLocalImport("./testdata/chain1.dhall", Code)))
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(actual).To(Equal(NaturalPlus{NaturalLit(2), NaturalLit(2)}))
+		})
+		It("Rejects import cycles", func() {
+			_, err := Load(Embed(MakeLocalImport("./testdata/cycle1.dhall", Code)))
+
+			Expect(err).To(HaveOccurred())
+		})
 	})
 	DescribeTable("Other subexpressions", expectResolves,
 		Entry("Literal expression", NaturalLit(3), NaturalLit(3)),
