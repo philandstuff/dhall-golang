@@ -47,8 +47,6 @@ func (t Const) CodecEncodeSelf(e *codec.Encoder) {
 func (v Var) CodecEncodeSelf(e *codec.Encoder) {
 	if v.Name == "_" {
 		e.Encode(v.Index)
-	} else if v.Index == 0 {
-		e.Encode(v.Name)
 	} else {
 		e.Encode([]interface{}{v.Name, v.Index})
 	}

@@ -29,6 +29,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/merge",
 	"TestParserAccepts/operatorsA.dhall",
+	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
 	"TestParserAccepts/spaceAfterListAppendA.dhall",
 	"TestParserAccepts/text/escapeA.dhall",
