@@ -190,7 +190,7 @@ In ← "in"
 As ← "as"
 Using ← "using"
 Merge ← "merge"
-Missing ← "missing"
+Missing ← "missing" { return Missing{}, nil }
 True ← "True"
 False ← "False"
 Infinity ← "Infinity"
@@ -317,8 +317,6 @@ PosixEnvironmentVariableCharacter ←
     / [\x23-\x3c]
     / [\x3e-\x5b]
     / [\x5d-\x7e]
-
-Missing ← "missing" _ { var m Missing; return m, nil }
 
 ImportType ← Missing / Local / Env
 
