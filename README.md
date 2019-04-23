@@ -34,9 +34,8 @@ Go bindings for dhall.
    - [ ] List/* functions
  - [x] Text
    - [x] double quote literals
-   - [ ] single quote literals
-   - [ ] text interpolation
-   - [ ] multiline strings
+   - [x] single quote literals
+   - [x] text interpolation
    - [ ] `l ++ r` text append
    - [ ] Text/show standard functions
  - [x] Optionals
@@ -50,13 +49,13 @@ Go bindings for dhall.
  - [ ] Unions
    - [ ] `merge`
  - [ ] Imports
-   - [ ] local imports
+   - [x] local imports
    - [ ] remote imports
    - [x] environment variable imports
    - [ ] import caching
    - [x] importing expressions
    - [x] importing `as Text`
    - [ ] `x ? y` alternate import operator
-   - [ ] `missing`
+   - [x] `missing`
  - [X] unmarshalling into Go types
  - [ ] better errors
