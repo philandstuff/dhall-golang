@@ -278,10 +278,11 @@ Path ← cs:PathComponent+ {
     return path.Join(components...), nil
 }
 
-Local ← ParentPath / HerePath
+Local ← ParentPath / HerePath / AbsolutePath
 
 ParentPath ← ".." p:Path { return Local(path.Join("..", p.(string))), nil }
 HerePath ← '.' p:Path { return Local(p.(string)), nil }
+AbsolutePath ← p:Path { return Local(path.Join("/", p.(string))), nil }
 
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
 

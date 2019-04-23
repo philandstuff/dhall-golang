@@ -139,6 +139,7 @@ baz
 		Entry("missing", `missing`, Embed(MakeImport(Missing(struct{}{}), Code))),
 		Entry("local here-path import", `./local`, Embed(MakeLocalImport("local", Code))),
 		Entry("local parent-path import", `../local`, Embed(MakeLocalImport("../local", Code))),
+		Entry("local absolute import", `/local`, Embed(MakeLocalImport("/local", Code))),
 	)
 	// can't test NaN using ParseAndCompare because NaN ≠ NaN
 	It("handles NaN correctly", func() {

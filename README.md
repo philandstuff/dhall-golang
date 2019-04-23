@@ -49,7 +49,7 @@ Go bindings for dhall.
  - [ ] Unions
    - [ ] `merge`
  - [ ] Imports
-   - [x] local imports
+   - [x] local imports (except home-rooted paths)
    - [ ] remote imports
    - [x] environment variable imports
    - [ ] import caching
