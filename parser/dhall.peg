@@ -44,7 +44,9 @@ _ ← WhitespaceChunk*
 
 _1 ← WhitespaceChunk+
 
-HexDig ← [0-9a-f]i
+Digit ← [0-9]
+
+HexDig ← Digit / [a-f]i
 
 SimpleLabelFirstChar ← [A-Za-z_]
 SimpleLabelNextChar ← [A-Za-z0-9_/-]
@@ -213,9 +215,9 @@ Lambda ← ('\\' / 'λ')
 Forall ← ("forall" / '∀')
 Arrow ← ("->" / '→')
 
-Exponent ← "e"i [+-]? [0-9]+
+Exponent ← "e"i [+-]? Digit+
 
-NumericDoubleLiteral ← [+-]? [0-9]+ ( "." [0-9]+ Exponent? / Exponent) {
+NumericDoubleLiteral ← [+-]? Digit+ ( "." Digit+ Exponent? / Exponent) {
       d, err := strconv.ParseFloat(string(c.text), 64)
       if err != nil {
          return nil, err
@@ -228,12 +230,12 @@ DoubleLiteral ← d:NumericDoubleLiteral
   / "-" Infinity { return DoubleLit(math.Inf(-1)), nil }
   / NaN { return DoubleLit(math.NaN()), nil }
 
-NaturalLiteral ← [0-9]+ {
+NaturalLiteral ← Digit+ {
       i, err := strconv.Atoi(string(c.text))
       return NaturalLit(i), err
 }
 
-IntegerLiteral ← [+-][0-9]+ {
+IntegerLiteral ← [+-]NaturalLiteral {
       i, err := strconv.Atoi(string(c.text))
       if err != nil {
          return nil, err
@@ -286,15 +288,25 @@ AbsolutePath ← p:Path { return Local(path.Join("/", p.(string))), nil }
 
 Scheme ← "http" 's'?
 
-HttpRaw ← Scheme "://" Authority Path { return string(c.text), nil }
+HttpRaw ← Scheme "://" Authority Path ( '?' Query )? { return string(c.text), nil }
 
-Authority ← Host
+Authority ← Host (':' Port)?
 
 Host ← RegName
 
-RegName ← Unreserved*
+Port ← Digit*
+
+RegName ← (Unreserved / PctEncoded / SubDelims)*
+
+PChar ← Unreserved / PctEncoded / SubDelims / [:@]
+
+Query ← (PChar / [/?])*
+
+PctEncoded ← '%' HexDig HexDig
 
 Unreserved ← [A-Za-z0-9._~-]
+
+SubDelims ← "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
 
 Http ← url:HttpRaw { return Remote(url.(string)), nil }
 
