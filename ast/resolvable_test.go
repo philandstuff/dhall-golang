@@ -27,10 +27,11 @@ var _ = DescribeTable("ChainOnto", func(resolvable, base, expected Resolvable) {
 	Entry("EnvVar onto Missing", EnvVar("foo"), Missing{}, EnvVar("foo")),
 	Entry("Relative local onto EnvVar", Local("foo"), EnvVar("bar"), Local("foo")),
 	Entry("Relative local onto Local", Local("foo"), Local("/bar/baz"), Local("/bar/foo")),
-	PEntry("Relative local onto Remote", Local("foo"), Remote("https://example.com/bar/baz"), Local("https://example.com/bar/foo")),
+	Entry("Relative local onto Remote", Local("foo"), Remote("https://example.com/bar/baz"), Remote("https://example.com/bar/foo")),
+	Entry("Parent-relative local onto Remote", Local("../foo"), Remote("https://example.com/bar/baz/quux"), Remote("https://example.com/bar/foo")),
 	Entry("Relative local onto Missing", Local("foo"), Missing{}, Local("foo")),
 	Entry("Absolute local onto EnvVar", Local("/foo"), EnvVar("bar"), Local("/foo")),
 	Entry("Absolute local onto Local", Local("/foo"), Local("/bar/baz"), Local("/foo")),
-	PEntry("Absolute local onto Remote", Local("/foo"), Remote("https://example.com/bar/baz"), Local("https://example.com/foo")),
+	Entry("Absolute local onto Remote", Local("/foo"), Remote("https://example.com/bar/baz"), nil),
 	Entry("Absolute local onto Missing", Local("/foo"), Missing{}, Local("/foo")),
 )

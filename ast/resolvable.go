@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 )
@@ -48,14 +49,26 @@ func (l Local) Resolve() (string, error) {
 func (l Local) ChainOnto(base Resolvable) (Resolvable, error) {
 	switch r := base.(type) {
 	case Local:
-		if path.IsAbs(string(l)) {
+		if l.IsAbs() {
 			return l, nil
 		}
 		return Local(path.Join(path.Dir(string(r)), string(l))), nil
+	case Remote:
+		if path.IsAbs(string(l)) {
+			return nil, errors.New("Can't get absolute path from remote import")
+		}
+		baseURL := r.URL()
+		relativeURL, err := url.Parse(string(l))
+		if err != nil {
+			return nil, err
+		}
+		newURL := baseURL.ResolveReference(relativeURL)
+		return Remote(newURL.String()), nil
 	default:
 		return l, nil
 	}
 }
+func (l Local) IsAbs() bool { return path.IsAbs(string(l)) }
 
 func (r Remote) Name() string { return string(r) }
 func (r Remote) Resolve() (string, error) {
@@ -73,6 +86,7 @@ func (r Remote) Resolve() (string, error) {
 func (r Remote) ChainOnto(base Resolvable) (Resolvable, error) {
 	return r, nil
 }
+func (r Remote) URL() *url.URL { url, _ := url.Parse(string(r)); return url }
 
 func (Missing) Name() string { return "" }
 func (Missing) Resolve() (string, error) {
