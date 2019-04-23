@@ -284,6 +284,20 @@ ParentPath ← ".." p:Path { return Local(path.Join("..", p.(string))), nil }
 HerePath ← '.' p:Path { return Local(p.(string)), nil }
 AbsolutePath ← p:Path { return Local(path.Join("/", p.(string))), nil }
 
+Scheme ← "http" 's'?
+
+HttpRaw ← Scheme "://" Authority Path { return string(c.text), nil }
+
+Authority ← Host
+
+Host ← RegName
+
+RegName ← Unreserved*
+
+Unreserved ← [A-Za-z0-9._~-]
+
+Http ← url:HttpRaw { return Remote(url.(string)), nil }
+
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
 
 BashEnvironmentVariable ← [A-Za-z_][A-Za-z0-9_]* {
@@ -318,7 +332,7 @@ PosixEnvironmentVariableCharacter ←
     / [\x3e-\x5b]
     / [\x5d-\x7e]
 
-ImportType ← Missing / Local / Env
+ImportType ← Missing / Local / Http / Env
 
 ImportHashed ← i:ImportType { return ImportHashed{Resolvable: i.(Resolvable)}, nil }
 

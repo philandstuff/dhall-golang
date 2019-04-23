@@ -134,7 +134,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/UnionSort",
 	"TestNormalization/unit/UnionType",
 	"TestImportFails/alternative",
-	"TestImportFails/referentiallyInsane",
 	"TestImport/alternative", // needs alternative operator
 	"TestImport/fieldOrder",  // needs import hashes
 }
