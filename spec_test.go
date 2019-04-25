@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -26,7 +27,15 @@ var expectedFailures = []string{
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/fieldsA.dhall",
-	"TestParserAccepts/import",
+	"TestParserAccepts/import/asText", // needs CBOR encoding of remote imports
+	"TestParserAccepts/import/hash",
+	"TestParserAccepts/import/importAlt",
+	"TestParserAccepts/import/parenthesizeUsing",
+	"TestParserAccepts/import/pathTermination", // needs union literals
+	"TestParserAccepts/import/paths",           // needs home-anchored paths
+	"TestParserAccepts/import/quotedPaths",     // needs.. quoted paths
+	"TestParserAccepts/import/unicodePaths",    // needs quoted paths
+	"TestParserAccepts/import/urls",            // needs all the URL features
 	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/merge",
 	"TestParserAccepts/operatorsA.dhall",
@@ -186,10 +195,36 @@ func expectEqualExprs(t *testing.T, expected, actual ast.Expr) {
 	}
 }
 
-func expectEqualBytes(t *testing.T, expected, actual []byte) {
+func cbor2Pretty(cbor []byte) (string, error) {
+	// cbor2pretty.rb comes from the cbor-diag gem
+	cmd := exec.Command("cbor2pretty.rb")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return "", err
+	}
+	go func() {
+		defer stdin.Close()
+		stdin.Write(cbor)
+	}()
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+func expectEqualCbor(t *testing.T, expected, actual []byte) {
 	t.Helper()
 	if !reflect.DeepEqual(expected, actual) {
-		failf(t, "Expected %x to equal %x", actual, expected)
+		actualPretty, err := cbor2Pretty(actual)
+		if err != nil {
+			failf(t, "Got unexpected error %v", err)
+		}
+		expectedPretty, err := cbor2Pretty(expected)
+		if err != nil {
+			failf(t, "Got unexpected error %v", err)
+		}
+		failf(t, "Expected\n%s\nto equal\n%s\n", actualPretty, expectedPretty)
 	}
 }
 
@@ -290,7 +325,7 @@ func TestParserAccepts(t *testing.T) {
 
 			expected, err := ioutil.ReadAll(bReader)
 			expectNoError(t, err)
-			expectEqualBytes(t, expected, actualBuf.Bytes())
+			expectEqualCbor(t, expected, actualBuf.Bytes())
 		})
 }
 

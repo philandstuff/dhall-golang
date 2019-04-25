@@ -24,6 +24,7 @@ var _ codec.Selfer = IntegerLit(0)
 var _ codec.Selfer = Some{}
 var _ codec.Selfer = Record(map[string]Expr{})
 var _ codec.Selfer = RecordLit(map[string]Expr{})
+var _ codec.Selfer = Embed{}
 
 func NewCborHandle() codec.CborHandle {
 	var h codec.CborHandle
@@ -175,6 +176,26 @@ func (r RecordLit) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode(output)
 }
 
+func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
+	r := i.Resolvable
+	mode := 0
+	if i.ImportMode == RawText {
+		mode = 1
+	}
+	switch rr := r.(type) {
+	case EnvVar:
+		e.Encode([]interface{}{24, nil, mode, 6, string(rr)})
+	case Local:
+		e.Encode("Local unimplemented")
+	case Remote:
+		e.Encode("Remote unimplemented")
+	case Missing:
+		e.Encode("Missing unimplemented")
+	default:
+		panic("can't happen")
+	}
+}
+
 // ignored
 func (Const) CodecDecodeSelf(*codec.Decoder)        {}
 func (Var) CodecDecodeSelf(*codec.Decoder)          {}
@@ -194,3 +215,4 @@ func (NonEmptyList) CodecDecodeSelf(*codec.Decoder) {}
 func (Some) CodecDecodeSelf(*codec.Decoder)         {}
 func (Record) CodecDecodeSelf(*codec.Decoder)       {}
 func (RecordLit) CodecDecodeSelf(*codec.Decoder)    {}
+func (Embed) CodecDecodeSelf(*codec.Decoder)        {}
