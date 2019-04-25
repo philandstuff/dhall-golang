@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strings"
 )
 
 type EnvVar string
@@ -68,7 +69,16 @@ func (l Local) ChainOnto(base Resolvable) (Resolvable, error) {
 		return l, nil
 	}
 }
-func (l Local) IsAbs() bool { return path.IsAbs(string(l)) }
+func (l Local) IsAbs() bool              { return path.IsAbs(string(l)) }
+func (l Local) IsRelativeToParent() bool { return strings.HasPrefix(string(l), "..") }
+
+func (l Local) PathComponents() []string {
+	if string(l)[0] == '/' || string(l)[0] == '.' {
+		return strings.Split(string(l), "/")[1:]
+	} else {
+		return strings.Split(string(l), "/")
+	}
+}
 
 func (r Remote) Name() string { return string(r) }
 func (r Remote) Resolve() (string, error) {

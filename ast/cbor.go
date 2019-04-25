@@ -176,6 +176,12 @@ func (r RecordLit) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode(output)
 }
 
+const (
+	AbsoluteImport = 2
+	HereImport     = 3
+	ParentImport   = 4
+)
+
 func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
 	r := i.Resolvable
 	mode := 0
@@ -186,7 +192,25 @@ func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
 	case EnvVar:
 		e.Encode([]interface{}{24, nil, mode, 6, string(rr)})
 	case Local:
-		e.Encode("Local unimplemented")
+		if rr.IsAbs() {
+			toEncode := []interface{}{24, nil, mode, AbsoluteImport}
+			for _, component := range rr.PathComponents() {
+				toEncode = append(toEncode, component)
+			}
+			e.Encode(toEncode)
+		} else if rr.IsRelativeToParent() {
+			toEncode := []interface{}{24, nil, mode, ParentImport}
+			for _, component := range rr.PathComponents() {
+				toEncode = append(toEncode, component)
+			}
+			e.Encode(toEncode)
+		} else {
+			toEncode := []interface{}{24, nil, mode, HereImport}
+			for _, component := range rr.PathComponents() {
+				toEncode = append(toEncode, component)
+			}
+			e.Encode(toEncode)
+		}
 	case Remote:
 		e.Encode("Remote unimplemented")
 	case Missing:

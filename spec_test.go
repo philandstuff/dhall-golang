@@ -31,6 +31,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/import/hash",
 	"TestParserAccepts/import/importAlt",
 	"TestParserAccepts/import/parenthesizeUsing",
+	"TestParserAccepts/import/pathHome",        // haven't implemented ~/home/style/imports
 	"TestParserAccepts/import/pathTermination", // needs union literals
 	"TestParserAccepts/import/paths",           // needs home-anchored paths
 	"TestParserAccepts/import/quotedPaths",     // needs.. quoted paths
