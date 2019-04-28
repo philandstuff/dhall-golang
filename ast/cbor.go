@@ -177,6 +177,8 @@ func (r RecordLit) CodecEncodeSelf(e *codec.Encoder) {
 }
 
 const (
+	HttpImport     = 0
+	HttpsImport    = 1
 	AbsoluteImport = 2
 	HereImport     = 3
 	ParentImport   = 4
@@ -189,37 +191,53 @@ func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
 	if i.ImportMode == RawText {
 		mode = 1
 	}
+	var hash interface{} // unimplemented, leave as nil for now
 	switch rr := r.(type) {
 	case EnvVar:
-		e.Encode([]interface{}{24, nil, mode, 6, string(rr)})
+		e.Encode([]interface{}{24, hash, mode, 6, string(rr)})
 	case Local:
 		if rr.IsAbs() {
-			toEncode := []interface{}{24, nil, mode, AbsoluteImport}
+			toEncode := []interface{}{24, hash, mode, AbsoluteImport}
 			for _, component := range rr.PathComponents() {
 				toEncode = append(toEncode, component)
 			}
 			e.Encode(toEncode)
 		} else if rr.IsRelativeToParent() {
-			toEncode := []interface{}{24, nil, mode, ParentImport}
+			toEncode := []interface{}{24, hash, mode, ParentImport}
 			for _, component := range rr.PathComponents() {
 				toEncode = append(toEncode, component)
 			}
 			e.Encode(toEncode)
 		} else if rr.IsRelativeToHome() {
-			toEncode := []interface{}{24, nil, mode, HomeImport}
+			toEncode := []interface{}{24, hash, mode, HomeImport}
 			for _, component := range rr.PathComponents() {
 				toEncode = append(toEncode, component)
 			}
 			e.Encode(toEncode)
 		} else {
-			toEncode := []interface{}{24, nil, mode, HereImport}
+			toEncode := []interface{}{24, hash, mode, HereImport}
 			for _, component := range rr.PathComponents() {
 				toEncode = append(toEncode, component)
 			}
 			e.Encode(toEncode)
 		}
 	case Remote:
-		e.Encode("Remote unimplemented")
+		var headers interface{} // unimplemented, leave as nil for now
+		scheme := HttpsImport
+		if rr.IsPlainHttp() {
+			scheme = HttpImport
+		}
+		toEncode := []interface{}{24, hash, mode, scheme, headers, rr.Authority()}
+		for _, component := range rr.PathComponents() {
+			toEncode = append(toEncode, component)
+		}
+		query := rr.Query()
+		if len(query) > 0 {
+			toEncode = append(toEncode, rr.Query())
+		} else {
+			toEncode = append(toEncode, nil)
+		}
+		e.Encode(toEncode)
 	case Missing:
 		e.Encode("Missing unimplemented")
 	default:

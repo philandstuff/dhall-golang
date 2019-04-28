@@ -97,7 +97,13 @@ func (r Remote) Resolve() (string, error) {
 func (r Remote) ChainOnto(base Resolvable) (Resolvable, error) {
 	return r, nil
 }
-func (r Remote) URL() *url.URL { url, _ := url.Parse(string(r)); return url }
+func (r Remote) URL() *url.URL     { url, _ := url.Parse(string(r)); return url }
+func (r Remote) IsPlainHttp() bool { return r.URL().Scheme == "http" }
+func (r Remote) Authority() string { return r.URL().Host }
+func (r Remote) PathComponents() []string {
+	return strings.Split(r.URL().EscapedPath()[1:], "/")
+}
+func (r Remote) Query() string { return r.URL().RawQuery }
 
 func (Missing) Name() string { return "" }
 func (Missing) Resolve() (string, error) {

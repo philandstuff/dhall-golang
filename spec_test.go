@@ -27,15 +27,13 @@ var expectedFailures = []string{
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/fieldsA.dhall",
-	"TestParserAccepts/import/asText", // needs CBOR encoding of remote imports
 	"TestParserAccepts/import/hash",
 	"TestParserAccepts/import/importAlt",
 	"TestParserAccepts/import/parenthesizeUsing",
 	"TestParserAccepts/import/pathTermination", // needs union literals
-	"TestParserAccepts/import/paths",           // needs home-anchored paths
 	"TestParserAccepts/import/quotedPaths",     // needs.. quoted paths
 	"TestParserAccepts/import/unicodePaths",    // needs quoted paths
-	"TestParserAccepts/import/urls",            // needs all the URL features
+	"TestParserAccepts/import/urlsA",           // needs all the URL features
 	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/merge",
 	"TestParserAccepts/operatorsA.dhall",
