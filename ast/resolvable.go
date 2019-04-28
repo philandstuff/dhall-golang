@@ -71,9 +71,10 @@ func (l Local) ChainOnto(base Resolvable) (Resolvable, error) {
 }
 func (l Local) IsAbs() bool              { return path.IsAbs(string(l)) }
 func (l Local) IsRelativeToParent() bool { return strings.HasPrefix(string(l), "..") }
+func (l Local) IsRelativeToHome() bool   { return string(l)[0] == '~' }
 
 func (l Local) PathComponents() []string {
-	if string(l)[0] == '/' || string(l)[0] == '.' {
+	if l.IsAbs() || l.IsRelativeToHome() || l.IsRelativeToParent() {
 		return strings.Split(string(l), "/")[1:]
 	} else {
 		return strings.Split(string(l), "/")

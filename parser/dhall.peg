@@ -280,10 +280,11 @@ Path ← cs:PathComponent+ {
     return path.Join(components...), nil
 }
 
-Local ← ParentPath / HerePath / AbsolutePath
+Local ← ParentPath / HerePath / HomePath / AbsolutePath
 
 ParentPath ← ".." p:Path { return Local(path.Join("..", p.(string))), nil }
 HerePath ← '.' p:Path { return Local(p.(string)), nil }
+HomePath ← '~' p:Path { return Local(path.Join("~", p.(string))), nil }
 AbsolutePath ← p:Path { return Local(path.Join("/", p.(string))), nil }
 
 Scheme ← "http" 's'?

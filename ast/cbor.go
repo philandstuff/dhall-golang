@@ -180,6 +180,7 @@ const (
 	AbsoluteImport = 2
 	HereImport     = 3
 	ParentImport   = 4
+	HomeImport     = 5
 )
 
 func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
@@ -200,6 +201,12 @@ func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
 			e.Encode(toEncode)
 		} else if rr.IsRelativeToParent() {
 			toEncode := []interface{}{24, nil, mode, ParentImport}
+			for _, component := range rr.PathComponents() {
+				toEncode = append(toEncode, component)
+			}
+			e.Encode(toEncode)
+		} else if rr.IsRelativeToHome() {
+			toEncode := []interface{}{24, nil, mode, HomeImport}
 			for _, component := range rr.PathComponents() {
 				toEncode = append(toEncode, component)
 			}

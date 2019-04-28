@@ -139,6 +139,7 @@ baz
 		Entry("missing", `missing`, Embed(MakeImport(Missing(struct{}{}), Code))),
 		Entry("local here-path import", `./local`, Embed(MakeLocalImport("local", Code))),
 		Entry("local parent-path import", `../local`, Embed(MakeLocalImport("../local", Code))),
+		Entry("local home import", `~/in/home`, Embed(MakeLocalImport("~/in/home", Code))),
 		Entry("local absolute import", `/local`, Embed(MakeLocalImport("/local", Code))),
 		Entry("simple remote", `https://example.com/foo`, Embed(MakeRemoteImport("https://example.com/foo", Code))),
 		Entry("http remote", `http://example.com/foo`, Embed(MakeRemoteImport("http://example.com/foo", Code))),
