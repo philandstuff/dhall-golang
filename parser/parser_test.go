@@ -225,10 +225,15 @@ baz
 			Entry("let", `let`),
 			Entry("in", `in`),
 			Entry("using", `using`),
-			// Entry("missing", `missing`),
 			Entry("as", `as`),
 			Entry("merge", `merge`),
 			Entry("Some", `Some`),
+		)
+		DescribeTable("bad URLs", ParseAndFail,
+			Entry("empty path 1", `https://foo`),
+			Entry("empty path 2", `https://foo/`),
+			Entry("empty path 3", `https://foo//`),
+			Entry("bad IPv6", `https://[11111::22222]/abc`),
 		)
 		DescribeTable("other expected failures", ParseAndFail,
 			Entry("annotation without required space", `3 :Natural`),

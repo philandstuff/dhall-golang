@@ -13,7 +13,7 @@ import (
 
 type EnvVar string
 type Local string
-type Remote string
+type Remote struct{ url *url.URL }
 type Missing struct{}
 
 type Resolvable interface {
@@ -24,7 +24,7 @@ type Resolvable interface {
 
 var _ Resolvable = EnvVar("")
 var _ Resolvable = Local("")
-var _ Resolvable = Remote("")
+var _ Resolvable = Remote{}
 var _ Resolvable = Missing(struct{}{})
 
 func (e EnvVar) Name() string { return string(e) }
@@ -58,13 +58,12 @@ func (l Local) ChainOnto(base Resolvable) (Resolvable, error) {
 		if path.IsAbs(string(l)) {
 			return nil, errors.New("Can't get absolute path from remote import")
 		}
-		baseURL := r.URL()
 		relativeURL, err := url.Parse(string(l))
 		if err != nil {
 			return nil, err
 		}
-		newURL := baseURL.ResolveReference(relativeURL)
-		return Remote(newURL.String()), nil
+		newURL := r.url.ResolveReference(relativeURL)
+		return Remote{url: newURL}, nil
 	default:
 		return l, nil
 	}
@@ -81,14 +80,21 @@ func (l Local) PathComponents() []string {
 	}
 }
 
-func (r Remote) Name() string { return string(r) }
+func MakeRemote(u *url.URL) (Remote, error) {
+	if u.EscapedPath() == "/" || u.EscapedPath() == "" {
+		return Remote{}, errors.New("URLs must have a nonempty path")
+	}
+	return Remote{url: u}, nil
+}
+
+func (r Remote) Name() string { return r.url.String() }
 func (r Remote) Resolve() (string, error) {
-	resp, err := http.Get(string(r))
+	resp, err := http.Get(r.url.String())
 	if err != nil {
 		return "", err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Got status %d from URL %s", resp.StatusCode, string(r))
+		return "", fmt.Errorf("Got status %d from URL %s", resp.StatusCode, r.url)
 	}
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
@@ -97,13 +103,17 @@ func (r Remote) Resolve() (string, error) {
 func (r Remote) ChainOnto(base Resolvable) (Resolvable, error) {
 	return r, nil
 }
-func (r Remote) URL() *url.URL     { url, _ := url.Parse(string(r)); return url }
-func (r Remote) IsPlainHttp() bool { return r.URL().Scheme == "http" }
-func (r Remote) Authority() string { return r.URL().Host }
-func (r Remote) PathComponents() []string {
-	return strings.Split(r.URL().EscapedPath()[1:], "/")
+func (r Remote) IsPlainHttp() bool { return r.url.Scheme == "http" }
+func (r Remote) Authority() string {
+	if r.url.User != nil {
+		return fmt.Sprintf("%s@%s", r.url.User.String(), r.url.Host)
+	}
+	return r.url.Host
 }
-func (r Remote) Query() string { return r.URL().RawQuery }
+func (r Remote) PathComponents() []string {
+	return strings.Split(r.url.EscapedPath()[1:], "/")
+}
+func (r Remote) Query() string { return r.url.RawQuery }
 
 func (Missing) Name() string { return "" }
 func (Missing) Resolve() (string, error) {

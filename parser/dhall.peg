@@ -8,6 +8,8 @@ import (
 "io"
 "io/ioutil"
 "math"
+"net"
+"net/url"
 "os"
 "path"
 "strconv"
@@ -289,13 +291,23 @@ AbsolutePath ← p:Path { return Local(path.Join("/", p.(string))), nil }
 
 Scheme ← "http" 's'?
 
-HttpRaw ← Scheme "://" Authority Path ( '?' Query )? { return string(c.text), nil }
+HttpRaw ← Scheme "://" Authority Path ( '?' Query )? { return url.ParseRequestURI(string(c.text)) }
 
-Authority ← Host (':' Port)?
+Authority ← (Userinfo '@')? Host (':' Port)?
 
-Host ← RegName
+Userinfo ← ( Unreserved / PctEncoded / SubDelims / ':' )*
+
+Host ← IPLiteral / RegName
 
 Port ← Digit*
+
+IPLiteral ← '[' IPv6address ']'
+
+IPv6address ← (HexDig)* ':' (HexDig / ':' / '.')* {
+    addr := net.ParseIP(string(c.text))
+    if addr == nil { return nil, errors.New("Malformed IPv6 address") }
+    return string(c.text), nil
+}
 
 RegName ← (Unreserved / PctEncoded / SubDelims)*
 
@@ -309,7 +321,7 @@ Unreserved ← [A-Za-z0-9._~-]
 
 SubDelims ← "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
 
-Http ← url:HttpRaw { return Remote(url.(string)), nil }
+Http ← u:HttpRaw { return MakeRemote(u.(*url.URL)) }
 
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
 

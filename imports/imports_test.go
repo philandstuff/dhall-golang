@@ -72,28 +72,28 @@ var _ = Describe("Import resolution", func() {
 			server.Close()
 		})
 		It("Resolves as Text", func() {
-			server.RouteToHandler("GET", "/",
+			server.RouteToHandler("GET", "/foo.dhall",
 				ghttp.RespondWith(http.StatusOK, "abcd"),
 			)
-			actual, err := Load(Embed(MakeHttpImport(server.URL(), RawText)))
+			actual, err := Load(Embed(MakeRemoteImport(server.URL()+"/foo.dhall", RawText)))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(TextLit{Suffix: "abcd"}))
 		})
 		It("Resolves as code", func() {
-			server.RouteToHandler("GET", "/",
+			server.RouteToHandler("GET", "/foo.dhall",
 				ghttp.RespondWith(http.StatusOK, "3 : Natural"),
 			)
-			actual, err := Load(Embed(MakeHttpImport(server.URL(), Code)))
+			actual, err := Load(Embed(MakeRemoteImport(server.URL()+"/foo.dhall", Code)))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
 		})
 		It("Fails to resolve code with free variables", func() {
-			server.RouteToHandler("GET", "/",
+			server.RouteToHandler("GET", "/foo.dhall",
 				ghttp.RespondWith(http.StatusOK, "x"),
 			)
-			_, err := Load(Embed(MakeHttpImport(server.URL(), Code)))
+			_, err := Load(Embed(MakeRemoteImport(server.URL()+"/foo.dhall", Code)))
 
 			Expect(err).To(HaveOccurred())
 		})

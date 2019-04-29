@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -223,16 +224,15 @@ func MakeEnvVarImport(envvar string, mode ImportMode) Import {
 	return MakeImport(EnvVar(envvar), mode)
 }
 
-func MakeHttpImport(url string, mode ImportMode) Import {
-	return MakeImport(Remote(url), mode)
-}
-
 func MakeLocalImport(path string, mode ImportMode) Import {
 	return MakeImport(Local(path), mode)
 }
 
-func MakeRemoteImport(url string, mode ImportMode) Import {
-	return MakeImport(Remote(url), mode)
+// only for generating test data - discards errors
+func MakeRemoteImport(uri string, mode ImportMode) Import {
+	parsedURI, _ := url.ParseRequestURI(uri)
+	remote, _ := MakeRemote(parsedURI)
+	return MakeImport(remote, mode)
 }
 
 func MakeImport(resolvable Resolvable, mode ImportMode) Import {
