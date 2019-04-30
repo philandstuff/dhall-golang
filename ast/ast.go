@@ -126,6 +126,12 @@ type (
 	EmptyList struct{ Type Expr }
 	// `[2,3,4]` == NonEmptyList(2,3,4)
 	NonEmptyList []Expr
+	// `a # b`
+	ListAppend struct {
+		L Expr
+		R Expr
+	}
+
 	// `Some 3` == Some(3)
 	Some struct{ Val Expr }
 	// None is a Builtin
@@ -196,6 +202,7 @@ var (
 	_ Expr = List
 	_ Expr = EmptyList{Natural}
 	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
+	_ Expr = ListAppend{}
 	_ Expr = Optional
 	_ Expr = Some{NaturalLit(3)}
 	_ Expr = Record(map[string]Expr{})
@@ -329,6 +336,8 @@ func Shift(d int, v Var, e Expr) Expr {
 			exprs[i] = Shift(d, v, expr)
 		}
 		return NonEmptyList(exprs)
+	case ListAppend:
+		return ListAppend{L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
 	case Some:
 		return Some{Shift(d, v, e.Val)}
 	case Record:
@@ -440,6 +449,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			exprs[i] = Subst(v, c, expr)
 		}
 		return NonEmptyList(exprs)
+	case ListAppend:
+		return ListAppend{L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
 	case Some:
 		return Some{Subst(v, c, e.Val)}
 	case Record:
@@ -589,6 +600,10 @@ func (l NonEmptyList) String() string {
 	}
 	out.WriteString(" ]")
 	return out.String()
+}
+
+func (a ListAppend) String() string {
+	return fmt.Sprintf("(%v # %v)", a.L, a.R)
 }
 
 func (s Some) String() string {
@@ -788,6 +803,28 @@ func (l NonEmptyList) Normalize() Expr {
 	return NonEmptyList(vals)
 }
 
+func (a ListAppend) Normalize() Expr {
+	l := a.L.Normalize()
+	r := a.R.Normalize()
+
+	_, lEmpty := l.(EmptyList)
+	if lEmpty {
+		return r
+	}
+	_, rEmpty := r.(EmptyList)
+	if rEmpty {
+		return l
+	}
+
+	lList, lOk := l.(NonEmptyList)
+	rList, rOk := r.(NonEmptyList)
+	if lOk && rOk {
+		return NonEmptyList(append(lList, rList...))
+	}
+
+	return ListAppend{l, r}
+}
+
 func (s Some) Normalize() Expr {
 	return Some{s.Val.Normalize()}
 }
@@ -956,6 +993,12 @@ func (l NonEmptyList) AlphaNormalize() Expr {
 		vals[i] = expr.AlphaNormalize()
 	}
 	return NonEmptyList(vals)
+}
+func (a ListAppend) AlphaNormalize() Expr {
+	L := a.L.AlphaNormalize()
+	R := a.R.AlphaNormalize()
+
+	return ListAppend{L: L, R: R}
 }
 
 func (s Some) AlphaNormalize() Expr {

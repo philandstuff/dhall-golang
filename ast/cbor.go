@@ -17,6 +17,7 @@ var _ codec.Selfer = Double // Builtin
 var _ codec.Selfer = BoolIf{}
 var _ codec.Selfer = EmptyList{}
 var _ codec.Selfer = NonEmptyList{}
+var _ codec.Selfer = ListAppend{}
 var _ codec.Selfer = TextLit{}
 var _ codec.Selfer = NaturalLit(0)
 var _ codec.Selfer = NaturalPlus{}
@@ -133,8 +134,27 @@ func (n NaturalLit) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode(append([]interface{}{15}, int(n)))
 }
 
+const (
+	orOp = iota
+	andOp
+	eqOp
+	neOp
+	plusOp
+	timesOp
+	textAppendOp
+	listAppendOp
+	recordMergeOp
+	rightBiasedRecordMergeOp
+	recordTypeMergeOp
+	importAltOp
+)
+
 func (p NaturalPlus) CodecEncodeSelf(e *codec.Encoder) {
-	e.Encode([]interface{}{3, 4, p.L, p.R})
+	e.Encode([]interface{}{3, plusOp, p.L, p.R})
+}
+
+func (a ListAppend) CodecEncodeSelf(e *codec.Encoder) {
+	e.Encode([]interface{}{3, listAppendOp, a.L, a.R})
 }
 
 func (i IntegerLit) CodecEncodeSelf(e *codec.Encoder) {
@@ -231,12 +251,7 @@ func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
 		for _, component := range rr.PathComponents() {
 			toEncode = append(toEncode, component)
 		}
-		query := rr.Query()
-		if len(query) > 0 {
-			toEncode = append(toEncode, rr.Query())
-		} else {
-			toEncode = append(toEncode, nil)
-		}
+		toEncode = append(toEncode, rr.Query())
 		e.Encode(toEncode)
 	case Missing:
 		e.Encode("Missing unimplemented")
@@ -258,6 +273,7 @@ func (BoolIf) CodecDecodeSelf(*codec.Decoder)       {}
 func (TextLit) CodecDecodeSelf(*codec.Decoder)      {}
 func (NaturalLit) CodecDecodeSelf(*codec.Decoder)   {}
 func (NaturalPlus) CodecDecodeSelf(*codec.Decoder)  {}
+func (ListAppend) CodecDecodeSelf(*codec.Decoder)   {}
 func (IntegerLit) CodecDecodeSelf(*codec.Decoder)   {}
 func (EmptyList) CodecDecodeSelf(*codec.Decoder)    {}
 func (NonEmptyList) CodecDecodeSelf(*codec.Decoder) {}

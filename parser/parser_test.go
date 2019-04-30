@@ -113,6 +113,7 @@ baz
 		Entry("[3,4]", `[3,4]`, MakeList(NaturalLit(3), NaturalLit(4))),
 		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Natural}),
 		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), &App{List, Natural}}),
+		Entry("a # b", `a # b`, ListAppend{Var{"a", 0}, Var{"b", 0}}),
 	)
 	DescribeTable("optionals", ParseAndCompare,
 		Entry("Optional Natural", `Optional Natural`, &App{Optional, Natural}),

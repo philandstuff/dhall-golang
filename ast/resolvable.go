@@ -111,9 +111,29 @@ func (r Remote) Authority() string {
 	return r.url.Host
 }
 func (r Remote) PathComponents() []string {
-	return strings.Split(r.url.EscapedPath()[1:], "/")
+	escapedComps := strings.Split(r.url.EscapedPath()[1:], "/")
+	unescapedComps := make([]string, len(escapedComps))
+	for i, comp := range escapedComps {
+		var err error
+		unescapedComps[i], err = url.PathUnescape(comp)
+		if err != nil {
+			// can't happen, surely
+			panic(fmt.Sprintf("Got error %v", err))
+		}
+	}
+	return unescapedComps
 }
-func (r Remote) Query() string { return r.url.RawQuery }
+func (r Remote) Query() *string {
+	if r.url.RawQuery == "" && !r.url.ForceQuery {
+		return nil
+	}
+	query, err := url.QueryUnescape(r.url.RawQuery)
+	if err != nil {
+		// can't happen, surely
+		panic(fmt.Sprintf("Got error %v", err))
+	}
+	return &query
+}
 
 func (Missing) Name() string { return "" }
 func (Missing) Resolve() (string, error) {

@@ -418,9 +418,9 @@ OperatorExpression ← ImportAltExpression
 
 ImportAltExpression ← PlusExpression
 
-MorePlus ← _ '+' _1 e:TimesExpression { return e, nil }
+MorePlus ← _ '+' _1 e:ListAppendExpression { return e, nil }
 PlusExpression ←
-      first:TimesExpression rest:MorePlus* {
+      first:ListAppendExpression rest:MorePlus* {
           a := first.(Expr)
           if rest == nil { return a, nil }
           for _, b := range rest.([]interface{}) {
@@ -428,6 +428,16 @@ PlusExpression ←
           }
           return a, nil
       }
+
+MoreListAppend ← _ '#' _ e:TimesExpression { return e, nil }
+ListAppendExpression ← first:TimesExpression rest:MoreListAppend* {
+    a := first.(Expr)
+    if rest == nil { return a, nil }
+    for _, b := range rest.([]interface{}) {
+        a = ListAppend{L: a, R: b.(Expr)}
+    }
+    return a, nil
+}
 
 MoreTimes ← _ '*' _ e:ApplicationExpression { return e, nil }
 TimesExpression ←

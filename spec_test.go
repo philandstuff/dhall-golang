@@ -39,7 +39,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/operatorsA.dhall",
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
-	"TestParserAccepts/spaceAfterListAppendA.dhall",
 	"TestParserAccepts/text/interestingA.dhall",
 	"TestParserAccepts/text/interpolatedDoubleQuotedStringA.dhall", // needs Natural/show
 	"TestParserAccepts/text/interpolatedSingleQuotedStringA.dhall",
@@ -54,7 +53,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/Merge",
 	"TestTypecheckFails/unit/OperatorAndNotBool.dhall",
 	"TestTypecheckFails/unit/OperatorEqualNotBool.dhall",
-	"TestTypecheckFails/unit/OperatorListConcatenate",
 	"TestTypecheckFails/unit/OperatorNotEqual",
 	"TestTypecheckFails/unit/OperatorOr",
 	"TestTypecheckFails/unit/OperatorTextConcatenate",
@@ -72,6 +70,43 @@ var expectedFailures = []string{
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
 	"TestTypechecks/simple/mixedFieldAccessA.dhall",
 	"TestTypechecks/simple/unionsOfTypesA.dhall",
+	"TestTypeInference/simple/alternativesAreTypesA.dhall",
+	"TestTypeInference/unit/DoubleShow",
+	"TestTypeInference/unit/IntegerShow",
+	"TestTypeInference/unit/IntegerToDouble",
+	"TestTypeInference/unit/ListBuild",
+	"TestTypeInference/unit/ListFold",
+	"TestTypeInference/unit/ListHead",
+	"TestTypeInference/unit/ListIndex",
+	"TestTypeInference/unit/ListLast",
+	"TestTypeInference/unit/ListLength",
+	"TestTypeInference/unit/ListReverse",
+	"TestTypeInference/unit/Merge",
+	"TestTypeInference/unit/NaturalBuild",
+	"TestTypeInference/unit/NaturalEven",
+	"TestTypeInference/unit/NaturalFold",
+	"TestTypeInference/unit/NaturalIsZero",
+	"TestTypeInference/unit/NaturalOdd",
+	"TestTypeInference/unit/NaturalShow",
+	"TestTypeInference/unit/NaturalToInteger",
+	"TestTypeInference/unit/OldOptional",
+	"TestTypeInference/unit/OperatorAnd",
+	"TestTypeInference/unit/OperatorEqual",
+	"TestTypeInference/unit/OperatorNotEqual",
+	"TestTypeInference/unit/OperatorOr",
+	"TestTypeInference/unit/OperatorTextConcat",
+	"TestTypeInference/unit/OptionalBuild",
+	"TestTypeInference/unit/OptionalFold",
+	"TestTypeInference/unit/RecordNestedKind",
+	"TestTypeInference/unit/RecordTypeKindLike",
+	"TestTypeInference/unit/RecordTypeNestedKind",
+	"TestTypeInference/unit/RecordProjection",
+	"TestTypeInference/unit/RecursiveRecordMerge",
+	"TestTypeInference/unit/RecursiveRecordTypeMerge",
+	"TestTypeInference/unit/RightBiasedRecordMerge",
+	"TestTypeInference/unit/TextShow",
+	"TestTypeInference/unit/TypeAnnotationSort",
+	"TestTypeInference/unit/Union",
 	"TestNormalization/haskell-tutorial/access/1A.dhall",
 	"TestNormalization/haskell-tutorial/combineTypes",
 	"TestNormalization/haskell-tutorial/prefer",
@@ -125,7 +160,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/OperatorAnd",
 	"TestNormalization/unit/OperatorEqual",
-	"TestNormalization/unit/OperatorListConcatenate",
 	"TestNormalization/unit/OperatorNotEqual",
 	"TestNormalization/unit/OperatorOr",
 	"TestNormalization/unit/OperatorTextConcatenate",
@@ -360,6 +394,40 @@ func TestTypechecks(t *testing.T) {
 			}
 			_, err = annot.TypeWith(ast.EmptyContext())
 			expectNoError(t, err)
+		})
+}
+
+func TestTypeInference(t *testing.T) {
+	runTestOnFilePairs(t, "dhall-lang/tests/type-inference/success/",
+		"A.dhall", "B.dhall",
+		func(t *testing.T, aReader, bReader io.Reader) {
+			parsedA, err := parser.ParseReader(t.Name(), aReader)
+			expectNoError(t, err)
+
+			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			expectNoError(t, err)
+
+			inferredType, err := parsedA.(ast.Expr).TypeWith(ast.EmptyContext())
+			expectNoError(t, err)
+
+			expectEqualExprs(t, parsedB.(ast.Expr), inferredType)
+		})
+}
+
+func TestAlphaNormalization(t *testing.T) {
+	runTestOnFilePairs(t, "dhall-lang/tests/alpha-normalization/success/",
+		"A.dhall", "B.dhall",
+		func(t *testing.T, aReader, bReader io.Reader) {
+			parsedA, err := parser.ParseReader(t.Name(), aReader)
+			expectNoError(t, err)
+
+			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			expectNoError(t, err)
+
+			normA := parsedA.(ast.Expr).AlphaNormalize()
+			normB := parsedB.(ast.Expr).AlphaNormalize()
+
+			expectEqualExprs(t, normB, normA)
 		})
 }
 

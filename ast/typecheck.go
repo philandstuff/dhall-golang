@@ -306,6 +306,46 @@ func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 	return &App{List, t}, nil
 }
 
+// This returns
+//  Expr: the element type of a list type
+//  Bool: whether it succeeded
+func listElementType(e Expr) (Expr, bool) {
+	app, ok := e.(*App)
+	if !ok {
+		return nil, false
+	}
+	if app.Fn == List {
+		return app.Arg, true
+	}
+	return nil, false
+}
+
+func (a ListAppend) TypeWith(ctx *TypeContext) (Expr, error) {
+	lt, err := a.L.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	lt = lt.Normalize()
+	rt, err := a.R.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rt = rt.Normalize()
+
+	lElemT, ok := listElementType(lt)
+	if !ok {
+		return nil, fmt.Errorf("Can't use list concatenate operator on a %s", lt)
+	}
+	rElemT, ok := listElementType(rt)
+	if !ok {
+		return nil, fmt.Errorf("Can't use list concatenate operator on a %s", rt)
+	}
+	if !judgmentallyEqual(lElemT, rElemT) {
+		return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
+	}
+	return lt, nil
+}
+
 func (s Some) TypeWith(ctx *TypeContext) (Expr, error) {
 	typ, err := s.Val.TypeWith(ctx)
 	return &App{Optional, typ}, err

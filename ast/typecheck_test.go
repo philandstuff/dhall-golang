@@ -125,6 +125,9 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("([3] : List Natural) : List Natural",
 			Annot{MakeList(NaturalLit(3)), &App{List, Natural}},
 			&App{List, Natural}),
+		Entry("[3] # [4] : List Natural",
+			ListAppend{MakeList(NaturalLit(3)), MakeList(NaturalLit(4))},
+			&App{List, Natural}),
 	)
 	DescribeTable("Optional types",
 		expectType,
@@ -191,6 +194,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("if True then 3 else +4", BoolIf{True, NaturalLit(3), IntegerLit(4)}),
 		Entry("if 2 then 3 else 4", BoolIf{NaturalLit(3), NaturalLit(3), NaturalLit(4)}),
 		Entry("if True then Type else (Type -> Type)", BoolIf{True, Type, &Pi{"_", Type, Type}}),
+		Entry("[3] # [True]", ListAppend{MakeList(NaturalLit(3)), MakeList(True)}),
 		Entry("let x : Bool = 3 in 5", MakeLet(NaturalLit(5),
 			Binding{Variable: "x", Annotation: Bool, Value: NaturalLit(3)})),
 		Entry("record types can't have Kind->Kind fields", Record(map[string]Expr{"foo": &Pi{Label: "_", Type: Kind, Body: Kind}})),
