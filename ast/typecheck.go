@@ -248,28 +248,44 @@ func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
 
 func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
 
-func (p NaturalPlus) TypeWith(ctx *TypeContext) (Expr, error) {
-	err := assertSimpleType(ctx, p.L, Natural)
-	if err != nil {
-		return nil, err
-	}
-	err = assertSimpleType(ctx, p.R, Natural)
-	if err != nil {
-		return nil, err
-	}
-	return Natural, nil
-}
+func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
+	switch op.OpCode {
+	case PlusOp, TimesOp:
+		err := assertSimpleType(ctx, op.L, Natural)
+		if err != nil {
+			return nil, err
+		}
+		err = assertSimpleType(ctx, op.R, Natural)
+		if err != nil {
+			return nil, err
+		}
+		return Natural, nil
+	case ListAppendOp:
+		lt, err := op.L.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		lt = lt.Normalize()
+		rt, err := op.R.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		rt = rt.Normalize()
 
-func (p NaturalTimes) TypeWith(ctx *TypeContext) (Expr, error) {
-	err := assertSimpleType(ctx, p.L, Natural)
-	if err != nil {
-		return nil, err
+		lElemT, ok := listElementType(lt)
+		if !ok {
+			return nil, fmt.Errorf("Can't use list concatenate operator on a %s", lt)
+		}
+		rElemT, ok := listElementType(rt)
+		if !ok {
+			return nil, fmt.Errorf("Can't use list concatenate operator on a %s", rt)
+		}
+		if !judgmentallyEqual(lElemT, rElemT) {
+			return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
+		}
+		return lt, nil
 	}
-	err = assertSimpleType(ctx, p.R, Natural)
-	if err != nil {
-		return nil, err
-	}
-	return Natural, nil
+	return nil, fmt.Errorf("Unknown opcode in %+v", op)
 }
 
 func (IntegerLit) TypeWith(*TypeContext) (Expr, error) { return Integer, nil }
@@ -318,32 +334,6 @@ func listElementType(e Expr) (Expr, bool) {
 		return app.Arg, true
 	}
 	return nil, false
-}
-
-func (a ListAppend) TypeWith(ctx *TypeContext) (Expr, error) {
-	lt, err := a.L.TypeWith(ctx)
-	if err != nil {
-		return nil, err
-	}
-	lt = lt.Normalize()
-	rt, err := a.R.TypeWith(ctx)
-	if err != nil {
-		return nil, err
-	}
-	rt = rt.Normalize()
-
-	lElemT, ok := listElementType(lt)
-	if !ok {
-		return nil, fmt.Errorf("Can't use list concatenate operator on a %s", lt)
-	}
-	rElemT, ok := listElementType(rt)
-	if !ok {
-		return nil, fmt.Errorf("Can't use list concatenate operator on a %s", rt)
-	}
-	if !judgmentallyEqual(lElemT, rElemT) {
-		return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
-	}
-	return lt, nil
 }
 
 func (s Some) TypeWith(ctx *TypeContext) (Expr, error) {

@@ -164,7 +164,7 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 			T:    resolvedT,
 			F:    resolvedF,
 		}, nil
-	case NaturalPlus:
+	case Operator:
 		resolvedL, err := Load(e.L)
 		if err != nil {
 			return nil, err
@@ -173,17 +173,7 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return NaturalPlus{L: resolvedL, R: resolvedR}, nil
-	case NaturalTimes:
-		resolvedL, err := Load(e.L)
-		if err != nil {
-			return nil, err
-		}
-		resolvedR, err := Load(e.R)
-		if err != nil {
-			return nil, err
-		}
-		return NaturalTimes{L: resolvedL, R: resolvedR}, nil
+		return Operator{OpCode: e.OpCode, L: resolvedL, R: resolvedR}, nil
 	case EmptyList:
 		resolvedType, err := Load(e.Type)
 		if err != nil {

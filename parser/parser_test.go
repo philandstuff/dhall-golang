@@ -50,10 +50,10 @@ var _ = Describe("Expression", func() {
 		Entry("Natural", `Natural`, Natural),
 		Entry("NaturalLit", `1234`, NaturalLit(1234)),
 		Entry("NaturalLit", `3`, NaturalLit(3)),
-		Entry("NaturalPlus", `3 + 5`, NaturalPlus{NaturalLit(3), NaturalLit(5)}),
-		Entry("NaturalTimes", `3 * 5`, NaturalTimes{NaturalLit(3), NaturalLit(5)}),
-		Entry("Natural op order #1", `3 * 4 + 5`, NaturalPlus{NaturalTimes{NaturalLit(3), NaturalLit(4)}, NaturalLit(5)}),
-		Entry("Natural op order #2", `3 + 4 * 5`, NaturalPlus{NaturalLit(3), NaturalTimes{NaturalLit(4), NaturalLit(5)}}),
+		Entry("NaturalPlus", `3 + 5`, NaturalPlus(NaturalLit(3), NaturalLit(5))),
+		Entry("NaturalTimes", `3 * 5`, NaturalTimes(NaturalLit(3), NaturalLit(5))),
+		Entry("Natural op order #1", `3 * 4 + 5`, NaturalPlus(NaturalTimes(NaturalLit(3), NaturalLit(4)), NaturalLit(5))),
+		Entry("Natural op order #2", `3 + 4 * 5`, NaturalPlus(NaturalLit(3), NaturalTimes(NaturalLit(4), NaturalLit(5)))),
 		// Check that if we skip whitespace, it parses
 		// correctly as function application, not natural
 		// addition
@@ -113,7 +113,7 @@ baz
 		Entry("[3,4]", `[3,4]`, MakeList(NaturalLit(3), NaturalLit(4))),
 		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Natural}),
 		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), &App{List, Natural}}),
-		Entry("a # b", `a # b`, ListAppend{Var{"a", 0}, Var{"b", 0}}),
+		Entry("a # b", `a # b`, ListAppend(Var{"a", 0}, Var{"b", 0})),
 	)
 	DescribeTable("optionals", ParseAndCompare,
 		Entry("Optional Natural", `Optional Natural`, &App{Optional, Natural}),

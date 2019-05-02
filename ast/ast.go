@@ -110,15 +110,7 @@ type (
 		F    Expr
 	}
 
-	NaturalLit  int
-	NaturalPlus struct {
-		L Expr
-		R Expr
-	}
-	NaturalTimes struct {
-		L Expr
-		R Expr
-	}
+	NaturalLit int
 
 	IntegerLit int
 
@@ -126,11 +118,6 @@ type (
 	EmptyList struct{ Type Expr }
 	// `[2,3,4]` == NonEmptyList(2,3,4)
 	NonEmptyList []Expr
-	// `a # b`
-	ListAppend struct {
-		L Expr
-		R Expr
-	}
 
 	// `Some 3` == Some(3)
 	Some struct{ Val Expr }
@@ -165,6 +152,40 @@ const (
 	None
 )
 
+// These numbers match the binary encoding label numbers
+const (
+	OrOp = iota
+	AndOp
+	EqOp
+	NeOp
+	PlusOp
+	TimesOp
+	TextAppendOp
+	ListAppendOp
+	RecordMergeOp
+	RightBiasedRecordMergeOp
+	RecordTypeMergeOp
+	ImportAltOp
+)
+
+type Operator struct {
+	OpCode int
+	L      Expr
+	R      Expr
+}
+
+func NaturalPlus(l, r Expr) Expr {
+	return Operator{OpCode: PlusOp, L: l, R: r}
+}
+
+func NaturalTimes(l, r Expr) Expr {
+	return Operator{OpCode: TimesOp, L: l, R: r}
+}
+
+func ListAppend(l, r Expr) Expr {
+	return Operator{OpCode: ListAppendOp, L: l, R: r}
+}
+
 const (
 	True  = BoolLit(true)
 	False = BoolLit(false)
@@ -195,14 +216,12 @@ var (
 	_ Expr = BoolIf{}
 	_ Expr = Natural
 	_ Expr = NaturalLit(3)
-	_ Expr = NaturalPlus{}
-	_ Expr = NaturalTimes{}
+	_ Expr = Operator{}
 	_ Expr = Integer
 	_ Expr = IntegerLit(3)
 	_ Expr = List
 	_ Expr = EmptyList{Natural}
 	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
-	_ Expr = ListAppend{}
 	_ Expr = Optional
 	_ Expr = Some{NaturalLit(3)}
 	_ Expr = Record(map[string]Expr{})
@@ -322,10 +341,8 @@ func Shift(d int, v Var, e Expr) Expr {
 		return BoolIf{Cond: Shift(d, v, e.Cond), T: Shift(d, v, e.T), F: Shift(d, v, e.F)}
 	case NaturalLit:
 		return e
-	case NaturalPlus:
-		return NaturalPlus{L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
-	case NaturalTimes:
-		return NaturalTimes{L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
+	case Operator:
+		return Operator{OpCode: e.OpCode, L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
 	case IntegerLit:
 		return e
 	case EmptyList:
@@ -336,8 +353,6 @@ func Shift(d int, v Var, e Expr) Expr {
 			exprs[i] = Shift(d, v, expr)
 		}
 		return NonEmptyList(exprs)
-	case ListAppend:
-		return ListAppend{L: Shift(d, v, e.L), R: Shift(d, v, e.R)}
 	case Some:
 		return Some{Shift(d, v, e.Val)}
 	case Record:
@@ -435,10 +450,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return BoolIf{Cond: Subst(v, c, e.Cond), T: Subst(v, c, e.T), F: Subst(v, c, e.F)}
 	case NaturalLit:
 		return e
-	case NaturalPlus:
-		return NaturalPlus{L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
-	case NaturalTimes:
-		return NaturalTimes{L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
+	case Operator:
+		return Operator{OpCode: e.OpCode, L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
 	case IntegerLit:
 		return e
 	case EmptyList:
@@ -449,8 +462,6 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			exprs[i] = Subst(v, c, expr)
 		}
 		return NonEmptyList(exprs)
-	case ListAppend:
-		return ListAppend{L: Subst(v, c, e.L), R: Subst(v, c, e.R)}
 	case Some:
 		return Some{Subst(v, c, e.Val)}
 	case Record:
@@ -573,12 +584,28 @@ func (nl NaturalLit) String() string {
 	return fmt.Sprintf("%d", nl)
 }
 
-func (p NaturalPlus) String() string {
-	return fmt.Sprintf("(%v + %v)", p.L, p.R)
-}
-
-func (t NaturalTimes) String() string {
-	return fmt.Sprintf("(%v * %v)", t.L, t.R)
+func (op Operator) String() string {
+	var opStr string
+	switch op.OpCode {
+	case OrOp:
+	case AndOp:
+	case EqOp:
+	case NeOp:
+	case PlusOp:
+		opStr = "+"
+	case TimesOp:
+		opStr = "*"
+	case TextAppendOp:
+	case ListAppendOp:
+		opStr = "#"
+	case RecordMergeOp:
+	case RightBiasedRecordMergeOp:
+	case RecordTypeMergeOp:
+	case ImportAltOp:
+	default:
+		panic(fmt.Sprintf("unknown opcode in Operator struct %#v", op))
+	}
+	return fmt.Sprintf("(%v %s %v)", op.L, opStr, op.R)
 }
 
 func (i IntegerLit) String() string {
@@ -600,10 +627,6 @@ func (l NonEmptyList) String() string {
 	}
 	out.WriteString(" ]")
 	return out.String()
-}
-
-func (a ListAppend) String() string {
-	return fmt.Sprintf("(%v # %v)", a.L, a.R)
 }
 
 func (s Some) String() string {
@@ -751,44 +774,56 @@ func (b BoolIf) Normalize() Expr {
 }
 
 func (n NaturalLit) Normalize() Expr { return n }
-func (p NaturalPlus) Normalize() Expr {
-	L := p.L.Normalize()
-	R := p.R.Normalize()
 
-	Ln, Lok := L.(NaturalLit)
-	Rn, Rok := R.(NaturalLit)
+func (op Operator) Normalize() Expr {
+	L := op.L.Normalize()
+	R := op.R.Normalize()
 
-	if Lok && Rok {
-		return NaturalLit(int(Ln) + int(Rn))
-	} else if Lok && int(Ln) == 0 {
-		return R
-	} else if Rok && int(Rn) == 0 {
-		return L
-	} else {
-		return NaturalPlus{L: L, R: R}
+	switch op.OpCode {
+	case PlusOp:
+		Ln, Lok := L.(NaturalLit)
+		Rn, Rok := R.(NaturalLit)
+
+		if Lok && Rok {
+			return NaturalLit(int(Ln) + int(Rn))
+		} else if Lok && int(Ln) == 0 {
+			return R
+		} else if Rok && int(Rn) == 0 {
+			return L
+		}
+	case TimesOp:
+		Ln, Lok := L.(NaturalLit)
+		Rn, Rok := R.(NaturalLit)
+
+		if Lok && Rok {
+			return NaturalLit(int(Ln) * int(Rn))
+		} else if Lok && int(Ln) == 0 {
+			return NaturalLit(0)
+		} else if Lok && int(Ln) == 1 {
+			return R
+		} else if Rok && int(Rn) == 0 {
+			return NaturalLit(0)
+		} else if Rok && int(Rn) == 1 {
+			return L
+		}
+	case ListAppendOp:
+		_, lEmpty := L.(EmptyList)
+		if lEmpty {
+			return R
+		}
+		_, rEmpty := R.(EmptyList)
+		if rEmpty {
+			return L
+		}
+
+		lList, lOk := L.(NonEmptyList)
+		rList, rOk := R.(NonEmptyList)
+		if lOk && rOk {
+			return NonEmptyList(append(lList, rList...))
+		}
+
 	}
-}
-
-func (p NaturalTimes) Normalize() Expr {
-	L := p.L.Normalize()
-	R := p.R.Normalize()
-
-	Ln, Lok := L.(NaturalLit)
-	Rn, Rok := R.(NaturalLit)
-
-	if Lok && Rok {
-		return NaturalLit(int(Ln) * int(Rn))
-	} else if Lok && int(Ln) == 0 {
-		return NaturalLit(0)
-	} else if Lok && int(Ln) == 1 {
-		return R
-	} else if Rok && int(Rn) == 0 {
-		return NaturalLit(0)
-	} else if Rok && int(Rn) == 1 {
-		return L
-	} else {
-		return NaturalTimes{L: L, R: R}
-	}
+	return Operator{OpCode: op.OpCode, L: L, R: R}
 }
 
 func (i IntegerLit) Normalize() Expr { return i }
@@ -801,28 +836,6 @@ func (l NonEmptyList) Normalize() Expr {
 		vals[i] = expr.Normalize()
 	}
 	return NonEmptyList(vals)
-}
-
-func (a ListAppend) Normalize() Expr {
-	l := a.L.Normalize()
-	r := a.R.Normalize()
-
-	_, lEmpty := l.(EmptyList)
-	if lEmpty {
-		return r
-	}
-	_, rEmpty := r.(EmptyList)
-	if rEmpty {
-		return l
-	}
-
-	lList, lOk := l.(NonEmptyList)
-	rList, rOk := r.(NonEmptyList)
-	if lOk && rOk {
-		return NonEmptyList(append(lList, rList...))
-	}
-
-	return ListAppend{l, r}
 }
 
 func (s Some) Normalize() Expr {
@@ -969,20 +982,12 @@ func (b BoolIf) AlphaNormalize() Expr {
 }
 
 func (n NaturalLit) AlphaNormalize() Expr { return n }
-func (p NaturalPlus) AlphaNormalize() Expr {
-	L := p.L.AlphaNormalize()
-	R := p.R.AlphaNormalize()
+func (op Operator) AlphaNormalize() Expr {
+	L := op.L.AlphaNormalize()
+	R := op.R.AlphaNormalize()
 
-	return NaturalPlus{L: L, R: R}
+	return Operator{OpCode: op.OpCode, L: L, R: R}
 }
-
-func (p NaturalTimes) AlphaNormalize() Expr {
-	L := p.L.AlphaNormalize()
-	R := p.R.AlphaNormalize()
-
-	return NaturalTimes{L: L, R: R}
-}
-
 func (i IntegerLit) AlphaNormalize() Expr { return i }
 
 func (l EmptyList) AlphaNormalize() Expr { return EmptyList{l.Type.AlphaNormalize()} }
@@ -993,12 +998,6 @@ func (l NonEmptyList) AlphaNormalize() Expr {
 		vals[i] = expr.AlphaNormalize()
 	}
 	return NonEmptyList(vals)
-}
-func (a ListAppend) AlphaNormalize() Expr {
-	L := a.L.AlphaNormalize()
-	R := a.R.AlphaNormalize()
-
-	return ListAppend{L: L, R: R}
 }
 
 func (s Some) AlphaNormalize() Expr {

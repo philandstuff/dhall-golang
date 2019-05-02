@@ -52,7 +52,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(Embed(MakeEnvVarImport("CHAIN1", Code)))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(NaturalPlus{NaturalLit(2), NaturalLit(2)}))
+			Expect(actual).To(Equal(NaturalPlus(NaturalLit(2), NaturalLit(2))))
 		})
 		It("Rejects import cycles", func() {
 			os.Setenv("CYCLE", "env:CYCLE")
@@ -120,7 +120,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(Embed(MakeLocalImport("./testdata/chain1.dhall", Code)))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(NaturalPlus{NaturalLit(2), NaturalLit(2)}))
+			Expect(actual).To(Equal(NaturalPlus(NaturalLit(2), NaturalLit(2))))
 		})
 		It("Rejects import cycles", func() {
 			_, err := Load(Embed(MakeLocalImport("./testdata/cycle1.dhall", Code)))
@@ -204,21 +204,13 @@ var _ = Describe("Import resolution", func() {
 			BoolIf{F: importFooAsText},
 			BoolIf{F: resolvedFooAsText},
 		),
-		Entry("Import within natural plus (left side)",
-			NaturalPlus{L: importFooAsText},
-			NaturalPlus{L: resolvedFooAsText},
+		Entry("Import within Operator (left side)",
+			Operator{L: importFooAsText},
+			Operator{L: resolvedFooAsText},
 		),
 		Entry("Import within natural plus (right side)",
-			NaturalPlus{R: importFooAsText},
-			NaturalPlus{R: resolvedFooAsText},
-		),
-		Entry("Import within natural times (left side)",
-			NaturalTimes{L: importFooAsText},
-			NaturalTimes{L: resolvedFooAsText},
-		),
-		Entry("Import within natural times (right side)",
-			NaturalTimes{R: importFooAsText},
-			NaturalTimes{R: resolvedFooAsText},
+			Operator{R: importFooAsText},
+			Operator{R: resolvedFooAsText},
 		),
 		Entry("Import within empty list type",
 			EmptyList{Type: importFooAsText},

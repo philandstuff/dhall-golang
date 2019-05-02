@@ -424,7 +424,7 @@ PlusExpression ←
           a := first.(Expr)
           if rest == nil { return a, nil }
           for _, b := range rest.([]interface{}) {
-              a = NaturalPlus{L: a, R: b.(Expr)}
+              a = NaturalPlus(a, b.(Expr))
           }
           return a, nil
       }
@@ -434,7 +434,7 @@ ListAppendExpression ← first:TimesExpression rest:MoreListAppend* {
     a := first.(Expr)
     if rest == nil { return a, nil }
     for _, b := range rest.([]interface{}) {
-        a = ListAppend{L: a, R: b.(Expr)}
+        a = ListAppend(a, b.(Expr))
     }
     return a, nil
 }
@@ -445,7 +445,7 @@ TimesExpression ←
           a := first.(Expr)
           if rest == nil { return a, nil }
           for _, b := range rest.([]interface{}) {
-              a = NaturalTimes{L: a, R: b.(Expr)}
+              a = NaturalTimes(a, b.(Expr))
           }
           return a, nil
       }

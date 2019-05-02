@@ -81,10 +81,10 @@ var _ = Describe("Unmarshal", func() {
 			dhallFn := &ast.LambdaExpr{
 				Label: "x",
 				Type:  ast.Natural,
-				Body: ast.NaturalPlus{
-					L: ast.Var{Name: "x"},
-					R: ast.NaturalLit(1),
-				},
+				Body: ast.NaturalPlus(
+					ast.Var{Name: "x"},
+					ast.NaturalLit(1),
+				),
 			}
 			Unmarshal(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
@@ -98,10 +98,10 @@ var _ = Describe("Unmarshal", func() {
 				Body: &ast.LambdaExpr{
 					Label: "y",
 					Type:  ast.Natural,
-					Body: ast.NaturalPlus{
-						L: ast.Var{Name: "x"},
-						R: ast.Var{Name: "y"},
-					},
+					Body: ast.NaturalPlus(
+						ast.Var{Name: "x"},
+						ast.Var{Name: "y"},
+					),
 				},
 			}
 			Unmarshal(dhallFn, &fn)

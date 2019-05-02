@@ -28,16 +28,18 @@ var (
 )
 
 func PlusOf(inner gopter.Gen) gopter.Gen {
-	return gen.Struct(reflect.TypeOf(ast.NaturalPlus{}), map[string]gopter.Gen{
-		"L": inner,
-		"R": inner,
+	return gen.Struct(reflect.TypeOf(ast.Operator{}), map[string]gopter.Gen{
+		"OpCode": gen.Const(ast.PlusOp),
+		"L":      inner,
+		"R":      inner,
 	}).WithLabel("NaturalPlus")
 }
 
 func TimesOf(inner gopter.Gen) gopter.Gen {
-	return gen.Struct(reflect.TypeOf(ast.NaturalTimes{}), map[string]gopter.Gen{
-		"L": inner,
-		"R": inner,
+	return gen.Struct(reflect.TypeOf(ast.Operator{}), map[string]gopter.Gen{
+		"OpCode": gen.Const(ast.TimesOp),
+		"L":      inner,
+		"R":      inner,
 	}).WithLabel("NaturalTimes")
 }
 

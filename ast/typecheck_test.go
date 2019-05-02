@@ -55,8 +55,8 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("3 : Natural", NaturalLit(3), Natural),
 		Entry("(3 : Natural) : Natural", Annot{NaturalLit(3), Natural}, Natural),
 		Entry("(3 : (λ(x : Type) → x) Natural) : Natural", Annot{NaturalLit(3), &App{&LambdaExpr{"x", Type, x(0)}, Natural}}, Natural),
-		Entry("3 + 5 : Natural", NaturalPlus{NaturalLit(3), NaturalLit(5)}, Natural),
-		Entry("3 * 5 : Natural", NaturalTimes{NaturalLit(3), NaturalLit(5)}, Natural),
+		Entry("3 + 5 : Natural", NaturalPlus(NaturalLit(3), NaturalLit(5)), Natural),
+		Entry("3 * 5 : Natural", NaturalTimes(NaturalLit(3), NaturalLit(5)), Natural),
 	)
 	DescribeTable("Builtins",
 		expectType,
@@ -84,7 +84,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("(λ(f : Natural → Natural) → f 3) λ(n : Natural) → n+1 : Natural",
 			&App{
 				Fn:  &LambdaExpr{"f", &Pi{"_", Natural, Natural}, &App{Var{"f", 0}, NaturalLit(3)}},
-				Arg: &LambdaExpr{"n", Natural, NaturalPlus{Var{"n", 0}, NaturalLit(1)}}},
+				Arg: &LambdaExpr{"n", Natural, NaturalPlus(Var{"n", 0}, NaturalLit(1))}},
 			Natural),
 		Entry("(λ(x : Type) → λ(x : x) → x) : ∀(x : Type) → ∀(x : x) → x@1",
 			&LambdaExpr{
@@ -126,7 +126,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 			Annot{MakeList(NaturalLit(3)), &App{List, Natural}},
 			&App{List, Natural}),
 		Entry("[3] # [4] : List Natural",
-			ListAppend{MakeList(NaturalLit(3)), MakeList(NaturalLit(4))},
+			ListAppend(MakeList(NaturalLit(3)), MakeList(NaturalLit(4))),
 			&App{List, Natural}),
 	)
 	DescribeTable("Optional types",
@@ -194,7 +194,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 		Entry("if True then 3 else +4", BoolIf{True, NaturalLit(3), IntegerLit(4)}),
 		Entry("if 2 then 3 else 4", BoolIf{NaturalLit(3), NaturalLit(3), NaturalLit(4)}),
 		Entry("if True then Type else (Type -> Type)", BoolIf{True, Type, &Pi{"_", Type, Type}}),
-		Entry("[3] # [True]", ListAppend{MakeList(NaturalLit(3)), MakeList(True)}),
+		Entry("[3] # [True]", ListAppend(MakeList(NaturalLit(3)), MakeList(True))),
 		Entry("let x : Bool = 3 in 5", MakeLet(NaturalLit(5),
 			Binding{Variable: "x", Annotation: Bool, Value: NaturalLit(3)})),
 		Entry("record types can't have Kind->Kind fields", Record(map[string]Expr{"foo": &Pi{Label: "_", Type: Kind, Body: Kind}})),
