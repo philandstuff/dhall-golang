@@ -62,11 +62,11 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 			return expr, nil
 		}
 	case *LambdaExpr:
-		resolvedType, err := Load(e.Type)
+		resolvedType, err := Load(e.Type, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedBody, err := Load(e.Body)
+		resolvedBody, err := Load(e.Body, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -76,11 +76,11 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 			Body:  resolvedBody,
 		}, nil
 	case *Pi:
-		resolvedType, err := Load(e.Type)
+		resolvedType, err := Load(e.Type, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedBody, err := Load(e.Body)
+		resolvedBody, err := Load(e.Body, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -90,11 +90,11 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 			Body:  resolvedBody,
 		}, nil
 	case *App:
-		resolvedFn, err := Load(e.Fn)
+		resolvedFn, err := Load(e.Fn, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedArg, err := Load(e.Arg)
+		resolvedArg, err := Load(e.Arg, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -108,27 +108,27 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 			var err error
 			newBindings[i].Variable = binding.Variable
 			if binding.Annotation != nil {
-				newBindings[i].Annotation, err = Load(binding.Annotation)
+				newBindings[i].Annotation, err = Load(binding.Annotation, ancestors...)
 				if err != nil {
 					return nil, err
 				}
 			}
-			newBindings[i].Value, err = Load(binding.Value)
+			newBindings[i].Value, err = Load(binding.Value, ancestors...)
 			if err != nil {
 				return nil, err
 			}
 		}
-		resolvedBody, err := Load(e.Body)
+		resolvedBody, err := Load(e.Body, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return Let{Bindings: newBindings, Body: resolvedBody}, nil
 	case Annot:
-		resolvedExpr, err := Load(e.Expr)
+		resolvedExpr, err := Load(e.Expr, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedAnnotation, err := Load(e.Annotation)
+		resolvedAnnotation, err := Load(e.Annotation, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +136,7 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 	case TextLit:
 		var newChunks Chunks
 		for _, chunk := range e.Chunks {
-			resolvedExpr, err := Load(chunk.Expr)
+			resolvedExpr, err := Load(chunk.Expr, ancestors...)
 			if err != nil {
 				return nil, err
 			}
@@ -147,15 +147,15 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 		}
 		return TextLit{newChunks, e.Suffix}, nil
 	case BoolIf:
-		resolvedCond, err := Load(e.Cond)
+		resolvedCond, err := Load(e.Cond, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedT, err := Load(e.T)
+		resolvedT, err := Load(e.T, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedF, err := Load(e.F)
+		resolvedF, err := Load(e.F, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -165,17 +165,17 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 			F:    resolvedF,
 		}, nil
 	case Operator:
-		resolvedL, err := Load(e.L)
+		resolvedL, err := Load(e.L, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedR, err := Load(e.R)
+		resolvedR, err := Load(e.R, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return Operator{OpCode: e.OpCode, L: resolvedL, R: resolvedR}, nil
 	case EmptyList:
-		resolvedType, err := Load(e.Type)
+		resolvedType, err := Load(e.Type, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -184,7 +184,7 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 		newList := make([]Expr, len(e))
 		for i, item := range e {
 			var err error
-			newList[i], err = Load(item)
+			newList[i], err = Load(item, ancestors...)
 			if err != nil {
 				return nil, err
 			}
@@ -194,7 +194,7 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 		newRecord := make(map[string]Expr, len(e))
 		for k, v := range e {
 			var err error
-			newRecord[k], err = Load(v)
+			newRecord[k], err = Load(v, ancestors...)
 			if err != nil {
 				return nil, err
 			}
@@ -204,14 +204,14 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 		newRecord := make(map[string]Expr, len(e))
 		for k, v := range e {
 			var err error
-			newRecord[k], err = Load(v)
+			newRecord[k], err = Load(v, ancestors...)
 			if err != nil {
 				return nil, err
 			}
 		}
 		return RecordLit(newRecord), nil
 	case Field:
-		newRecord, err := Load(e.Record)
+		newRecord, err := Load(e.Record, ancestors...)
 		if err != nil {
 			return nil, err
 		}
