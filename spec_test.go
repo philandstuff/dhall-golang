@@ -34,6 +34,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/import/quotedPaths",     // needs.. quoted paths
 	"TestParserAccepts/import/unicodePaths",    // needs quoted paths
 	"TestParserAccepts/import/urlsA",           // needs all the URL features
+	"TestParserAccepts/import/urls/potPourri",  // needs all the URL features
 	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/merge",
 	"TestParserAccepts/operatorsA.dhall",
@@ -128,6 +129,7 @@ var expectedFailures = []string{
 	"TestNormalization/simple/enumA.dhall",
 	"TestNormalization/simple/integerShowA.dhall",
 	"TestNormalization/simple/integerToDoubleA.dhall",
+	"TestNormalization/simple/letenumA.dhall",
 	"TestNormalization/simple/listBuildA.dhall",
 	"TestNormalization/simple/naturalBuildA.dhall",
 	"TestNormalization/simple/naturalShowA.dhall",

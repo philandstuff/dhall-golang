@@ -127,12 +127,7 @@ func (r Remote) Query() *string {
 	if r.url.RawQuery == "" && !r.url.ForceQuery {
 		return nil
 	}
-	query, err := url.QueryUnescape(r.url.RawQuery)
-	if err != nil {
-		// can't happen, surely
-		panic(fmt.Sprintf("Got error %v", err))
-	}
-	return &query
+	return &r.url.RawQuery
 }
 
 func (Missing) Name() string { return "" }
