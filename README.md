@@ -30,7 +30,7 @@ Go bindings for dhall.
  - [X] Doubles
    - [ ] Double/show
  - [X] Lists
-   - [ ] `l # r` list append
+   - [x] `l # r` list append
    - [ ] List/* functions
  - [x] Text
    - [x] double quote literals
@@ -50,7 +50,7 @@ Go bindings for dhall.
    - [ ] `merge`
  - [ ] Imports
    - [x] local imports (except home-rooted paths)
-   - [ ] remote imports
+   - [x] remote imports
    - [x] environment variable imports
    - [ ] import caching
    - [x] importing expressions
