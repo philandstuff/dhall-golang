@@ -1,6 +1,7 @@
 package imports_test
 
 import (
+	"io"
 	"net/http"
 	"os"
 
@@ -64,9 +65,7 @@ var _ = Describe("Import resolution", func() {
 	Describe("http imports", func() {
 		var server *ghttp.Server
 		BeforeEach(func() {
-			var err error
 			server = ghttp.NewServer()
-			Expect(err).ToNot(HaveOccurred())
 		})
 		AfterEach(func() {
 			server.Close()
@@ -96,6 +95,81 @@ var _ = Describe("Import resolution", func() {
 			_, err := Load(Embed(MakeRemoteImport(server.URL()+"/foo.dhall", Code)))
 
 			Expect(err).To(HaveOccurred())
+		})
+		Describe("CORS checks", func() {
+			BeforeEach(func() {
+				server.RouteToHandler("GET", "/no-cors.dhall",
+					func(w http.ResponseWriter, r *http.Request) {
+						// no Access-Control-Allow-Origin header
+						io.WriteString(w, "3 : Natural")
+					},
+				)
+				server.RouteToHandler("GET", "/cors-ok-with-star.dhall",
+					func(w http.ResponseWriter, r *http.Request) {
+						w.Header().Set("Access-Control-Allow-Origin", "*")
+						io.WriteString(w, "3 : Natural")
+					},
+				)
+				server.RouteToHandler("GET", "/cors-ok-with-origin.dhall",
+					func(w http.ResponseWriter, r *http.Request) {
+						w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+						io.WriteString(w, "3 : Natural")
+					},
+				)
+			})
+			Context("when remote import fetches same origin", func() {
+				It("allows the request", func() {
+					server.RouteToHandler("GET", "/same-origin.dhall",
+						ghttp.RespondWith(http.StatusOK, "./no-cors.dhall"),
+					)
+
+					actual, err := Load(Embed(MakeRemoteImport(server.URL()+"/same-origin.dhall", Code)))
+
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+				})
+			})
+			Context("when remote import fetches different origin", func() {
+				It("refuses if CORS fails", func() {
+					otherOrigin := ghttp.NewServer()
+					otherOrigin.RouteToHandler("GET", "/other-origin.dhall",
+						ghttp.RespondWith(http.StatusOK, server.URL()+"/no-cors.dhall"),
+					)
+
+					_, err := Load(Embed(MakeRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code)))
+					Expect(err).To(HaveOccurred())
+				})
+				It("allows if Access-Control-Allow-Origin is '*'", func() {
+					otherOrigin := ghttp.NewServer()
+					otherOrigin.RouteToHandler("GET", "/other-origin.dhall",
+						ghttp.RespondWith(http.StatusOK, server.URL()+"/cors-ok-with-star.dhall"),
+					)
+
+					actual, err := Load(Embed(MakeRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code)))
+
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+				})
+				It("allows if Access-Control-Allow-Origin matches the Origin header", func() {
+					otherOrigin := ghttp.NewServer()
+					otherOrigin.RouteToHandler("GET", "/other-origin.dhall",
+						ghttp.RespondWith(http.StatusOK, server.URL()+"/cors-ok-with-origin.dhall"),
+					)
+
+					actual, err := Load(Embed(MakeRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code)))
+
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+				})
+			})
+			Context("when local import fetches remote", func() {
+				It("allows the request", func() {
+					actual, err := Load(Embed(MakeRemoteImport(server.URL()+"/no-cors.dhall", Code)))
+
+					Expect(err).ToNot(HaveOccurred())
+					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+				})
+			})
 		})
 	})
 	Describe("local imports", func() {

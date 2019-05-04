@@ -3,6 +3,7 @@ package imports
 import (
 	"fmt"
 
+	"github.com/philandstuff/dhall-golang/ast"
 	. "github.com/philandstuff/dhall-golang/ast"
 	"github.com/philandstuff/dhall-golang/parser"
 )
@@ -27,7 +28,10 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		}
 		var r Fetchable
 		r = i.Fetchable
+		origin := ast.NullOrigin
 		if len(ancestors) >= 1 {
+			origin = ancestors[len(ancestors)-1].Origin()
+
 			var err error
 			r, err = r.ChainOnto(ancestors[len(ancestors)-1])
 			if err != nil {
@@ -35,7 +39,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			}
 		}
 		imports := append(ancestors, here)
-		content, err := r.Fetch()
+		content, err := r.Fetch(origin)
 		if err != nil {
 			return nil, err
 		}
