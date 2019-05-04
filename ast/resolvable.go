@@ -50,13 +50,16 @@ func (l Local) Resolve() (string, error) {
 func (l Local) ChainOnto(base Resolvable) (Resolvable, error) {
 	switch r := base.(type) {
 	case Local:
-		if l.IsAbs() {
+		if l.IsAbs() || l.IsRelativeToHome() {
 			return l, nil
 		}
 		return Local(path.Join(path.Dir(string(r)), string(l))), nil
 	case Remote:
-		if path.IsAbs(string(l)) {
+		if l.IsAbs() {
 			return nil, errors.New("Can't get absolute path from remote import")
+		}
+		if l.IsRelativeToHome() {
+			return nil, errors.New("Can't get home-relative path from remote import")
 		}
 		relativeURL, err := url.Parse(string(l))
 		if err != nil {
