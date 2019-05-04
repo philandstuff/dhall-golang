@@ -16,8 +16,8 @@ func makeRemote(u string) Remote {
 	return remote
 }
 
-var _ = DescribeTable("ChainOnto", func(resolvable, base, expected Resolvable) {
-	actual, err := resolvable.ChainOnto(base)
+var _ = DescribeTable("ChainOnto", func(fetchable, base, expected Fetchable) {
+	actual, err := fetchable.ChainOnto(base)
 	if expected == nil {
 		Expect(err).To(HaveOccurred())
 	} else {

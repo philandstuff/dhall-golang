@@ -15,18 +15,18 @@ func ResolveStringAsExpr(name, content string) (Expr, error) {
 	return expr.(Expr), nil
 }
 
-func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
+func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 	switch e := e.(type) {
 	case Embed:
 		i := Import(e)
-		here := i.Resolvable
+		here := i.Fetchable
 		for _, ancestor := range ancestors {
 			if ancestor == here {
 				return nil, fmt.Errorf("Detected import cycle in %s", ancestor)
 			}
 		}
-		var r Resolvable
-		r = i.Resolvable
+		var r Fetchable
+		r = i.Fetchable
 		if len(ancestors) >= 1 {
 			var err error
 			r, err = r.ChainOnto(ancestors[len(ancestors)-1])
@@ -35,7 +35,7 @@ func Load(e Expr, ancestors ...Resolvable) (Expr, error) {
 			}
 		}
 		imports := append(ancestors, here)
-		content, err := r.Resolve()
+		content, err := r.Fetch()
 		if err != nil {
 			return nil, err
 		}

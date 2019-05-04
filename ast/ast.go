@@ -231,7 +231,7 @@ var (
 )
 
 type ImportHashed struct {
-	Resolvable
+	Fetchable
 }
 
 type ImportMode byte
@@ -261,10 +261,10 @@ func MakeRemoteImport(uri string, mode ImportMode) Import {
 	return MakeImport(remote, mode)
 }
 
-func MakeImport(resolvable Resolvable, mode ImportMode) Import {
+func MakeImport(fetchable Fetchable, mode ImportMode) Import {
 	return Import{
 		ImportHashed: ImportHashed{
-			Resolvable: resolvable,
+			Fetchable: fetchable,
 		},
 		ImportMode: mode,
 	}

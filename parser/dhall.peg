@@ -359,7 +359,7 @@ PosixEnvironmentVariableCharacter ←
 
 ImportType ← Missing / Local / Http / Env
 
-ImportHashed ← i:ImportType { return ImportHashed{Resolvable: i.(Resolvable)}, nil }
+ImportHashed ← i:ImportType { return ImportHashed{Fetchable: i.(Fetchable)}, nil }
 
 Import ← i:ImportHashed _ As _1 Text { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}), nil }
        / i:ImportHashed { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Code}), nil }

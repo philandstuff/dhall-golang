@@ -16,26 +16,26 @@ type Local string
 type Remote struct{ url *url.URL }
 type Missing struct{}
 
-type Resolvable interface {
+type Fetchable interface {
 	Name() string
-	Resolve() (string, error)
-	ChainOnto(base Resolvable) (Resolvable, error)
+	Fetch() (string, error)
+	ChainOnto(base Fetchable) (Fetchable, error)
 }
 
-var _ Resolvable = EnvVar("")
-var _ Resolvable = Local("")
-var _ Resolvable = Remote{}
-var _ Resolvable = Missing(struct{}{})
+var _ Fetchable = EnvVar("")
+var _ Fetchable = Local("")
+var _ Fetchable = Remote{}
+var _ Fetchable = Missing(struct{}{})
 
 func (e EnvVar) Name() string { return string(e) }
-func (e EnvVar) Resolve() (string, error) {
+func (e EnvVar) Fetch() (string, error) {
 	val, ok := os.LookupEnv(string(e))
 	if !ok {
 		return "", fmt.Errorf("Unset environment variable %s", string(e))
 	}
 	return val, nil
 }
-func (e EnvVar) ChainOnto(base Resolvable) (Resolvable, error) {
+func (e EnvVar) ChainOnto(base Fetchable) (Fetchable, error) {
 	if _, ok := base.(Remote); ok {
 		return nil, errors.New("Can't access environment variable from remote import")
 	}
@@ -43,11 +43,11 @@ func (e EnvVar) ChainOnto(base Resolvable) (Resolvable, error) {
 }
 
 func (l Local) Name() string { return string(l) }
-func (l Local) Resolve() (string, error) {
+func (l Local) Fetch() (string, error) {
 	bytes, err := ioutil.ReadFile(string(l))
 	return string(bytes), err
 }
-func (l Local) ChainOnto(base Resolvable) (Resolvable, error) {
+func (l Local) ChainOnto(base Fetchable) (Fetchable, error) {
 	switch r := base.(type) {
 	case Local:
 		if l.IsAbs() || l.IsRelativeToHome() {
@@ -91,7 +91,7 @@ func MakeRemote(u *url.URL) (Remote, error) {
 }
 
 func (r Remote) Name() string { return r.url.String() }
-func (r Remote) Resolve() (string, error) {
+func (r Remote) Fetch() (string, error) {
 	resp, err := http.Get(r.url.String())
 	if err != nil {
 		return "", err
@@ -103,7 +103,7 @@ func (r Remote) Resolve() (string, error) {
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	return string(bodyBytes), err
 }
-func (r Remote) ChainOnto(base Resolvable) (Resolvable, error) {
+func (r Remote) ChainOnto(base Fetchable) (Fetchable, error) {
 	return r, nil
 }
 func (r Remote) IsPlainHttp() bool { return r.url.Scheme == "http" }
@@ -134,9 +134,9 @@ func (r Remote) Query() *string {
 }
 
 func (Missing) Name() string { return "" }
-func (Missing) Resolve() (string, error) {
-	return "", errors.New("Cannot resolve missing import")
+func (Missing) Fetch() (string, error) {
+	return "", errors.New("Cannot fetch missing import")
 }
-func (Missing) ChainOnto(base Resolvable) (Resolvable, error) {
+func (Missing) ChainOnto(base Fetchable) (Fetchable, error) {
 	return Missing{}, nil
 }

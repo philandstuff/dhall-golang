@@ -186,7 +186,7 @@ const (
 )
 
 func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
-	r := i.Resolvable
+	r := i.Fetchable
 	mode := 0
 	if i.ImportMode == RawText {
 		mode = 1
