@@ -15,6 +15,7 @@ import (
 	"github.com/philandstuff/dhall-golang/ast"
 	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/pkg/errors"
 	"github.com/ugorji/go/codec"
 )
 
@@ -44,6 +45,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/text/interpolatedDoubleQuotedStringA.dhall", // needs Natural/show
 	"TestParserAccepts/text/interpolatedSingleQuotedStringA.dhall",
 	"TestParserAccepts/text/interpolationA.dhall",
+	"TestParserAccepts/text/multilineCorrupted", // test is broken; fixed in #527
 	"TestParserAccepts/text/templateA.dhall",
 	"TestParserAccepts/unionA.dhall",
 	"TestParserAccepts/whitespaceBuffetA.dhall", // requires Natural/even
@@ -242,7 +244,10 @@ func cbor2Pretty(cbor []byte) (string, error) {
 	}()
 	out, err := cmd.Output()
 	if err != nil {
-		return "", err
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return "", errors.Wrap(err, "error calling cbor2pretty.rb. stderr was: "+string(exitError.Stderr))
+		}
+		return "", errors.Wrap(err, "error calling cbor2pretty.rb")
 	}
 	return string(out), nil
 }
@@ -252,11 +257,11 @@ func expectEqualCbor(t *testing.T, expected, actual []byte) {
 	if !reflect.DeepEqual(expected, actual) {
 		actualPretty, err := cbor2Pretty(actual)
 		if err != nil {
-			failf(t, "Got unexpected error %v", err)
+			failf(t, "Couldn't decode actual CBOR: %v", err)
 		}
 		expectedPretty, err := cbor2Pretty(expected)
 		if err != nil {
-			failf(t, "Got unexpected error %v", err)
+			failf(t, "Couldn't decode expected CBOR: %v", err)
 		}
 		failf(t, "Expected\n%s\nto equal\n%s\n", actualPretty, expectedPretty)
 	}

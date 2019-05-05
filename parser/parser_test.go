@@ -87,6 +87,22 @@ foo''`, TextLit{Suffix: "foo"}),
 		Entry("Simple TextLit with newlines", `''
 foo
 ''`, TextLit{Suffix: "foo\n"}),
+		Entry("TextLit with space indent", `''
+  foo
+  bar
+  ''`, TextLit{Suffix: "foo\nbar\n"}),
+		Entry("TextLit with tab indent", `''
+		foo
+		bar
+		''`, TextLit{Suffix: "foo\nbar\n"}),
+		Entry("TextLit with mixed tab/space indent", `''
+	  foo
+	  bar
+	  ''`, TextLit{Suffix: "foo\nbar\n"}),
+		Entry("TextLit with weird indenting", `''
+	    foo
+	  	bar
+	  ''`, TextLit{Suffix: "  foo\n\tbar\n"}),
 		Entry(`Escape ''`, `''
 '''
 ''`, TextLit{Suffix: "''\n"}),
