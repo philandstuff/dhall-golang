@@ -145,6 +145,7 @@ var _ = Describe("Normalize", func() {
 			EmptyList{&App{&LambdaExpr{"x", Type, x(0)}, Natural}},
 			EmptyList{Natural}),
 		Entry(`"foo ${"bar"} baz}" » "foo bar baz"`, TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}}, " baz"}, TextLit{Suffix: "foo bar baz"}),
+		Entry(`"${x}" » x (special case)`, TextLit{Chunks{{"", x(0)}}, ""}, x(0)),
 		Entry("{} » {}", Record(map[string]Expr{}), Record(map[string]Expr{})),
 		Entry("{=} » {=}", RecordLit(map[string]Expr{}), RecordLit(map[string]Expr{})),
 		Entry("{foo = 3 + 5} » {foo = 8}", RecordLit(map[string]Expr{"foo": NaturalPlus(NaturalLit(3), NaturalLit(5))}), RecordLit(map[string]Expr{"foo": NaturalLit(8)})),

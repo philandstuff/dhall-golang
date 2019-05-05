@@ -729,6 +729,10 @@ func (d DoubleLit) Normalize() Expr { return d }
 func (t TextLit) Normalize() Expr {
 	var str strings.Builder
 	var newChunks Chunks
+	// Special case: "${<expr>}" → <expr>
+	if len(t.Chunks) == 1 && t.Chunks[0].Prefix == "" && t.Suffix == "" {
+		return t.Chunks[0].Expr
+	}
 	for _, chunk := range t.Chunks {
 		str.WriteString(chunk.Prefix)
 		normExpr := chunk.Expr.Normalize()
