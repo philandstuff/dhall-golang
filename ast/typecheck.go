@@ -53,7 +53,7 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 }
 
 func (v Var) TypeWith(ctx *TypeContext) (Expr, error) {
-	if t, ok := ctx.Lookup(v.Name, 0); ok {
+	if t, ok := ctx.Lookup(v.Name, v.Index); ok {
 		return t, nil
 	}
 	return nil, fmt.Errorf("Unbound variable %s, context was %+v", v.Name, ctx)
@@ -250,6 +250,16 @@ func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
 
 func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 	switch op.OpCode {
+	case AndOp:
+		err := assertSimpleType(ctx, op.L, Bool)
+		if err != nil {
+			return nil, err
+		}
+		err = assertSimpleType(ctx, op.R, Bool)
+		if err != nil {
+			return nil, err
+		}
+		return Bool, nil
 	case PlusOp, TimesOp:
 		err := assertSimpleType(ctx, op.L, Natural)
 		if err != nil {

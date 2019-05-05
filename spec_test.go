@@ -28,14 +28,6 @@ var expectedFailures = []string{
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/fieldsA.dhall",
-	"TestParserAccepts/import/hash",
-	"TestParserAccepts/import/importAlt",
-	"TestParserAccepts/import/parenthesizeUsing",
-	"TestParserAccepts/import/pathTermination", // needs union literals
-	"TestParserAccepts/import/quotedPaths",     // needs.. quoted paths
-	"TestParserAccepts/import/unicodePaths",    // needs quoted paths
-	"TestParserAccepts/import/urlsA",           // needs all the URL features
-	"TestParserAccepts/import/urls/potPourri",  // needs all the URL features
 	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/merge",
 	"TestParserAccepts/operatorsA.dhall",
@@ -48,13 +40,24 @@ var expectedFailures = []string{
 	"TestParserAccepts/text/multilineCorrupted", // test is broken; fixed in #527
 	"TestParserAccepts/text/templateA.dhall",
 	"TestParserAccepts/unionA.dhall",
+	"TestParserAccepts/unit/import/hash",
+	"TestParserAccepts/unit/import/importAlt",
+	"TestParserAccepts/unit/import/parenthesizeUsing",
+	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals
+	"TestParserAccepts/unit/import/quotedPaths",          // needs.. quoted paths
+	"TestParserAccepts/unit/import/unicodePaths",         // needs quoted paths
+	"TestParserAccepts/unit/import/urlsA",                // needs all the URL features
+	"TestParserAccepts/unit/import/urls/potPourri",       // needs all the URL features
+	"TestParserAccepts/unit/import/urls/quotedPath",      // needs quotedPaths
+	"TestParserAccepts/unit/Merge",
+	"TestParserAccepts/unit/Quoted",
+	"TestParserAccepts/unit/Union",
 	"TestParserAccepts/whitespaceBuffetA.dhall", // requires Natural/even
 	"TestTypecheckFails/combineMixedRecords.dhall",
 	"TestTypecheckFails/duplicateFields.dhall",
 	"TestTypecheckFails/mixedUnions.dhall",
 	"TestTypecheckFails/preferMixedRecords.dhall",
 	"TestTypecheckFails/unit/Merge",
-	"TestTypecheckFails/unit/OperatorAndNotBool.dhall",
 	"TestTypecheckFails/unit/OperatorEqualNotBool.dhall",
 	"TestTypecheckFails/unit/OperatorNotEqual",
 	"TestTypecheckFails/unit/OperatorOr",
@@ -93,7 +96,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/NaturalShow",
 	"TestTypeInference/unit/NaturalToInteger",
 	"TestTypeInference/unit/OldOptional",
-	"TestTypeInference/unit/OperatorAnd",
 	"TestTypeInference/unit/OperatorEqual",
 	"TestTypeInference/unit/OperatorNotEqual",
 	"TestTypeInference/unit/OperatorOr",
@@ -138,7 +140,6 @@ var expectedFailures = []string{
 	"TestNormalization/simple/naturalToIntegerA.dhall",
 	"TestNormalization/simple/optional",
 	"TestNormalization/simple/sortOperatorA.dhall",
-	"TestNormalization/simplifications/andA.dhall",
 	"TestNormalization/simplifications/eqA.dhall",
 	"TestNormalization/simplifications/neA.dhall",
 	"TestNormalization/simplifications/orA.dhall",
@@ -162,7 +163,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/NaturalShow",
 	"TestNormalization/unit/NaturalToInteger",
 	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
-	"TestNormalization/unit/OperatorAnd",
 	"TestNormalization/unit/OperatorEqual",
 	"TestNormalization/unit/OperatorNotEqual",
 	"TestNormalization/unit/OperatorOr",

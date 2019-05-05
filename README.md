@@ -13,13 +13,15 @@ Go bindings for dhall.
  - [X] Type, Kind, Sort
  - [X] Variables
    - [X] de bruijn indices
+   - [ ] quoted variables
  - [X] Lambdas, Pis, function application
    - [x] Alpha normalization
  - [X] Let bindings
  - [X] Type annotations
  - [X] Bools
    - [X] if
-   - [ ] `&&`, `||`
+   - [x] `&&`
+   - [ ] `||`
    - [ ] `==`, `!=`
  - [X] Naturals
    - [X] `l + r` Natural addition

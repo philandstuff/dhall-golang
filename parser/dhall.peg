@@ -429,12 +429,22 @@ PlusExpression ←
           return a, nil
       }
 
-MoreListAppend ← _ '#' _ e:TimesExpression { return e, nil }
-ListAppendExpression ← first:TimesExpression rest:MoreListAppend* {
+MoreListAppend ← _ '#' _ e:AndExpression { return e, nil }
+ListAppendExpression ← first:AndExpression rest:MoreListAppend* {
     a := first.(Expr)
     if rest == nil { return a, nil }
     for _, b := range rest.([]interface{}) {
         a = ListAppend(a, b.(Expr))
+    }
+    return a, nil
+}
+
+MoreAnd ← _ "&&" _ e:TimesExpression { return e, nil }
+AndExpression ← first:TimesExpression rest:MoreAnd* {
+    a := first.(Expr)
+    if rest == nil { return a, nil }
+    for _, b := range rest.([]interface{}) {
+        a = BoolAnd(a, b.(Expr))
     }
     return a, nil
 }

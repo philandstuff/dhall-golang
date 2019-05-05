@@ -182,6 +182,10 @@ func NaturalTimes(l, r Expr) Expr {
 	return Operator{OpCode: TimesOp, L: l, R: r}
 }
 
+func BoolAnd(l, r Expr) Expr {
+	return Operator{OpCode: AndOp, L: l, R: r}
+}
+
 func ListAppend(l, r Expr) Expr {
 	return Operator{OpCode: ListAppendOp, L: l, R: r}
 }
@@ -589,6 +593,7 @@ func (op Operator) String() string {
 	switch op.OpCode {
 	case OrOp:
 	case AndOp:
+		opStr = "&&"
 	case EqOp:
 	case NeOp:
 	case PlusOp:
@@ -784,6 +789,22 @@ func (op Operator) Normalize() Expr {
 	R := op.R.Normalize()
 
 	switch op.OpCode {
+	case AndOp:
+		Lb, Lok := L.(BoolLit)
+		Rb, Rok := R.(BoolLit)
+
+		if Lok && Lb == True {
+			return R
+		} else if Rok && Rb == True {
+			return L
+		} else if Lok && Lb == False {
+			return False
+		} else if Rok && Rb == False {
+			return False
+		}
+		if judgmentallyEqual(L, R) {
+			return L
+		}
 	case PlusOp:
 		Ln, Lok := L.(NaturalLit)
 		Rn, Rok := R.(NaturalLit)
