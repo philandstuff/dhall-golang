@@ -19,6 +19,18 @@ import (
 )
 import . "github.com/philandstuff/dhall-golang/ast"
 
+// Helper function for parsing all the operator parsing blocks
+// see OrExpression for an example of how this is used
+func ParseOperator(opcode int, first, rest interface{}) Expr {
+    out := first.(Expr)
+    if rest == nil { return out }
+    for _, b := range rest.([]interface{}) {
+        nextExpr := b.([]interface{})[3].(Expr)
+        out = Operator{OpCode: opcode, L: out, R: nextExpr}
+    }
+    return out
+}
+
 }
 
 DhallFile ← e:CompleteExpression EOF { return e, nil }
@@ -416,59 +428,18 @@ EmptyList ← '[' _ ']' _ ':' _1 List _ a:ImportExpression {
 
 OperatorExpression ← ImportAltExpression
 
-ImportAltExpression ← OrExpression
+ImportAltExpression  ← OrExpression
 
-MoreOr ← _ "||" _ e:PlusExpression { return e, nil }
-OrExpression ← first:PlusExpression rest:MoreOr* {
-    a := first.(Expr)
-    if rest == nil { return a, nil }
-    for _, b := range rest.([]interface{}) {
-        a = BoolOr(a, b.(Expr))
-    }
-    return a, nil
-}
-
-MorePlus ← _ '+' _1 e:ListAppendExpression { return e, nil }
-PlusExpression ←
-      first:ListAppendExpression rest:MorePlus* {
-          a := first.(Expr)
-          if rest == nil { return a, nil }
-          for _, b := range rest.([]interface{}) {
-              a = NaturalPlus(a, b.(Expr))
-          }
-          return a, nil
-      }
-
-MoreListAppend ← _ '#' _ e:AndExpression { return e, nil }
-ListAppendExpression ← first:AndExpression rest:MoreListAppend* {
-    a := first.(Expr)
-    if rest == nil { return a, nil }
-    for _, b := range rest.([]interface{}) {
-        a = ListAppend(a, b.(Expr))
-    }
-    return a, nil
-}
-
-MoreAnd ← _ "&&" _ e:TimesExpression { return e, nil }
-AndExpression ← first:TimesExpression rest:MoreAnd* {
-    a := first.(Expr)
-    if rest == nil { return a, nil }
-    for _, b := range rest.([]interface{}) {
-        a = BoolAnd(a, b.(Expr))
-    }
-    return a, nil
-}
-
-MoreTimes ← _ '*' _ e:ApplicationExpression { return e, nil }
-TimesExpression ←
-      first:ApplicationExpression rest:MoreTimes* {
-          a := first.(Expr)
-          if rest == nil { return a, nil }
-          for _, b := range rest.([]interface{}) {
-              a = NaturalTimes(a, b.(Expr))
-          }
-          return a, nil
-      }
+OrExpression         ← first:PlusExpression        rest:(_ "||" _ PlusExpression)*
+  {return ParseOperator(OrOp, first, rest), nil}
+PlusExpression       ← first:ListAppendExpression  rest:(_ '+' _1 e:ListAppendExpression)*
+  {return ParseOperator(PlusOp, first, rest), nil}
+ListAppendExpression ← first:AndExpression         rest:(_ '#' _ e:AndExpression)*
+  {return ParseOperator(ListAppendOp, first, rest), nil}
+AndExpression        ← first:TimesExpression       rest:(_ "&&" _ e:TimesExpression)*
+  {return ParseOperator(AndOp, first, rest), nil}
+TimesExpression      ← first:ApplicationExpression rest:(_ '*' _ e:ApplicationExpression)*
+  {return ParseOperator(TimesOp, first, rest), nil}
 
 ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression)* {
           e := f.(Expr)
