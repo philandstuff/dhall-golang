@@ -37,7 +37,7 @@ Go bindings for dhall.
    - [x] double quote literals
    - [x] single quote literals
    - [x] text interpolation
-   - [ ] `l ++ r` text append
+   - [x] `l ++ r` text append
    - [ ] Text/show standard functions
  - [x] Optionals
    - [ ] Optional/fold and Optional/build

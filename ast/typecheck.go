@@ -270,6 +270,16 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 			return nil, err
 		}
 		return Natural, nil
+	case TextAppendOp:
+		err := assertSimpleType(ctx, op.L, Text)
+		if err != nil {
+			return nil, err
+		}
+		err = assertSimpleType(ctx, op.R, Text)
+		if err != nil {
+			return nil, err
+		}
+		return Text, nil
 	case ListAppendOp:
 		lt, err := op.L.TypeWith(ctx)
 		if err != nil {

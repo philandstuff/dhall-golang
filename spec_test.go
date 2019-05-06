@@ -57,7 +57,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/mixedUnions.dhall",
 	"TestTypecheckFails/preferMixedRecords.dhall",
 	"TestTypecheckFails/unit/Merge",
-	"TestTypecheckFails/unit/OperatorTextConcatenate",
 	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
 	"TestTypecheckFails/unit/RecordProjection",
 	"TestTypecheckFails/unit/RecursiveRecordMerge",
@@ -92,7 +91,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/NaturalShow",
 	"TestTypeInference/unit/NaturalToInteger",
 	"TestTypeInference/unit/OldOptional",
-	"TestTypeInference/unit/OperatorTextConcat",
 	"TestTypeInference/unit/OptionalBuild",
 	"TestTypeInference/unit/OptionalFold",
 	"TestTypeInference/unit/RecordNestedKind",
@@ -152,7 +150,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/NaturalShow",
 	"TestNormalization/unit/NaturalToInteger",
 	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
-	"TestNormalization/unit/OperatorTextConcatenate",
 	"TestNormalization/unit/OptionalBuild",
 	"TestNormalization/unit/OptionalFold",
 	"TestNormalization/unit/RecordProjection",

@@ -432,8 +432,10 @@ ImportAltExpression  ← OrExpression
 
 OrExpression         ← first:PlusExpression        rest:(_ "||" _ PlusExpression)*
   {return ParseOperator(OrOp, first, rest), nil}
-PlusExpression       ← first:ListAppendExpression  rest:(_ '+' _1 e:ListAppendExpression)*
+PlusExpression       ← first:TextAppendExpression  rest:(_ '+' _1 e:TextAppendExpression)*
   {return ParseOperator(PlusOp, first, rest), nil}
+TextAppendExpression ← first:ListAppendExpression  rest:(_ "++" _ e:ListAppendExpression)*
+  {return ParseOperator(TextAppendOp, first, rest), nil}
 ListAppendExpression ← first:AndExpression         rest:(_ '#' _ e:AndExpression)*
   {return ParseOperator(ListAppendOp, first, rest), nil}
 AndExpression        ← first:TimesExpression       rest:(_ "&&" _ e:TimesExpression)*

@@ -608,6 +608,7 @@ func (op Operator) String() string {
 	case TimesOp:
 		opStr = "*"
 	case TextAppendOp:
+		opStr = "++"
 	case ListAppendOp:
 		opStr = "#"
 	case RecordMergeOp:
@@ -741,10 +742,6 @@ func (d DoubleLit) Normalize() Expr { return d }
 func (t TextLit) Normalize() Expr {
 	var str strings.Builder
 	var newChunks Chunks
-	// Special case: "${<expr>}" → <expr>
-	if len(t.Chunks) == 1 && t.Chunks[0].Prefix == "" && t.Suffix == "" {
-		return t.Chunks[0].Expr
-	}
 	for _, chunk := range t.Chunks {
 		str.WriteString(chunk.Prefix)
 		normExpr := chunk.Expr.Normalize()
@@ -766,7 +763,14 @@ func (t TextLit) Normalize() Expr {
 		}
 	}
 	str.WriteString(t.Suffix)
-	return TextLit{Chunks: newChunks, Suffix: str.String()}
+	newSuffix := str.String()
+
+	// Special case: "${<expr>}" → <expr>
+	if len(newChunks) == 1 && newChunks[0].Prefix == "" && newSuffix == "" {
+		return newChunks[0].Expr
+	}
+
+	return TextLit{Chunks: newChunks, Suffix: newSuffix}
 }
 
 func (n BoolLit) Normalize() Expr { return n }
@@ -878,6 +882,8 @@ func (op Operator) Normalize() Expr {
 		} else if Rok && int(Rn) == 1 {
 			return L
 		}
+	case TextAppendOp:
+		return TextLit{Chunks: Chunks{{Expr: L}, {Expr: R}}}.Normalize()
 	case ListAppendOp:
 		_, lEmpty := L.(EmptyList)
 		if lEmpty {
