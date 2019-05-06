@@ -21,7 +21,7 @@ Go bindings for dhall.
  - [X] Bools
    - [X] if
    - [x] `&&`, `||`
-   - [ ] `==`, `!=`
+   - [x] `==`, `!=`
  - [X] Naturals
    - [X] `l + r` Natural addition
    - [x] `l * r` Natural multiplication

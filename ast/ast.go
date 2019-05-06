@@ -600,7 +600,9 @@ func (op Operator) String() string {
 	case AndOp:
 		opStr = "&&"
 	case EqOp:
+		opStr = "=="
 	case NeOp:
+		opStr = "!="
 	case PlusOp:
 		opStr = "+"
 	case TimesOp:
@@ -825,6 +827,30 @@ func (op Operator) Normalize() Expr {
 		}
 		if judgmentallyEqual(L, R) {
 			return L
+		}
+	case EqOp:
+		Lb, Lok := L.(BoolLit)
+		Rb, Rok := R.(BoolLit)
+
+		if Lok && Lb == True {
+			return R
+		} else if Rok && Rb == True {
+			return L
+		}
+		if judgmentallyEqual(L, R) {
+			return True
+		}
+	case NeOp:
+		Lb, Lok := L.(BoolLit)
+		Rb, Rok := R.(BoolLit)
+
+		if Lok && Lb == False {
+			return R
+		} else if Rok && Rb == False {
+			return L
+		}
+		if judgmentallyEqual(L, R) {
+			return False
 		}
 	case PlusOp:
 		Ln, Lok := L.(NaturalLit)
