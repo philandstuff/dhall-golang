@@ -42,7 +42,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/hash",
 	"TestParserAccepts/unit/import/importAlt",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
-	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals
+	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals, which I won't implement
 	"TestParserAccepts/unit/import/quotedPaths",          // needs.. quoted paths
 	"TestParserAccepts/unit/import/unicodePaths",         // needs quoted paths
 	"TestParserAccepts/unit/import/urlsA",                // needs all the URL features
@@ -50,11 +50,10 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/urls/quotedPath",      // needs quotedPaths
 	"TestParserAccepts/unit/Merge",
 	"TestParserAccepts/unit/Quoted",
-	"TestParserAccepts/unit/Union",
+	"TestParserAccepts/unit/UnionLit",           // not going to implement union literals
 	"TestParserAccepts/whitespaceBuffetA.dhall", // requires Natural/even
 	"TestTypecheckFails/combineMixedRecords.dhall",
 	"TestTypecheckFails/duplicateFields.dhall",
-	"TestTypecheckFails/mixedUnions.dhall",
 	"TestTypecheckFails/preferMixedRecords.dhall",
 	"TestTypecheckFails/unit/Merge",
 	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
@@ -63,7 +62,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/RecursiveRecordTypeMerge",
 	"TestTypecheckFails/unit/RightBiasedRecordMerge",
 	"TestTypecheckFails/unit/Some",
-	"TestTypecheckFails/unit/Union",
 	"TestTypechecks/prelude",
 	"TestTypechecks/recordOfRecordOfTypesA.dhall",
 	"TestTypechecks/simple/access/1A.dhall",
@@ -102,8 +100,8 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/RightBiasedRecordMerge",
 	"TestTypeInference/unit/TextShow",
 	"TestTypeInference/unit/TypeAnnotationSort",
-	"TestTypeInference/unit/Union",
-	"TestNormalization/haskell-tutorial/access/1A.dhall",
+	"TestTypeInference/unit/UnionConstructor", // not implemented yet
+	"TestTypeInference/unit/UnionOne",         // deprecated union literal syntax
 	"TestNormalization/haskell-tutorial/combineTypes",
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",
@@ -158,9 +156,7 @@ var expectedFailures = []string{
 	"TestNormalization/unit/RightBiasedRecordMerge",
 	"TestNormalization/unit/TextShow",
 	"TestNormalization/unit/UnionNormalize",
-	"TestNormalization/unit/UnionProjectConstructorA",
 	"TestNormalization/unit/UnionSort",
-	"TestNormalization/unit/UnionType",
 	"TestImportFails/alternative",
 	"TestImport/alternative", // needs alternative operator
 	"TestImport/fieldOrder",  // needs import hashes

@@ -48,6 +48,8 @@ Go bindings for dhall.
    - [ ] `l ⫽ r`
    - [ ] `l ⩓ r`
  - [ ] Unions
+   - [x] types
+   - [ ] constructors
    - [ ] `merge`
  - [ ] Imports
    - [x] local imports (except home-rooted paths)

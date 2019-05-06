@@ -453,6 +453,42 @@ func (f Field) TypeWith(ctx *TypeContext) (Expr, error) {
 	return ft, nil
 }
 
+func (u UnionType) TypeWith(ctx *TypeContext) (Expr, error) {
+	if len(u) == 0 {
+		return Type, nil
+	}
+	var c Const
+	first := true
+	for _, typ := range u {
+		if typ == nil {
+			// empty alternative
+			continue
+		}
+		k, err := typ.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if first {
+			var ok bool
+			c, ok = k.(Const)
+			if !ok {
+				return nil, errors.New("Invalid alternative type")
+			}
+		} else {
+			if c.Normalize() != k.Normalize() {
+				return nil, fmt.Errorf("can't mix %s and %s", c, k)
+			}
+		}
+		if c == Sort {
+			if typ.Normalize() != Kind {
+				return nil, errors.New("Invalid alternative type")
+			}
+		}
+		first = false
+	}
+	return c, nil
+}
+
 func (e Embed) TypeWith(ctx *TypeContext) (Expr, error) {
 	return nil, errors.New("Cannot typecheck an expression with unresolved imports")
 }

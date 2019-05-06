@@ -478,6 +478,7 @@ PrimitiveExpression ←
     / IntegerLiteral
     / TextLiteral
     / '{' _ r:RecordTypeOrLiteral _ '}' { return r, nil }
+    / '<' _ u:UnionType _ '>' { return u, nil }
     / NonEmptyListLiteral
     / Identifier
     / '(' _  e:Expression _ ')' { return e, nil }
@@ -517,6 +518,32 @@ NonEmptyRecordLiteral ←
           }
           return RecordLit(content), nil
       }
+
+UnionType ← NonEmptyUnionType / EmptyUnionType
+
+EmptyUnionType ← "" { return UnionType{}, nil }
+
+NonEmptyUnionType ← first:UnionVariant rest:(_ '|' _ UnionVariant)* {
+    alternatives := make(map[string]Expr)
+    first2 := first.([]interface{})
+    if first2[1] == nil {
+        alternatives[first2[0].(string)] = nil
+    } else {
+        alternatives[first2[0].(string)] = first2[1].([]interface{})[3].(Expr)
+    }
+    if rest == nil { return UnionType(alternatives), nil }
+    for _, alternativeSyntax := range rest.([]interface{}) {
+        alternative := alternativeSyntax.([]interface{})[3].([]interface{})
+        if alternative[1] == nil {
+            alternatives[alternative[0].(string)] = nil
+        } else {
+            alternatives[alternative[0].(string)] = alternative[1].([]interface{})[3].(Expr)
+        }
+    }
+    return UnionType(alternatives), nil
+}
+
+UnionVariant ← AnyLabel (_ ':' _1 Expression)?
 
 MoreList ← ',' _ e:Expression _ {return e, nil}
 

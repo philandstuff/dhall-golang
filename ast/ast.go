@@ -132,6 +132,8 @@ type (
 		FieldName string
 	}
 
+	UnionType map[string]Expr // < x : Natural | y >
+
 	Embed Import
 )
 
@@ -235,6 +237,7 @@ var (
 	_ Expr = Record(map[string]Expr{})
 	_ Expr = RecordLit(map[string]Expr{})
 	_ Expr = Field{}
+	_ Expr = UnionType{}
 	_ Expr = Embed(Import{})
 )
 
@@ -364,14 +367,14 @@ func Shift(d int, v Var, e Expr) Expr {
 	case Some:
 		return Some{Shift(d, v, e.Val)}
 	case Record:
-		fields := make(map[string]Expr, len(map[string]Expr(e)))
-		for name, val := range map[string]Expr(e) {
+		fields := make(map[string]Expr, len(e))
+		for name, val := range e {
 			fields[name] = Shift(d, v, val)
 		}
 		return Record(fields)
 	case RecordLit:
-		fields := make(map[string]Expr, len(map[string]Expr(e)))
-		for name, val := range map[string]Expr(e) {
+		fields := make(map[string]Expr, len(e))
+		for name, val := range e {
 			fields[name] = Shift(d, v, val)
 		}
 		return RecordLit(fields)
@@ -380,6 +383,16 @@ func Shift(d int, v Var, e Expr) Expr {
 			Record:    Shift(d, v, e.Record),
 			FieldName: e.FieldName,
 		}
+	case UnionType:
+		fields := make(map[string]Expr, len(e))
+		for name, val := range e {
+			if val == nil {
+				fields[name] = nil
+				continue
+			}
+			fields[name] = Shift(d, v, val)
+		}
+		return Record(fields)
 	case Embed:
 		return e
 	}
@@ -473,14 +486,14 @@ func Subst(v Var, c Expr, b Expr) Expr {
 	case Some:
 		return Some{Subst(v, c, e.Val)}
 	case Record:
-		fields := make(map[string]Expr, len(map[string]Expr(e)))
-		for name, val := range map[string]Expr(e) {
+		fields := make(map[string]Expr, len(e))
+		for name, val := range e {
 			fields[name] = Subst(v, c, val)
 		}
 		return Record(fields)
 	case RecordLit:
-		fields := make(map[string]Expr, len(map[string]Expr(e)))
-		for name, val := range map[string]Expr(e) {
+		fields := make(map[string]Expr, len(e))
+		for name, val := range e {
 			fields[name] = Subst(v, c, val)
 		}
 		return RecordLit(fields)
@@ -489,6 +502,16 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Record:    Subst(v, c, e.Record),
 			FieldName: e.FieldName,
 		}
+	case UnionType:
+		fields := make(map[string]Expr, len(e))
+		for name, val := range e {
+			if val == nil {
+				fields[name] = nil
+				continue
+			}
+			fields[name] = Subst(v, c, val)
+		}
+		return Record(fields)
 	case Embed:
 		return e
 	}
@@ -680,6 +703,26 @@ func (r RecordLit) String() string {
 
 func (f Field) String() string {
 	return fmt.Sprintf("%v.%s", f.Record, f.FieldName)
+}
+
+func (u UnionType) String() string {
+	var out strings.Builder
+	out.WriteString("< ")
+	fields := map[string]Expr(u)
+	first := true
+	for name, expr := range fields {
+		if !first {
+			out.WriteString(" | ")
+		}
+		first = false
+		if expr == nil {
+			out.WriteString(name)
+		} else {
+			out.WriteString(fmt.Sprintf("%s : %v", name, expr))
+		}
+	}
+	out.WriteString(" >")
+	return out.String()
 }
 
 func (e Embed) String() string {
@@ -921,16 +964,16 @@ func (s Some) Normalize() Expr {
 }
 
 func (r Record) Normalize() Expr {
-	fields := make(map[string]Expr, len(map[string]Expr(r)))
-	for name, val := range map[string]Expr(r) {
+	fields := make(map[string]Expr, len(r))
+	for name, val := range r {
 		fields[name] = val.Normalize()
 	}
 	return Record(fields)
 }
 
 func (r RecordLit) Normalize() Expr {
-	fields := make(map[string]Expr, len(map[string]Expr(r)))
-	for name, val := range map[string]Expr(r) {
+	fields := make(map[string]Expr, len(r))
+	for name, val := range r {
 		fields[name] = val.Normalize()
 	}
 	return RecordLit(fields)
@@ -943,6 +986,19 @@ func (f Field) Normalize() Expr {
 		return val.Normalize()
 	}
 	return Field{Record: r, FieldName: f.FieldName}
+}
+
+func (u UnionType) Normalize() Expr {
+	fields := make(map[string]Expr, len(u))
+	for name, val := range u {
+		if val == nil {
+			// empty alternative
+			fields[name] = nil
+			continue
+		}
+		fields[name] = val.Normalize()
+	}
+	return UnionType(fields)
 }
 
 func (e Embed) Normalize() Expr {
@@ -1083,16 +1139,16 @@ func (s Some) AlphaNormalize() Expr {
 }
 
 func (r Record) AlphaNormalize() Expr {
-	fields := make(map[string]Expr, len(map[string]Expr(r)))
-	for name, val := range map[string]Expr(r) {
+	fields := make(map[string]Expr, len(r))
+	for name, val := range r {
 		fields[name] = val.AlphaNormalize()
 	}
 	return Record(fields)
 }
 
 func (r RecordLit) AlphaNormalize() Expr {
-	fields := make(map[string]Expr, len(map[string]Expr(r)))
-	for name, val := range map[string]Expr(r) {
+	fields := make(map[string]Expr, len(r))
+	for name, val := range r {
 		fields[name] = val.AlphaNormalize()
 	}
 	return RecordLit(fields)
@@ -1103,6 +1159,19 @@ func (f Field) AlphaNormalize() Expr {
 		Record:    f.Record.AlphaNormalize(),
 		FieldName: f.FieldName,
 	}
+}
+
+func (u UnionType) AlphaNormalize() Expr {
+	fields := make(map[string]Expr, len(u))
+	for name, val := range u {
+		if val == nil {
+			// empty alternative
+			fields[name] = nil
+			continue
+		}
+		fields[name] = val.AlphaNormalize()
+	}
+	return UnionType(fields)
 }
 
 func (e Embed) AlphaNormalize() Expr {
