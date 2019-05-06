@@ -64,7 +64,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/Some",
 	"TestTypechecks/prelude",
 	"TestTypechecks/recordOfRecordOfTypesA.dhall",
-	"TestTypechecks/simple/access/1A.dhall",
 	"TestTypechecks/simple/alternativesAreTypesA.dhall",
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
 	"TestTypechecks/simple/mixedFieldAccessA.dhall",
@@ -100,8 +99,7 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/RightBiasedRecordMerge",
 	"TestTypeInference/unit/TextShow",
 	"TestTypeInference/unit/TypeAnnotationSort",
-	"TestTypeInference/unit/UnionConstructor", // not implemented yet
-	"TestTypeInference/unit/UnionOne",         // deprecated union literal syntax
+	"TestTypeInference/unit/UnionOne", // deprecated union literal syntax
 	"TestNormalization/haskell-tutorial/combineTypes",
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",

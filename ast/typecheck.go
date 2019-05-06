@@ -442,15 +442,33 @@ func (f Field) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, fmt.Errorf("Expected Type, Kind or Sort, but got %+v", rt)
 	}
 	rt = rt.Normalize()
+
 	rtRecord, ok := rt.(Record)
-	if !ok {
-		return nil, fmt.Errorf("Tried to access field from non-record type")
+	if ok {
+		ft, ok := rtRecord[f.FieldName]
+		if !ok {
+			return nil, fmt.Errorf("Tried to access nonexistent field %s", f.FieldName)
+		}
+		return ft, nil
 	}
-	ft, ok := rtRecord[f.FieldName]
+
+	if rt != Type {
+		return nil, fmt.Errorf("Tried to access field from non-record non-union type: %s", rt)
+	}
+	record := f.Record.Normalize()
+	unionType, ok := record.(UnionType)
+	if !ok {
+		return nil, fmt.Errorf("Tried to access field from non-record non-union type: %s", record)
+	}
+	alternativeType, ok := unionType[f.FieldName]
 	if !ok {
 		return nil, fmt.Errorf("Tried to access nonexistent field %s", f.FieldName)
 	}
-	return ft, nil
+	if alternativeType == nil {
+		// empty alternative
+		return unionType, nil
+	}
+	return &Pi{f.FieldName, alternativeType, unionType}, nil
 }
 
 func (u UnionType) TypeWith(ctx *TypeContext) (Expr, error) {
