@@ -20,8 +20,7 @@ Go bindings for dhall.
  - [X] Type annotations
  - [X] Bools
    - [X] if
-   - [x] `&&`
-   - [ ] `||`
+   - [x] `&&`, `||`
    - [ ] `==`, `!=`
  - [X] Naturals
    - [X] `l + r` Natural addition

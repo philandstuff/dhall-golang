@@ -250,7 +250,7 @@ func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
 
 func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 	switch op.OpCode {
-	case AndOp:
+	case OrOp, AndOp:
 		err := assertSimpleType(ctx, op.L, Bool)
 		if err != nil {
 			return nil, err

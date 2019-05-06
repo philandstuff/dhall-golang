@@ -59,7 +59,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/Merge",
 	"TestTypecheckFails/unit/OperatorEqualNotBool.dhall",
 	"TestTypecheckFails/unit/OperatorNotEqual",
-	"TestTypecheckFails/unit/OperatorOr",
 	"TestTypecheckFails/unit/OperatorTextConcatenate",
 	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
 	"TestTypecheckFails/unit/RecordProjection",
@@ -97,7 +96,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/OperatorEqual",
 	"TestTypeInference/unit/OperatorNotEqual",
-	"TestTypeInference/unit/OperatorOr",
 	"TestTypeInference/unit/OperatorTextConcat",
 	"TestTypeInference/unit/OptionalBuild",
 	"TestTypeInference/unit/OptionalFold",
@@ -141,7 +139,6 @@ var expectedFailures = []string{
 	"TestNormalization/simple/sortOperatorA.dhall",
 	"TestNormalization/simplifications/eqA.dhall",
 	"TestNormalization/simplifications/neA.dhall",
-	"TestNormalization/simplifications/orA.dhall",
 	"TestNormalization/unit/DoubleShow",
 	"TestNormalization/unit/EmptyAlternative",
 	"TestNormalization/unit/IntegerShow",
@@ -164,7 +161,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/OperatorEqual",
 	"TestNormalization/unit/OperatorNotEqual",
-	"TestNormalization/unit/OperatorOr",
 	"TestNormalization/unit/OperatorTextConcatenate",
 	"TestNormalization/unit/OptionalBuild",
 	"TestNormalization/unit/OptionalFold",

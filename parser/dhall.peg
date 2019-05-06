@@ -416,7 +416,17 @@ EmptyList ← '[' _ ']' _ ':' _1 List _ a:ImportExpression {
 
 OperatorExpression ← ImportAltExpression
 
-ImportAltExpression ← PlusExpression
+ImportAltExpression ← OrExpression
+
+MoreOr ← _ "||" _ e:PlusExpression { return e, nil }
+OrExpression ← first:PlusExpression rest:MoreOr* {
+    a := first.(Expr)
+    if rest == nil { return a, nil }
+    for _, b := range rest.([]interface{}) {
+        a = BoolOr(a, b.(Expr))
+    }
+    return a, nil
+}
 
 MorePlus ← _ '+' _1 e:ListAppendExpression { return e, nil }
 PlusExpression ←
