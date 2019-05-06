@@ -37,7 +37,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/text/interpolatedDoubleQuotedStringA.dhall", // needs Natural/show
 	"TestParserAccepts/text/interpolatedSingleQuotedStringA.dhall",
 	"TestParserAccepts/text/interpolationA.dhall",
-	"TestParserAccepts/text/multilineCorrupted", // test is broken; fixed in #527
 	"TestParserAccepts/text/templateA.dhall",
 	"TestParserAccepts/unionA.dhall",
 	"TestParserAccepts/unit/import/hash",
