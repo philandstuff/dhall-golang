@@ -411,13 +411,13 @@ Expression ←
           return &Pi{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
     / o:OperatorExpression _ Arrow _ e:Expression { return &Pi{"_",o.(Expr),e.(Expr)}, nil }
+    / EmptyList
     / AnnotatedExpression
 
 Annotation ← ':' _1 a:Expression { return a, nil }
 
 AnnotatedExpression ←
-    EmptyList
-  / e:OperatorExpression a:(_ Annotation)? {
+e:OperatorExpression a:(_ Annotation)? {
         if a == nil { return e, nil }
         return Annot{e.(Expr), a.([]interface{})[1].(Expr)}, nil
     }
