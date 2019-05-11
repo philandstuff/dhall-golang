@@ -26,6 +26,14 @@ func assertSimpleType(ctx *TypeContext, expr, expectedType Expr) error {
 	return nil
 }
 
+func NormalizedTypeWith(e Expr, ctx *TypeContext) (Expr, error) {
+	t, err := e.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return t.Normalize(), nil
+}
+
 func (c Const) TypeWith(ctx *TypeContext) (Expr, error) {
 	switch c {
 	case Type:
@@ -93,22 +101,20 @@ func Rule(a Const, b Const) (Const, error) {
 }
 
 func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
-	argType, err := pi.Type.TypeWith(ctx)
+	tA, err := NormalizedTypeWith(pi.Type, ctx)
 	if err != nil {
 		return nil, err
 	}
-	tA := argType.Normalize()
 	kA, ok := tA.(Const)
 	if !ok {
 		return nil, errors.New("Wrong kind for type of pi type")
 	}
 	// FIXME: modifying context in place is.. icky
 	(*ctx)[pi.Label] = append([]Expr{pi.Type.Normalize()}, (*ctx)[pi.Label]...)
-	bodyType, err := pi.Body.TypeWith(ctx)
+	tB, err := NormalizedTypeWith(pi.Body, ctx)
 	if err != nil {
 		return nil, err
 	}
-	tB := bodyType.Normalize()
 	kB, ok := tB.(Const)
 	if !ok {
 		return nil, errors.New("Wrong kind for body of pi type")
@@ -120,11 +126,10 @@ func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 }
 
 func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
-	fnType, err := app.Fn.TypeWith(ctx)
+	tF, err := NormalizedTypeWith(app.Fn, ctx)
 	if err != nil {
 		return nil, err
 	}
-	tF := fnType.Normalize()
 	pF, ok := tF.(*Pi)
 	if !ok {
 		return nil, fmt.Errorf("Expected %s to be a function type", tF)
@@ -281,16 +286,14 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 		}
 		return Text, nil
 	case ListAppendOp:
-		lt, err := op.L.TypeWith(ctx)
+		lt, err := NormalizedTypeWith(op.L, ctx)
 		if err != nil {
 			return nil, err
 		}
-		lt = lt.Normalize()
-		rt, err := op.R.TypeWith(ctx)
+		rt, err := NormalizedTypeWith(op.R, ctx)
 		if err != nil {
 			return nil, err
 		}
-		rt = rt.Normalize()
 
 		lElemT, ok := listElementType(lt)
 		if !ok {
@@ -505,6 +508,93 @@ func (u UnionType) TypeWith(ctx *TypeContext) (Expr, error) {
 		first = false
 	}
 	return c, nil
+}
+
+func (m Merge) TypeWith(ctx *TypeContext) (Expr, error) {
+	ht, err := NormalizedTypeWith(m.Handler, ctx)
+	if err != nil {
+		return nil, err
+	}
+	ut, err := NormalizedTypeWith(m.Union, ctx)
+	if err != nil {
+		return nil, err
+	}
+	handlerRecord, ok := ht.(Record)
+	if !ok {
+		return nil, errors.New("merge handler must be a record")
+	}
+	unionType, ok := ut.(UnionType)
+	if !ok {
+		return nil, fmt.Errorf("merge arg must be of union type, but inferred type of %s was %s", m.Union, ut)
+	}
+
+	if len(handlerRecord) != len(unionType) {
+		return nil, errors.New("handler record fields must match union type alternatives")
+	}
+
+	// Γ ⊢ t :⇥ {}   Γ ⊢ u :⇥ <>
+	if len(handlerRecord) == 0 {
+		if m.Annotation == nil {
+			return nil, errors.New("empty merge requires an annotation")
+		}
+		annotationT, err := NormalizedTypeWith(m.Annotation, ctx)
+		if err != nil {
+			return nil, err
+		}
+		// Γ ⊢ T :⇥ Type
+		if annotationT != Type {
+			return nil, errors.New("in `merge {=} <> : T`, T must be a Type")
+		}
+		// Γ ⊢ (merge t u : T) : T
+		return m.Annotation, nil
+	}
+	var outputType Expr
+	for altName, altType := range unionType {
+		field, ok := handlerRecord[altName]
+		if !ok {
+			return nil, errors.New("handler record fields must match union type alternatives")
+		}
+		if altType == nil {
+			// Γ ⊢ t :⇥ { y : T₀, ts… }   Γ ⊢ u :⇥ < y | us… >
+			if outputType == nil {
+				outputType = field
+			} else {
+				if !judgmentallyEqual(outputType, field) {
+					return nil, errors.New("all handlers must output the same type")
+				}
+			}
+		} else {
+			// Γ ⊢ t :⇥ { y : ∀(x : A₀) → T₀, ts… }
+			// Γ ⊢ u :⇥ < y : A₁ | us… >
+			pi, ok := field.(*Pi)
+			if !ok {
+				return nil, errors.New("handler must be a function")
+			}
+			// A₀ ≡ A₁
+			if !judgmentallyEqual(altType, pi.Type) {
+				return nil, fmt.Errorf("Handler for %s should take argument of type %s, not %s", altName, altType, pi.Type)
+			}
+			// ; `x` not free in `T₀`
+			if IsFreeIn(pi.Body, altName) {
+				// we maybe don't need this block, except for better
+				// error reporting
+				return nil, fmt.Errorf("Variable %s used in function type body %s", altName, pi.Body)
+			}
+			thisOutputType := Shift(-1, Var{Name: altName, Index: 0}, pi.Body)
+			if outputType == nil {
+				outputType = thisOutputType
+			} else {
+				if !judgmentallyEqual(outputType, thisOutputType) {
+					return nil, errors.New("all handlers must output the same type")
+				}
+			}
+		}
+	}
+
+	if m.Annotation != nil && !judgmentallyEqual(outputType, m.Annotation) {
+		return nil, fmt.Errorf("Expression was annotated as type %s but inferred type was %s", m.Annotation, outputType)
+	}
+	return outputType, nil
 }
 
 func (e Embed) TypeWith(ctx *TypeContext) (Expr, error) {

@@ -25,6 +25,7 @@ var _ codec.Selfer = Some{}
 var _ codec.Selfer = Record(map[string]Expr{})
 var _ codec.Selfer = RecordLit(map[string]Expr{})
 var _ codec.Selfer = UnionType{}
+var _ codec.Selfer = Merge{}
 var _ codec.Selfer = Embed{}
 
 func NewCborHandle() codec.CborHandle {
@@ -185,6 +186,14 @@ func (u UnionType) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode(output)
 }
 
+func (m Merge) CodecEncodeSelf(e *codec.Encoder) {
+	if m.Annotation != nil {
+		e.Encode([]interface{}{6, m.Handler, m.Union, m.Annotation})
+	} else {
+		e.Encode([]interface{}{6, m.Handler, m.Union})
+	}
+}
+
 const (
 	HttpImport     = 0
 	HttpsImport    = 1
@@ -269,4 +278,5 @@ func (Some) CodecDecodeSelf(*codec.Decoder)         {}
 func (Record) CodecDecodeSelf(*codec.Decoder)       {}
 func (RecordLit) CodecDecodeSelf(*codec.Decoder)    {}
 func (UnionType) CodecDecodeSelf(*codec.Decoder)    {}
+func (Merge) CodecDecodeSelf(*codec.Decoder)        {}
 func (Embed) CodecDecodeSelf(*codec.Decoder)        {}

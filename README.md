@@ -47,14 +47,15 @@ Go bindings for dhall.
    - [ ] `l ∧ r`
    - [ ] `l ⫽ r`
    - [ ] `l ⩓ r`
- - [ ] Unions
+ - [x] Unions
    - [x] types
-   - [ ] constructors
-   - [ ] `merge`
+   - [x] constructors
+   - [x] `merge`
  - [ ] Imports
    - [x] local imports (except home-rooted paths)
    - [x] remote imports
    - [x] environment variable imports
+   - [ ] `using ./headers`
    - [ ] import caching
    - [x] importing expressions
    - [x] importing `as Text`

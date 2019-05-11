@@ -29,7 +29,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/fieldsA.dhall",
 	"TestParserAccepts/largeExpressionA.dhall",
-	"TestParserAccepts/merge",
+	"TestParserAccepts/merge", // requires Natural/even
 	"TestParserAccepts/operatorsA.dhall",
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
@@ -48,14 +48,18 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/urlsA",                // needs all the URL features
 	"TestParserAccepts/unit/import/urls/potPourri",       // needs all the URL features
 	"TestParserAccepts/unit/import/urls/quotedPath",      // needs quotedPaths
-	"TestParserAccepts/unit/Merge",
 	"TestParserAccepts/unit/Quoted",
 	"TestParserAccepts/unit/UnionLit",           // not going to implement union literals
 	"TestParserAccepts/whitespaceBuffetA.dhall", // requires Natural/even
 	"TestTypecheckFails/combineMixedRecords.dhall",
 	"TestTypecheckFails/duplicateFields.dhall",
 	"TestTypecheckFails/preferMixedRecords.dhall",
-	"TestTypecheckFails/unit/Merge",
+	"TestTypecheckFails/unit/MergeAlternative",
+	"TestTypecheckFails/unit/MergeHandlerNotFunction",
+	"TestTypecheckFails/unit/MergeHandlerNotMatchAlternativeType",
+	"TestTypecheckFails/unit/MergeHandlersWithDifferentType",
+	"TestTypecheckFails/unit/MergeLhsNotRecord",
+	"TestTypecheckFails/unit/MergeWithWrongAnnotation",
 	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
 	"TestTypecheckFails/unit/RecordProjection",
 	"TestTypecheckFails/unit/RecursiveRecordMerge",
@@ -63,10 +67,8 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/RightBiasedRecordMerge",
 	"TestTypecheckFails/unit/Some",
 	"TestTypechecks/prelude",
-	"TestTypechecks/recordOfRecordOfTypesA.dhall",
 	"TestTypechecks/simple/alternativesAreTypesA.dhall",
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
-	"TestTypechecks/simple/mixedFieldAccessA.dhall",
 	"TestTypechecks/simple/unionsOfTypesA.dhall",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall",
 	"TestTypeInference/unit/DoubleShow",
@@ -79,7 +81,8 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/ListLast",
 	"TestTypeInference/unit/ListLength",
 	"TestTypeInference/unit/ListReverse",
-	"TestTypeInference/unit/Merge",
+	"TestTypeInference/unit/MergeOneA.dhall",               // uses union literals
+	"TestTypeInference/unit/MergeOneWithAnnotationA.dhall", // uses union literals
 	"TestTypeInference/unit/NaturalBuild",
 	"TestTypeInference/unit/NaturalEven",
 	"TestTypeInference/unit/NaturalFold",
@@ -116,10 +119,8 @@ var expectedFailures = []string{
 	"TestNormalization/prelude/Text",
 	"TestNormalization/remoteSystemsA.dhall",
 	"TestNormalization/simple/doubleShowA.dhall",
-	"TestNormalization/simple/enumA.dhall",
 	"TestNormalization/simple/integerShowA.dhall",
 	"TestNormalization/simple/integerToDoubleA.dhall",
-	"TestNormalization/simple/letenumA.dhall",
 	"TestNormalization/simple/listBuildA.dhall",
 	"TestNormalization/simple/naturalBuildA.dhall",
 	"TestNormalization/simple/naturalShowA.dhall",
@@ -127,7 +128,6 @@ var expectedFailures = []string{
 	"TestNormalization/simple/optional",
 	"TestNormalization/simple/sortOperatorA.dhall",
 	"TestNormalization/unit/DoubleShow",
-	"TestNormalization/unit/EmptyAlternative",
 	"TestNormalization/unit/IntegerShow",
 	"TestNormalization/unit/IntegerToDouble",
 	"TestNormalization/unit/ListBuild",
@@ -137,7 +137,7 @@ var expectedFailures = []string{
 	"TestNormalization/unit/ListLast",
 	"TestNormalization/unit/ListLength",
 	"TestNormalization/unit/ListReverse",
-	"TestNormalization/unit/Merge",
+	"TestNormalization/unit/MergeWithTypeA", // uses union literals
 	"TestNormalization/unit/NaturalBuild",
 	"TestNormalization/unit/NaturalEven",
 	"TestNormalization/unit/NaturalFold",

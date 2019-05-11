@@ -104,6 +104,27 @@ var _ = DescribeTable("Subst",
 		MakeLet(y(0), Binding{Variable: "y", Annotation: Natural, Value: NaturalLit(3)})),
 )
 
+var _ = Describe("IsFreeIn", func() {
+	DescribeTable("`x` is free examples",
+		func(in Expr) {
+			actual := IsFreeIn(in, "x")
+			Expect(actual).To(BeTrue())
+		},
+		Entry("x", Var{Name: "x"}),
+		Entry("x+3", NaturalPlus(Var{Name: "x"}, NaturalLit(3))),
+		Entry("let x = 5 in x@1", MakeLet(x(1), Binding{Variable: "x", Value: NaturalLit(5)})),
+	)
+	DescribeTable("`x` is not free examples",
+		func(in Expr) {
+			actual := IsFreeIn(in, "x")
+			Expect(actual).To(BeFalse())
+		},
+		Entry("y", Var{Name: "y"}),
+		Entry("x@1", Var{Name: "x", Index: 1}),
+		Entry("let x = 5 in x", MakeLet(x(0), Binding{Variable: "x", Value: NaturalLit(5)})),
+	)
+})
+
 var _ = Describe("Normalize", func() {
 	DescribeTable("Normalize",
 		func(in Expr, expected Expr) {

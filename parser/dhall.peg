@@ -411,6 +411,9 @@ Expression ←
           return &Pi{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
     / o:OperatorExpression _ Arrow _ e:Expression { return &Pi{"_",o.(Expr),e.(Expr)}, nil }
+    / Merge _1 h:ImportExpression _1 u:ImportExpression _ ':' _1 a:ApplicationExpression {
+          return Merge{Handler:h.(Expr), Union:u.(Expr), Annotation:a.(Expr)}, nil
+      }
     / EmptyList
     / AnnotatedExpression
 
@@ -457,7 +460,10 @@ ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression
       }
 
 FirstApplicationExpression ←
-       Some _1 e:ImportExpression { return Some{e.(Expr)}, nil }
+       Merge _1 h:ImportExpression _1 u:ImportExpression {
+             return Merge{Handler:h.(Expr), Union:u.(Expr)}, nil
+          }
+     / Some _1 e:ImportExpression { return Some{e.(Expr)}, nil }
      / ImportExpression
 
 ImportExpression ← Import / SelectorExpression

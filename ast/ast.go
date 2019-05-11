@@ -133,6 +133,11 @@ type (
 	}
 
 	UnionType map[string]Expr // < x : Natural | y >
+	Merge     struct {
+		Handler    Expr
+		Union      Expr
+		Annotation Expr // optional
+	}
 
 	Embed Import
 )
@@ -238,6 +243,7 @@ var (
 	_ Expr = RecordLit(map[string]Expr{})
 	_ Expr = Field{}
 	_ Expr = UnionType{}
+	_ Expr = Merge{}
 	_ Expr = Embed(Import{})
 )
 
@@ -287,6 +293,9 @@ func Shift(d int, v Var, e Expr) Expr {
 		return e
 	case Var:
 		if v.Name == e.Name && v.Index <= e.Index {
+			if e.Index+d < 0 {
+				panic("tried to shift to negative")
+			}
 			return Var{Name: e.Name, Index: e.Index + d}
 		} else {
 			return e
@@ -392,7 +401,16 @@ func Shift(d int, v Var, e Expr) Expr {
 			}
 			fields[name] = Shift(d, v, val)
 		}
-		return Record(fields)
+		return UnionType(fields)
+	case Merge:
+		output := Merge{
+			Handler: Shift(d, v, e.Handler),
+			Union:   Shift(d, v, e.Union),
+		}
+		if e.Annotation != nil {
+			output.Annotation = Shift(d, v, e.Annotation)
+		}
+		return output
 	case Embed:
 		return e
 	}
@@ -511,11 +529,25 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			}
 			fields[name] = Subst(v, c, val)
 		}
-		return Record(fields)
+		return UnionType(fields)
+	case Merge:
+		output := Merge{
+			Handler: Subst(v, c, e.Handler),
+			Union:   Subst(v, c, e.Union),
+		}
+		if e.Annotation != nil {
+			output.Annotation = Subst(v, c, e.Annotation)
+		}
+		return output
 	case Embed:
 		return e
 	}
 	panic("missing switch case in Subst()")
+}
+
+func IsFreeIn(e Expr, x string) bool {
+	e2 := Subst(Var{Name: x}, Bool, e)
+	return !judgmentallyEqual(e, e2)
 }
 
 func (c Const) String() string {
@@ -723,6 +755,14 @@ func (u UnionType) String() string {
 	}
 	out.WriteString(" >")
 	return out.String()
+}
+
+func (m Merge) String() string {
+	if m.Annotation != nil {
+		return fmt.Sprintf("merge %s %s : %s", m.Handler, m.Union, m.Annotation)
+	} else {
+		return fmt.Sprintf("merge %s %s", m.Handler, m.Union)
+	}
 }
 
 func (e Embed) String() string {
@@ -1001,6 +1041,34 @@ func (u UnionType) Normalize() Expr {
 	return UnionType(fields)
 }
 
+func (m Merge) Normalize() Expr {
+	handlerN := m.Handler.Normalize()
+	unionN := m.Union.Normalize()
+	if handlers, ok := handlerN.(RecordLit); ok {
+		if unionVal, ok := unionN.(*App); ok {
+			// we have a union alternative with a value
+			// if the expression is well-typed, this can't fail
+			field := unionVal.Fn.(Field)
+			return (&App{
+				Fn:  handlers[field.FieldName],
+				Arg: unionVal.Arg,
+			}).Normalize()
+		}
+		if unionVal, ok := unionN.(Field); ok {
+			// we have an empty union alternative
+			return handlers[unionVal.FieldName].Normalize()
+		}
+	}
+	output := Merge{
+		Handler: handlerN,
+		Union:   unionN,
+	}
+	if m.Annotation != nil {
+		output.Annotation = m.Annotation.Normalize()
+	}
+	return output
+}
+
 func (e Embed) Normalize() Expr {
 	panic("Can't normalize an expression with unresolved imports")
 }
@@ -1172,6 +1240,17 @@ func (u UnionType) AlphaNormalize() Expr {
 		fields[name] = val.AlphaNormalize()
 	}
 	return UnionType(fields)
+}
+
+func (m Merge) AlphaNormalize() Expr {
+	output := Merge{
+		Handler: m.Handler.AlphaNormalize(),
+		Union:   m.Union.AlphaNormalize(),
+	}
+	if m.Annotation != nil {
+		output.Annotation = m.Annotation.Normalize()
+	}
+	return output
 }
 
 func (e Embed) AlphaNormalize() Expr {
