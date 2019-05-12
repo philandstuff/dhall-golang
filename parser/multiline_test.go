@@ -40,7 +40,15 @@ var _ = Describe("RemoveLeadingCommonIndent removes leading common indent", func
 		Expect(actual).To(Equal(expected))
 	},
 		Entry("when every line has a 3-space prefix",
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: "\n   foo"},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: "\nfoo"}),
+		Entry("when there is trailing space after an interpolation",
 			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: "   foo"},
-			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: "foo"}),
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: "   foo"}),
+		Entry("when there is trailing space after every interpolation",
+			// this is ''
+			//    ${True}   ${True}   foo''
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}, {Prefix: "   ", Expr: True}}, Suffix: "   foo"},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}, {Prefix: "   ", Expr: True}}, Suffix: "   foo"}),
 	)
 })

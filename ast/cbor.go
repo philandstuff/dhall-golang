@@ -105,6 +105,8 @@ func (t Builtin) CodecEncodeSelf(e *codec.Encoder) {
 	switch t {
 	case Double:
 		e.Encode("Double")
+	case Text:
+		e.Encode("Text")
 	case Bool:
 		e.Encode("Bool")
 	case Natural:
@@ -113,6 +115,10 @@ func (t Builtin) CodecEncodeSelf(e *codec.Encoder) {
 		e.Encode("Integer")
 	case List:
 		e.Encode("List")
+	case Optional:
+		e.Encode("Optional")
+	case None:
+		e.Encode("None")
 	default:
 		panic(fmt.Sprintf("unknown type %d\n", t))
 	}
@@ -125,7 +131,7 @@ func (bi BoolIf) CodecEncodeSelf(e *codec.Encoder) {
 func (t TextLit) CodecEncodeSelf(e *codec.Encoder) {
 	output := []interface{}{18}
 	for _, chunk := range t.Chunks {
-		output = append(output, []interface{}{chunk.Prefix, chunk.Expr})
+		output = append(output, chunk.Prefix, chunk.Expr)
 	}
 	output = append(output, t.Suffix)
 	e.Encode(output)

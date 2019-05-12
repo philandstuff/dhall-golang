@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/philandstuff/dhall-golang/ast"
@@ -10,17 +9,22 @@ import (
 //RemoveLeadingCommonIndent
 // removes the common leading indent from a TextLit, as defined in standard/multiline.md
 func RemoveLeadingCommonIndent(text ast.TextLit) ast.TextLit {
-	lines := allTheLines(text)
-	prefix := longestCommonIndentPrefix(lines)
-	re := regexp.MustCompile("(?m)^" + prefix)
-	var newChunks ast.Chunks
+	prefix := longestCommonIndentPrefix(allTheLines(text))
+	trimmedText := ast.TextLit{Suffix: strings.ReplaceAll(text.Suffix, "\n"+prefix, "\n")}
 	for _, chunk := range text.Chunks {
-		newChunks = append(newChunks, ast.Chunk{
-			Prefix: re.ReplaceAllLiteralString(chunk.Prefix, ""),
+		// trim lines other than the first (everywhere after a '\n')
+		trimmedText.Chunks = append(trimmedText.Chunks, ast.Chunk{
+			Prefix: strings.ReplaceAll(chunk.Prefix, "\n"+prefix, "\n"),
 			Expr:   chunk.Expr,
 		})
 	}
-	return ast.TextLit{Chunks: newChunks, Suffix: re.ReplaceAllLiteralString(text.Suffix, "")}
+	// trim the first line
+	if trimmedText.Chunks != nil {
+		trimmedText.Chunks[0].Prefix = strings.Replace(trimmedText.Chunks[0].Prefix, prefix, "", 1)
+	} else {
+		trimmedText.Suffix = strings.Replace(trimmedText.Suffix, prefix, "", 1)
+	}
+	return trimmedText
 }
 
 func allTheLines(text ast.TextLit) []string {

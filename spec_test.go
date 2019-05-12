@@ -33,7 +33,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/operatorsA.dhall",
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
-	"TestParserAccepts/text/interestingA.dhall",
 	"TestParserAccepts/text/interpolatedDoubleQuotedStringA.dhall", // needs Natural/show
 	"TestParserAccepts/text/interpolatedSingleQuotedStringA.dhall",
 	"TestParserAccepts/text/interpolationA.dhall",
