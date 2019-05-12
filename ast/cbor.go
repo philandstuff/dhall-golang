@@ -103,26 +103,7 @@ func (a Annot) CodecEncodeSelf(e *codec.Encoder) {
 }
 
 func (t Builtin) CodecEncodeSelf(e *codec.Encoder) {
-	switch t {
-	case Double:
-		e.Encode("Double")
-	case Text:
-		e.Encode("Text")
-	case Bool:
-		e.Encode("Bool")
-	case Natural:
-		e.Encode("Natural")
-	case Integer:
-		e.Encode("Integer")
-	case List:
-		e.Encode("List")
-	case Optional:
-		e.Encode("Optional")
-	case None:
-		e.Encode("None")
-	default:
-		panic(fmt.Sprintf("unknown type %d\n", t))
-	}
+	e.Encode(string(t))
 }
 
 func (bi BoolIf) CodecEncodeSelf(e *codec.Encoder) {

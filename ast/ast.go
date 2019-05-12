@@ -89,7 +89,7 @@ type (
 		Annotation Expr
 	}
 
-	Builtin int
+	Builtin string
 
 	DoubleLit float64
 
@@ -149,14 +149,14 @@ const (
 )
 
 const (
-	Double Builtin = iota
-	Text
-	Bool
-	Natural
-	Integer
-	List
-	Optional
-	None
+	Double   = Builtin("Double")
+	Text     = Builtin("Text")
+	Bool     = Builtin("Bool")
+	Natural  = Builtin("Natural")
+	Integer  = Builtin("Integer")
+	List     = Builtin("List")
+	Optional = Builtin("Optional")
+	None     = Builtin("None")
 )
 
 // These numbers match the binary encoding label numbers
@@ -589,26 +589,7 @@ func (a Annot) String() string {
 }
 
 func (t Builtin) String() string {
-	switch t {
-	case Double:
-		return "Double"
-	case Text:
-		return "Text"
-	case Bool:
-		return "Bool"
-	case Natural:
-		return "Natural"
-	case Integer:
-		return "Integer"
-	case List:
-		return "List"
-	case Optional:
-		return "Optional"
-	case None:
-		return "None"
-	default:
-		panic(fmt.Sprintf("unknown type %d\n", t))
-	}
+	return string(t)
 }
 
 func (d DoubleLit) String() string {

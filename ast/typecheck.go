@@ -56,7 +56,7 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 	case None:
 		return &Pi{"A", Type, &App{Optional, Var{"A", 0}}}, nil
 	default:
-		return nil, fmt.Errorf("Unknown Builtin %d", b)
+		return nil, fmt.Errorf("Unknown Builtin %s", b)
 	}
 }
 
