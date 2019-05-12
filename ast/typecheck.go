@@ -55,6 +55,20 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 		return FnType(Type, Type), nil
 	case None:
 		return &Pi{"A", Type, Apply(Optional, MkVar("A"))}, nil
+	case NaturalBuild:
+		natural := MkVar("natural")
+		return FnType(&Pi{"natural", Type,
+			&Pi{"succ", FnType(natural, natural),
+				&Pi{"zero", natural,
+					natural}}},
+			Natural), nil
+	case NaturalFold:
+		natural := MkVar("natural")
+		return FnType(Natural,
+			&Pi{"natural", Type,
+				&Pi{"succ", FnType(natural, natural),
+					&Pi{"zero", natural,
+						natural}}}), nil
 	case NaturalEven:
 		return FnType(Natural, Bool), nil
 	default:

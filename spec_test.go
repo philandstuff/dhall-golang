@@ -79,8 +79,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/ListReverse",
 	"TestTypeInference/unit/MergeOneA.dhall",               // uses union literals
 	"TestTypeInference/unit/MergeOneWithAnnotationA.dhall", // uses union literals
-	"TestTypeInference/unit/NaturalBuild",
-	"TestTypeInference/unit/NaturalFold",
 	"TestTypeInference/unit/NaturalIsZero",
 	"TestTypeInference/unit/NaturalOdd",
 	"TestTypeInference/unit/NaturalShow",
@@ -109,7 +107,6 @@ var expectedFailures = []string{
 	"TestNormalization/prelude/Double",
 	"TestNormalization/prelude/Integer",
 	"TestNormalization/prelude/List",
-	"TestNormalization/prelude/Natural/build",
 	"TestNormalization/prelude/Natural/enumerate",
 	"TestNormalization/prelude/Natural/fold",
 	"TestNormalization/prelude/Natural/isZero",
@@ -126,7 +123,6 @@ var expectedFailures = []string{
 	"TestNormalization/simple/integerShowA.dhall",
 	"TestNormalization/simple/integerToDoubleA.dhall",
 	"TestNormalization/simple/listBuildA.dhall",
-	"TestNormalization/simple/naturalBuildA.dhall",
 	"TestNormalization/simple/naturalShowA.dhall",
 	"TestNormalization/simple/naturalToIntegerA.dhall",
 	"TestNormalization/simple/optional",
@@ -142,8 +138,8 @@ var expectedFailures = []string{
 	"TestNormalization/unit/ListLength",
 	"TestNormalization/unit/ListReverse",
 	"TestNormalization/unit/MergeWithTypeA", // uses union literals
-	"TestNormalization/unit/NaturalBuild",
-	"TestNormalization/unit/NaturalFold",
+	"TestNormalization/unit/NaturalFoldOne",
+	"TestNormalization/unit/NaturalFoldZero",
 	"TestNormalization/unit/NaturalIsZero",
 	"TestNormalization/unit/NaturalOdd",
 	"TestNormalization/unit/NaturalShow",

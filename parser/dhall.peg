@@ -164,8 +164,8 @@ TextLiteral ← DoubleQuoteLiteral / SingleQuoteLiteral
 
 // reserved identifiers from semantics.md, only required for negative lookahed rules
 Reserved ←
-    "Natural/build" { return nil, errors.New("Natural/build unimplemented") }
-  / "Natural/fold" { return nil, errors.New("Natural/fold unimplemented") }
+    "Natural/build" { return NaturalBuild, nil }
+  / "Natural/fold" { return NaturalFold, nil }
   / "Natural/isZero" { return nil, errors.New("Natural/isZero unimplemented") }
   / "Natural/even" { return NaturalEven, nil }
   / "Natural/odd" { return nil, errors.New("Natural/odd unimplemented") }

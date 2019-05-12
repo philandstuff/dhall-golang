@@ -158,7 +158,9 @@ const (
 	Optional = Builtin("Optional")
 	None     = Builtin("None")
 
-	NaturalEven = Builtin("Natural/even")
+	NaturalBuild = Builtin("Natural/build")
+	NaturalEven  = Builtin("Natural/even")
+	NaturalFold  = Builtin("Natural/fold")
 )
 
 // These numbers match the binary encoding label numbers
@@ -802,6 +804,20 @@ func (app *App) Normalize() Expr {
 				} else {
 					return False
 				}
+			}
+		case NaturalBuild:
+			if ap, ok := a.(*App); ok {
+				if ap.Fn == NaturalFold {
+					// Natural/build (Natural/fold b) → b
+					return ap.Arg
+				}
+			}
+			if l, ok := a.(*LambdaExpr); ok {
+				return Apply(l,
+					Natural,
+					&LambdaExpr{"x", Natural, NaturalPlus(MkVar("x"), NaturalLit(1))},
+					NaturalLit(0),
+				).Normalize()
 			}
 		}
 	}
