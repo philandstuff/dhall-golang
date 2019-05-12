@@ -46,8 +46,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/urls/potPourri",       // needs all the URL features
 	"TestParserAccepts/unit/import/urls/quotedPath",      // needs quotedPaths
 	"TestParserAccepts/unit/Quoted",
-	"TestParserAccepts/unit/UnionLit",           // not going to implement union literals
-	"TestParserAccepts/whitespaceBuffetA.dhall", // requires Natural/even
+	"TestParserAccepts/unit/UnionLit", // not going to implement union literals
 	"TestTypecheckFails/combineMixedRecords.dhall",
 	"TestTypecheckFails/duplicateFields.dhall",
 	"TestTypecheckFails/preferMixedRecords.dhall",
@@ -81,7 +80,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/MergeOneA.dhall",               // uses union literals
 	"TestTypeInference/unit/MergeOneWithAnnotationA.dhall", // uses union literals
 	"TestTypeInference/unit/NaturalBuild",
-	"TestTypeInference/unit/NaturalEven",
 	"TestTypeInference/unit/NaturalFold",
 	"TestTypeInference/unit/NaturalIsZero",
 	"TestTypeInference/unit/NaturalOdd",
@@ -111,7 +109,16 @@ var expectedFailures = []string{
 	"TestNormalization/prelude/Double",
 	"TestNormalization/prelude/Integer",
 	"TestNormalization/prelude/List",
-	"TestNormalization/prelude/Natural",
+	"TestNormalization/prelude/Natural/build",
+	"TestNormalization/prelude/Natural/enumerate",
+	"TestNormalization/prelude/Natural/fold",
+	"TestNormalization/prelude/Natural/isZero",
+	"TestNormalization/prelude/Natural/odd",
+	"TestNormalization/prelude/Natural/product",
+	"TestNormalization/prelude/Natural/show",
+	"TestNormalization/prelude/Natural/sum",
+	"TestNormalization/prelude/Natural/toDouble",
+	"TestNormalization/prelude/Natural/toInteger",
 	"TestNormalization/prelude/Optional",
 	"TestNormalization/prelude/Text",
 	"TestNormalization/remoteSystemsA.dhall",
@@ -136,7 +143,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/ListReverse",
 	"TestNormalization/unit/MergeWithTypeA", // uses union literals
 	"TestNormalization/unit/NaturalBuild",
-	"TestNormalization/unit/NaturalEven",
 	"TestNormalization/unit/NaturalFold",
 	"TestNormalization/unit/NaturalIsZero",
 	"TestNormalization/unit/NaturalOdd",

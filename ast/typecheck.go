@@ -52,9 +52,11 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 	case Double, Text, Bool, Natural, Integer:
 		return Type, nil
 	case List, Optional:
-		return &Pi{"_", Type, Type}, nil
+		return FnType(Type, Type), nil
 	case None:
 		return &Pi{"A", Type, &App{Optional, Var{"A", 0}}}, nil
+	case NaturalEven:
+		return FnType(Natural, Bool), nil
 	default:
 		return nil, fmt.Errorf("Unknown Builtin %s", b)
 	}

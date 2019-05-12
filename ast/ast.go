@@ -157,6 +157,8 @@ const (
 	List     = Builtin("List")
 	Optional = Builtin("Optional")
 	None     = Builtin("None")
+
+	NaturalEven = Builtin("Natural/even")
 )
 
 // These numbers match the binary encoding label numbers
@@ -212,6 +214,10 @@ func MakeList(first Expr, rest ...Expr) NonEmptyList {
 
 func MakeLet(body Expr, bindings ...Binding) Let {
 	return Let{Bindings: bindings, Body: body}
+}
+
+func FnType(input, output Expr) Expr {
+	return &Pi{"_", input, output}
 }
 
 var (
@@ -776,6 +782,18 @@ func (app *App) Normalize() Expr {
 		b1 := Subst(v, a2, l.Body)
 		b2 := Shift(-1, v, b1)
 		return b2.Normalize()
+	}
+	if b, ok := f.(Builtin); ok {
+		switch b {
+		case NaturalEven:
+			if n, ok := a.(NaturalLit); ok {
+				if n%2 == 0 {
+					return True
+				} else {
+					return False
+				}
+			}
+		}
 	}
 	return &App{Fn: f, Arg: a}
 }

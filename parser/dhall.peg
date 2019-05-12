@@ -167,7 +167,7 @@ Reserved ←
     "Natural/build" { return nil, errors.New("Natural/build unimplemented") }
   / "Natural/fold" { return nil, errors.New("Natural/fold unimplemented") }
   / "Natural/isZero" { return nil, errors.New("Natural/isZero unimplemented") }
-  / "Natural/even" { return nil, errors.New("Natural/even unimplemented") }
+  / "Natural/even" { return NaturalEven, nil }
   / "Natural/odd" { return nil, errors.New("Natural/odd unimplemented") }
   / "Natural/toInteger" { return nil, errors.New("Natural/toInteger unimplemented") }
   / "Natural/show" { return nil, errors.New("Natural/show unimplemented") }
@@ -410,7 +410,7 @@ Expression ←
     / Forall _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
           return &Pi{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
       }
-    / o:OperatorExpression _ Arrow _ e:Expression { return &Pi{"_",o.(Expr),e.(Expr)}, nil }
+    / o:OperatorExpression _ Arrow _ e:Expression { return FnType(o.(Expr),e.(Expr)), nil }
     / Merge _1 h:ImportExpression _1 u:ImportExpression _ ':' _1 a:ApplicationExpression {
           return Merge{Handler:h.(Expr), Union:u.(Expr), Annotation:a.(Expr)}, nil
       }
