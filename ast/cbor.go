@@ -22,8 +22,9 @@ var _ codec.Selfer = TextLit{}
 var _ codec.Selfer = NaturalLit(0)
 var _ codec.Selfer = IntegerLit(0)
 var _ codec.Selfer = Some{}
-var _ codec.Selfer = Record(map[string]Expr{})
-var _ codec.Selfer = RecordLit(map[string]Expr{})
+var _ codec.Selfer = Record{}
+var _ codec.Selfer = RecordLit{}
+var _ codec.Selfer = Field{}
 var _ codec.Selfer = UnionType{}
 var _ codec.Selfer = Merge{}
 var _ codec.Selfer = Embed{}
@@ -184,6 +185,10 @@ func (r RecordLit) CodecEncodeSelf(e *codec.Encoder) {
 	e.Encode(output)
 }
 
+func (f Field) CodecEncodeSelf(e *codec.Encoder) {
+	e.Encode([]interface{}{9, f.Record, f.FieldName})
+}
+
 func (u UnionType) CodecEncodeSelf(e *codec.Encoder) {
 	items := map[string]Expr(u)
 	// we rely on the EncodeOptions having Canonical set
@@ -283,6 +288,7 @@ func (NonEmptyList) CodecDecodeSelf(*codec.Decoder) {}
 func (Some) CodecDecodeSelf(*codec.Decoder)         {}
 func (Record) CodecDecodeSelf(*codec.Decoder)       {}
 func (RecordLit) CodecDecodeSelf(*codec.Decoder)    {}
+func (Field) CodecDecodeSelf(*codec.Decoder)        {}
 func (UnionType) CodecDecodeSelf(*codec.Decoder)    {}
 func (Merge) CodecDecodeSelf(*codec.Decoder)        {}
 func (Embed) CodecDecodeSelf(*codec.Decoder)        {}

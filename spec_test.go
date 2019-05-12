@@ -20,14 +20,12 @@ import (
 )
 
 var expectedFailures = []string{
-	"TestParserAccepts/annotationsA.dhall",        // requires records, list append, optionals
-	"TestParserAccepts/builtinsA.dhall",           // Haven't implemented all builtins
-	"TestParserAccepts/builtinNameAsFieldA.dhall", // requires remote imports
+	"TestParserAccepts/annotationsA.dhall", // requires records, list append, optionals
+	"TestParserAccepts/builtinsA.dhall",    // Haven't implemented all builtins
 	"TestParserAccepts/collectionImportTypeA.dhall",
 	"TestParserAccepts/constructorsA.dhall",
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
-	"TestParserAccepts/fieldsA.dhall",
 	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/merge", // requires Natural/even
 	"TestParserAccepts/operatorsA.dhall",
