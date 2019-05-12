@@ -54,7 +54,7 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 	case List, Optional:
 		return FnType(Type, Type), nil
 	case None:
-		return &Pi{"A", Type, &App{Optional, Var{"A", 0}}}, nil
+		return &Pi{"A", Type, Apply(Optional, MkVar("A"))}, nil
 	case NaturalEven:
 		return FnType(Natural, Bool), nil
 	default:
@@ -321,7 +321,7 @@ func (l EmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &App{List, t}, nil
+	return Apply(List, t), nil
 }
 
 func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
@@ -344,7 +344,7 @@ func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 			return nil, fmt.Errorf("All List elements must have same type, but types %s and %s don't match", t, t2)
 		}
 	}
-	return &App{List, t}, nil
+	return Apply(List, t), nil
 }
 
 // This returns
@@ -363,7 +363,7 @@ func listElementType(e Expr) (Expr, bool) {
 
 func (s Some) TypeWith(ctx *TypeContext) (Expr, error) {
 	typ, err := s.Val.TypeWith(ctx)
-	return &App{Optional, typ}, err
+	return Apply(Optional, typ), err
 }
 
 func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {

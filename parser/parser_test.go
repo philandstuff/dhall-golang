@@ -44,7 +44,7 @@ var _ = Describe("Expression", func() {
 		Entry("Bool", `Bool`, Bool),
 		Entry("True", `True`, BoolLit(true)),
 		Entry("False", `False`, BoolLit(false)),
-		Entry("if True then x else y", `if True then x else y`, BoolIf{True, Var{"x", 0}, Var{"y", 0}}),
+		Entry("if True then x else y", `if True then x else y`, BoolIf{True, MkVar("x"), MkVar("y")}),
 	)
 	DescribeTable("naturals", ParseAndCompare,
 		Entry("Natural", `Natural`, Natural),
@@ -57,7 +57,7 @@ var _ = Describe("Expression", func() {
 		// Check that if we skip whitespace, it parses
 		// correctly as function application, not natural
 		// addition
-		Entry("Plus without whitespace", `3 +5`, &App{NaturalLit(3), IntegerLit(5)}),
+		Entry("Plus without whitespace", `3 +5`, Apply(NaturalLit(3), IntegerLit(5))),
 	)
 	DescribeTable("double-quoted text literals", ParseAndCompare,
 		Entry("Empty TextLit", `""`, TextLit{}),
@@ -118,23 +118,23 @@ baz
 		),
 	)
 	DescribeTable("simple expressions", ParseAndCompare,
-		Entry("Identifier", `x`, Var{"x", 0}),
+		Entry("Identifier", `x`, MkVar("x")),
 		Entry("Identifier with index", `x@1`, Var{"x", 1}),
-		Entry("Identifier with reserved prefix", `Listicle`, Var{"Listicle", 0}),
+		Entry("Identifier with reserved prefix", `Listicle`, MkVar("Listicle")),
 		Entry("Identifier with reserved prefix and index", `Listicle@3`, Var{"Listicle", 3}),
 	)
 	DescribeTable("lists", ParseAndCompare,
-		Entry("List Natural", `List Natural`, &App{List, Natural}),
+		Entry("List Natural", `List Natural`, Apply(List, Natural)),
 		Entry("[3]", `[3]`, MakeList(NaturalLit(3))),
 		Entry("[3,4]", `[3,4]`, MakeList(NaturalLit(3), NaturalLit(4))),
 		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Natural}),
-		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), &App{List, Natural}}),
-		Entry("a # b", `a # b`, ListAppend(Var{"a", 0}, Var{"b", 0})),
+		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), Apply(List, Natural)}),
+		Entry("a # b", `a # b`, ListAppend(MkVar("a"), MkVar("b"))),
 	)
 	DescribeTable("optionals", ParseAndCompare,
-		Entry("Optional Natural", `Optional Natural`, &App{Optional, Natural}),
+		Entry("Optional Natural", `Optional Natural`, Apply(Optional, Natural)),
 		Entry("Some 3", `Some 3`, Some{NaturalLit(3)}),
-		Entry("None Natural", `None Natural`, &App{None, Natural}),
+		Entry("None Natural", `None Natural`, Apply(None, Natural)),
 	)
 	DescribeTable("records", ParseAndCompare,
 		Entry("{}", `{}`, Record(map[string]Expr{})),
@@ -143,8 +143,8 @@ baz
 		Entry("{foo = 3}", `{foo = 3}`, RecordLit(map[string]Expr{"foo": NaturalLit(3)})),
 		Entry("{foo : Natural, bar : Integer}", `{foo : Natural, bar: Integer}`, Record(map[string]Expr{"foo": Natural, "bar": Integer})),
 		Entry("{foo = 3 , bar = +3}", `{foo = 3 , bar = +3}`, RecordLit(map[string]Expr{"foo": NaturalLit(3), "bar": IntegerLit(3)})),
-		Entry("t.x", `t.x`, Field{Var{"t", 0}, "x"}),
-		Entry("t.x.y", `t.x.y`, Field{Field{Var{"t", 0}, "x"}, "y"}),
+		Entry("t.x", `t.x`, Field{MkVar("t"), "x"}),
+		Entry("t.x.y", `t.x.y`, Field{Field{MkVar("t"), "x"}, "y"}),
 	)
 	DescribeTable("imports", ParseAndCompare,
 		Entry("bash envvar text import", `env:FOO as Text`, Embed(MakeEnvVarImport("FOO", RawText))),
@@ -179,58 +179,58 @@ baz
 		Entry("simple λ",
 			`λ(foo : bar) → baz`,
 			&LambdaExpr{
-				"foo", Var{"bar", 0}, Var{"baz", 0}}),
+				"foo", MkVar("bar"), MkVar("baz")}),
 		Entry(`simple \`,
 			`\(foo : bar) → baz`,
 			&LambdaExpr{
-				"foo", Var{"bar", 0}, Var{"baz", 0}}),
+				"foo", MkVar("bar"), MkVar("baz")}),
 		Entry("with line comment",
 			"λ(foo : bar) --asdf\n → baz",
 			&LambdaExpr{
-				"foo", Var{"bar", 0}, Var{"baz", 0}}),
+				"foo", MkVar("bar"), MkVar("baz")}),
 		Entry("with block comment",
 			"λ(foo : bar) {-asdf\n-} → baz",
 			&LambdaExpr{
-				"foo", Var{"bar", 0}, Var{"baz", 0}}),
+				"foo", MkVar("bar"), MkVar("baz")}),
 		Entry("simple ∀",
 			`∀(foo : bar) → baz`,
-			&Pi{"foo", Var{"bar", 0}, Var{"baz", 0}}),
+			&Pi{"foo", MkVar("bar"), MkVar("baz")}),
 		Entry("arrow type has implicit _ var",
 			`foo → bar`,
-			FnType(Var{"foo", 0}, Var{"bar", 0})),
+			FnType(MkVar("foo"), MkVar("bar"))),
 		Entry(`simple forall`,
 			`forall(foo : bar) → baz`,
-			&Pi{"foo", Var{"bar", 0}, Var{"baz", 0}}),
+			&Pi{"foo", MkVar("bar"), MkVar("baz")}),
 		Entry("with line comment",
 			"∀(foo : bar) --asdf\n → baz",
-			&Pi{"foo", Var{"bar", 0}, Var{"baz", 0}}),
+			&Pi{"foo", MkVar("bar"), MkVar("baz")}),
 	)
 	DescribeTable("applications", ParseAndCompare,
 		Entry("identifier application",
 			`foo bar`,
-			&App{
-				Var{"foo", 0},
-				Var{"bar", 0},
-			}),
+			Apply(
+				MkVar("foo"),
+				MkVar("bar"),
+			)),
 		Entry("lambda application",
 			`(λ(foo : bar) → baz) quux`,
-			&App{
+			Apply(
 				&LambdaExpr{
-					"foo", Var{"bar", 0}, Var{"baz", 0}},
-				Var{"quux", 0}}),
+					"foo", MkVar("bar"), MkVar("baz")},
+				MkVar("quux"))),
 	)
 	DescribeTable("lets", ParseAndCompare,
 		Entry("simple let",
 			`let x = y in z`,
-			MakeLet(Var{"z", 0}, Binding{
-				Variable: "x", Value: Var{"y", 0},
+			MakeLet(MkVar("z"), Binding{
+				Variable: "x", Value: MkVar("y"),
 			})),
 		Entry("lambda application",
 			`(λ(foo : bar) → baz) quux`,
-			&App{
+			Apply(
 				&LambdaExpr{
-					"foo", Var{"bar", 0}, Var{"baz", 0}},
-				Var{"quux", 0}}),
+					"foo", MkVar("bar"), MkVar("baz")},
+				MkVar("quux"))),
 	)
 	Describe("Expected failures", func() {
 		// these keywords should fail to parse unless they're part of

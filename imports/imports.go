@@ -102,10 +102,10 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &App{
-			Fn:  resolvedFn,
-			Arg: resolvedArg,
-		}, nil
+		return Apply(
+			resolvedFn,
+			resolvedArg,
+		), nil
 	case Let:
 		newBindings := make([]Binding, len(e.Bindings))
 		for i, binding := range e.Bindings {

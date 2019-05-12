@@ -454,7 +454,7 @@ ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression
           e := f.(Expr)
           if rest == nil { return e, nil }
           for _, arg := range rest.([]interface{}) {
-              e = &App{Fn:e, Arg: arg.([]interface{})[1].(Expr)}
+              e = Apply(e, arg.([]interface{})[1].(Expr))
           }
           return e,nil
       }

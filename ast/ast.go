@@ -220,6 +220,16 @@ func FnType(input, output Expr) Expr {
 	return &Pi{"_", input, output}
 }
 
+func MkVar(name string) Var { return Var{Name: name} }
+
+func Apply(fn Expr, args ...Expr) Expr {
+	out := fn
+	for _, arg := range args {
+		out = &App{Fn: out, Arg: arg}
+	}
+	return out
+}
+
 var (
 	_ Expr = Type
 	_ Expr = &Var{}
@@ -331,10 +341,10 @@ func Shift(d int, v Var, e Expr) Expr {
 			Body:  body,
 		}
 	case *App:
-		return &App{
-			Fn:  Shift(d, v, e.Fn),
-			Arg: Shift(d, v, e.Arg),
-		}
+		return Apply(
+			Shift(d, v, e.Fn),
+			Shift(d, v, e.Arg),
+		)
 	case Let:
 		newBindings := make([]Binding, len(e.Bindings))
 		for i, binding := range e.Bindings {
@@ -459,10 +469,10 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Body:  substBody,
 		}
 	case *App:
-		return &App{
-			Fn:  Subst(v, c, e.Fn),
-			Arg: Subst(v, c, e.Arg),
-		}
+		return Apply(
+			Subst(v, c, e.Fn),
+			Subst(v, c, e.Arg),
+		)
 	case Let:
 		newBindings := make([]Binding, len(e.Bindings))
 		for i, binding := range e.Bindings {
@@ -552,7 +562,7 @@ func Subst(v Var, c Expr, b Expr) Expr {
 }
 
 func IsFreeIn(e Expr, x string) bool {
-	e2 := Subst(Var{Name: x}, Bool, e)
+	e2 := Subst(MkVar(x), Bool, e)
 	return !judgmentallyEqual(e, e2)
 }
 
@@ -777,7 +787,7 @@ func (app *App) Normalize() Expr {
 	f := app.Fn.Normalize()
 	a := app.Arg.Normalize()
 	if l, ok := f.(*LambdaExpr); ok {
-		v := Var{Name: l.Label}
+		v := MkVar(l.Label)
 		a2 := Shift(1, v, a)
 		b1 := Subst(v, a2, l.Body)
 		b2 := Shift(-1, v, b1)
@@ -795,7 +805,7 @@ func (app *App) Normalize() Expr {
 			}
 		}
 	}
-	return &App{Fn: f, Arg: a}
+	return Apply(f, a)
 }
 
 func (l Let) Normalize() Expr {
@@ -1048,10 +1058,10 @@ func (m Merge) Normalize() Expr {
 			// we have a union alternative with a value
 			// if the expression is well-typed, this can't fail
 			field := unionVal.Fn.(Field)
-			return (&App{
-				Fn:  handlers[field.FieldName],
-				Arg: unionVal.Arg,
-			}).Normalize()
+			return Apply(
+				handlers[field.FieldName],
+				unionVal.Arg,
+			).Normalize()
 		}
 		if unionVal, ok := unionN.(Field); ok {
 			// we have an empty union alternative
@@ -1112,10 +1122,10 @@ func (pi *Pi) AlphaNormalize() Expr {
 	}
 }
 func (app *App) AlphaNormalize() Expr {
-	return &App{
-		Fn:  app.Fn.AlphaNormalize(),
-		Arg: app.Arg.AlphaNormalize(),
-	}
+	return Apply(
+		app.Fn.AlphaNormalize(),
+		app.Arg.AlphaNormalize(),
+	)
 }
 
 func (l Let) AlphaNormalize() Expr {
