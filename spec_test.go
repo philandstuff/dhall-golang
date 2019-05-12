@@ -108,7 +108,6 @@ var expectedFailures = []string{
 	"TestNormalization/prelude/Integer",
 	"TestNormalization/prelude/List",
 	"TestNormalization/prelude/Natural/enumerate",
-	"TestNormalization/prelude/Natural/fold",
 	"TestNormalization/prelude/Natural/isZero",
 	"TestNormalization/prelude/Natural/odd",
 	"TestNormalization/prelude/Natural/product",
@@ -138,8 +137,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/ListLength",
 	"TestNormalization/unit/ListReverse",
 	"TestNormalization/unit/MergeWithTypeA", // uses union literals
-	"TestNormalization/unit/NaturalFoldOne",
-	"TestNormalization/unit/NaturalFoldZero",
 	"TestNormalization/unit/NaturalIsZero",
 	"TestNormalization/unit/NaturalOdd",
 	"TestNormalization/unit/NaturalShow",

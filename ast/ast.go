@@ -818,14 +818,6 @@ func (app *App) Normalize() Expr {
 	}
 	if b, ok := f.(Builtin); ok {
 		switch b {
-		case NaturalEven:
-			if n, ok := args[0].(NaturalLit); ok {
-				if n%2 == 0 {
-					return True
-				} else {
-					return False
-				}
-			}
 		case NaturalBuild:
 			if ap, ok := args[0].(*App); ok {
 				if ap.Fn == NaturalFold {
@@ -839,6 +831,22 @@ func (app *App) Normalize() Expr {
 					&LambdaExpr{"x", Natural, NaturalPlus(MkVar("x"), NaturalLit(1))},
 					NaturalLit(0),
 				).Normalize()
+			}
+		case NaturalFold:
+			if len(args) >= 4 {
+				output := args[3]
+				for i := 0; i < int(args[0].(NaturalLit)); i++ {
+					output = Apply(args[2], output).Normalize()
+				}
+				return Apply(output, args[4:]...).Normalize()
+			}
+		case NaturalEven:
+			if n, ok := args[0].(NaturalLit); ok {
+				if n%2 == 0 {
+					return True
+				} else {
+					return False
+				}
 			}
 		}
 	}
