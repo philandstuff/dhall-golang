@@ -451,12 +451,12 @@ NotEqualExpression   ← first:ApplicationExpression rest:(_ "!=" _ e:Applicatio
   {return ParseOperator(NeOp, first, rest), nil}
 
 ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression)* {
-          e := f.(Expr)
-          if rest == nil { return e, nil }
-          for _, arg := range rest.([]interface{}) {
-              e = Apply(e, arg.([]interface{})[1].(Expr))
+          if rest == nil { return f, nil }
+          args := make([]Expr, len(rest.([]interface{})))
+          for i, arg := range rest.([]interface{}) {
+              args[i] = arg.([]interface{})[1].(Expr)
           }
-          return e,nil
+          return Apply(f.(Expr), args...), nil
       }
 
 FirstApplicationExpression ←

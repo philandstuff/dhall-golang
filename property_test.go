@@ -56,8 +56,8 @@ var BasicType = gen.OneConstOf(ast.Double, ast.Text, ast.Bool, ast.Natural, ast.
 
 func ListOf(inner gopter.Gen) gopter.Gen {
 	return gopter.DeriveGen(
-		func(expr ast.Expr) ast.Expr { return &ast.App{Fn: ast.List, Arg: expr} },
-		func(listType ast.Expr) ast.Expr { return listType.(*ast.App).Arg },
+		func(expr ast.Expr) ast.Expr { return ast.Apply(ast.List, expr) },
+		func(listType ast.Expr) ast.Expr { return listType.(*ast.App).Args[0] },
 		inner,
 	)
 }

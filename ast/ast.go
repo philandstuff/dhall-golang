@@ -70,8 +70,8 @@ type (
 	}
 
 	App struct {
-		Fn  Expr
-		Arg Expr
+		Fn   Expr
+		Args []Expr
 	}
 
 	Binding struct {
@@ -225,11 +225,10 @@ func FnType(input, output Expr) Expr {
 func MkVar(name string) Var { return Var{Name: name} }
 
 func Apply(fn Expr, args ...Expr) Expr {
-	out := fn
-	for _, arg := range args {
-		out = &App{Fn: out, Arg: arg}
+	if len(args) == 0 {
+		return fn
 	}
-	return out
+	return &App{Fn: fn, Args: args}
 }
 
 var (
@@ -343,9 +342,13 @@ func Shift(d int, v Var, e Expr) Expr {
 			Body:  body,
 		}
 	case *App:
+		newArgs := make([]Expr, len(e.Args))
+		for i, arg := range e.Args {
+			newArgs[i] = Shift(d, v, arg)
+		}
 		return Apply(
 			Shift(d, v, e.Fn),
-			Shift(d, v, e.Arg),
+			newArgs...,
 		)
 	case Let:
 		newBindings := make([]Binding, len(e.Bindings))
@@ -471,9 +474,13 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Body:  substBody,
 		}
 	case *App:
+		newArgs := make([]Expr, len(e.Args))
+		for i, arg := range e.Args {
+			newArgs[i] = Subst(v, c, arg)
+		}
 		return Apply(
 			Subst(v, c, e.Fn),
-			Subst(v, c, e.Arg),
+			newArgs...,
 		)
 	case Let:
 		newBindings := make([]Binding, len(e.Bindings))
@@ -595,7 +602,14 @@ func (pi *Pi) String() string {
 }
 
 func (app *App) String() string {
-	return fmt.Sprintf("(%v %v)", app.Fn, app.Arg)
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("(%v", app.Fn))
+	for _, arg := range app.Args {
+		b.WriteString(" ")
+		b.WriteString(fmt.Sprintf("%v", arg))
+	}
+	b.WriteString(")")
+	return b.String()
 }
 
 func (l Let) String() string {
@@ -787,18 +801,25 @@ func (pi *Pi) Normalize() Expr {
 }
 func (app *App) Normalize() Expr {
 	f := app.Fn.Normalize()
-	a := app.Arg.Normalize()
+	args := make([]Expr, len(app.Args))
+	for i, arg := range app.Args {
+		args[i] = arg.Normalize()
+	}
 	if l, ok := f.(*LambdaExpr); ok {
 		v := MkVar(l.Label)
-		a2 := Shift(1, v, a)
+		a2 := Shift(1, v, args[0])
 		b1 := Subst(v, a2, l.Body)
 		b2 := Shift(-1, v, b1)
-		return b2.Normalize()
+		if len(args) == 1 {
+			return b2.Normalize()
+		} else {
+			return Apply(b2, args[1:]...).Normalize()
+		}
 	}
 	if b, ok := f.(Builtin); ok {
 		switch b {
 		case NaturalEven:
-			if n, ok := a.(NaturalLit); ok {
+			if n, ok := args[0].(NaturalLit); ok {
 				if n%2 == 0 {
 					return True
 				} else {
@@ -806,13 +827,13 @@ func (app *App) Normalize() Expr {
 				}
 			}
 		case NaturalBuild:
-			if ap, ok := a.(*App); ok {
+			if ap, ok := args[0].(*App); ok {
 				if ap.Fn == NaturalFold {
 					// Natural/build (Natural/fold b) → b
-					return ap.Arg
+					return ap.Args[0]
 				}
 			}
-			if l, ok := a.(*LambdaExpr); ok {
+			if l, ok := args[0].(*LambdaExpr); ok {
 				return Apply(l,
 					Natural,
 					&LambdaExpr{"x", Natural, NaturalPlus(MkVar("x"), NaturalLit(1))},
@@ -821,7 +842,7 @@ func (app *App) Normalize() Expr {
 			}
 		}
 	}
-	return Apply(f, a)
+	return Apply(f, args...)
 }
 
 func (l Let) Normalize() Expr {
@@ -1076,7 +1097,7 @@ func (m Merge) Normalize() Expr {
 			field := unionVal.Fn.(Field)
 			return Apply(
 				handlers[field.FieldName],
-				unionVal.Arg,
+				unionVal.Args[0],
 			).Normalize()
 		}
 		if unionVal, ok := unionN.(Field); ok {
@@ -1138,9 +1159,13 @@ func (pi *Pi) AlphaNormalize() Expr {
 	}
 }
 func (app *App) AlphaNormalize() Expr {
+	newArgs := make([]Expr, len(app.Args))
+	for i, arg := range app.Args {
+		newArgs[i] = arg.AlphaNormalize()
+	}
 	return Apply(
 		app.Fn.AlphaNormalize(),
-		app.Arg.AlphaNormalize(),
+		newArgs...,
 	)
 }
 

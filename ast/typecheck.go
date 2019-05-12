@@ -146,22 +146,24 @@ func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	pF, ok := tF.(*Pi)
-	if !ok {
-		return nil, fmt.Errorf("Expected %s to be a function type", tF)
-	}
+	for _, arg := range app.Args {
+		pF, ok := tF.(*Pi)
+		if !ok {
+			return nil, fmt.Errorf("Expected %s to be a function type", tF)
+		}
 
-	argType, err := app.Arg.TypeWith(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if judgmentallyEqual(pF.Type, argType) {
-		a := Shift(1, Var{Name: pF.Label}, app.Arg)
+		argType, err := arg.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if !judgmentallyEqual(pF.Type, argType) {
+			return nil, errors.New("type mismatch between function and applied value")
+		}
+		a := Shift(1, Var{Name: pF.Label}, app.Args[0])
 		b := Subst(Var{Name: pF.Label}, a, pF.Body)
-		return Shift(-1, Var{Name: pF.Label}, b), nil
-	} else {
-		return nil, errors.New("type mismatch between lambda and applied value")
+		tF = Shift(-1, Var{Name: pF.Label}, b)
 	}
+	return tF, nil
 }
 
 func (l Let) TypeWith(ctx *TypeContext) (Expr, error) {
@@ -178,7 +180,7 @@ func (l Let) TypeWith(ctx *TypeContext) (Expr, error) {
 			return nil, err
 		}
 		if !judgmentallyEqual(binding.Annotation, valueType) {
-			return nil, errors.New("type doesn't match annotation in let")
+			return nil, fmt.Errorf("in let binding, was expecting type %v but saw %v", binding.Annotation, valueType)
 		}
 	}
 
@@ -370,7 +372,7 @@ func listElementType(e Expr) (Expr, bool) {
 		return nil, false
 	}
 	if app.Fn == List {
-		return app.Arg, true
+		return app.Args[0], true
 	}
 	return nil, false
 }

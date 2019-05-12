@@ -73,17 +73,13 @@ func (p *Pi) CodecEncodeSelf(e *codec.Encoder) {
 }
 
 func (a *App) CodecEncodeSelf(e *codec.Encoder) {
-	fn := a.Fn
-	args := []interface{}{a.Arg}
-	for true {
-		parentapp, ok := fn.(*App)
-		if !ok {
-			break
-		}
-		fn = parentapp.Fn
-		args = append([]interface{}{parentapp.Arg}, args...)
+	output := make([]interface{}, len(a.Args)+2)
+	output[0] = 0
+	output[1] = a.Fn
+	for i, arg := range a.Args {
+		output[i+2] = arg
 	}
-	e.Encode(append([]interface{}{0, fn}, args...))
+	e.Encode(output)
 }
 
 func (l Let) CodecEncodeSelf(e *codec.Encoder) {
