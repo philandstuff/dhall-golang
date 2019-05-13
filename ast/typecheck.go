@@ -77,6 +77,23 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 		return FnType(Natural, Text), nil
 	case TextShow:
 		return FnType(Text, Text), nil
+	case ListBuild:
+		list := MkVar("list")
+		return &Pi{"a", Type,
+			FnType(
+				&Pi{"list", Type,
+					&Pi{"cons", FnType(MkVar("a"), FnType(list, list)),
+						&Pi{"nil", list, list}}},
+				Apply(List, MkVar("a")),
+			)}, nil
+	case ListFold:
+		list := MkVar("list")
+		return &Pi{"a", Type,
+			FnType(Apply(List, MkVar("a")),
+				&Pi{"list", Type,
+					&Pi{"cons", FnType(MkVar("a"), FnType(list, list)),
+						&Pi{"nil", list,
+							list}}})}, nil
 	default:
 		return nil, fmt.Errorf("Unknown Builtin %s", b)
 	}

@@ -167,6 +167,9 @@ const (
 	NaturalShow      = Builtin("Natural/show")
 
 	TextShow = Builtin("Text/show")
+
+	ListBuild = Builtin("List/build")
+	ListFold  = Builtin("List/fold")
 )
 
 // These numbers match the binary encoding label numbers
@@ -700,7 +703,7 @@ func (i IntegerLit) String() string {
 }
 
 func (l EmptyList) String() string {
-	return fmt.Sprintf("[] : %v", l.Type)
+	return fmt.Sprintf("[] : List %v", l.Type)
 }
 
 func (l NonEmptyList) String() string {
@@ -912,6 +915,40 @@ func (app *App) Normalize() Expr {
 					out.WriteRune('"')
 					return TextLit{Suffix: out.String()}
 				}
+			}
+		case ListBuild:
+			if len(args) >= 2 {
+				if ap, ok := args[1].(*App); ok {
+					if ap.Fn == ListFold && len(ap.Args) >= 2 {
+						// List/build A₀ (List/fold A₁ b) → b
+						return ap.Args[1]
+					}
+				}
+				A0 := args[0]
+				g := args[1]
+				A1 := Shift(1, Var{"a", 0}, A0)
+				return Apply(
+					g,
+					Apply(List, A0),
+					&LambdaExpr{"a", A0,
+						&LambdaExpr{"as", Apply(List, A1),
+							ListAppend(
+								MakeList(MkVar("a")),
+								MkVar("as"),
+							)}},
+					EmptyList{A0},
+				).Normalize()
+			}
+		case ListFold:
+			if len(args) >= 5 {
+				cons := args[3]
+				output := args[4]
+				if list, ok := args[1].(NonEmptyList); ok {
+					for i := len(list) - 1; i >= 0; i-- {
+						output = Apply(cons, list[i], output).Normalize()
+					}
+				}
+				return Apply(output, args[5:]...).Normalize()
 			}
 		}
 	}
@@ -1165,13 +1202,14 @@ func (m Merge) Normalize() Expr {
 	unionN := m.Union.Normalize()
 	if handlers, ok := handlerN.(RecordLit); ok {
 		if unionVal, ok := unionN.(*App); ok {
-			// we have a union alternative with a value
-			// if the expression is well-typed, this can't fail
-			field := unionVal.Fn.(Field)
-			return Apply(
-				handlers[field.FieldName],
-				unionVal.Args[0],
-			).Normalize()
+			// do we have a union alternative with a value, or a
+			// subexpression?
+			if field, ok := unionVal.Fn.(Field); ok {
+				return Apply(
+					handlers[field.FieldName],
+					unionVal.Args[0],
+				).Normalize()
+			}
 		}
 		if unionVal, ok := unionN.(Field); ok {
 			// we have an empty union alternative

@@ -174,8 +174,8 @@ Reserved ←
   / "Integer/toDouble" { return nil, errors.New("Integer/toDouble unimplemented") }
   / "Integer/show" { return nil, errors.New("Integer/show unimplemented") }
   / "Double/show" { return nil, errors.New("Double/show unimplemented") }
-  / "List/build" { return nil, errors.New("List/build unimplemented") }
-  / "List/fold" { return nil, errors.New("List/fold unimplemented") }
+  / "List/build" { return ListBuild, nil }
+  / "List/fold" { return ListFold, nil }
   / "List/length" { return nil, errors.New("List/length unimplemented") }
   / "List/head" { return nil, errors.New("List/head unimplemented") }
   / "List/last" { return nil, errors.New("List/last unimplemented") }
