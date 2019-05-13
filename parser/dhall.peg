@@ -183,7 +183,7 @@ Reserved ←
   / "List/reverse" { return nil, errors.New("List/reverse unimplemented") }
   / "Optional/build" { return nil, errors.New("Optional/build unimplemented") }
   / "Optional/fold" { return nil, errors.New("Optional/fold unimplemented") }
-  / "Text/show" { return nil, errors.New("Text/show unimplemented") }
+  / "Text/show" { return TextShow, nil }
   / "Bool" { return Bool, nil }
   / "True" { return True, nil }
   / "False" { return False, nil }

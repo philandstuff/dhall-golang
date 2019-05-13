@@ -165,6 +165,8 @@ const (
 	NaturalOdd       = Builtin("Natural/odd")
 	NaturalToInteger = Builtin("Natural/toInteger")
 	NaturalShow      = Builtin("Natural/show")
+
+	TextShow = Builtin("Text/show")
 )
 
 // These numbers match the binary encoding label numbers
@@ -875,6 +877,41 @@ func (app *App) Normalize() Expr {
 		case NaturalShow:
 			if n, ok := args[0].(NaturalLit); ok {
 				return TextLit{Suffix: n.String()}
+			}
+		case TextShow:
+			if t, ok := args[0].(TextLit); ok {
+				if t.Chunks == nil || len(t.Chunks) == 0 {
+					var out strings.Builder
+					out.WriteRune('"')
+					for _, r := range t.Suffix {
+						switch r {
+						case '"':
+							out.WriteString(`\"`)
+						case '$':
+							out.WriteString(`\u0024`)
+						case '\\':
+							out.WriteString(`\\`)
+						case '\b':
+							out.WriteString(`\b`)
+						case '\f':
+							out.WriteString(`\f`)
+						case '\n':
+							out.WriteString(`\n`)
+						case '\r':
+							out.WriteString(`\r`)
+						case '\t':
+							out.WriteString(`\t`)
+						default:
+							if r < 0x1f {
+								out.WriteString(fmt.Sprintf(`\u%04x`, r))
+							} else {
+								out.WriteRune(r)
+							}
+						}
+					}
+					out.WriteRune('"')
+					return TextLit{Suffix: out.String()}
+				}
 			}
 		}
 	}
