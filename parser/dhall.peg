@@ -176,11 +176,11 @@ Reserved ←
   / "Double/show" { return nil, errors.New("Double/show unimplemented") }
   / "List/build" { return ListBuild, nil }
   / "List/fold" { return ListFold, nil }
-  / "List/length" { return nil, errors.New("List/length unimplemented") }
-  / "List/head" { return nil, errors.New("List/head unimplemented") }
-  / "List/last" { return nil, errors.New("List/last unimplemented") }
-  / "List/indexed" { return nil, errors.New("List/indexed unimplemented") }
-  / "List/reverse" { return nil, errors.New("List/reverse unimplemented") }
+  / "List/length" { return ListLength, nil }
+  / "List/head" { return ListHead, nil }
+  / "List/last" { return ListLast, nil }
+  / "List/indexed" { return ListIndexed, nil }
+  / "List/reverse" { return ListReverse, nil }
   / "Optional/build" { return nil, errors.New("Optional/build unimplemented") }
   / "Optional/fold" { return nil, errors.New("Optional/fold unimplemented") }
   / "Text/show" { return TextShow, nil }

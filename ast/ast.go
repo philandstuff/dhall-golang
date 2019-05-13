@@ -168,8 +168,13 @@ const (
 
 	TextShow = Builtin("Text/show")
 
-	ListBuild = Builtin("List/build")
-	ListFold  = Builtin("List/fold")
+	ListBuild   = Builtin("List/build")
+	ListFold    = Builtin("List/fold")
+	ListLength  = Builtin("List/length")
+	ListHead    = Builtin("List/head")
+	ListLast    = Builtin("List/last")
+	ListIndexed = Builtin("List/indexed")
+	ListReverse = Builtin("List/reverse")
 )
 
 // These numbers match the binary encoding label numbers
@@ -607,6 +612,9 @@ func (lam *LambdaExpr) String() string {
 }
 
 func (pi *Pi) String() string {
+	if pi.Label == "_" {
+		return fmt.Sprintf("%v → %v", pi.Type, pi.Body)
+	}
 	return fmt.Sprintf("∀(%s : %v) → %v", pi.Label, pi.Type, pi.Body)
 }
 
@@ -843,11 +851,13 @@ func (app *App) Normalize() Expr {
 			}
 		case NaturalFold:
 			if len(args) >= 4 {
-				output := args[3]
-				for i := 0; i < int(args[0].(NaturalLit)); i++ {
-					output = Apply(args[2], output).Normalize()
+				if n, ok := args[0].(NaturalLit); ok {
+					output := args[3]
+					for i := 0; i < int(n); i++ {
+						output = Apply(args[2], output).Normalize()
+					}
+					return Apply(output, args[4:]...).Normalize()
 				}
-				return Apply(output, args[4:]...).Normalize()
 			}
 		case NaturalIsZero:
 			if n, ok := args[0].(NaturalLit); ok {
@@ -949,6 +959,54 @@ func (app *App) Normalize() Expr {
 					}
 				}
 				return Apply(output, args[5:]...).Normalize()
+			}
+		case ListLength:
+			if len(args) >= 2 {
+				if _, ok := args[1].(EmptyList); ok {
+					return NaturalLit(0)
+				}
+				if list, ok := args[1].(NonEmptyList); ok {
+					return NaturalLit(len(list))
+				}
+			}
+		case ListHead, ListLast:
+			if len(args) >= 2 {
+				if _, ok := args[1].(EmptyList); ok {
+					return Apply(None, args[0])
+				}
+				if l, ok := args[1].(NonEmptyList); ok {
+					if b == ListHead {
+						return Some{l[0]}
+					} else {
+						return Some{l[len(l)-1]}
+					}
+				}
+			}
+		case ListIndexed:
+			if len(args) >= 2 {
+				if _, ok := args[1].(EmptyList); ok {
+					return EmptyList{Record{"index": Natural, "value": args[0]}}
+				}
+				if l, ok := args[1].(NonEmptyList); ok {
+					output := make([]Expr, len(l))
+					for i, a := range l {
+						output[i] = RecordLit{"index": NaturalLit(i), "value": a}
+					}
+					return NonEmptyList(output)
+				}
+			}
+		case ListReverse:
+			if len(args) >= 2 {
+				if _, ok := args[1].(EmptyList); ok {
+					return EmptyList{args[0]}
+				}
+				if l, ok := args[1].(NonEmptyList); ok {
+					output := make([]Expr, len(l))
+					for i, a := range l {
+						output[len(l)-i-1] = a
+					}
+					return NonEmptyList(output)
+				}
 			}
 		}
 	}

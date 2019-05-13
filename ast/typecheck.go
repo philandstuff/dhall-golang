@@ -47,6 +47,14 @@ func (c Const) TypeWith(ctx *TypeContext) (Expr, error) {
 	}
 }
 
+// common variable names in types
+var (
+	a       = MkVar("a")
+	A       = MkVar("A")
+	list    = MkVar("list")
+	natural = MkVar("natural")
+)
+
 func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 	switch b {
 	case Double, Text, Bool, Natural, Integer:
@@ -54,16 +62,14 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 	case List, Optional:
 		return FnType(Type, Type), nil
 	case None:
-		return &Pi{"A", Type, Apply(Optional, MkVar("A"))}, nil
+		return &Pi{"A", Type, Apply(Optional, A)}, nil
 	case NaturalBuild:
-		natural := MkVar("natural")
 		return FnType(&Pi{"natural", Type,
 			&Pi{"succ", FnType(natural, natural),
 				&Pi{"zero", natural,
 					natural}}},
 			Natural), nil
 	case NaturalFold:
-		natural := MkVar("natural")
 		return FnType(Natural,
 			&Pi{"natural", Type,
 				&Pi{"succ", FnType(natural, natural),
@@ -78,22 +84,42 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 	case TextShow:
 		return FnType(Text, Text), nil
 	case ListBuild:
-		list := MkVar("list")
 		return &Pi{"a", Type,
 			FnType(
 				&Pi{"list", Type,
-					&Pi{"cons", FnType(MkVar("a"), FnType(list, list)),
+					&Pi{"cons", FnType(a, FnType(list, list)),
 						&Pi{"nil", list, list}}},
-				Apply(List, MkVar("a")),
+				Apply(List, a),
 			)}, nil
 	case ListFold:
 		list := MkVar("list")
 		return &Pi{"a", Type,
-			FnType(Apply(List, MkVar("a")),
+			FnType(Apply(List, a),
 				&Pi{"list", Type,
-					&Pi{"cons", FnType(MkVar("a"), FnType(list, list)),
+					&Pi{"cons", FnType(a, FnType(list, list)),
 						&Pi{"nil", list,
 							list}}})}, nil
+	case ListLength:
+		return &Pi{"a", Type,
+			FnType(Apply(List, a), Natural),
+		}, nil
+	case ListHead, ListLast:
+		return &Pi{"a", Type,
+			FnType(
+				Apply(List, a),
+				Apply(Optional, a),
+			)}, nil
+	case ListIndexed:
+		return &Pi{"a", Type, FnType(
+			Apply(List, a),
+			Apply(List, Record{"index": Natural, "value": a}),
+		)}, nil
+	case ListReverse:
+		return &Pi{"a", Type,
+			FnType(
+				Apply(List, a),
+				Apply(List, a),
+			)}, nil
 	default:
 		return nil, fmt.Errorf("Unknown Builtin %s", b)
 	}
