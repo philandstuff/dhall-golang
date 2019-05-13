@@ -49,10 +49,11 @@ func (c Const) TypeWith(ctx *TypeContext) (Expr, error) {
 
 // common variable names in types
 var (
-	a       = MkVar("a")
-	A       = MkVar("A")
-	list    = MkVar("list")
-	natural = MkVar("natural")
+	a        = MkVar("a")
+	A        = MkVar("A")
+	list     = MkVar("list")
+	natural  = MkVar("natural")
+	optional = MkVar("optional")
 )
 
 func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
@@ -119,6 +120,22 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 			FnType(
 				Apply(List, a),
 				Apply(List, a),
+			)}, nil
+	case OptionalBuild:
+		return &Pi{"a", Type,
+			FnType(
+				&Pi{"optional", Type,
+					&Pi{"just", FnType(a, optional),
+						&Pi{"nothing", optional,
+							optional}}},
+				Apply(Optional, a))}, nil
+	case OptionalFold:
+		return &Pi{"a", Type,
+			FnType(Apply(Optional, a),
+				&Pi{"optional", Type,
+					&Pi{"just", FnType(a, optional),
+						&Pi{"nothing", optional,
+							optional}}},
 			)}, nil
 	default:
 		return nil, fmt.Errorf("Unknown Builtin %s", b)

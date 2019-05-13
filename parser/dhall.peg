@@ -181,8 +181,8 @@ Reserved ←
   / "List/last" { return ListLast, nil }
   / "List/indexed" { return ListIndexed, nil }
   / "List/reverse" { return ListReverse, nil }
-  / "Optional/build" { return nil, errors.New("Optional/build unimplemented") }
-  / "Optional/fold" { return nil, errors.New("Optional/fold unimplemented") }
+  / "Optional/build" { return OptionalBuild, nil }
+  / "Optional/fold" { return OptionalFold, nil }
   / "Text/show" { return TextShow, nil }
   / "Bool" { return Bool, nil }
   / "True" { return True, nil }

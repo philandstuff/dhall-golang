@@ -175,6 +175,9 @@ const (
 	ListLast    = Builtin("List/last")
 	ListIndexed = Builtin("List/indexed")
 	ListReverse = Builtin("List/reverse")
+
+	OptionalBuild = Builtin("Optional/build")
+	OptionalFold  = Builtin("Optional/fold")
 )
 
 // These numbers match the binary encoding label numbers
@@ -1007,6 +1010,35 @@ func (app *App) Normalize() Expr {
 					}
 					return NonEmptyList(output)
 				}
+			}
+		case OptionalBuild:
+			if len(args) >= 2 {
+				if ap, ok := args[1].(*App); ok {
+					if ap.Fn == OptionalFold && len(ap.Args) >= 2 {
+						// Optional/build A₀ (Optional/fold A₁ b) → b
+						return ap.Args[1]
+					}
+				}
+				A0 := args[0]
+				g := args[1]
+				return Apply(
+					g,
+					Apply(Optional, A0),
+					&LambdaExpr{"a", A0, Some{MkVar("a")}},
+					Apply(None, A0),
+				).Normalize()
+			}
+		case OptionalFold:
+			if len(args) >= 5 {
+				someFn := args[3]
+				noneVal := args[4]
+				if someVal, ok := args[1].(Some); ok {
+					return Apply(
+						Apply(someFn, someVal.Val).Normalize(),
+						args[5:]...,
+					).Normalize()
+				}
+				return Apply(noneVal, args[5:]...).Normalize()
 			}
 		}
 	}

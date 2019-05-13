@@ -70,8 +70,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/MergeOneA.dhall",               // uses union literals
 	"TestTypeInference/unit/MergeOneWithAnnotationA.dhall", // uses union literals
 	"TestTypeInference/unit/OldOptional",
-	"TestTypeInference/unit/OptionalBuild",
-	"TestTypeInference/unit/OptionalFold",
 	"TestTypeInference/unit/RecordNestedKind",
 	"TestTypeInference/unit/RecordTypeKindLike",
 	"TestTypeInference/unit/RecordTypeNestedKind",
@@ -107,7 +105,6 @@ var expectedFailures = []string{
 	"TestNormalization/prelude/Natural/product/0A",
 	"TestNormalization/prelude/Natural/sum/0A",
 	"TestNormalization/prelude/Natural/toDouble",
-	"TestNormalization/prelude/Optional",
 	"TestNormalization/prelude/Text/concat/0A",
 	"TestNormalization/prelude/Text/concatMap",
 	"TestNormalization/prelude/Text/concatSep",
@@ -115,15 +112,12 @@ var expectedFailures = []string{
 	"TestNormalization/simple/doubleShowA.dhall",
 	"TestNormalization/simple/integerShowA.dhall",
 	"TestNormalization/simple/integerToDoubleA.dhall",
-	"TestNormalization/simple/optional",
 	"TestNormalization/simple/sortOperatorA.dhall",
 	"TestNormalization/unit/DoubleShow",
 	"TestNormalization/unit/IntegerShow",
 	"TestNormalization/unit/IntegerToDouble",
 	"TestNormalization/unit/MergeWithTypeA", // uses union literals
 	"TestNormalization/unit/NoneNaturalA",   // I don't intend to implement this; it will disappear from the standard
-	"TestNormalization/unit/OptionalBuild",
-	"TestNormalization/unit/OptionalFold",
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/RecursiveRecordMerge",
 	"TestNormalization/unit/RecursiveRecordTypeMerge",
