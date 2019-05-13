@@ -79,8 +79,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/ListReverse",
 	"TestTypeInference/unit/MergeOneA.dhall",               // uses union literals
 	"TestTypeInference/unit/MergeOneWithAnnotationA.dhall", // uses union literals
-	"TestTypeInference/unit/NaturalIsZero",
-	"TestTypeInference/unit/NaturalOdd",
 	"TestTypeInference/unit/NaturalShow",
 	"TestTypeInference/unit/NaturalToInteger",
 	"TestTypeInference/unit/OldOptional",
@@ -108,8 +106,6 @@ var expectedFailures = []string{
 	"TestNormalization/prelude/Integer",
 	"TestNormalization/prelude/List",
 	"TestNormalization/prelude/Natural/enumerate",
-	"TestNormalization/prelude/Natural/isZero",
-	"TestNormalization/prelude/Natural/odd",
 	"TestNormalization/prelude/Natural/product",
 	"TestNormalization/prelude/Natural/show",
 	"TestNormalization/prelude/Natural/sum",
@@ -137,8 +133,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/ListLength",
 	"TestNormalization/unit/ListReverse",
 	"TestNormalization/unit/MergeWithTypeA", // uses union literals
-	"TestNormalization/unit/NaturalIsZero",
-	"TestNormalization/unit/NaturalOdd",
 	"TestNormalization/unit/NaturalShow",
 	"TestNormalization/unit/NaturalToInteger",
 	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard

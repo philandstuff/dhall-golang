@@ -166,9 +166,9 @@ TextLiteral ← DoubleQuoteLiteral / SingleQuoteLiteral
 Reserved ←
     "Natural/build" { return NaturalBuild, nil }
   / "Natural/fold" { return NaturalFold, nil }
-  / "Natural/isZero" { return nil, errors.New("Natural/isZero unimplemented") }
+  / "Natural/isZero" { return NaturalIsZero, nil }
   / "Natural/even" { return NaturalEven, nil }
-  / "Natural/odd" { return nil, errors.New("Natural/odd unimplemented") }
+  / "Natural/odd" { return NaturalOdd, nil }
   / "Natural/toInteger" { return nil, errors.New("Natural/toInteger unimplemented") }
   / "Natural/show" { return nil, errors.New("Natural/show unimplemented") }
   / "Integer/toDouble" { return nil, errors.New("Integer/toDouble unimplemented") }

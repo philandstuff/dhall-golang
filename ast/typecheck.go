@@ -69,7 +69,7 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 				&Pi{"succ", FnType(natural, natural),
 					&Pi{"zero", natural,
 						natural}}}), nil
-	case NaturalEven:
+	case NaturalIsZero, NaturalEven, NaturalOdd:
 		return FnType(Natural, Bool), nil
 	default:
 		return nil, fmt.Errorf("Unknown Builtin %s", b)
