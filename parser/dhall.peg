@@ -169,8 +169,8 @@ Reserved ←
   / "Natural/isZero" { return NaturalIsZero, nil }
   / "Natural/even" { return NaturalEven, nil }
   / "Natural/odd" { return NaturalOdd, nil }
-  / "Natural/toInteger" { return nil, errors.New("Natural/toInteger unimplemented") }
-  / "Natural/show" { return nil, errors.New("Natural/show unimplemented") }
+  / "Natural/toInteger" { return NaturalToInteger, nil }
+  / "Natural/show" { return NaturalShow, nil }
   / "Integer/toDouble" { return nil, errors.New("Integer/toDouble unimplemented") }
   / "Integer/show" { return nil, errors.New("Integer/show unimplemented") }
   / "Double/show" { return nil, errors.New("Double/show unimplemented") }

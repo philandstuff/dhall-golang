@@ -31,9 +31,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/operatorsA.dhall",
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
-	"TestParserAccepts/text/interpolatedDoubleQuotedStringA.dhall", // needs Natural/show
-	"TestParserAccepts/text/interpolatedSingleQuotedStringA.dhall",
-	"TestParserAccepts/text/interpolationA.dhall",
 	"TestParserAccepts/text/templateA.dhall",
 	"TestParserAccepts/unionA.dhall",
 	"TestParserAccepts/unit/import/hash",
@@ -79,8 +76,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/ListReverse",
 	"TestTypeInference/unit/MergeOneA.dhall",               // uses union literals
 	"TestTypeInference/unit/MergeOneWithAnnotationA.dhall", // uses union literals
-	"TestTypeInference/unit/NaturalShow",
-	"TestTypeInference/unit/NaturalToInteger",
 	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/OptionalBuild",
 	"TestTypeInference/unit/OptionalFold",
@@ -107,10 +102,8 @@ var expectedFailures = []string{
 	"TestNormalization/prelude/List",
 	"TestNormalization/prelude/Natural/enumerate",
 	"TestNormalization/prelude/Natural/product",
-	"TestNormalization/prelude/Natural/show",
 	"TestNormalization/prelude/Natural/sum",
 	"TestNormalization/prelude/Natural/toDouble",
-	"TestNormalization/prelude/Natural/toInteger",
 	"TestNormalization/prelude/Optional",
 	"TestNormalization/prelude/Text",
 	"TestNormalization/remoteSystemsA.dhall",
@@ -118,8 +111,6 @@ var expectedFailures = []string{
 	"TestNormalization/simple/integerShowA.dhall",
 	"TestNormalization/simple/integerToDoubleA.dhall",
 	"TestNormalization/simple/listBuildA.dhall",
-	"TestNormalization/simple/naturalShowA.dhall",
-	"TestNormalization/simple/naturalToIntegerA.dhall",
 	"TestNormalization/simple/optional",
 	"TestNormalization/simple/sortOperatorA.dhall",
 	"TestNormalization/unit/DoubleShow",
@@ -133,9 +124,7 @@ var expectedFailures = []string{
 	"TestNormalization/unit/ListLength",
 	"TestNormalization/unit/ListReverse",
 	"TestNormalization/unit/MergeWithTypeA", // uses union literals
-	"TestNormalization/unit/NaturalShow",
-	"TestNormalization/unit/NaturalToInteger",
-	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
+	"TestNormalization/unit/NoneNaturalA",   // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/OptionalBuild",
 	"TestNormalization/unit/OptionalFold",
 	"TestNormalization/unit/RecordProjection",

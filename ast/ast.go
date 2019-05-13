@@ -158,11 +158,13 @@ const (
 	Optional = Builtin("Optional")
 	None     = Builtin("None")
 
-	NaturalBuild  = Builtin("Natural/build")
-	NaturalFold   = Builtin("Natural/fold")
-	NaturalIsZero = Builtin("Natural/isZero")
-	NaturalEven   = Builtin("Natural/even")
-	NaturalOdd    = Builtin("Natural/odd")
+	NaturalBuild     = Builtin("Natural/build")
+	NaturalFold      = Builtin("Natural/fold")
+	NaturalIsZero    = Builtin("Natural/isZero")
+	NaturalEven      = Builtin("Natural/even")
+	NaturalOdd       = Builtin("Natural/odd")
+	NaturalToInteger = Builtin("Natural/toInteger")
+	NaturalShow      = Builtin("Natural/show")
 )
 
 // These numbers match the binary encoding label numbers
@@ -865,6 +867,14 @@ func (app *App) Normalize() Expr {
 				} else {
 					return True
 				}
+			}
+		case NaturalToInteger:
+			if n, ok := args[0].(NaturalLit); ok {
+				return IntegerLit(int(n))
+			}
+		case NaturalShow:
+			if n, ok := args[0].(NaturalLit); ok {
+				return TextLit{Suffix: n.String()}
 			}
 		}
 	}
