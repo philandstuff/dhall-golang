@@ -33,11 +33,11 @@ func reflectValToDhallVal(val reflect.Value, typ ast.Expr) ast.Expr {
 		switch e.Fn {
 		case ast.List:
 			if val.Len() == 0 {
-				return ast.EmptyList{Type: e.Args[0]}
+				return ast.EmptyList{Type: e.Arg}
 			}
 			slice := make([]ast.Expr, val.Len())
 			for i := 0; i < val.Len(); i++ {
-				slice[i] = reflectValToDhallVal(val.Index(i), e.Args[0])
+				slice[i] = reflectValToDhallVal(val.Index(i), e.Arg)
 			}
 			return ast.NonEmptyList(slice)
 		default:
@@ -57,11 +57,11 @@ func argNType(fn *ast.LambdaExpr, n int) ast.Expr {
 
 func dhallShim(out reflect.Type, dhallFunc *ast.LambdaExpr) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
-		argsExprs := make([]ast.Expr, len(args))
+		var expr ast.Expr = dhallFunc
 		for i, arg := range args {
-			argsExprs[i] = reflectValToDhallVal(arg, argNType(dhallFunc, i))
+			dhallArg := reflectValToDhallVal(arg, argNType(dhallFunc, i))
+			expr = &ast.App{Fn: expr, Arg: dhallArg}
 		}
-		expr := ast.Apply(dhallFunc, argsExprs...)
 		ptr := reflect.New(out)
 		unmarshal(expr.Normalize(), ptr.Elem())
 		return []reflect.Value{ptr.Elem()}

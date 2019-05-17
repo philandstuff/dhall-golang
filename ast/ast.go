@@ -70,8 +70,8 @@ type (
 	}
 
 	App struct {
-		Fn   Expr
-		Args []Expr
+		Fn  Expr
+		Arg Expr
 	}
 
 	Binding struct {
@@ -222,6 +222,10 @@ func ListAppend(l, r Expr) Expr {
 	return Operator{OpCode: ListAppendOp, L: l, R: r}
 }
 
+func TextAppend(l, r Expr) Expr {
+	return Operator{OpCode: TextAppendOp, L: l, R: r}
+}
+
 const (
 	True  = BoolLit(true)
 	False = BoolLit(false)
@@ -242,10 +246,38 @@ func FnType(input, output Expr) Expr {
 func MkVar(name string) Var { return Var{Name: name} }
 
 func Apply(fn Expr, args ...Expr) Expr {
-	if len(args) == 0 {
-		return fn
+	out := fn
+	for _, arg := range args {
+		out = &App{Fn: out, Arg: arg}
 	}
-	return &App{Fn: fn, Args: args}
+	return out
+}
+
+func (app *App) NumArgs() int {
+	out := 1
+	for next, ok := app.Fn.(*App); ok; next, ok = next.Fn.(*App) {
+		out++
+	}
+	return out
+}
+
+func (app *App) BaseFn() Expr {
+	var here Expr = app
+	for true {
+		here = here.(*App).Fn
+		if _, ok := here.(*App); !ok {
+			break
+		}
+	}
+	return here
+}
+
+func (app *App) GetArg(i int) Expr {
+	here := app
+	for j := 0; j < app.NumArgs()-i-1; j++ {
+		here = here.Fn.(*App)
+	}
+	return here.Arg
 }
 
 var (
@@ -359,13 +391,9 @@ func Shift(d int, v Var, e Expr) Expr {
 			Body:  body,
 		}
 	case *App:
-		newArgs := make([]Expr, len(e.Args))
-		for i, arg := range e.Args {
-			newArgs[i] = Shift(d, v, arg)
-		}
 		return Apply(
 			Shift(d, v, e.Fn),
-			newArgs...,
+			Shift(d, v, e.Arg),
 		)
 	case Let:
 		newBindings := make([]Binding, len(e.Bindings))
@@ -404,7 +432,7 @@ func Shift(d int, v Var, e Expr) Expr {
 	case IntegerLit:
 		return e
 	case EmptyList:
-		return e
+		return EmptyList{Type: Shift(d, v, e.Type)}
 	case NonEmptyList:
 		exprs := make([]Expr, len([]Expr(e)))
 		for i, expr := range []Expr(e) {
@@ -491,13 +519,9 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Body:  substBody,
 		}
 	case *App:
-		newArgs := make([]Expr, len(e.Args))
-		for i, arg := range e.Args {
-			newArgs[i] = Subst(v, c, arg)
-		}
 		return Apply(
 			Subst(v, c, e.Fn),
-			newArgs...,
+			Subst(v, c, e.Arg),
 		)
 	case Let:
 		newBindings := make([]Binding, len(e.Bindings))
@@ -536,7 +560,7 @@ func Subst(v Var, c Expr, b Expr) Expr {
 	case IntegerLit:
 		return e
 	case EmptyList:
-		return e
+		return EmptyList{Type: Subst(v, c, e.Type)}
 	case NonEmptyList:
 		exprs := make([]Expr, len([]Expr(e)))
 		for i, expr := range []Expr(e) {
@@ -622,14 +646,17 @@ func (pi *Pi) String() string {
 }
 
 func (app *App) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("(%v", app.Fn))
-	for _, arg := range app.Args {
-		b.WriteString(" ")
-		b.WriteString(fmt.Sprintf("%v", arg))
+	if subApp, ok := app.Fn.(*App); ok {
+		return fmt.Sprintf("(%v %v)", subApp.StringNoParens(), app.Arg)
 	}
-	b.WriteString(")")
-	return b.String()
+	return fmt.Sprintf("(%v %v)", app.Fn, app.Arg)
+}
+
+func (app *App) StringNoParens() string {
+	if subApp, ok := app.Fn.(*App); ok {
+		return fmt.Sprintf("%v %v", subApp.StringNoParens(), app.Arg)
+	}
+	return fmt.Sprintf("%v %v", app.Fn, app.Arg)
 }
 
 func (l Let) String() string {
@@ -821,31 +848,25 @@ func (pi *Pi) Normalize() Expr {
 }
 func (app *App) Normalize() Expr {
 	f := app.Fn.Normalize()
-	args := make([]Expr, len(app.Args))
-	for i, arg := range app.Args {
-		args[i] = arg.Normalize()
-	}
+	a := app.Arg.Normalize()
+	newapp := Apply(f, a).(*App)
 	if l, ok := f.(*LambdaExpr); ok {
 		v := MkVar(l.Label)
-		a2 := Shift(1, v, args[0])
+		a2 := Shift(1, v, a)
 		b1 := Subst(v, a2, l.Body)
 		b2 := Shift(-1, v, b1)
-		if len(args) == 1 {
-			return b2.Normalize()
-		} else {
-			return Apply(b2, args[1:]...).Normalize()
-		}
+		return b2.Normalize()
 	}
-	if b, ok := f.(Builtin); ok {
+	if b, ok := newapp.BaseFn().(Builtin); ok {
 		switch b {
 		case NaturalBuild:
-			if ap, ok := args[0].(*App); ok {
+			if ap, ok := a.(*App); ok {
 				if ap.Fn == NaturalFold {
 					// Natural/build (Natural/fold b) → b
-					return ap.Args[0]
+					return ap.Arg
 				}
 			}
-			if l, ok := args[0].(*LambdaExpr); ok {
+			if l, ok := a.(*LambdaExpr); ok {
 				return Apply(l,
 					Natural,
 					&LambdaExpr{"x", Natural, NaturalPlus(MkVar("x"), NaturalLit(1))},
@@ -853,17 +874,17 @@ func (app *App) Normalize() Expr {
 				).Normalize()
 			}
 		case NaturalFold:
-			if len(args) >= 4 {
-				if n, ok := args[0].(NaturalLit); ok {
-					output := args[3]
+			if newapp.NumArgs() == 4 {
+				if n, ok := newapp.GetArg(0).(NaturalLit); ok {
+					output := newapp.GetArg(3)
 					for i := 0; i < int(n); i++ {
-						output = Apply(args[2], output).Normalize()
+						output = Apply(newapp.GetArg(2), output).Normalize()
 					}
-					return Apply(output, args[4:]...).Normalize()
+					return output
 				}
 			}
 		case NaturalIsZero:
-			if n, ok := args[0].(NaturalLit); ok {
+			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
 				if n == 0 {
 					return True
 				} else {
@@ -871,7 +892,7 @@ func (app *App) Normalize() Expr {
 				}
 			}
 		case NaturalEven:
-			if n, ok := args[0].(NaturalLit); ok {
+			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
 				if n%2 == 0 {
 					return True
 				} else {
@@ -879,7 +900,7 @@ func (app *App) Normalize() Expr {
 				}
 			}
 		case NaturalOdd:
-			if n, ok := args[0].(NaturalLit); ok {
+			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
 				if n%2 == 0 {
 					return False
 				} else {
@@ -887,58 +908,60 @@ func (app *App) Normalize() Expr {
 				}
 			}
 		case NaturalToInteger:
-			if n, ok := args[0].(NaturalLit); ok {
+			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
 				return IntegerLit(int(n))
 			}
 		case NaturalShow:
-			if n, ok := args[0].(NaturalLit); ok {
+			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
 				return TextLit{Suffix: n.String()}
 			}
 		case TextShow:
-			if t, ok := args[0].(TextLit); ok {
-				if t.Chunks == nil || len(t.Chunks) == 0 {
-					var out strings.Builder
-					out.WriteRune('"')
-					for _, r := range t.Suffix {
-						switch r {
-						case '"':
-							out.WriteString(`\"`)
-						case '$':
-							out.WriteString(`\u0024`)
-						case '\\':
-							out.WriteString(`\\`)
-						case '\b':
-							out.WriteString(`\b`)
-						case '\f':
-							out.WriteString(`\f`)
-						case '\n':
-							out.WriteString(`\n`)
-						case '\r':
-							out.WriteString(`\r`)
-						case '\t':
-							out.WriteString(`\t`)
-						default:
-							if r < 0x1f {
-								out.WriteString(fmt.Sprintf(`\u%04x`, r))
-							} else {
-								out.WriteRune(r)
+			if newapp.NumArgs() == 1 {
+				if t, ok := newapp.GetArg(0).(TextLit); ok {
+					if t.Chunks == nil || len(t.Chunks) == 0 {
+						var out strings.Builder
+						out.WriteRune('"')
+						for _, r := range t.Suffix {
+							switch r {
+							case '"':
+								out.WriteString(`\"`)
+							case '$':
+								out.WriteString(`\u0024`)
+							case '\\':
+								out.WriteString(`\\`)
+							case '\b':
+								out.WriteString(`\b`)
+							case '\f':
+								out.WriteString(`\f`)
+							case '\n':
+								out.WriteString(`\n`)
+							case '\r':
+								out.WriteString(`\r`)
+							case '\t':
+								out.WriteString(`\t`)
+							default:
+								if r < 0x1f {
+									out.WriteString(fmt.Sprintf(`\u%04x`, r))
+								} else {
+									out.WriteRune(r)
+								}
 							}
 						}
+						out.WriteRune('"')
+						return TextLit{Suffix: out.String()}
 					}
-					out.WriteRune('"')
-					return TextLit{Suffix: out.String()}
 				}
 			}
 		case ListBuild:
-			if len(args) >= 2 {
-				if ap, ok := args[1].(*App); ok {
-					if ap.Fn == ListFold && len(ap.Args) >= 2 {
+			if newapp.NumArgs() == 2 {
+				if ap, ok := newapp.GetArg(1).(*App); ok {
+					if ap.BaseFn() == ListFold && ap.NumArgs() == 2 {
 						// List/build A₀ (List/fold A₁ b) → b
-						return ap.Args[1]
+						return ap.GetArg(1)
 					}
 				}
-				A0 := args[0]
-				g := args[1]
+				A0 := newapp.GetArg(0)
+				g := newapp.GetArg(1)
 				A1 := Shift(1, Var{"a", 0}, A0)
 				return Apply(
 					g,
@@ -953,31 +976,34 @@ func (app *App) Normalize() Expr {
 				).Normalize()
 			}
 		case ListFold:
-			if len(args) >= 5 {
-				cons := args[3]
-				output := args[4]
-				if list, ok := args[1].(NonEmptyList); ok {
+			if newapp.NumArgs() == 5 {
+				cons := newapp.GetArg(3)
+				output := newapp.GetArg(4)
+				if list, ok := newapp.GetArg(1).(NonEmptyList); ok {
 					for i := len(list) - 1; i >= 0; i-- {
 						output = Apply(cons, list[i], output).Normalize()
 					}
+					return output
 				}
-				return Apply(output, args[5:]...).Normalize()
+				if _, ok = newapp.GetArg(1).(EmptyList); ok {
+					return output
+				}
 			}
 		case ListLength:
-			if len(args) >= 2 {
-				if _, ok := args[1].(EmptyList); ok {
+			if newapp.NumArgs() == 2 {
+				if _, ok := newapp.GetArg(1).(EmptyList); ok {
 					return NaturalLit(0)
 				}
-				if list, ok := args[1].(NonEmptyList); ok {
+				if list, ok := newapp.GetArg(1).(NonEmptyList); ok {
 					return NaturalLit(len(list))
 				}
 			}
 		case ListHead, ListLast:
-			if len(args) >= 2 {
-				if _, ok := args[1].(EmptyList); ok {
-					return Apply(None, args[0])
+			if newapp.NumArgs() == 2 {
+				if _, ok := newapp.GetArg(1).(EmptyList); ok {
+					return Apply(None, newapp.GetArg(0))
 				}
-				if l, ok := args[1].(NonEmptyList); ok {
+				if l, ok := newapp.GetArg(1).(NonEmptyList); ok {
 					if b == ListHead {
 						return Some{l[0]}
 					} else {
@@ -986,11 +1012,11 @@ func (app *App) Normalize() Expr {
 				}
 			}
 		case ListIndexed:
-			if len(args) >= 2 {
-				if _, ok := args[1].(EmptyList); ok {
-					return EmptyList{Record{"index": Natural, "value": args[0]}}
+			if newapp.NumArgs() == 2 {
+				if _, ok := newapp.GetArg(1).(EmptyList); ok {
+					return EmptyList{Record{"index": Natural, "value": newapp.GetArg(0)}}
 				}
-				if l, ok := args[1].(NonEmptyList); ok {
+				if l, ok := newapp.GetArg(1).(NonEmptyList); ok {
 					output := make([]Expr, len(l))
 					for i, a := range l {
 						output[i] = RecordLit{"index": NaturalLit(i), "value": a}
@@ -999,11 +1025,11 @@ func (app *App) Normalize() Expr {
 				}
 			}
 		case ListReverse:
-			if len(args) >= 2 {
-				if _, ok := args[1].(EmptyList); ok {
-					return EmptyList{args[0]}
+			if newapp.NumArgs() == 2 {
+				if _, ok := newapp.GetArg(1).(EmptyList); ok {
+					return EmptyList{newapp.GetArg(0)}
 				}
-				if l, ok := args[1].(NonEmptyList); ok {
+				if l, ok := newapp.GetArg(1).(NonEmptyList); ok {
 					output := make([]Expr, len(l))
 					for i, a := range l {
 						output[len(l)-i-1] = a
@@ -1012,15 +1038,15 @@ func (app *App) Normalize() Expr {
 				}
 			}
 		case OptionalBuild:
-			if len(args) >= 2 {
-				if ap, ok := args[1].(*App); ok {
-					if ap.Fn == OptionalFold && len(ap.Args) >= 2 {
+			if newapp.NumArgs() == 2 {
+				if ap, ok := newapp.GetArg(1).(*App); ok {
+					if ap.BaseFn() == OptionalFold && ap.NumArgs() == 2 {
 						// Optional/build A₀ (Optional/fold A₁ b) → b
-						return ap.Args[1]
+						return ap.GetArg(1)
 					}
 				}
-				A0 := args[0]
-				g := args[1]
+				A0 := newapp.GetArg(0)
+				g := newapp.GetArg(1)
 				return Apply(
 					g,
 					Apply(Optional, A0),
@@ -1029,20 +1055,23 @@ func (app *App) Normalize() Expr {
 				).Normalize()
 			}
 		case OptionalFold:
-			if len(args) >= 5 {
-				someFn := args[3]
-				noneVal := args[4]
-				if someVal, ok := args[1].(Some); ok {
-					return Apply(
-						Apply(someFn, someVal.Val).Normalize(),
-						args[5:]...,
-					).Normalize()
+			if newapp.NumArgs() == 5 {
+
+				input := newapp.GetArg(1)
+				someFn := newapp.GetArg(3)
+				noneVal := newapp.GetArg(4)
+				if someVal, ok := input.(Some); ok {
+					return Apply(someFn, someVal.Val).Normalize()
 				}
-				return Apply(noneVal, args[5:]...).Normalize()
+				if appVal, ok := input.(*App); ok {
+					if appVal.Fn == None {
+						return noneVal
+					}
+				}
 			}
 		}
 	}
-	return Apply(f, args...)
+	return newapp
 }
 
 func (l Let) Normalize() Expr {
@@ -1083,9 +1112,9 @@ func (t TextLit) Normalize() Expr {
 				newChunks = append(newChunks,
 					text.Chunks[1:]...)
 				str.Reset()
-			} else {
-				str.WriteString(text.Suffix)
 			}
+			str.WriteString(text.Suffix)
+
 		} else {
 			newChunks = append(newChunks, Chunk{Prefix: str.String(), Expr: normExpr})
 			str.Reset()
@@ -1297,7 +1326,7 @@ func (m Merge) Normalize() Expr {
 			if field, ok := unionVal.Fn.(Field); ok {
 				return Apply(
 					handlers[field.FieldName],
-					unionVal.Args[0],
+					unionVal.Arg,
 				).Normalize()
 			}
 		}
@@ -1349,24 +1378,20 @@ func (pi *Pi) AlphaNormalize() Expr {
 			Body:  pi.Body.AlphaNormalize(),
 		}
 	} else {
-		b1 := Shift(1, Var{"_", 0}, pi.Body)
-		b2 := Subst(Var{pi.Label, 0}, Var{"_", 0}, b1)
-		b3 := Shift(-1, Var{"x", 0}, b2)
+		B1 := Shift(1, Var{"_", 0}, pi.Body)
+		B2 := Subst(Var{pi.Label, 0}, Var{"_", 0}, B1)
+		B3 := Shift(-1, Var{pi.Label, 0}, B2)
 		return &Pi{
 			Label: "_",
 			Type:  pi.Type.AlphaNormalize(),
-			Body:  b3.AlphaNormalize(),
+			Body:  B3.AlphaNormalize(),
 		}
 	}
 }
 func (app *App) AlphaNormalize() Expr {
-	newArgs := make([]Expr, len(app.Args))
-	for i, arg := range app.Args {
-		newArgs[i] = arg.AlphaNormalize()
-	}
 	return Apply(
 		app.Fn.AlphaNormalize(),
-		newArgs...,
+		app.Arg.AlphaNormalize(),
 	)
 }
 

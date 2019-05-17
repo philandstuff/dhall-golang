@@ -149,6 +149,7 @@ func (v Var) TypeWith(ctx *TypeContext) (Expr, error) {
 	return nil, fmt.Errorf("Unbound variable %s, context was %+v", v.Name, ctx)
 }
 
+// Γ₀ ⊢ λ(x : A) → b : ∀(x : A) → B
 func (lam *LambdaExpr) TypeWith(ctx *TypeContext) (Expr, error) {
 	if _, err := lam.Type.TypeWith(ctx); err != nil {
 		return nil, err
@@ -182,18 +183,19 @@ func Rule(a Const, b Const) (Const, error) {
 	return -1, errors.New("Dependent types are not allowed")
 }
 
+// Γ₀ ⊢ ∀(x : A) → B : c
 func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
+	// Γ₀ ⊢ A :⇥ i
 	tA, err := NormalizedTypeWith(pi.Type, ctx)
 	if err != nil {
 		return nil, err
 	}
 	kA, ok := tA.(Const)
 	if !ok {
-		return nil, errors.New("Wrong kind for type of pi type")
+		return nil, fmt.Errorf("Expected %v to be a Const", tA)
 	}
-	// FIXME: modifying context in place is.. icky
-	(*ctx)[pi.Label] = append([]Expr{pi.Type.Normalize()}, (*ctx)[pi.Label]...)
-	tB, err := NormalizedTypeWith(pi.Body, ctx)
+	newctx := ctx.Insert(pi.Label, pi.Type.Normalize()).Map(func(e Expr) Expr { return Shift(1, Var{Name: pi.Label}, e) })
+	tB, err := NormalizedTypeWith(pi.Body, newctx)
 	if err != nil {
 		return nil, err
 	}
@@ -201,35 +203,39 @@ func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 	if !ok {
 		return nil, errors.New("Wrong kind for body of pi type")
 	}
-	// Restore ctx to how it was before
-	(*ctx)[pi.Label] = (*ctx)[pi.Label][1:len((*ctx)[pi.Label])]
 
 	return Rule(kA, kB)
 }
 
+// Γ ⊢ f a₀ : B₂
 func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
+	// Γ ⊢ f :⇥ ∀(x : A₀) → B₀
 	tF, err := NormalizedTypeWith(app.Fn, ctx)
 	if err != nil {
 		return nil, err
 	}
-	for _, arg := range app.Args {
-		pF, ok := tF.(*Pi)
-		if !ok {
-			return nil, fmt.Errorf("Expected %s to be a function type", tF)
-		}
-
-		argType, err := arg.TypeWith(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if !judgmentallyEqual(pF.Type, argType) {
-			return nil, errors.New("type mismatch between function and applied value")
-		}
-		a := Shift(1, Var{Name: pF.Label}, app.Args[0])
-		b := Subst(Var{Name: pF.Label}, a, pF.Body)
-		tF = Shift(-1, Var{Name: pF.Label}, b)
+	pF, ok := tF.(*Pi)
+	if !ok {
+		return nil, fmt.Errorf("Expected %s to be a function type", tF)
 	}
-	return tF, nil
+
+	// Γ ⊢ a₀ : A₁
+	A1, err := app.Arg.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// A₀ ≡ A₁
+	if judgmentallyEqual(pF.Type, A1) {
+		// ↑(1, x, 0, a₀) = a₁
+		a1 := Shift(1, Var{Name: pF.Label}, app.Arg)
+		// B₀[x ≔ a₁] = B₁
+		B1 := Subst(Var{Name: pF.Label}, a1, pF.Body)
+		// ↑(-1, x, 0, B₁) = B₂
+		return Shift(-1, Var{Name: pF.Label}, B1), nil
+	} else {
+		return nil, fmt.Errorf("type mismatch between function and applied value: `%v` `%v`", pF, A1)
+	}
 }
 
 func (l Let) TypeWith(ctx *TypeContext) (Expr, error) {
@@ -438,7 +444,7 @@ func listElementType(e Expr) (Expr, bool) {
 		return nil, false
 	}
 	if app.Fn == List {
-		return app.Args[0], true
+		return app.Arg, true
 	}
 	return nil, false
 }

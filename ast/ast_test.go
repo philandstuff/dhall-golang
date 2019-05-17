@@ -39,7 +39,7 @@ var _ = DescribeTable("Shift",
 	Entry("Shift(1, x, x : Natural) = x@1 : Natural", Shift(1, x(0), Annot{x(0), Natural}), Annot{x(1), Natural}),
 	Entry("Shift(1, x, x + 3) = x@1 + 3", Shift(1, x(0), NaturalPlus(x(0), NaturalLit(3))), NaturalPlus(x(1), NaturalLit(3))),
 	Entry("Shift(1, x, x * 3) = x@1 * 3", Shift(1, x(0), NaturalTimes(x(0), NaturalLit(3))), NaturalTimes(x(1), NaturalLit(3))),
-	Entry("Shift(1, x, [] : List Natural) = [] : List Natural", Shift(1, x(0), EmptyList{Natural}), EmptyList{Natural}),
+	Entry("Shift(1, x, [] : List x) = [] : List x@1", Shift(1, x(0), EmptyList{x(0)}), EmptyList{x(1)}),
 	Entry("Shift(1, x, [x]) = [x@1]", Shift(1, x(0), MakeList(x(0))), MakeList(x(1))),
 	Entry("Shift(1, x, None x) = None x@1", Shift(1, x(0), Apply(None, x(0))), Apply(None, x(1))),
 	Entry("Shift(1, x, Some x) = Some x@1", Shift(1, x(0), Some{x(0)}), Some{x(1)}),
@@ -73,15 +73,18 @@ var _ = DescribeTable("Subst",
 	Entry("Subst(x, Natural, x) = Natural", Subst(x(0), Natural, x(0)), Natural),
 	Entry("Subst(x@1, Natural, x) = x", Subst(x(1), Natural, x(0)), x(0)),
 	Entry("Subst(x, Natural, x@1) = x@1", Subst(x(0), Natural, x(1)), x(1)),
-	Entry("Subst(x, Natural, λ( x) -> x) = λ( Natural) -> x",
+	Entry("Subst(x, Natural, λ(x : x) -> x) = λ(x : Natural) -> x",
 		Subst(x(0), Natural, &LambdaExpr{"x", x(0), x(0)}),
 		&LambdaExpr{"x", Natural, x(0)}),
-	Entry("Subst(x, Natural, (λ(x: x) -> x) 3) = (λ(x: Natural) -> x) 3",
+	Entry("Subst(x, Natural, (λ(x : x) -> x) 3) = (λ(x : Natural) -> x) 3",
 		Subst(x(0), Natural, Apply(&LambdaExpr{"x", x(0), x(0)}, NaturalLit(3))),
 		Apply(&LambdaExpr{"x", Natural, x(0)}, NaturalLit(3))),
+	Entry("Subst(x, Natural, ∀(x : x) -> Natural) = ∀(x : Natural) -> Natural",
+		Subst(x(0), Natural, &Pi{"x", x(0), Natural}),
+		&Pi{"x", Natural, Natural}),
 	Entry("Subst(x, Natural, y : x) = y : Natural", Subst(x(0), Natural, Annot{y(0), x(0)}), Annot{y(0), Natural}),
 	Entry("Subst(x, Natural, x : y) = Natural : y", Subst(x(0), Natural, Annot{x(0), y(0)}), Annot{Natural, y(0)}),
-	Entry("Subst(x, 3, [] : List Natural) = [] : List Natural", Subst(x(0), NaturalLit(3), EmptyList{Natural}), EmptyList{Natural}),
+	Entry("Subst(x, Natural, [] : List x) = [] : List Natural", Subst(x(0), Natural, EmptyList{x(0)}), EmptyList{Natural}),
 	Entry("Subst(x, 3, [x]) = [3]", Subst(x(0), NaturalLit(3), MakeList(x(0))), MakeList(NaturalLit(3))),
 	Entry("Subst(x, Natural, None x) = None Natural", Subst(x(0), Natural, Apply(None, x(0))), Apply(None, Natural)),
 	Entry("Subst(x, 3, Some x) = Some 3", Subst(x(0), NaturalLit(3), Some{x(0)}), Some{NaturalLit(3)}),
@@ -125,6 +128,46 @@ var _ = Describe("IsFreeIn", func() {
 	)
 })
 
+var _ = Describe("App", func() {
+	Describe(".NumArgs()", func() {
+		It("= 1 for None Natural", func() {
+			Expect(Apply(None, Natural).(*App).NumArgs()).To(Equal(1))
+		})
+		It("= 2 for List/build x y", func() {
+			Expect(Apply(ListBuild, MkVar("x"), MkVar("y")).(*App).NumArgs()).To(Equal(2))
+		})
+	})
+	Describe(".BaseFn()", func() {
+		It("List/fold A", func() {
+			Expect(Apply(ListFold, MkVar("A")).(*App).BaseFn()).
+				To(Equal(ListFold))
+		})
+		It("List/fold A B", func() {
+			Expect(Apply(ListFold, MkVar("A"), MkVar("B")).(*App).BaseFn()).
+				To(Equal(ListFold))
+		})
+		It("List/fold A B C", func() {
+			Expect(Apply(ListFold, MkVar("A"), MkVar("B"), MkVar("C")).(*App).BaseFn()).
+				To(Equal(ListFold))
+		})
+	})
+	Describe(".GetArg(i)", func() {
+		It("= Natural for None Natural 0", func() {
+			Expect(Apply(None, Natural).(*App).GetArg(0)).
+				To(Equal(Natural))
+		})
+		It("(List/fold A l c).GetArg(0)", func() {
+			Expect(Apply(ListFold, MkVar("A"), MkVar("l"), MkVar("c")).(*App).GetArg(0)).To(Equal(MkVar("A")))
+		})
+		It("(List/fold A l c).GetArg(1)", func() {
+			Expect(Apply(ListFold, MkVar("A"), MkVar("l"), MkVar("c")).(*App).GetArg(1)).To(Equal(MkVar("l")))
+		})
+		It("(List/fold A l c).GetArg(2)", func() {
+			Expect(Apply(ListFold, MkVar("A"), MkVar("l"), MkVar("c")).(*App).GetArg(2)).To(Equal(MkVar("c")))
+		})
+	})
+})
+
 var _ = Describe("Normalize", func() {
 	DescribeTable("Normalize",
 		func(in Expr, expected Expr) {
@@ -157,6 +200,8 @@ var _ = Describe("Normalize", func() {
 		Entry("[+1] # [-2] » [+1, -2]", ListAppend(MakeList(IntegerLit(1)), MakeList(IntegerLit(-2))), MakeList(IntegerLit(1), IntegerLit(-2))),
 		Entry("[] # x » x", ListAppend(EmptyList{Bool}, x(0)), x(0)),
 		Entry("x # [] » x", ListAppend(EmptyList{Bool}, x(0)), x(0)),
+		Entry(`"${x}foo" ++ "${x}" » "${x}foo${x}"`, TextAppend(TextLit{Chunks: []Chunk{{Expr: x(0)}}, Suffix: "foo"}, TextLit{Chunks: []Chunk{{Expr: x(0)}}}), TextLit{Chunks: []Chunk{{Expr: x(0)}, {Prefix: "foo", Expr: x(0)}}}),
+		Entry(`"${"${x}foo"}" » "${x}foo"`, TextLit{Chunks: []Chunk{{Expr: TextLit{Chunks: []Chunk{{Expr: x(0)}}, Suffix: "foo"}}}}, TextLit{Chunks: []Chunk{{Expr: x(0)}}, Suffix: "foo"}),
 		Entry("(λ(x : Natural) → x) 3 » 3", Apply(&LambdaExpr{"x", Natural, x(0)}, NaturalLit(3)), NaturalLit(3)),
 		Entry("λ(x : Natural) → 2 + 3 » λ(x : Natural) → 5", &LambdaExpr{"x", Natural, NaturalPlus(NaturalLit(2), NaturalLit(3))}, &LambdaExpr{"x", Natural, NaturalLit(5)}),
 		Entry("[3 + 5] » [8]", MakeList(NaturalPlus(NaturalLit(3), NaturalLit(5))), MakeList(NaturalLit(8))),
@@ -210,6 +255,9 @@ var _ = Describe("AlphaNormalize", func() {
 		Entry("∀(x : Natural) → Natural » ∀(_ : Natural) → Natural",
 			&Pi{"x", Natural, Natural},
 			&Pi{"_", Natural, Natural}),
+		Entry("∀(x : x) → x@1 » ∀(_ : x) → x",
+			&Pi{"x", x(0), x(1)},
+			&Pi{"_", x(0), x(0)}),
 		Entry("[3 + 5] » [3 + 5]",
 			MakeList(NaturalPlus(NaturalLit(3), NaturalLit(5))),
 			MakeList(NaturalPlus(NaturalLit(3), NaturalLit(5)))),
