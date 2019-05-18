@@ -291,17 +291,34 @@ func (l Let) TypeWith(ctx *TypeContext) (Expr, error) {
 }
 
 func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
+	if a.Annotation == Sort {
+		// Γ ⊢ t : Sort
+		err := assertNormalizedTypeIs(a.Expr, ctx, Sort,
+			fmt.Errorf("Expected %v to have type Sort", a.Expr))
+		if err != nil {
+			return nil, err
+		}
+		// ─────────────────────
+		// Γ ⊢ (t : Sort) : Sort
+		return Sort, nil
+	}
+
+	// Γ ⊢ T₀ : i
 	_, err := a.Annotation.TypeWith(ctx)
 	if err != nil {
 		return nil, err
 	}
+	// Γ ⊢ t : T₁
 	t2, err := a.Expr.TypeWith(ctx)
 	if err != nil {
 		return nil, err
 	}
+	// T₀ ≡ T₁
 	if !judgmentallyEqual(a.Annotation, t2) {
 		return nil, fmt.Errorf("Annotation mismatch: inferred type %v but annotated %v", t2, a.Annotation)
 	}
+	// ─────────────────
+	// Γ ⊢ (t : T₀) : T₀
 	return t2, nil
 }
 

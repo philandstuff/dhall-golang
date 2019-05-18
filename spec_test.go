@@ -56,7 +56,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/RecursiveRecordMerge",
 	"TestTypeInference/unit/RecursiveRecordTypeMerge",
 	"TestTypeInference/unit/RightBiasedRecordMerge",
-	"TestTypeInference/unit/TypeAnnotationSort",
 	"TestTypeInference/unit/UnionLiteral", // deprecated union literal syntax
 	"TestNormalization/haskell-tutorial/combineTypes",
 	"TestNormalization/haskell-tutorial/prefer",
