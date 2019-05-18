@@ -50,5 +50,16 @@ var _ = Describe("RemoveLeadingCommonIndent removes leading common indent", func
 			//    ${True}   ${True}   foo''
 			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}, {Prefix: "   ", Expr: True}}, Suffix: "   foo"},
 			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}, {Prefix: "   ", Expr: True}}, Suffix: "   foo"}),
+		Entry("when there are multiple interpolations on the same line",
+			// this is ''
+			//    ${True} ${True}
+			//    ''
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}, {Prefix: " ", Expr: True}}, Suffix: "\n   "},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}, {Prefix: " ", Expr: True}}, Suffix: "\n"}),
+		Entry("when there is no trailing newline",
+			// this is ''
+			//    ${True}''
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: ""},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: ""}),
 	)
 })

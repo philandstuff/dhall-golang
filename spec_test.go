@@ -61,7 +61,6 @@ var expectedFailures = []string{
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",
 	"TestNormalization/prelude/Double",
-	"TestNormalization/remoteSystemsA.dhall",
 	"TestNormalization/simple/doubleShowA.dhall",      // getting precision right is tricky
 	"TestNormalization/simple/integerToDoubleA.dhall", // requires bigint representation, which the standard itself does not require
 	"TestNormalization/simple/sortOperatorA.dhall",
