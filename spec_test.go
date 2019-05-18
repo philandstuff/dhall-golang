@@ -39,7 +39,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/Quoted",
 	"TestParserAccepts/unit/UnionLit", // not going to implement union literals
 	"TestTypecheckFails/combineMixedRecords.dhall",
-	"TestTypecheckFails/duplicateFields.dhall",
+	"TestTypecheckFails/duplicateFields.dhall", // in dhall-golang, duplicate fields a parse error, not a type error
 	"TestTypecheckFails/preferMixedRecords.dhall",
 	"TestTypecheckFails/unit/MergeHandlersWithDifferentType", // test is buggy
 	"TestTypecheckFails/unit/README",                         // FIXME, shouldn't need excluding

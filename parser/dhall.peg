@@ -505,7 +505,11 @@ NonEmptyRecordType ←
           content := make(map[string]Expr, len(fields)+1)
           content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Expr)
           for _, field := range(fields) {
-              content[field.([]interface{})[0].(string)] = field.([]interface{})[1].(Expr)
+              fieldName := field.([]interface{})[0].(string)
+              if _, ok := content[fieldName]; ok {
+                  return nil, fmt.Errorf("Duplicate field %s in record", fieldName)
+              }
+              content[fieldName] = field.([]interface{})[1].(Expr)
           }
           return Record(content), nil
       }
@@ -520,7 +524,11 @@ NonEmptyRecordLiteral ←
           content := make(map[string]Expr, len(fields)+1)
           content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Expr)
           for _, field := range(fields) {
-              content[field.([]interface{})[0].(string)] = field.([]interface{})[1].(Expr)
+              fieldName := field.([]interface{})[0].(string)
+              if _, ok := content[fieldName]; ok {
+                  return nil, fmt.Errorf("Duplicate field %s in record", fieldName)
+              }
+              content[fieldName] = field.([]interface{})[1].(Expr)
           }
           return RecordLit(content), nil
       }
