@@ -22,12 +22,10 @@ import (
 var expectedFailures = []string{
 	"TestParserAccepts/annotationsA.dhall", // requires records, list append, optionals
 	"TestParserAccepts/builtinsA.dhall",    // Haven't implemented all builtins
-	"TestParserAccepts/collectionImportTypeA.dhall",
 	"TestParserAccepts/constructorsA.dhall",
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/largeExpressionA.dhall",
-	"TestParserAccepts/merge", // requires Natural/even
 	"TestParserAccepts/operatorsA.dhall",
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
@@ -47,13 +45,8 @@ var expectedFailures = []string{
 	"TestTypecheckFails/combineMixedRecords.dhall",
 	"TestTypecheckFails/duplicateFields.dhall",
 	"TestTypecheckFails/preferMixedRecords.dhall",
-	"TestTypecheckFails/unit/MergeAlternative",
-	"TestTypecheckFails/unit/MergeHandlerNotFunction",
-	"TestTypecheckFails/unit/MergeHandlerNotMatchAlternativeType",
-	"TestTypecheckFails/unit/MergeHandlersWithDifferentType",
-	"TestTypecheckFails/unit/MergeLhsNotRecord",
-	"TestTypecheckFails/unit/MergeWithWrongAnnotation",
-	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
+	"TestTypecheckFails/unit/MergeHandlersWithDifferentType", // test is buggy
+	"TestTypecheckFails/unit/README",                         // FIXME, shouldn't need excluding
 	"TestTypecheckFails/unit/RecordProjection",
 	"TestTypecheckFails/unit/RecursiveRecordMerge",
 	"TestTypecheckFails/unit/RecursiveRecordTypeMerge",
@@ -67,8 +60,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/DoubleShow",
 	"TestTypeInference/unit/IntegerShow",
 	"TestTypeInference/unit/IntegerToDouble",
-	"TestTypeInference/unit/MergeOneA.dhall",               // uses union literals
-	"TestTypeInference/unit/MergeOneWithAnnotationA.dhall", // uses union literals
 	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/RecordNestedKind",
 	"TestTypeInference/unit/RecordTypeKindLike",
@@ -78,7 +69,7 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/RecursiveRecordTypeMerge",
 	"TestTypeInference/unit/RightBiasedRecordMerge",
 	"TestTypeInference/unit/TypeAnnotationSort",
-	"TestTypeInference/unit/UnionOne", // deprecated union literal syntax
+	"TestTypeInference/unit/UnionLiteral", // deprecated union literal syntax
 	"TestNormalization/haskell-tutorial/combineTypes",
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",
@@ -94,14 +85,12 @@ var expectedFailures = []string{
 	"TestNormalization/unit/DoubleShow",
 	"TestNormalization/unit/IntegerShow",
 	"TestNormalization/unit/IntegerToDouble",
-	"TestNormalization/unit/MergeWithTypeA", // uses union literals
-	"TestNormalization/unit/NoneNaturalA",   // I don't intend to implement this; it will disappear from the standard
+	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/RecursiveRecordMerge",
 	"TestNormalization/unit/RecursiveRecordTypeMerge",
 	"TestNormalization/unit/RightBiasedRecordMerge",
-	"TestNormalization/unit/UnionNormalize",
-	"TestNormalization/unit/UnionSort",
+	"TestNormalization/unit/UnionLiteral",
 	"TestImportFails/alternative",
 	"TestImport/alternative", // needs alternative operator
 	"TestImport/fieldOrder",  // needs import hashes
