@@ -679,7 +679,7 @@ func (m Merge) TypeWith(ctx *TypeContext) (Expr, error) {
 				outputType = field
 			} else {
 				if !judgmentallyEqual(outputType, field) {
-					return nil, errors.New("all handlers must output the same type")
+					return nil, fmt.Errorf("all handlers must output the same type, but %v was not the same as %v", outputType, field)
 				}
 			}
 		} else {
@@ -699,12 +699,12 @@ func (m Merge) TypeWith(ctx *TypeContext) (Expr, error) {
 				// error reporting
 				return nil, fmt.Errorf("Variable %s used in function type body %s", altName, pi.Body)
 			}
-			thisOutputType := Shift(-1, Var{Name: altName, Index: 0}, pi.Body)
+			thisOutputType := Shift(-1, Var{Name: pi.Label, Index: 0}, pi.Body)
 			if outputType == nil {
 				outputType = thisOutputType
 			} else {
 				if !judgmentallyEqual(outputType, thisOutputType) {
-					return nil, errors.New("all handlers must output the same type")
+					return nil, fmt.Errorf("all handlers must output the same type, but %v was not the same as %v", outputType, thisOutputType)
 				}
 			}
 		}
