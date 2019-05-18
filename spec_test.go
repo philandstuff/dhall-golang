@@ -21,15 +21,12 @@ import (
 
 var expectedFailures = []string{
 	"TestParserAccepts/annotationsA.dhall", // requires records, list append, optionals
-	"TestParserAccepts/builtinsA.dhall",    // Haven't implemented all builtins
 	"TestParserAccepts/constructorsA.dhall",
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
-	"TestParserAccepts/largeExpressionA.dhall",
 	"TestParserAccepts/operatorsA.dhall",
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
-	"TestParserAccepts/text/templateA.dhall",
 	"TestParserAccepts/unionA.dhall",
 	"TestParserAccepts/unit/import/hash",
 	"TestParserAccepts/unit/import/importAlt",
@@ -57,9 +54,6 @@ var expectedFailures = []string{
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
 	"TestTypechecks/simple/unionsOfTypesA.dhall",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall",
-	"TestTypeInference/unit/DoubleShow",
-	"TestTypeInference/unit/IntegerShow",
-	"TestTypeInference/unit/IntegerToDouble",
 	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/RecordNestedKind",
 	"TestTypeInference/unit/RecordTypeKindLike",
@@ -75,16 +69,11 @@ var expectedFailures = []string{
 	"TestNormalization/haskell-tutorial/projection",
 	"TestNormalization/multiline",
 	"TestNormalization/prelude/Double",
-	"TestNormalization/prelude/Integer",
-	"TestNormalization/prelude/Natural/toDouble",
 	"TestNormalization/remoteSystemsA.dhall",
-	"TestNormalization/simple/doubleShowA.dhall",
-	"TestNormalization/simple/integerShowA.dhall",
-	"TestNormalization/simple/integerToDoubleA.dhall",
+	"TestNormalization/simple/doubleShowA.dhall",      // getting precision right is tricky
+	"TestNormalization/simple/integerToDoubleA.dhall", // requires bigint representation, which the standard itself does not require
 	"TestNormalization/simple/sortOperatorA.dhall",
-	"TestNormalization/unit/DoubleShow",
-	"TestNormalization/unit/IntegerShow",
-	"TestNormalization/unit/IntegerToDouble",
+	"TestNormalization/unit/DoubleShow",   // getting precision right is tricky
 	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/RecursiveRecordMerge",

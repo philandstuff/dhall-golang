@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"strings"
 )
@@ -165,6 +166,11 @@ const (
 	NaturalOdd       = Builtin("Natural/odd")
 	NaturalToInteger = Builtin("Natural/toInteger")
 	NaturalShow      = Builtin("Natural/show")
+
+	IntegerToDouble = Builtin("Integer/toDouble")
+	IntegerShow     = Builtin("Integer/show")
+
+	DoubleShow = Builtin("Double/show")
 
 	TextShow = Builtin("Text/show")
 
@@ -645,6 +651,12 @@ func (t Builtin) String() string {
 }
 
 func (d DoubleLit) String() string {
+	if math.IsInf(float64(d), 1) {
+		return "Infinity"
+	}
+	if math.IsInf(float64(d), -1) {
+		return "-Infinity"
+	}
 	return fmt.Sprintf("%f", d)
 }
 
@@ -1010,6 +1022,18 @@ func (app *App) Normalize() Expr {
 		case NaturalShow:
 			if n, ok := a0.(NaturalLit); ok {
 				return TextLit{Suffix: n.String()}
+			}
+		case IntegerToDouble:
+			if i, ok := a0.(IntegerLit); ok {
+				return DoubleLit(float64(i))
+			}
+		case IntegerShow:
+			if i, ok := a0.(IntegerLit); ok {
+				return TextLit{Suffix: i.String()}
+			}
+		case DoubleShow:
+			if d, ok := a0.(DoubleLit); ok {
+				return TextLit{Suffix: d.String()}
 			}
 		case TextShow:
 			if t, ok := a0.(TextLit); ok {

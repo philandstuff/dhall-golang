@@ -171,9 +171,9 @@ Reserved ←
   / "Natural/odd" { return NaturalOdd, nil }
   / "Natural/toInteger" { return NaturalToInteger, nil }
   / "Natural/show" { return NaturalShow, nil }
-  / "Integer/toDouble" { return nil, errors.New("Integer/toDouble unimplemented") }
-  / "Integer/show" { return nil, errors.New("Integer/show unimplemented") }
-  / "Double/show" { return nil, errors.New("Double/show unimplemented") }
+  / "Integer/toDouble" { return IntegerToDouble, nil }
+  / "Integer/show" { return IntegerShow, nil }
+  / "Double/show" { return DoubleShow, nil }
   / "List/build" { return ListBuild, nil }
   / "List/fold" { return ListFold, nil }
   / "List/length" { return ListLength, nil }
