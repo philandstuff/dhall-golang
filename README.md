@@ -25,22 +25,22 @@ Go bindings for dhall.
  - [X] Naturals
    - [X] `l + r` Natural addition
    - [x] `l * r` Natural multiplication
-   - [ ] Natural/* standard functions
+   - [x] Natural/* standard functions
  - [X] Integers
-   - [ ] Integer/toDouble and Integer/show
+   - [x] Integer/toDouble and Integer/show
  - [X] Doubles
-   - [ ] Double/show
+   - [ ] Double/show (it exists but doesn't pass tests)
  - [X] Lists
    - [x] `l # r` list append
-   - [ ] List/* functions
+   - [x] List/* functions
  - [x] Text
    - [x] double quote literals
    - [x] single quote literals
    - [x] text interpolation
    - [x] `l ++ r` text append
-   - [ ] Text/show standard functions
+   - [x] Text/show standard functions
  - [x] Optionals
-   - [ ] Optional/fold and Optional/build
+   - [x] Optional/fold and Optional/build
  - [x] Records
    - [x] `f.a`
    - [ ] `f.{ xs… }`
