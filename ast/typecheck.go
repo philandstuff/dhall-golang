@@ -316,34 +316,42 @@ func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Γ ⊢ t :⇥ Bool
 	if condType != Bool {
 		return nil, errors.New("if condition must be type Bool")
 	}
+	// Γ ⊢ l : L
 	tType, err := b.T.TypeWith(ctx)
 	if err != nil {
 		return nil, err
 	}
-	ttType, err := tType.TypeWith(ctx)
+	// Γ ⊢ L :⇥ Type
+	ttType, err := NormalizedTypeWith(tType, ctx)
 	if err != nil {
 		return nil, err
 	}
 	if ttType != Type {
 		return nil, errors.New("if branches must have terms, not types")
 	}
+	// Γ ⊢ r : R
 	fType, err := b.F.TypeWith(ctx)
 	if err != nil {
 		return nil, err
 	}
-	ftType, err := fType.TypeWith(ctx)
+	// Γ ⊢ R :⇥ Type
+	ftType, err := NormalizedTypeWith(fType, ctx)
 	if err != nil {
 		return nil, err
 	}
 	if ftType != Type {
 		return nil, errors.New("if branches must have terms, not types")
 	}
+	// L ≡ R
 	if !judgmentallyEqual(tType, fType) {
 		return nil, errors.New("if branches must have matching types")
 	}
+	// ──────────────────────────
+	// Γ ⊢ if t then l else r : L
 	return tType, nil
 }
 
@@ -456,8 +464,23 @@ func listElementType(e Expr) (Expr, bool) {
 }
 
 func (s Some) TypeWith(ctx *TypeContext) (Expr, error) {
-	typ, err := s.Val.TypeWith(ctx)
-	return Apply(Optional, typ), err
+	// Γ ⊢ a : A
+	A, err := s.Val.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Γ ⊢ A : Type
+	k, err := A.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if k != Type {
+		return nil, fmt.Errorf("Some must take a term, not a type like %v", s.Val)
+	}
+	// ───────────────────────
+	// Γ ⊢ Some a : Optional A
+	return Apply(Optional, A), nil
 }
 
 func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {

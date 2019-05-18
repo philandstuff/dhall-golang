@@ -20,11 +20,10 @@ import (
 )
 
 var expectedFailures = []string{
-	"TestParserAccepts/annotationsA.dhall", // requires records, list append, optionals
-	"TestParserAccepts/constructorsA.dhall",
+	"TestParserAccepts/annotationsA.dhall", // requires old optional syntax
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
-	"TestParserAccepts/operatorsA.dhall",
+	"TestParserAccepts/operatorsA.dhall", // requires record operators // //\\
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
 	"TestParserAccepts/unionA.dhall",
@@ -48,8 +47,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/RecursiveRecordMerge",
 	"TestTypecheckFails/unit/RecursiveRecordTypeMerge",
 	"TestTypecheckFails/unit/RightBiasedRecordMerge",
-	"TestTypecheckFails/unit/Some",
-	"TestTypechecks/prelude",
 	"TestTypechecks/simple/alternativesAreTypesA.dhall",
 	"TestTypechecks/simple/mergeEquivalenceA.dhall",
 	"TestTypechecks/simple/unionsOfTypesA.dhall",
@@ -67,14 +64,13 @@ var expectedFailures = []string{
 	"TestNormalization/haskell-tutorial/combineTypes",
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",
-	"TestNormalization/multiline",
 	"TestNormalization/prelude/Double",
 	"TestNormalization/remoteSystemsA.dhall",
 	"TestNormalization/simple/doubleShowA.dhall",      // getting precision right is tricky
 	"TestNormalization/simple/integerToDoubleA.dhall", // requires bigint representation, which the standard itself does not require
 	"TestNormalization/simple/sortOperatorA.dhall",
-	"TestNormalization/unit/DoubleShow",   // getting precision right is tricky
-	"TestNormalization/unit/NoneNaturalA", // I don't intend to implement this; it will disappear from the standard
+	"TestNormalization/unit/DoubleShowValue", // getting precision right is tricky
+	"TestNormalization/unit/NoneNaturalA",    // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/RecursiveRecordMerge",
 	"TestNormalization/unit/RecursiveRecordTypeMerge",
@@ -297,9 +293,15 @@ func TestTypechecks(t *testing.T) {
 			parsedB, err := parser.ParseReader(t.Name(), bReader)
 			expectNoError(t, err)
 
+			resolvedA, err := imports.Load(parsedA.(ast.Expr))
+			expectNoError(t, err)
+
+			resolvedB, err := imports.Load(parsedB.(ast.Expr))
+			expectNoError(t, err)
+
 			annot := ast.Annot{
-				Expr:       parsedA.(ast.Expr),
-				Annotation: parsedB.(ast.Expr),
+				Expr:       resolvedA.(ast.Expr),
+				Annotation: resolvedB.(ast.Expr),
 			}
 			_, err = annot.TypeWith(ast.EmptyContext())
 			expectNoError(t, err)
