@@ -253,33 +253,6 @@ func Apply(fn Expr, args ...Expr) Expr {
 	return out
 }
 
-func (app *App) NumArgs() int {
-	out := 1
-	for next, ok := app.Fn.(*App); ok; next, ok = next.Fn.(*App) {
-		out++
-	}
-	return out
-}
-
-func (app *App) BaseFn() Expr {
-	var here Expr = app
-	for true {
-		here = here.(*App).Fn
-		if _, ok := here.(*App); !ok {
-			break
-		}
-	}
-	return here
-}
-
-func (app *App) GetArg(i int) Expr {
-	here := app
-	for j := 0; j < app.NumArgs()-i-1; j++ {
-		here = here.Fn.(*App)
-	}
-	return here.Arg
-}
-
 var (
 	_ Expr = Type
 	_ Expr = &Var{}
@@ -847,121 +820,78 @@ func (pi *Pi) Normalize() Expr {
 	}
 }
 func (app *App) Normalize() Expr {
-	f := app.Fn.Normalize()
-	a := app.Arg.Normalize()
-	newapp := Apply(f, a).(*App)
-	if l, ok := f.(*LambdaExpr); ok {
-		v := MkVar(l.Label)
-		a2 := Shift(1, v, a)
-		b1 := Subst(v, a2, l.Body)
+	f0 := app.Fn.Normalize()
+	a0 := app.Arg.Normalize()
+	switch f1 := f0.(type) {
+	case *LambdaExpr:
+		v := MkVar(f1.Label)
+		a2 := Shift(1, v, a0)
+		b1 := Subst(v, a2, f1.Body)
 		b2 := Shift(-1, v, b1)
 		return b2.Normalize()
-	}
-	if b, ok := newapp.BaseFn().(Builtin); ok {
-		switch b {
-		case NaturalBuild:
-			if ap, ok := a.(*App); ok {
-				if ap.Fn == NaturalFold {
-					// Natural/build (Natural/fold b) → b
-					return ap.Arg
-				}
-			}
-			if l, ok := a.(*LambdaExpr); ok {
-				return Apply(l,
-					Natural,
-					&LambdaExpr{"x", Natural, NaturalPlus(MkVar("x"), NaturalLit(1))},
-					NaturalLit(0),
-				).Normalize()
-			}
-		case NaturalFold:
-			if newapp.NumArgs() == 4 {
-				if n, ok := newapp.GetArg(0).(NaturalLit); ok {
-					output := newapp.GetArg(3)
-					for i := 0; i < int(n); i++ {
-						output = Apply(newapp.GetArg(2), output).Normalize()
-					}
-					return output
-				}
-			}
-		case NaturalIsZero:
-			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
-				if n == 0 {
-					return True
-				} else {
-					return False
-				}
-			}
-		case NaturalEven:
-			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
-				if n%2 == 0 {
-					return True
-				} else {
-					return False
-				}
-			}
-		case NaturalOdd:
-			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
-				if n%2 == 0 {
-					return False
-				} else {
-					return True
-				}
-			}
-		case NaturalToInteger:
-			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
-				return IntegerLit(int(n))
-			}
-		case NaturalShow:
-			if n, ok := newapp.GetArg(0).(NaturalLit); ok {
-				return TextLit{Suffix: n.String()}
-			}
-		case TextShow:
-			if newapp.NumArgs() == 1 {
-				if t, ok := newapp.GetArg(0).(TextLit); ok {
-					if t.Chunks == nil || len(t.Chunks) == 0 {
-						var out strings.Builder
-						out.WriteRune('"')
-						for _, r := range t.Suffix {
-							switch r {
-							case '"':
-								out.WriteString(`\"`)
-							case '$':
-								out.WriteString(`\u0024`)
-							case '\\':
-								out.WriteString(`\\`)
-							case '\b':
-								out.WriteString(`\b`)
-							case '\f':
-								out.WriteString(`\f`)
-							case '\n':
-								out.WriteString(`\n`)
-							case '\r':
-								out.WriteString(`\r`)
-							case '\t':
-								out.WriteString(`\t`)
-							default:
-								if r < 0x1f {
-									out.WriteString(fmt.Sprintf(`\u%04x`, r))
-								} else {
-									out.WriteRune(r)
+	case *App:
+		switch f2 := f1.Fn.(type) {
+		case *App:
+			switch f3 := f2.Fn.(type) {
+			case *App:
+				switch f4 := f3.Fn.(type) {
+				case *App:
+					switch f5 := f4.Fn.(type) {
+					case Builtin: // five args: (Foo/bar f4.Arg f3.Arg f2.Arg f1.Arg a0)
+						switch f5 {
+						case ListFold:
+							cons := f1.Arg
+							output := a0
+							if list, ok := f3.Arg.(NonEmptyList); ok {
+								for i := len(list) - 1; i >= 0; i-- {
+									output = Apply(cons, list[i], output).Normalize()
+								}
+								return output
+							}
+							if _, ok := f3.Arg.(EmptyList); ok {
+								return output
+							}
+						case OptionalFold:
+							input := f3.Arg
+							someFn := f1.Arg
+							noneVal := a0
+							if someVal, ok := input.(Some); ok {
+								return Apply(someFn, someVal.Val).Normalize()
+							}
+							if appVal, ok := input.(*App); ok {
+								if appVal.Fn == None {
+									return noneVal
 								}
 							}
 						}
-						out.WriteRune('"')
-						return TextLit{Suffix: out.String()}
 					}
+				case Builtin: // four args: (Foo/bar f3.Arg f2.Arg f1.Arg a0)
+					switch f4 {
+					case NaturalFold:
+						if n, ok := f3.Arg.(NaturalLit); ok {
+							output := a0
+							for i := 0; i < int(n); i++ {
+								output = Apply(f1.Arg, output).Normalize()
+							}
+							return output
+						}
+					}
+
 				}
 			}
-		case ListBuild:
-			if newapp.NumArgs() == 2 {
-				if ap, ok := newapp.GetArg(1).(*App); ok {
-					if ap.BaseFn() == ListFold && ap.NumArgs() == 2 {
-						// List/build A₀ (List/fold A₁ b) → b
-						return ap.GetArg(1)
+		case Builtin: // two args: (Foo/bar f1.Arg a0)
+			switch f2 {
+			case ListBuild:
+				if ap0, ok := a0.(*App); ok {
+					if ap1, ok := ap0.Fn.(*App); ok {
+						if ap1.Fn == ListFold {
+							// List/build A₀ (List/fold A₁ b) → b
+							return ap0.Arg
+						}
 					}
 				}
-				A0 := newapp.GetArg(0)
-				g := newapp.GetArg(1)
+				A0 := f1.Arg
+				g := a0
 				A1 := Shift(1, Var{"a", 0}, A0)
 				return Apply(
 					g,
@@ -974,79 +904,57 @@ func (app *App) Normalize() Expr {
 							)}},
 					EmptyList{A0},
 				).Normalize()
-			}
-		case ListFold:
-			if newapp.NumArgs() == 5 {
-				cons := newapp.GetArg(3)
-				output := newapp.GetArg(4)
-				if list, ok := newapp.GetArg(1).(NonEmptyList); ok {
-					for i := len(list) - 1; i >= 0; i-- {
-						output = Apply(cons, list[i], output).Normalize()
-					}
-					return output
+			case ListReverse:
+				if _, ok := a0.(EmptyList); ok {
+					return EmptyList{f1.Arg}
 				}
-				if _, ok = newapp.GetArg(1).(EmptyList); ok {
-					return output
-				}
-			}
-		case ListLength:
-			if newapp.NumArgs() == 2 {
-				if _, ok := newapp.GetArg(1).(EmptyList); ok {
-					return NaturalLit(0)
-				}
-				if list, ok := newapp.GetArg(1).(NonEmptyList); ok {
-					return NaturalLit(len(list))
-				}
-			}
-		case ListHead, ListLast:
-			if newapp.NumArgs() == 2 {
-				if _, ok := newapp.GetArg(1).(EmptyList); ok {
-					return Apply(None, newapp.GetArg(0))
-				}
-				if l, ok := newapp.GetArg(1).(NonEmptyList); ok {
-					if b == ListHead {
-						return Some{l[0]}
-					} else {
-						return Some{l[len(l)-1]}
-					}
-				}
-			}
-		case ListIndexed:
-			if newapp.NumArgs() == 2 {
-				if _, ok := newapp.GetArg(1).(EmptyList); ok {
-					return EmptyList{Record{"index": Natural, "value": newapp.GetArg(0)}}
-				}
-				if l, ok := newapp.GetArg(1).(NonEmptyList); ok {
-					output := make([]Expr, len(l))
-					for i, a := range l {
-						output[i] = RecordLit{"index": NaturalLit(i), "value": a}
-					}
-					return NonEmptyList(output)
-				}
-			}
-		case ListReverse:
-			if newapp.NumArgs() == 2 {
-				if _, ok := newapp.GetArg(1).(EmptyList); ok {
-					return EmptyList{newapp.GetArg(0)}
-				}
-				if l, ok := newapp.GetArg(1).(NonEmptyList); ok {
+				if l, ok := a0.(NonEmptyList); ok {
 					output := make([]Expr, len(l))
 					for i, a := range l {
 						output[len(l)-i-1] = a
 					}
 					return NonEmptyList(output)
 				}
-			}
-		case OptionalBuild:
-			if newapp.NumArgs() == 2 {
-				if ap, ok := newapp.GetArg(1).(*App); ok {
-					if ap.BaseFn() == OptionalFold && ap.NumArgs() == 2 {
-						// Optional/build A₀ (Optional/fold A₁ b) → b
-						return ap.GetArg(1)
+			case ListLength:
+				if _, ok := a0.(EmptyList); ok {
+					return NaturalLit(0)
+				}
+				if list, ok := a0.(NonEmptyList); ok {
+					return NaturalLit(len(list))
+				}
+			case ListHead, ListLast:
+				if _, ok := a0.(EmptyList); ok {
+					return Apply(None, f1.Arg)
+				}
+				if l, ok := a0.(NonEmptyList); ok {
+					if f2 == ListHead {
+						return Some{l[0]}
+					} else {
+						return Some{l[len(l)-1]}
 					}
 				}
-				A0 := newapp.GetArg(0)
-				g := newapp.GetArg(1)
+			case ListIndexed:
+				if _, ok := a0.(EmptyList); ok {
+					return EmptyList{Record{"index": Natural, "value": f1.Arg}}
+				}
+				if l, ok := a0.(NonEmptyList); ok {
+					output := make([]Expr, len(l))
+					for i, a := range l {
+						output[i] = RecordLit{"index": NaturalLit(i), "value": a}
+					}
+					return NonEmptyList(output)
+				}
+			case OptionalBuild:
+				if ap0, ok := a0.(*App); ok {
+					if ap1, ok := ap0.Fn.(*App); ok {
+						if ap1.Fn == OptionalFold {
+							// Optional/build A₀ (Optional/fold A₁ b) → b
+							return ap0.Arg
+						}
+					}
+				}
+				A0 := f1.Arg
+				g := a0
 				return Apply(
 					g,
 					Apply(Optional, A0),
@@ -1054,24 +962,93 @@ func (app *App) Normalize() Expr {
 					Apply(None, A0),
 				).Normalize()
 			}
-		case OptionalFold:
-			if newapp.NumArgs() == 5 {
-
-				input := newapp.GetArg(1)
-				someFn := newapp.GetArg(3)
-				noneVal := newapp.GetArg(4)
-				if someVal, ok := input.(Some); ok {
-					return Apply(someFn, someVal.Val).Normalize()
+		}
+	case Builtin: // one arg: (Foo/bar a0)
+		switch f1 {
+		case NaturalBuild:
+			if ap, ok := a0.(*App); ok {
+				if ap.Fn == NaturalFold {
+					// Natural/build (Natural/fold b) → b
+					return ap.Arg
 				}
-				if appVal, ok := input.(*App); ok {
-					if appVal.Fn == None {
-						return noneVal
+			}
+			if l, ok := a0.(*LambdaExpr); ok {
+				return Apply(l,
+					Natural,
+					&LambdaExpr{"x", Natural, NaturalPlus(MkVar("x"), NaturalLit(1))},
+					NaturalLit(0),
+				).Normalize()
+			}
+		case NaturalIsZero:
+			if n, ok := a0.(NaturalLit); ok {
+				if n == 0 {
+					return True
+				} else {
+					return False
+				}
+			}
+		case NaturalEven:
+			if n, ok := a0.(NaturalLit); ok {
+				if n%2 == 0 {
+					return True
+				} else {
+					return False
+				}
+			}
+		case NaturalOdd:
+			if n, ok := a0.(NaturalLit); ok {
+				if n%2 == 0 {
+					return False
+				} else {
+					return True
+				}
+			}
+		case NaturalToInteger:
+			if n, ok := a0.(NaturalLit); ok {
+				return IntegerLit(int(n))
+			}
+		case NaturalShow:
+			if n, ok := a0.(NaturalLit); ok {
+				return TextLit{Suffix: n.String()}
+			}
+		case TextShow:
+			if t, ok := a0.(TextLit); ok {
+				if t.Chunks == nil || len(t.Chunks) == 0 {
+					var out strings.Builder
+					out.WriteRune('"')
+					for _, r := range t.Suffix {
+						switch r {
+						case '"':
+							out.WriteString(`\"`)
+						case '$':
+							out.WriteString(`\u0024`)
+						case '\\':
+							out.WriteString(`\\`)
+						case '\b':
+							out.WriteString(`\b`)
+						case '\f':
+							out.WriteString(`\f`)
+						case '\n':
+							out.WriteString(`\n`)
+						case '\r':
+							out.WriteString(`\r`)
+						case '\t':
+							out.WriteString(`\t`)
+						default:
+							if r < 0x1f {
+								out.WriteString(fmt.Sprintf(`\u%04x`, r))
+							} else {
+								out.WriteRune(r)
+							}
+						}
 					}
+					out.WriteRune('"')
+					return TextLit{Suffix: out.String()}
 				}
 			}
 		}
 	}
-	return newapp
+	return Apply(f0, a0)
 }
 
 func (l Let) Normalize() Expr {

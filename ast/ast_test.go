@@ -128,46 +128,6 @@ var _ = Describe("IsFreeIn", func() {
 	)
 })
 
-var _ = Describe("App", func() {
-	Describe(".NumArgs()", func() {
-		It("= 1 for None Natural", func() {
-			Expect(Apply(None, Natural).(*App).NumArgs()).To(Equal(1))
-		})
-		It("= 2 for List/build x y", func() {
-			Expect(Apply(ListBuild, MkVar("x"), MkVar("y")).(*App).NumArgs()).To(Equal(2))
-		})
-	})
-	Describe(".BaseFn()", func() {
-		It("List/fold A", func() {
-			Expect(Apply(ListFold, MkVar("A")).(*App).BaseFn()).
-				To(Equal(ListFold))
-		})
-		It("List/fold A B", func() {
-			Expect(Apply(ListFold, MkVar("A"), MkVar("B")).(*App).BaseFn()).
-				To(Equal(ListFold))
-		})
-		It("List/fold A B C", func() {
-			Expect(Apply(ListFold, MkVar("A"), MkVar("B"), MkVar("C")).(*App).BaseFn()).
-				To(Equal(ListFold))
-		})
-	})
-	Describe(".GetArg(i)", func() {
-		It("= Natural for None Natural 0", func() {
-			Expect(Apply(None, Natural).(*App).GetArg(0)).
-				To(Equal(Natural))
-		})
-		It("(List/fold A l c).GetArg(0)", func() {
-			Expect(Apply(ListFold, MkVar("A"), MkVar("l"), MkVar("c")).(*App).GetArg(0)).To(Equal(MkVar("A")))
-		})
-		It("(List/fold A l c).GetArg(1)", func() {
-			Expect(Apply(ListFold, MkVar("A"), MkVar("l"), MkVar("c")).(*App).GetArg(1)).To(Equal(MkVar("l")))
-		})
-		It("(List/fold A l c).GetArg(2)", func() {
-			Expect(Apply(ListFold, MkVar("A"), MkVar("l"), MkVar("c")).(*App).GetArg(2)).To(Equal(MkVar("c")))
-		})
-	})
-})
-
 var _ = Describe("Normalize", func() {
 	DescribeTable("Normalize",
 		func(in Expr, expected Expr) {
