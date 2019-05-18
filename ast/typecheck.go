@@ -34,6 +34,17 @@ func NormalizedTypeWith(e Expr, ctx *TypeContext) (Expr, error) {
 	return t.Normalize(), nil
 }
 
+func assertNormalizedTypeIs(expr Expr, ctx *TypeContext, expectedType Expr, msg error) error {
+	t, err := NormalizedTypeWith(expr, ctx)
+	if err != nil {
+		return err
+	}
+	if t != expectedType {
+		return msg
+	}
+	return nil
+}
+
 func (c Const) TypeWith(ctx *TypeContext) (Expr, error) {
 	switch c {
 	case Type:
@@ -298,12 +309,10 @@ func (DoubleLit) TypeWith(*TypeContext) (Expr, error) { return Double, nil }
 
 func (t TextLit) TypeWith(ctx *TypeContext) (Expr, error) {
 	for _, chunk := range t.Chunks {
-		chunkT, err := chunk.Expr.TypeWith(ctx)
+		err := assertNormalizedTypeIs(chunk.Expr, ctx, Text,
+			errors.New("Interpolated expression is not Text"))
 		if err != nil {
 			return nil, err
-		}
-		if chunkT != Text {
-			return nil, errors.New("Interpolated expression is not Text")
 		}
 	}
 	return Text, nil
@@ -312,13 +321,11 @@ func (t TextLit) TypeWith(ctx *TypeContext) (Expr, error) {
 func (BoolLit) TypeWith(*TypeContext) (Expr, error) { return Bool, nil }
 
 func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
-	condType, err := b.Cond.TypeWith(ctx)
+	// Γ ⊢ t :⇥ Bool
+	err := assertNormalizedTypeIs(b.Cond, ctx, Bool,
+		errors.New("if condition must be type Bool"))
 	if err != nil {
 		return nil, err
-	}
-	// Γ ⊢ t :⇥ Bool
-	if condType != Bool {
-		return nil, errors.New("if condition must be type Bool")
 	}
 	// Γ ⊢ l : L
 	tType, err := b.T.TypeWith(ctx)
@@ -326,12 +333,9 @@ func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, err
 	}
 	// Γ ⊢ L :⇥ Type
-	ttType, err := NormalizedTypeWith(tType, ctx)
+	err = assertNormalizedTypeIs(tType, ctx, Type, errors.New("if branches must have terms, not types"))
 	if err != nil {
 		return nil, err
-	}
-	if ttType != Type {
-		return nil, errors.New("if branches must have terms, not types")
 	}
 	// Γ ⊢ r : R
 	fType, err := b.F.TypeWith(ctx)
@@ -339,12 +343,9 @@ func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
 		return nil, err
 	}
 	// Γ ⊢ R :⇥ Type
-	ftType, err := NormalizedTypeWith(fType, ctx)
+	err = assertNormalizedTypeIs(fType, ctx, Type, errors.New("if branches must have terms, not types"))
 	if err != nil {
 		return nil, err
-	}
-	if ftType != Type {
-		return nil, errors.New("if branches must have terms, not types")
 	}
 	// L ≡ R
 	if !judgmentallyEqual(tType, fType) {
@@ -471,12 +472,10 @@ func (s Some) TypeWith(ctx *TypeContext) (Expr, error) {
 	}
 
 	// Γ ⊢ A : Type
-	k, err := A.TypeWith(ctx)
+	err = assertNormalizedTypeIs(A, ctx, Type,
+		fmt.Errorf("Some must take a term, not a type like %v", s.Val))
 	if err != nil {
 		return nil, err
-	}
-	if k != Type {
-		return nil, fmt.Errorf("Some must take a term, not a type like %v", s.Val)
 	}
 	// ───────────────────────
 	// Γ ⊢ Some a : Optional A
@@ -574,7 +573,7 @@ func (f Field) TypeWith(ctx *TypeContext) (Expr, error) {
 		return ft, nil
 	}
 
-	if rt != Type {
+	if _, ok := rt.(Const); !ok {
 		return nil, fmt.Errorf("Tried to access field from non-record non-union type: %s", rt)
 	}
 	record := f.Record.Normalize()
@@ -656,14 +655,13 @@ func (m Merge) TypeWith(ctx *TypeContext) (Expr, error) {
 		if m.Annotation == nil {
 			return nil, errors.New("empty merge requires an annotation")
 		}
-		annotationT, err := NormalizedTypeWith(m.Annotation, ctx)
+		// Γ ⊢ T :⇥ Type
+		err := assertNormalizedTypeIs(m.Annotation, ctx, Type,
+			errors.New("in `merge {=} <> : T`, T must be a Type"))
 		if err != nil {
 			return nil, err
 		}
-		// Γ ⊢ T :⇥ Type
-		if annotationT != Type {
-			return nil, errors.New("in `merge {=} <> : T`, T must be a Type")
-		}
+		// ───────────────────────
 		// Γ ⊢ (merge t u : T) : T
 		return m.Annotation, nil
 	}

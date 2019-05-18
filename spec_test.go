@@ -47,7 +47,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/RecursiveRecordMerge",
 	"TestTypecheckFails/unit/RecursiveRecordTypeMerge",
 	"TestTypecheckFails/unit/RightBiasedRecordMerge",
-	"TestTypechecks/simple/unionsOfTypesA.dhall",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
 	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/RecordNestedKind",
