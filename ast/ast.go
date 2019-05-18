@@ -842,13 +842,13 @@ func (app *App) Normalize() Expr {
 						case ListFold:
 							cons := f1.Arg
 							output := a0
-							if list, ok := f3.Arg.(NonEmptyList); ok {
+							switch list := f3.Arg.(type) {
+							case NonEmptyList:
 								for i := len(list) - 1; i >= 0; i-- {
 									output = Apply(cons, list[i], output).Normalize()
 								}
 								return output
-							}
-							if _, ok := f3.Arg.(EmptyList); ok {
+							case EmptyList:
 								return output
 							}
 						case OptionalFold:
@@ -905,41 +905,41 @@ func (app *App) Normalize() Expr {
 					EmptyList{A0},
 				).Normalize()
 			case ListReverse:
-				if _, ok := a0.(EmptyList); ok {
+				switch list := a0.(type) {
+				case EmptyList:
 					return EmptyList{f1.Arg}
-				}
-				if l, ok := a0.(NonEmptyList); ok {
-					output := make([]Expr, len(l))
-					for i, a := range l {
-						output[len(l)-i-1] = a
+				case NonEmptyList:
+					output := make([]Expr, len(list))
+					for i, a := range list {
+						output[len(list)-i-1] = a
 					}
 					return NonEmptyList(output)
 				}
 			case ListLength:
-				if _, ok := a0.(EmptyList); ok {
+				switch list := a0.(type) {
+				case EmptyList:
 					return NaturalLit(0)
-				}
-				if list, ok := a0.(NonEmptyList); ok {
+				case NonEmptyList:
 					return NaturalLit(len(list))
 				}
 			case ListHead, ListLast:
-				if _, ok := a0.(EmptyList); ok {
+				switch list := a0.(type) {
+				case EmptyList:
 					return Apply(None, f1.Arg)
-				}
-				if l, ok := a0.(NonEmptyList); ok {
+				case NonEmptyList:
 					if f2 == ListHead {
-						return Some{l[0]}
+						return Some{list[0]}
 					} else {
-						return Some{l[len(l)-1]}
+						return Some{list[len(list)-1]}
 					}
 				}
 			case ListIndexed:
-				if _, ok := a0.(EmptyList); ok {
+				switch list := a0.(type) {
+				case EmptyList:
 					return EmptyList{Record{"index": Natural, "value": f1.Arg}}
-				}
-				if l, ok := a0.(NonEmptyList); ok {
-					output := make([]Expr, len(l))
-					for i, a := range l {
+				case NonEmptyList:
+					output := make([]Expr, len(list))
+					for i, a := range list {
 						output[i] = RecordLit{"index": NaturalLit(i), "value": a}
 					}
 					return NonEmptyList(output)
