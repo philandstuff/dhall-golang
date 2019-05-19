@@ -37,7 +37,7 @@ DhallFile ← e:CompleteExpression EOF { return e, nil }
 
 CompleteExpression ← _ e:Expression _ { return e, nil }
 
-EOL ← "\n" / "\r\n"
+EOL ← "\n" / "\r\n" { return []byte{'\n'}, nil }
 
 BlockComment ← "{-" BlockCommentContinue
 
@@ -138,7 +138,7 @@ EscapedInterpolation ← "''${" { return []byte("$\u007b"), nil }
 SingleQuoteChar ←
      [\x20-\U0010ffff]
    / '\t'
-   / '\n'
+   / EOL
 
 SingleQuoteLiteral ← "''" EOL content:SingleQuoteContinue {
     var str strings.Builder

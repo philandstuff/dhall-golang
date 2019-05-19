@@ -26,7 +26,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/operatorsA.dhall", // requires record operators // //\\
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
-	"TestParserAccepts/unionA.dhall",
+	"TestParserAccepts/unionA.dhall", // deprecated syntax
 	"TestParserAccepts/unit/import/hash",
 	"TestParserAccepts/unit/import/importAlt",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
