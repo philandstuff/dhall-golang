@@ -1182,6 +1182,27 @@ func (b BoolIf) Normalize() Expr {
 
 func (n NaturalLit) Normalize() Expr { return n }
 
+func mustMergeRecordLits(l RecordLit, r RecordLit) RecordLit {
+	output := make(RecordLit)
+	for k, v := range l {
+		output[k] = v
+	}
+	for k, v := range r {
+		if lField, ok := output[k]; ok {
+			lSubrecord, Lok := lField.(RecordLit)
+			rSubrecord, Rok := v.(RecordLit)
+			if !(Lok && Rok) {
+				// typecheck ought to have caught this
+				panic("Record mismatch")
+			}
+			output[k] = mustMergeRecordLits(lSubrecord, rSubrecord)
+		} else {
+			output[k] = v
+		}
+	}
+	return output
+}
+
 func (op Operator) Normalize() Expr {
 	L := op.L.Normalize()
 	R := op.R.Normalize()
@@ -1286,6 +1307,17 @@ func (op Operator) Normalize() Expr {
 		if lOk && rOk {
 			return NonEmptyList(append(lList, rList...))
 		}
+	case RecordMergeOp:
+		Lr, Lok := L.(RecordLit)
+		Rr, Rok := R.(RecordLit)
+
+		if Lok && len(Lr) == 0 {
+			return R
+		} else if Rok && len(Rr) == 0 {
+			return L
+		} else if Lok && Rok {
+			return mustMergeRecordLits(Lr, Rr)
+		}
 	case RightBiasedRecordMergeOp:
 		Lr, Lok := L.(RecordLit)
 		Rr, Rok := R.(RecordLit)
@@ -1303,6 +1335,21 @@ func (op Operator) Normalize() Expr {
 				output[k] = v
 			}
 			return output
+		}
+	case RecordTypeMergeOp:
+		Lr, Lok := L.(Record)
+		Rr, Rok := R.(Record)
+
+		if Lok && len(Lr) == 0 {
+			return R
+		} else if Rok && len(Rr) == 0 {
+			return L
+		} else if Lok && Rok {
+			out, err := mergeRecords(Lr, Rr)
+			if err != nil {
+				panic(err)
+			}
+			return out
 		}
 	}
 	return Operator{OpCode: op.OpCode, L: L, R: R}

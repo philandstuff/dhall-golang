@@ -43,14 +43,8 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/RecordProjection",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
 	"TestTypeInference/unit/OldOptional",
-	"TestTypeInference/unit/RecordNestedKind",
-	"TestTypeInference/unit/RecordTypeKindLike",
-	"TestTypeInference/unit/RecordTypeNestedKind",
 	"TestTypeInference/unit/RecordProjection",
-	"TestTypeInference/unit/RecursiveRecordMerge",
-	"TestTypeInference/unit/RecursiveRecordTypeMerge",
 	"TestTypeInference/unit/UnionLiteral", // deprecated union literal syntax
-	"TestNormalization/haskell-tutorial/combineTypes",
 	"TestNormalization/haskell-tutorial/projection",
 	"TestNormalization/prelude/Double",
 	"TestNormalization/simple/doubleShowA.dhall",      // getting precision right is tricky
@@ -58,8 +52,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/DoubleShowValue",          // getting precision right is tricky
 	"TestNormalization/unit/NoneNaturalA",             // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
-	"TestNormalization/unit/RecursiveRecordMerge",
-	"TestNormalization/unit/RecursiveRecordTypeMerge",
 	"TestNormalization/unit/UnionLiteral",
 	"TestImportFails/alternative",
 	"TestImport/alternative", // needs alternative operator

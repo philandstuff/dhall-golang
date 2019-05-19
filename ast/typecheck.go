@@ -375,6 +375,30 @@ func (b BoolIf) TypeWith(ctx *TypeContext) (Expr, error) {
 
 func (NaturalLit) TypeWith(*TypeContext) (Expr, error) { return Natural, nil }
 
+func mergeRecords(l Record, r Record) (Record, error) {
+	var err error
+	output := make(Record)
+	for k, v := range l {
+		output[k] = v
+	}
+	for k, v := range r {
+		if lField, ok := output[k]; ok {
+			lSubrecord, Lok := lField.(Record)
+			rSubrecord, Rok := v.(Record)
+			if !(Lok && Rok) {
+				return nil, errors.New("Record mismatch")
+			}
+			output[k], err = mergeRecords(lSubrecord, rSubrecord)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			output[k] = v
+		}
+	}
+	return output, nil
+}
+
 func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 	switch op.OpCode {
 	case OrOp, AndOp, EqOp, NeOp:
@@ -429,6 +453,37 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 			return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
 		}
 		return lt, nil
+	case RecordMergeOp:
+		lt, err := NormalizedTypeWith(op.L, ctx)
+		if err != nil {
+			return nil, err
+		}
+		ltr, ok := lt.(Record)
+		if !ok {
+			return nil, fmt.Errorf("The ∧ operator operates on records, not %v", lt)
+		}
+		ltt, err := NormalizedTypeWith(lt, ctx)
+		if err != nil {
+			return nil, err
+		}
+		rt, err := NormalizedTypeWith(op.R, ctx)
+		if err != nil {
+			return nil, err
+		}
+		rtr, ok := rt.(Record)
+		if !ok {
+			return nil, fmt.Errorf("The ∧ operator operates on records, not %v", rt)
+		}
+		rtt, err := NormalizedTypeWith(rt, ctx)
+		if err != nil {
+			return nil, err
+		}
+		if ltt != rtt {
+			// trying to mix a record of Types with a record of Kinds
+			// (or Sorts)
+			return nil, fmt.Errorf("Can't merge a record of type %v (a %v) with record of type %v (a %v)", lt, ltt, rt, rtt)
+		}
+		return mergeRecords(ltr, rtr)
 	case RightBiasedRecordMergeOp:
 		lt, err := NormalizedTypeWith(op.L, ctx)
 		if err != nil {
@@ -467,6 +522,35 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 			output[k] = v
 		}
 		return output, nil
+	case RecordTypeMergeOp:
+		lt, err := NormalizedTypeWith(op.L, ctx)
+		if err != nil {
+			return nil, err
+		}
+		rt, err := NormalizedTypeWith(op.R, ctx)
+		if err != nil {
+			return nil, err
+		}
+		if lt != rt {
+			// trying to mix a record of Types with a record of Kinds
+			// (or Sorts)
+			return nil, fmt.Errorf("Can't merge a record of type %v (a %v) with record of type %v (a %v)", op.L, lt, op.R, rt)
+		}
+
+		lr, ok := op.L.Normalize().(Record)
+		if !ok {
+			return nil, fmt.Errorf("The ∧ operator operates on records, not %v", lt)
+		}
+		rr, ok := op.R.Normalize().(Record)
+		if !ok {
+			return nil, fmt.Errorf("The ∧ operator operates on records, not %v", rt)
+		}
+		// ensure that the records are safe to merge
+		_, err = mergeRecords(lr, rr)
+		if err != nil {
+			return nil, err
+		}
+		return lt, nil
 	}
 	return nil, fmt.Errorf("Unknown opcode in %+v", op)
 }
@@ -560,11 +644,6 @@ func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {
 				return nil, fmt.Errorf("can't mix %s and %s", c, k)
 			}
 		}
-		if c == Sort {
-			if typ.Normalize() != Kind {
-				return nil, errors.New("Invalid field type")
-			}
-		}
 		first = false
 	}
 	return c, nil
@@ -592,11 +671,6 @@ func (r RecordLit) TypeWith(ctx *TypeContext) (Expr, error) {
 		} else {
 			if c.Normalize() != k.Normalize() {
 				return nil, fmt.Errorf("can't mix %s and %s", c, k)
-			}
-		}
-		if c == Sort {
-			if typ.Normalize() != Kind {
-				return nil, errors.New("Invalid field type")
 			}
 		}
 		fieldTypes[name] = typ
