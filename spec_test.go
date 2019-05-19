@@ -23,7 +23,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/annotationsA.dhall", // requires old optional syntax
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
-	"TestParserAccepts/operatorsA.dhall", // requires record operators // //\\
 	"TestParserAccepts/quotedBoundVariableA.dhall",
 	"TestParserAccepts/quotedLabelA.dhall",
 	"TestParserAccepts/unionA.dhall", // deprecated syntax
@@ -37,17 +36,12 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/urls/potPourri",       // needs all the URL features
 	"TestParserAccepts/unit/import/urls/quotedPath",      // needs quotedPaths
 	"TestParserAccepts/unit/Quoted",
-	"TestParserAccepts/unit/UnionLit", // not going to implement union literals
-	"TestTypecheckFails/combineMixedRecords.dhall",
-	"TestTypecheckFails/duplicateFields.dhall", // in dhall-golang, duplicate fields a parse error, not a type error
-	"TestTypecheckFails/preferMixedRecords.dhall",
+	"TestParserAccepts/unit/UnionLit",                        // not going to implement union literals
+	"TestTypecheckFails/duplicateFields.dhall",               // in dhall-golang, duplicate fields a parse error, not a type error
 	"TestTypecheckFails/unit/MergeHandlersWithDifferentType", // test is buggy
 	"TestTypecheckFails/unit/README",                         // FIXME, shouldn't need excluding
 	"TestTypecheckFails/unit/RecordProjection",
-	"TestTypecheckFails/unit/RecursiveRecordMerge",
-	"TestTypecheckFails/unit/RecursiveRecordTypeMerge",
-	"TestTypecheckFails/unit/RightBiasedRecordMerge",
-	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
+	"TestTypeInference/simple/alternativesAreTypesA.dhall",   // old union literals
 	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/RecordNestedKind",
 	"TestTypeInference/unit/RecordTypeKindLike",
