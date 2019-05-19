@@ -41,7 +41,7 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/MergeHandlersWithDifferentType", // test is buggy
 	"TestTypecheckFails/unit/README",                         // FIXME, shouldn't need excluding
 	"TestTypecheckFails/unit/RecordProjection",
-	"TestTypeInference/simple/alternativesAreTypesA.dhall",   // old union literals
+	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
 	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/RecordNestedKind",
 	"TestTypeInference/unit/RecordTypeKindLike",
@@ -49,21 +49,17 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/RecordProjection",
 	"TestTypeInference/unit/RecursiveRecordMerge",
 	"TestTypeInference/unit/RecursiveRecordTypeMerge",
-	"TestTypeInference/unit/RightBiasedRecordMerge",
 	"TestTypeInference/unit/UnionLiteral", // deprecated union literal syntax
 	"TestNormalization/haskell-tutorial/combineTypes",
-	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",
 	"TestNormalization/prelude/Double",
 	"TestNormalization/simple/doubleShowA.dhall",      // getting precision right is tricky
 	"TestNormalization/simple/integerToDoubleA.dhall", // requires bigint representation, which the standard itself does not require
-	"TestNormalization/simple/sortOperatorA.dhall",
-	"TestNormalization/unit/DoubleShowValue", // getting precision right is tricky
-	"TestNormalization/unit/NoneNaturalA",    // I don't intend to implement this; it will disappear from the standard
+	"TestNormalization/unit/DoubleShowValue",          // getting precision right is tricky
+	"TestNormalization/unit/NoneNaturalA",             // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/RecursiveRecordMerge",
 	"TestNormalization/unit/RecursiveRecordTypeMerge",
-	"TestNormalization/unit/RightBiasedRecordMerge",
 	"TestNormalization/unit/UnionLiteral",
 	"TestImportFails/alternative",
 	"TestImport/alternative", // needs alternative operator

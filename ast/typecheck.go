@@ -429,6 +429,44 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 			return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
 		}
 		return lt, nil
+	case RightBiasedRecordMergeOp:
+		lt, err := NormalizedTypeWith(op.L, ctx)
+		if err != nil {
+			return nil, err
+		}
+		ltr, ok := lt.(Record)
+		if !ok {
+			return nil, fmt.Errorf("The ⫽ operator operates on records, not %v", lt)
+		}
+		ltt, err := NormalizedTypeWith(lt, ctx)
+		if err != nil {
+			return nil, err
+		}
+		rt, err := NormalizedTypeWith(op.R, ctx)
+		if err != nil {
+			return nil, err
+		}
+		rtr, ok := rt.(Record)
+		if !ok {
+			return nil, fmt.Errorf("The ⫽ operator operates on records, not %v", rt)
+		}
+		rtt, err := NormalizedTypeWith(rt, ctx)
+		if err != nil {
+			return nil, err
+		}
+		if ltt != rtt {
+			// trying to mix a record of Types with a record of Kinds
+			// (or Sorts)
+			return nil, fmt.Errorf("Can't merge a record of type %v (a %v) with record of type %v (a %v)", lt, ltt, rt, rtt)
+		}
+		output := make(Record)
+		for k, v := range ltr {
+			output[k] = v
+		}
+		for k, v := range rtr {
+			output[k] = v
+		}
+		return output, nil
 	}
 	return nil, fmt.Errorf("Unknown opcode in %+v", op)
 }

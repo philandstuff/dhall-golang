@@ -736,9 +736,13 @@ func (op Operator) String() string {
 	case ListAppendOp:
 		opStr = "#"
 	case RecordMergeOp:
+		opStr = "∧"
 	case RightBiasedRecordMergeOp:
+		opStr = "⫽"
 	case RecordTypeMergeOp:
+		opStr = "⩓"
 	case ImportAltOp:
+		opStr = "?"
 	default:
 		panic(fmt.Sprintf("unknown opcode in Operator struct %#v", op))
 	}
@@ -1282,7 +1286,24 @@ func (op Operator) Normalize() Expr {
 		if lOk && rOk {
 			return NonEmptyList(append(lList, rList...))
 		}
+	case RightBiasedRecordMergeOp:
+		Lr, Lok := L.(RecordLit)
+		Rr, Rok := R.(RecordLit)
 
+		if Lok && len(Lr) == 0 {
+			return R
+		} else if Rok && len(Rr) == 0 {
+			return L
+		} else if Lok && Rok {
+			output := make(RecordLit)
+			for k, v := range Lr {
+				output[k] = v
+			}
+			for k, v := range Rr {
+				output[k] = v
+			}
+			return output
+		}
 	}
 	return Operator{OpCode: op.OpCode, L: L, R: R}
 }
