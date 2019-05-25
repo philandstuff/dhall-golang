@@ -13,7 +13,7 @@ Go bindings for dhall.
  - [X] Type, Kind, Sort
  - [X] Variables
    - [X] de bruijn indices
-   - [ ] quoted variables
+   - [x] quoted variables
  - [X] Lambdas, Pis, function application
    - [x] Alpha normalization
  - [X] Let bindings

@@ -70,9 +70,11 @@ SimpleLabel ← Keyword SimpleLabelNextChar+ { return string(c.text), nil }
             return string(c.text), nil
           }
 
-// QuotedLabel
+QuotedLabelChar ← [\x20-\x5f\x61-\x7e]
+QuotedLabel ← QuotedLabelChar+ { return string(c.text), nil }
 
-Label ← label:SimpleLabel { return label, nil }
+Label ← '`' label:QuotedLabel '`' { return label, nil }
+      / label:SimpleLabel { return label, nil }
 
 NonreservedLabel ← &(Reserved SimpleLabelNextChar) label:Label { return label, nil }
                 / !Reserved label:Label { return label, nil }
