@@ -3,6 +3,8 @@ package parser
 
 import (
 "bytes"
+"crypto/sha256"
+"encoding/hex"
 "errors"
 "fmt"
 "io"
@@ -376,7 +378,29 @@ PosixEnvironmentVariableCharacter ←
 
 ImportType ← Missing / Local / Http / Env
 
-ImportHashed ← i:ImportType { return ImportHashed{Fetchable: i.(Fetchable)}, nil }
+// ugh, there seems to be no fixed-repetition operator in pigeon :(
+HashValue = HexDig HexDig HexDig HexDig HexDig HexDig HexDig HexDig
+            HexDig HexDig HexDig HexDig HexDig HexDig HexDig HexDig
+            HexDig HexDig HexDig HexDig HexDig HexDig HexDig HexDig
+            HexDig HexDig HexDig HexDig HexDig HexDig HexDig HexDig
+            HexDig HexDig HexDig HexDig HexDig HexDig HexDig HexDig
+            HexDig HexDig HexDig HexDig HexDig HexDig HexDig HexDig
+            HexDig HexDig HexDig HexDig HexDig HexDig HexDig HexDig
+            HexDig HexDig HexDig HexDig HexDig HexDig HexDig HexDig {
+    out := make([]byte, sha256.Size)
+    _, err := hex.Decode(out, c.text)
+    if err != nil { return nil, err }
+    return out, nil
+}
+Hash = "sha256:" val:HashValue { return append([]byte{0x12,0x20}, val.([]byte)...), nil }
+
+ImportHashed ← i:ImportType h:(_1 Hash)? {
+    out := ImportHashed{Fetchable: i.(Fetchable)}
+    if h != nil {
+        out.Hash = h.([]interface{})[1].([]byte)
+    }
+    return out, nil
+}
 
 Import ← i:ImportHashed _ As _1 Text { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}), nil }
        / i:ImportHashed { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Code}), nil }

@@ -294,6 +294,7 @@ var (
 
 type ImportHashed struct {
 	Fetchable
+	Hash []byte // stored in multihash form - ie first two bytes are 0x12 0x20
 }
 
 type ImportMode byte

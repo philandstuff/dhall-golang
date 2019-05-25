@@ -583,31 +583,30 @@ func (box *CborBox) CodecEncodeSelf(e *codec.Encoder) {
 		if val.ImportMode == RawText {
 			mode = 1
 		}
-		var hash interface{} // unimplemented, leave as nil for now
 		switch rr := r.(type) {
 		case EnvVar:
-			e.Encode([]interface{}{24, hash, mode, 6, string(rr)})
+			e.Encode([]interface{}{24, val.Hash, mode, 6, string(rr)})
 		case Local:
 			if rr.IsAbs() {
-				toEncode := []interface{}{24, hash, mode, AbsoluteImport}
+				toEncode := []interface{}{24, val.Hash, mode, AbsoluteImport}
 				for _, component := range rr.PathComponents() {
 					toEncode = append(toEncode, component)
 				}
 				e.Encode(toEncode)
 			} else if rr.IsRelativeToParent() {
-				toEncode := []interface{}{24, hash, mode, ParentImport}
+				toEncode := []interface{}{24, val.Hash, mode, ParentImport}
 				for _, component := range rr.PathComponents() {
 					toEncode = append(toEncode, component)
 				}
 				e.Encode(toEncode)
 			} else if rr.IsRelativeToHome() {
-				toEncode := []interface{}{24, hash, mode, HomeImport}
+				toEncode := []interface{}{24, val.Hash, mode, HomeImport}
 				for _, component := range rr.PathComponents() {
 					toEncode = append(toEncode, component)
 				}
 				e.Encode(toEncode)
 			} else {
-				toEncode := []interface{}{24, hash, mode, HereImport}
+				toEncode := []interface{}{24, val.Hash, mode, HereImport}
 				for _, component := range rr.PathComponents() {
 					toEncode = append(toEncode, component)
 				}
@@ -619,7 +618,7 @@ func (box *CborBox) CodecEncodeSelf(e *codec.Encoder) {
 			if rr.IsPlainHttp() {
 				scheme = HttpImport
 			}
-			toEncode := []interface{}{24, hash, mode, scheme, headers, rr.Authority()}
+			toEncode := []interface{}{24, val.Hash, mode, scheme, headers, rr.Authority()}
 			for _, component := range rr.PathComponents() {
 				toEncode = append(toEncode, component)
 			}

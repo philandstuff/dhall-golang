@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"bytes"
+	"encoding/hex"
 	"io"
 	"io/ioutil"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -23,7 +25,6 @@ var expectedFailures = []string{
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/unionA.dhall", // deprecated syntax
-	"TestParserAccepts/unit/import/hash",
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
 	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals, which I won't implement
@@ -41,18 +42,17 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/RecordProjection",
 	"TestTypeInference/unit/UnionLiteral", // deprecated union literal syntax
 	"TestNormalization/haskell-tutorial/projection",
-	"TestNormalization/prelude/Map",                   // requires import hashes
 	"TestNormalization/simple/integerToDoubleA.dhall", // requires bigint representation, which the standard itself does not require
 	"TestNormalization/unit/NoneNaturalA",             // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/UnionLiteral",
-	"TestImport/alternativeHashMismatchA.dhall", // needs alternative operator
 	"TestImport/customHeadersA.dhall",
-	"TestImport/fieldOrder",    // needs import hashes
 	"TestImport/hashFromCache", // needs reading from cache
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
-	"TestImportFails/hashMismatch", // needs import hashes
+	"TestSemanticHash/haskell-tutorial/projection", // requires projection
+	"TestSemanticHash/prelude/Natural/toDouble/1A", // Double binary encoding issues
+	"TestSemanticHash/simple/integerToDouble",      // oversized int (we don't support bigints)
 }
 
 func pass(t *testing.T) {
@@ -93,6 +93,13 @@ func expectEqual(t *testing.T, expected, actual interface{}) {
 	t.Helper()
 	if !reflect.DeepEqual(expected, actual) {
 		failf(t, "Expected %+v to equal %+v", actual, expected)
+	}
+}
+
+func expectEqualBytes(t *testing.T, expected, actual []byte) {
+	t.Helper()
+	if !reflect.DeepEqual(expected, actual) {
+		failf(t, "Expected %x to equal %x", actual, expected)
 	}
 }
 
@@ -369,6 +376,35 @@ func TestImport(t *testing.T) {
 			expectNoError(t, err)
 
 			expectEqualExprs(t, resolvedB, resolvedA)
+		})
+}
+
+func TestSemanticHash(t *testing.T) {
+	sha256re := regexp.MustCompile("^sha256:([0-9a-fA-F]{64})\n$")
+	runTestOnFilePairs(t, "dhall-lang/tests/semantic-hash/success/",
+		"A.dhall", "B.hash",
+		func(t *testing.T, aReader, bReader io.Reader) {
+			parsedA, err := parser.ParseReader(t.Name(), aReader)
+			expectNoError(t, err)
+			resolvedA, err := imports.Load(parsedA.(ast.Expr))
+			expectNoError(t, err)
+
+			actualHash, err := ast.SemanticHash(resolvedA)
+			expectNoError(t, err)
+
+			expectedHashStr, err := ioutil.ReadAll(bReader)
+			expectNoError(t, err)
+
+			groups := sha256re.FindSubmatch(expectedHashStr)
+			if groups == nil {
+				t.Fatalf("Couldn't parse expected hash string %s", expectedHashStr)
+			}
+
+			expectedRawHash := make([]byte, 32)
+			_, err = hex.Decode(expectedRawHash, groups[1])
+			expectNoError(t, err)
+
+			expectEqualBytes(t, append([]byte{0x12, 0x20}, expectedRawHash...), actualHash)
 		})
 }
 

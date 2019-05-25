@@ -1,6 +1,7 @@
 package imports
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/philandstuff/dhall-golang/ast"
@@ -43,8 +44,9 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
+		var expr Expr
 		if i.ImportMode == RawText {
-			return TextLit{Suffix: content}, nil
+			expr = TextLit{Suffix: content}
 		} else {
 			// dynamicExpr may contain more imports
 			dynamicExpr, err := ResolveStringAsExpr(r.Name(), content)
@@ -53,7 +55,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			}
 
 			// recursively load any more imports
-			expr, err := Load(dynamicExpr, imports...)
+			expr, err = Load(dynamicExpr, imports...)
 			if err != nil {
 				return nil, err
 			}
@@ -63,8 +65,18 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			if err != nil {
 				return nil, err
 			}
-			return expr, nil
 		}
+		// check hash, if supplied
+		if i.Hash != nil {
+			actualHash, err := ast.SemanticHash(expr)
+			if err != nil {
+				return nil, err
+			}
+			if !bytes.Equal(i.Hash, actualHash[:]) {
+				return nil, fmt.Errorf("Failed integrity check: expected %x but saw %x", i.Hash, actualHash)
+			}
+		}
+		return expr, nil
 	case *LambdaExpr:
 		resolvedType, err := Load(e.Type, ancestors...)
 		if err != nil {
