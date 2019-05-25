@@ -44,9 +44,9 @@ Go bindings for dhall.
  - [x] Records
    - [x] `f.a`
    - [ ] `f.{ xs… }`
-   - [ ] `l ∧ r`
-   - [ ] `l ⫽ r`
-   - [ ] `l ⩓ r`
+   - [x] `l ∧ r`
+   - [x] `l ⫽ r`
+   - [x] `l ⩓ r`
  - [x] Unions
    - [x] types
    - [x] constructors
