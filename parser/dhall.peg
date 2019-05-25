@@ -436,8 +436,8 @@ EmptyList ← '[' _ ']' _ ':' _1 List _ a:ImportExpression {
 
 OperatorExpression ← ImportAltExpression
 
-ImportAltExpression  ← OrExpression
-
+ImportAltExpression    ← first:OrExpression           rest:(_ "?" _ OrExpression)*
+  {return ParseOperator(ImportAltOp, first, rest), nil}
 OrExpression           ← first:PlusExpression         rest:(_ "||" _ PlusExpression)*
   {return ParseOperator(OrOp, first, rest), nil}
 PlusExpression         ← first:TextAppendExpression   rest:(_ '+' _1 e:TextAppendExpression)*

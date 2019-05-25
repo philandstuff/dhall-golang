@@ -244,7 +244,7 @@ func (i Embed) CodecEncodeSelf(e *codec.Encoder) {
 		toEncode = append(toEncode, rr.Query())
 		e.Encode(toEncode)
 	case Missing:
-		e.Encode("Missing unimplemented")
+		e.Encode([]interface{}{24, nil, 0, 7})
 	default:
 		panic("can't happen")
 	}

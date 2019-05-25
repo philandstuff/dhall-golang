@@ -169,6 +169,17 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			F:    resolvedF,
 		}, nil
 	case Operator:
+		if e.OpCode == ImportAltOp {
+			resolvedL, err := Load(e.L, ancestors...)
+			if err == nil {
+				return resolvedL, nil
+			}
+			resolvedR, err := Load(e.R, ancestors...)
+			if err != nil {
+				return nil, err
+			}
+			return resolvedR, nil
+		}
 		resolvedL, err := Load(e.L, ancestors...)
 		if err != nil {
 			return nil, err

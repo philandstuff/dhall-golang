@@ -25,7 +25,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/unionA.dhall", // deprecated syntax
 	"TestParserAccepts/unit/import/hash",
-	"TestParserAccepts/unit/import/importAlt",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
 	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals, which I won't implement
 	"TestParserAccepts/unit/import/quotedPaths",          // needs.. quoted paths
@@ -49,9 +48,8 @@ var expectedFailures = []string{
 	"TestNormalization/unit/NoneNaturalA",             // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/UnionLiteral",
-	"TestImportFails/alternative",
-	"TestImport/alternative", // needs alternative operator
-	"TestImport/fieldOrder",  // needs import hashes
+	"TestImport/alternativeHashMismatchA.dhall", // needs alternative operator
+	"TestImport/fieldOrder",                     // needs import hashes
 }
 
 func pass(t *testing.T) {
