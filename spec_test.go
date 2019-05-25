@@ -27,16 +27,15 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/hash",
 	"TestParserAccepts/unit/import/importAlt",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
-	"TestParserAccepts/unit/import/pathTerminationUnion",     // needs union literals, which I won't implement
-	"TestParserAccepts/unit/import/quotedPaths",              // needs.. quoted paths
-	"TestParserAccepts/unit/import/unicodePaths",             // needs quoted paths
-	"TestParserAccepts/unit/import/urlsA",                    // needs all the URL features
-	"TestParserAccepts/unit/import/urls/potPourri",           // needs all the URL features
-	"TestParserAccepts/unit/import/urls/quotedPath",          // needs quotedPaths
-	"TestParserAccepts/unit/UnionLit",                        // not going to implement union literals
-	"TestTypecheckFails/duplicateFields.dhall",               // in dhall-golang, duplicate fields a parse error, not a type error
-	"TestTypecheckFails/unit/MergeHandlersWithDifferentType", // test is buggy
-	"TestTypecheckFails/unit/README",                         // FIXME, shouldn't need excluding
+	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals, which I won't implement
+	"TestParserAccepts/unit/import/quotedPaths",          // needs.. quoted paths
+	"TestParserAccepts/unit/import/unicodePaths",         // needs quoted paths
+	"TestParserAccepts/unit/import/urlsA",                // needs all the URL features
+	"TestParserAccepts/unit/import/urls/potPourri",       // needs all the URL features
+	"TestParserAccepts/unit/import/urls/quotedPath",      // needs quotedPaths
+	"TestParserAccepts/unit/UnionLit",                    // not going to implement union literals
+	"TestTypecheckFails/duplicateFields.dhall",           // in dhall-golang, duplicate fields a parse error, not a type error
+	"TestTypecheckFails/unit/README",                     // FIXME, shouldn't need excluding
 	"TestTypecheckFails/unit/RecordProjection",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
 	"TestTypeInference/unit/OldOptional",
