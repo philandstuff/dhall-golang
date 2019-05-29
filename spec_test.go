@@ -23,7 +23,8 @@ var expectedFailures = []string{
 	"TestParserAccepts/annotationsA.dhall", // requires old optional syntax
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
-	"TestParserAccepts/unionA.dhall", // deprecated syntax
+	"TestParserAccepts/largeExpressionA.dhall", // fixed by dhall-lang/dhall-lang#565
+	"TestParserAccepts/unionA.dhall",           // deprecated syntax
 	"TestParserAccepts/unit/import/hash",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
 	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals, which I won't implement

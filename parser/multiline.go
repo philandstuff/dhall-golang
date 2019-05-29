@@ -27,32 +27,46 @@ func RemoveLeadingCommonIndent(text ast.TextLit) ast.TextLit {
 	return trimmedText
 }
 
-func allTheLines(text ast.TextLit) []string {
-	if len(text.Chunks) == 0 {
-		return strings.Split(text.Suffix, "\n")
+func nonBlankLinesPlusPossibleBlankLastLine(s string) []string {
+	lines := strings.FieldsFunc(s, func(r rune) bool { return r == '\n' })
+	if len(s) > 0 && s[len(s)-1] == '\n' {
+		lines = append(lines, "")
 	}
-
-	chunkLines := make([]string, 0)
-	for i, chunk := range text.Chunks {
-		if i == 0 {
-			chunkLines = append(chunkLines, strings.Split(chunk.Prefix, "\n")...)
-		} else {
-			// skip the first split, because it's a trailing portion of the previous line
-			chunkLines = append(chunkLines, strings.Split(chunk.Prefix, "\n")[1:]...)
-		}
-	}
-	// skip the first split, because it's a trailing portion of the previous line
-	return append(chunkLines, strings.Split(text.Suffix, "\n")[1:]...)
+	return lines
 }
 
-// lines must be a nonempty slice
-func longestCommonIndentPrefix(text ast.TextLit) string {
-	lines := allTheLines(text)
-	var prefix strings.Builder
-	firstLine := strings.Split(text.Suffix, "\n")[0]
-	if text.Chunks != nil {
-		firstLine = strings.Split(text.Chunks[0].Prefix, "\n")[0]
+func allNonBlankLines(text ast.TextLit) []string {
+	if len(text.Chunks) == 0 {
+		return nonBlankLinesPlusPossibleBlankLastLine(text.Suffix)
 	}
+
+	lines := make([]string, 0)
+	for i, chunk := range text.Chunks {
+		thisChunkLines := nonBlankLinesPlusPossibleBlankLastLine(chunk.Prefix)
+		if i == 0 {
+			lines = append(lines, thisChunkLines...)
+		} else {
+			// skip the first line, because it's a trailing portion of the previous line
+			if len(thisChunkLines) >= 1 {
+				lines = append(lines, thisChunkLines[1:]...)
+			}
+		}
+	}
+	// skip the first line, because it's a trailing portion of the previous line
+	suffixLines := nonBlankLinesPlusPossibleBlankLastLine(text.Suffix)
+	if len(suffixLines) >= 1 {
+		lines = append(lines, suffixLines[1:]...)
+	}
+	return lines
+}
+
+func longestCommonIndentPrefix(text ast.TextLit) string {
+	lines := allNonBlankLines(text)
+	if len(lines) == 0 {
+		return ""
+	}
+	var prefix strings.Builder
+	firstLine := lines[0]
 	otherLines := lines[1:]
 	// we range over bytes rather than runes because a) indexing byte
 	// arrays is easier than indexing runes in strings, and b) we know
@@ -63,11 +77,7 @@ Loop:
 		if ch != '\t' && ch != ' ' {
 			break Loop
 		}
-		for j, line := range otherLines {
-			if line == "" && j+1 != len(otherLines) {
-				// ignore blank lines unless they are the last line
-				continue
-			}
+		for _, line := range otherLines {
 			if i >= len(line) || line[i] != ch {
 				break Loop
 			}
