@@ -50,6 +50,7 @@ var expectedFailures = []string{
 	"TestNormalization/unit/UnionLiteral",
 	"TestImport/alternativeHashMismatchA.dhall", // needs alternative operator
 	"TestImport/fieldOrder",                     // needs import hashes
+	"TestImportFails/hashMismatch",              // needs import hashes
 }
 
 func pass(t *testing.T) {
