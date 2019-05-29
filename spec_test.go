@@ -142,23 +142,26 @@ func runTestOnEachFile(
 	test func(*testing.T, io.Reader),
 ) {
 	err := filepath.Walk(dir,
-		func(path string, info os.FileInfo, err error) error {
+		func(testPath string, info os.FileInfo, err error) error {
 			if info.IsDir() {
 				return nil
 			}
 			if err != nil {
 				return err
 			}
-			reader, err := os.Open(path)
+			reader, err := os.Open(testPath)
 			if err != nil {
 				t.Fatal(err)
 			}
 			defer reader.Close()
-			name := strings.Replace(path, dir, "", 1)
+			name := strings.Replace(testPath, dir, "", 1)
+			wd, _ := os.Getwd()
+			os.Chdir(path.Dir(testPath))
 			t.Run(name, func(t *testing.T) {
 				test(t, reader)
 				pass(t)
 			})
+			os.Chdir(wd)
 			return nil
 		})
 	if err != nil {
