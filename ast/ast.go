@@ -111,7 +111,7 @@ type (
 		F    Expr
 	}
 
-	NaturalLit int
+	NaturalLit uint
 
 	IntegerLit int
 
@@ -639,7 +639,16 @@ func (app *App) StringNoParens() string {
 }
 
 func (l Let) String() string {
-	panic("unimplemented")
+	var b strings.Builder
+	for _, binding := range l.Bindings {
+		if binding.Annotation != nil {
+			b.WriteString(fmt.Sprintf("let %v : %v = %v\n", binding.Variable, binding.Annotation, binding.Value))
+		} else {
+			b.WriteString(fmt.Sprintf("let %v = %v\n", binding.Variable, binding.Value))
+		}
+	}
+	b.WriteString(fmt.Sprintf("in %v", l.Body))
+	return b.String()
 }
 
 func (a Annot) String() string {
@@ -839,7 +848,7 @@ func (m Merge) String() string {
 }
 
 func (e Embed) String() string {
-	panic("unimplemented")
+	return e.Fetchable.String()
 }
 
 func (c Const) Normalize() Expr { return c }
@@ -1269,10 +1278,10 @@ func (op Operator) Normalize() Expr {
 		Rn, Rok := R.(NaturalLit)
 
 		if Lok && Rok {
-			return NaturalLit(int(Ln) + int(Rn))
-		} else if Lok && int(Ln) == 0 {
+			return NaturalLit(uint(Ln) + uint(Rn))
+		} else if Lok && uint(Ln) == 0 {
 			return R
-		} else if Rok && int(Rn) == 0 {
+		} else if Rok && uint(Rn) == 0 {
 			return L
 		}
 	case TimesOp:
@@ -1280,14 +1289,14 @@ func (op Operator) Normalize() Expr {
 		Rn, Rok := R.(NaturalLit)
 
 		if Lok && Rok {
-			return NaturalLit(int(Ln) * int(Rn))
-		} else if Lok && int(Ln) == 0 {
+			return NaturalLit(uint(Ln) * uint(Rn))
+		} else if Lok && uint(Ln) == 0 {
 			return NaturalLit(0)
-		} else if Lok && int(Ln) == 1 {
+		} else if Lok && uint(Ln) == 1 {
 			return R
-		} else if Rok && int(Rn) == 0 {
+		} else if Rok && uint(Rn) == 0 {
 			return NaturalLit(0)
-		} else if Rok && int(Rn) == 1 {
+		} else if Rok && uint(Rn) == 1 {
 			return L
 		}
 	case TextAppendOp:

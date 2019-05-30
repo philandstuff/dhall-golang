@@ -234,7 +234,7 @@ func TestParserAccepts(t *testing.T) {
 			expectNoError(t, err)
 
 			aEnc := codec.NewEncoder(actualBuf, &cbor)
-			err = aEnc.Encode(parsed)
+			err = aEnc.Encode(ast.Box(parsed.(ast.Expr)))
 			expectNoError(t, err)
 
 			expected, err := ioutil.ReadAll(bReader)
@@ -370,4 +370,31 @@ func TestImport(t *testing.T) {
 
 			expectEqualExprs(t, resolvedB, resolvedA)
 		})
+}
+
+func TestBinaryDecode(t *testing.T) {
+	cbor := ast.NewCborHandle()
+	runTestOnFilePairs(t, "dhall-lang/tests/binary-decode/success/",
+		"A.dhallb", "B.dhall",
+		func(t *testing.T, aReader, bReader io.Reader) {
+			var exprBox ast.CborBox
+			aDec := codec.NewDecoder(aReader, &cbor)
+			err := aDec.Decode(&exprBox)
+			expectNoError(t, err)
+
+			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			expectNoError(t, err)
+
+			expectEqualExprs(t, parsedB.(ast.Expr), exprBox.Content)
+		})
+}
+
+func TestBinaryDecodeFails(t *testing.T) {
+	cbor := ast.NewCborHandle()
+	runTestOnEachFile(t, "dhall-lang/tests/binary-decode/failure/", func(t *testing.T, reader io.Reader) {
+		var exprBox ast.CborBox
+		dec := codec.NewDecoder(reader, &cbor)
+		err := dec.Decode(&exprBox)
+		expectError(t, err)
+	})
 }

@@ -26,6 +26,7 @@ type Fetchable interface {
 	// the `origin` parameter should be `scheme://authority` or NullOrigin
 	Fetch(origin string) (string, error)
 	ChainOnto(base Fetchable) (Fetchable, error)
+	String() string
 }
 
 var _ Fetchable = EnvVar("")
@@ -35,6 +36,9 @@ var _ Fetchable = Missing{}
 
 func (e EnvVar) Name() string { return string(e) }
 func (EnvVar) Origin() string { return NullOrigin }
+func (e EnvVar) String() string {
+	return "env:" + string(e)
+}
 func (e EnvVar) Fetch(origin string) (string, error) {
 	if origin != NullOrigin {
 		return "", errors.New("Can't access environment variable from remote import")
@@ -51,6 +55,13 @@ func (e EnvVar) ChainOnto(base Fetchable) (Fetchable, error) {
 
 func (l Local) Name() string { return string(l) }
 func (Local) Origin() string { return NullOrigin }
+func (l Local) String() string {
+	if l.IsAbs() || l.IsRelativeToHome() || l.IsRelativeToParent() {
+		return string(l)
+	} else {
+		return "./" + string(l)
+	}
+}
 func (l Local) Fetch(origin string) (string, error) {
 	if origin != NullOrigin {
 		return "", fmt.Errorf("Can't get %s from remote import at %s", l, origin)
@@ -109,6 +120,7 @@ var client http.Client
 
 func (r Remote) Name() string   { return r.url.String() }
 func (r Remote) Origin() string { return fmt.Sprintf("%s://%s", r.url.Scheme, r.Authority()) }
+func (r Remote) String() string { return fmt.Sprintf("%v", r.url) }
 func (r Remote) Fetch(origin string) (string, error) {
 	req, err := http.NewRequest("GET", r.url.String(), nil)
 	if err != nil {
@@ -169,6 +181,7 @@ func (r Remote) Query() *string {
 
 func (Missing) Name() string   { return "" }
 func (Missing) Origin() string { return NullOrigin }
+func (Missing) String() string { return "missing" }
 func (Missing) Fetch(origin string) (string, error) {
 	return "", errors.New("Cannot resolve missing import")
 }

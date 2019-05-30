@@ -63,3 +63,4 @@ Go bindings for dhall.
    - [x] `missing`
  - [X] unmarshalling into Go types
  - [ ] better errors
+ - [ ] better godoc
