@@ -250,7 +250,7 @@ var _ = Describe("Import resolution", func() {
 		Entry("Import within TextLit",
 			TextLit{
 				Chunks: []Chunk{
-					Chunk{
+					{
 						Prefix: "foo",
 						Expr:   importFooAsText,
 					}},
@@ -258,7 +258,7 @@ var _ = Describe("Import resolution", func() {
 			},
 			TextLit{
 				Chunks: []Chunk{
-					Chunk{
+					{
 						Prefix: "foo",
 						Expr:   resolvedFooAsText,
 					},

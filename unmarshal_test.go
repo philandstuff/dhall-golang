@@ -51,7 +51,7 @@ var _ = Describe("Unmarshal", func() {
 		Entry("unmarshals List (List Bool) into slice",
 			ast.MakeList(ast.MakeList(ast.True, ast.False)),
 			new([][]bool),
-			[][]bool{[]bool{true, false}}),
+			[][]bool{{true, false}}),
 	)
 	Describe("Function types", func() {
 		It("Unmarshals the identity int function", func() {
