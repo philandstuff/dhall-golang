@@ -657,7 +657,7 @@ func (d DoubleLit) String() string {
 	if math.IsInf(float64(d), -1) {
 		return "-Infinity"
 	}
-	return fmt.Sprintf("%f", d)
+	return fmt.Sprintf("%g", d)
 }
 
 func (t TextLit) String() string {

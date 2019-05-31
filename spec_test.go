@@ -43,10 +43,7 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/RecordProjection",
 	"TestTypeInference/unit/UnionLiteral", // deprecated union literal syntax
 	"TestNormalization/haskell-tutorial/projection",
-	"TestNormalization/prelude/Double",
-	"TestNormalization/simple/doubleShowA.dhall",      // getting precision right is tricky
 	"TestNormalization/simple/integerToDoubleA.dhall", // requires bigint representation, which the standard itself does not require
-	"TestNormalization/unit/DoubleShowValue",          // getting precision right is tricky
 	"TestNormalization/unit/NoneNaturalA",             // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/UnionLiteral",
