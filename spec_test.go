@@ -25,6 +25,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/unionA.dhall", // deprecated syntax
 	"TestParserAccepts/unit/import/hash",
+	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
 	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals, which I won't implement
 	"TestParserAccepts/unit/import/quotedPaths",          // needs.. quoted paths
@@ -36,6 +37,7 @@ var expectedFailures = []string{
 	"TestTypecheckFails/duplicateFields.dhall",           // in dhall-golang, duplicate fields a parse error, not a type error
 	"TestTypecheckFails/unit/README",                     // FIXME, shouldn't need excluding
 	"TestTypecheckFails/unit/RecordProjection",
+	"TestTypecheckFails/customHeadersUsingBoundVariable",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
 	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/RecordProjection",
@@ -49,8 +51,11 @@ var expectedFailures = []string{
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/UnionLiteral",
 	"TestImport/alternativeHashMismatchA.dhall", // needs alternative operator
-	"TestImport/fieldOrder",                     // needs import hashes
-	"TestImportFails/hashMismatch",              // needs import hashes
+	"TestImport/customHeadersA.dhall",
+	"TestImport/fieldOrder", // needs import hashes
+	"TestImport/headerForwardingA.dhall",
+	"TestImport/noHeaderForwardingA.dhall",
+	"TestImportFails/hashMismatch", // needs import hashes
 }
 
 func pass(t *testing.T) {
