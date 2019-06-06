@@ -20,7 +20,6 @@ import (
 )
 
 var expectedFailures = []string{
-	"TestParserAccepts/annotationsA.dhall", // requires old optional syntax
 	// FIXME binary encoding doesn't match here
 	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/unionA.dhall", // deprecated syntax
@@ -39,17 +38,18 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/RecordProjection",
 	"TestTypecheckFails/customHeadersUsingBoundVariable",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
-	"TestTypeInference/unit/OldOptional",
 	"TestTypeInference/unit/RecordProjection",
 	"TestTypeInference/unit/UnionLiteral", // deprecated union literal syntax
 	"TestNormalization/haskell-tutorial/projection",
+	"TestNormalization/prelude/Map",                   // requires import hashes
 	"TestNormalization/simple/integerToDoubleA.dhall", // requires bigint representation, which the standard itself does not require
 	"TestNormalization/unit/NoneNaturalA",             // I don't intend to implement this; it will disappear from the standard
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/UnionLiteral",
 	"TestImport/alternativeHashMismatchA.dhall", // needs alternative operator
 	"TestImport/customHeadersA.dhall",
-	"TestImport/fieldOrder", // needs import hashes
+	"TestImport/fieldOrder",    // needs import hashes
+	"TestImport/hashFromCache", // needs reading from cache
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
 	"TestImportFails/hashMismatch", // needs import hashes
