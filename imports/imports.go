@@ -27,6 +27,12 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				return nil, fmt.Errorf("Detected import cycle in %s", ancestor)
 			}
 		}
+		if i.Hash != nil {
+			// fetch from cache if available
+			if expr := fetchFromCache(i.Hash); expr != nil {
+				return expr, nil
+			}
+		}
 		var r Fetchable
 		r = i.Fetchable
 		origin := ast.NullOrigin
@@ -75,6 +81,8 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			if !bytes.Equal(i.Hash, actualHash[:]) {
 				return nil, fmt.Errorf("Failed integrity check: expected %x but saw %x", i.Hash, actualHash)
 			}
+			// store in cache
+			saveToCache(actualHash, expr)
 		}
 		return expr, nil
 	case *LambdaExpr:

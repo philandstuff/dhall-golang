@@ -56,10 +56,10 @@ Go bindings for dhall.
    - [x] remote imports
    - [x] environment variable imports
    - [ ] `using ./headers`
-   - [ ] import caching
+   - [x] import caching
    - [x] importing expressions
    - [x] importing `as Text`
-   - [ ] `x ? y` alternate import operator
+   - [x] `x ? y` alternate import operator
    - [x] `missing`
  - [X] unmarshalling into Go types
  - [ ] better errors

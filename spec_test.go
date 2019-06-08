@@ -46,7 +46,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/RecordProjection",
 	"TestNormalization/unit/UnionLiteral",
 	"TestImport/customHeadersA.dhall",
-	"TestImport/hashFromCache", // needs reading from cache
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
 	"TestSemanticHash/haskell-tutorial/projection", // requires projection
@@ -357,6 +356,11 @@ func TestImportFails(t *testing.T) {
 }
 
 func TestImport(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Setenv("XDG_CACHE_HOME", cwd+"/dhall-lang/tests/import/cache")
 	runTestOnFilePairs(t, "dhall-lang/tests/import/success/",
 		"A.dhall", "B.dhall",
 		func(t *testing.T, aReader, bReader io.Reader) {
