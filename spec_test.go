@@ -18,7 +18,6 @@ import (
 	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
 	"github.com/pkg/errors"
-	"github.com/ugorji/go/codec"
 )
 
 var expectedFailures = []string{
@@ -232,7 +231,6 @@ func TestParserRejects(t *testing.T) {
 }
 
 func TestParserAccepts(t *testing.T) {
-	cbor := ast.NewCborHandle()
 	runTestOnFilePairs(t, "dhall-lang/tests/parser/success/",
 		"A.dhall", "B.dhallb",
 		func(t *testing.T, aReader, bReader io.Reader) {
@@ -240,8 +238,7 @@ func TestParserAccepts(t *testing.T) {
 			parsed, err := parser.ParseReader(t.Name(), aReader)
 			expectNoError(t, err)
 
-			aEnc := codec.NewEncoder(actualBuf, &cbor)
-			err = aEnc.Encode(ast.Box(parsed.(ast.Expr)))
+			err = ast.EncodeAsCbor(actualBuf, parsed.(ast.Expr))
 			expectNoError(t, err)
 
 			expected, err := ioutil.ReadAll(bReader)
@@ -409,28 +406,22 @@ func TestSemanticHash(t *testing.T) {
 }
 
 func TestBinaryDecode(t *testing.T) {
-	cbor := ast.NewCborHandle()
 	runTestOnFilePairs(t, "dhall-lang/tests/binary-decode/success/",
 		"A.dhallb", "B.dhall",
 		func(t *testing.T, aReader, bReader io.Reader) {
-			var exprBox ast.CborBox
-			aDec := codec.NewDecoder(aReader, &cbor)
-			err := aDec.Decode(&exprBox)
+			expr, err := ast.DecodeAsCbor(aReader)
 			expectNoError(t, err)
 
 			parsedB, err := parser.ParseReader(t.Name(), bReader)
 			expectNoError(t, err)
 
-			expectEqualExprs(t, parsedB.(ast.Expr), exprBox.Content)
+			expectEqualExprs(t, parsedB.(ast.Expr), expr)
 		})
 }
 
 func TestBinaryDecodeFails(t *testing.T) {
-	cbor := ast.NewCborHandle()
 	runTestOnEachFile(t, "dhall-lang/tests/binary-decode/failure/", func(t *testing.T, reader io.Reader) {
-		var exprBox ast.CborBox
-		dec := codec.NewDecoder(reader, &cbor)
-		err := dec.Decode(&exprBox)
+		_, err := ast.DecodeAsCbor(reader)
 		expectError(t, err)
 	})
 }

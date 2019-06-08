@@ -3,11 +3,14 @@ package ast
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"path"
 
 	"github.com/ugorji/go/codec"
 )
+
+var cbor = newCborHandle()
 
 var nameToBuiltin = map[string]Expr{
 	"Type": Type,
@@ -85,7 +88,7 @@ func decodeMap(i interface{}) (map[string]Expr, error) {
 			if t == nil {
 				decodedM[name] = nil
 			} else {
-				decodedM[name], err = Decode(t)
+				decodedM[name], err = decode(t)
 				if err != nil {
 					return nil, err
 				}
@@ -96,7 +99,7 @@ func decodeMap(i interface{}) (map[string]Expr, error) {
 	return nil, fmt.Errorf("couldn't interpret %v as map[string]interface{}", i)
 }
 
-func Decode(decodedCbor interface{}) (Expr, error) {
+func decode(decodedCbor interface{}) (Expr, error) {
 	switch val := decodedCbor.(type) {
 	case uint64:
 		// _@n
@@ -135,13 +138,13 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				if len(val) <= 2 {
 					return nil, errors.New("Invalid CBOR: must have at least one arg in application")
 				}
-				fn, err := Decode(val[1])
+				fn, err := decode(val[1])
 				if err != nil {
 					return nil, err
 				}
 				args := make([]Expr, len(val)-2)
 				for i, arg := range val[2:] {
-					args[i], err = Decode(arg)
+					args[i], err = decode(arg)
 					if err != nil {
 						return nil, err
 					}
@@ -153,11 +156,11 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				var err error
 				switch len(val) {
 				case 3: // implicit _ name
-					t, err = Decode(val[1])
+					t, err = decode(val[1])
 					if err != nil {
 						return nil, err
 					}
-					body, err = Decode(val[2])
+					body, err = decode(val[2])
 					if err != nil {
 						return nil, err
 					}
@@ -169,11 +172,11 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 					if name == "_" {
 						return nil, errors.New("Invalid CBOR: explicit _ variable name")
 					}
-					t, err = Decode(val[2])
+					t, err = decode(val[2])
 					if err != nil {
 						return nil, err
 					}
-					body, err = Decode(val[3])
+					body, err = decode(val[3])
 					if err != nil {
 						return nil, err
 					}
@@ -189,11 +192,11 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				if len(val) != 4 {
 					return nil, fmt.Errorf("CBOR decode error: an operator takes exactly two arguments")
 				}
-				l, err := Decode(val[2])
+				l, err := decode(val[2])
 				if err != nil {
 					return nil, err
 				}
-				r, err := Decode(val[3])
+				r, err := decode(val[3])
 				if err != nil {
 					return nil, err
 				}
@@ -210,7 +213,7 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 					if len(val) > 2 {
 						return nil, fmt.Errorf("CBOR decode error: nonempty lists must not have an annotation in %v", val)
 					}
-					t, err := Decode(val[1])
+					t, err := decode(val[1])
 					if err != nil {
 						return nil, err
 					}
@@ -219,7 +222,7 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				items := make([]Expr, len(val)-2)
 				for i, rawItem := range val[2:] {
 					var err error
-					items[i], err = Decode(rawItem)
+					items[i], err = decode(rawItem)
 					if err != nil {
 						return nil, err
 					}
@@ -229,7 +232,7 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				if len(val) != 3 || val[1] != nil {
 					return nil, fmt.Errorf("CBOR decode error: malformed Some expression: %v", val)
 				}
-				val, err := Decode(val[2])
+				val, err := decode(val[2])
 				if err != nil {
 					return nil, err
 				}
@@ -239,17 +242,17 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				var err error
 				switch len(val) {
 				case 4:
-					annotation, err = Decode(val[3])
+					annotation, err = decode(val[3])
 					if err != nil {
 						return nil, err
 					}
 					fallthrough
 				case 3:
-					l, err := Decode(val[1])
+					l, err := decode(val[1])
 					if err != nil {
 						return nil, err
 					}
-					r, err := Decode(val[2])
+					r, err := decode(val[2])
 					if err != nil {
 						return nil, err
 					}
@@ -268,7 +271,7 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 					return RecordLit(m), nil
 				}
 			case 9: // field access (r.x or u.x)
-				recordOrUnionType, err := Decode(val[1])
+				recordOrUnionType, err := decode(val[1])
 				if err != nil {
 					return nil, err
 				}
@@ -287,15 +290,15 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				// case 12: // union literal (deprecated)
 				// case 13: // constructors (now removed)
 			case 14: // if
-				cond, err := Decode(val[1])
+				cond, err := decode(val[1])
 				if err != nil {
 					return nil, err
 				}
-				tBranch, err := Decode(val[2])
+				tBranch, err := decode(val[2])
 				if err != nil {
 					return nil, err
 				}
-				fBranch, err := Decode(val[3])
+				fBranch, err := decode(val[3])
 				if err != nil {
 					return nil, err
 				}
@@ -320,7 +323,7 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 					if err != nil {
 						return nil, err
 					}
-					expr, err := Decode(val[i+1])
+					expr, err := decode(val[i+1])
 					if err != nil {
 						return nil, err
 					}
@@ -411,7 +414,7 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				if len(val)%3 != 2 {
 					return nil, fmt.Errorf("CBOR decode error: unexpected array length %d when decoding let", len(val))
 				}
-				body, err := Decode(val[len(val)-1])
+				body, err := decode(val[len(val)-1])
 				if err != nil {
 					return nil, err
 				}
@@ -423,12 +426,12 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 					}
 					var annotation Expr
 					if val[i+1] != nil {
-						annotation, err = Decode(val[i+1])
+						annotation, err = decode(val[i+1])
 						if err != nil {
 							return nil, err
 						}
 					}
-					value, err := Decode(val[i+2])
+					value, err := decode(val[i+2])
 					if err != nil {
 						return nil, err
 					}
@@ -436,11 +439,11 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 				}
 				return MakeLet(body, bindings...), nil
 			case 26: // annotated expression
-				expr, err := Decode(val[1])
+				expr, err := decode(val[1])
 				if err != nil {
 					return nil, err
 				}
-				annotation, err := Decode(val[2])
+				annotation, err := decode(val[2])
 				if err != nil {
 					return nil, err
 				}
@@ -452,14 +455,14 @@ func Decode(decodedCbor interface{}) (Expr, error) {
 }
 
 // a marker type for CBOR-encoding purposes
-type CborBox struct{ Content Expr }
+type cborBox struct{ content Expr }
 
-var _ codec.Selfer = &CborBox{}
+var _ codec.Selfer = &cborBox{}
 
-func Box(expr Expr) *CborBox { return &CborBox{Content: expr} }
+func box(expr Expr) *cborBox { return &cborBox{content: expr} }
 
-func (box *CborBox) CodecEncodeSelf(e *codec.Encoder) {
-	switch val := box.Content.(type) {
+func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
+	switch val := b.content.(type) {
 	case Var:
 		if val.Name == "_" {
 			e.Encode(val.Index)
@@ -481,74 +484,74 @@ func (box *CborBox) CodecEncodeSelf(e *codec.Encoder) {
 		e.Encode(string(val))
 	case *App:
 		fn := val.Fn
-		args := []interface{}{Box(val.Arg)}
+		args := []interface{}{box(val.Arg)}
 		for true {
 			parentapp, ok := fn.(*App)
 			if !ok {
 				break
 			}
 			fn = parentapp.Fn
-			args = append([]interface{}{Box(parentapp.Arg)}, args...)
+			args = append([]interface{}{box(parentapp.Arg)}, args...)
 		}
-		e.Encode(append([]interface{}{0, Box(fn)}, args...))
+		e.Encode(append([]interface{}{0, box(fn)}, args...))
 
 	case *LambdaExpr:
 		if val.Label == "_" {
-			e.Encode([]interface{}{1, Box(val.Type), Box(val.Body)})
+			e.Encode([]interface{}{1, box(val.Type), box(val.Body)})
 		} else {
-			e.Encode([]interface{}{1, val.Label, Box(val.Type), Box(val.Body)})
+			e.Encode([]interface{}{1, val.Label, box(val.Type), box(val.Body)})
 		}
 	case *Pi:
 		if val.Label == "_" {
-			e.Encode([]interface{}{2, Box(val.Type), Box(val.Body)})
+			e.Encode([]interface{}{2, box(val.Type), box(val.Body)})
 		} else {
-			e.Encode([]interface{}{2, val.Label, Box(val.Type), Box(val.Body)})
+			e.Encode([]interface{}{2, val.Label, box(val.Type), box(val.Body)})
 		}
 	case Operator:
-		e.Encode([]interface{}{3, val.OpCode, Box(val.L), Box(val.R)})
+		e.Encode([]interface{}{3, val.OpCode, box(val.L), box(val.R)})
 	case EmptyList:
-		e.Encode([]interface{}{4, Box(val.Type)})
+		e.Encode([]interface{}{4, box(val.Type)})
 	case NonEmptyList:
 		items := []Expr(val)
 		output := make([]interface{}, len(items)+2)
 		output[0] = 4
 		output[1] = nil
 		for i, item := range items {
-			output[i+2] = Box(item)
+			output[i+2] = box(item)
 		}
 		e.Encode(output)
 	case Some:
-		e.Encode([]interface{}{5, nil, Box(val.Val)})
+		e.Encode([]interface{}{5, nil, box(val.Val)})
 	case Merge:
 		if val.Annotation != nil {
-			e.Encode([]interface{}{6, Box(val.Handler), Box(val.Union), Box(val.Annotation)})
+			e.Encode([]interface{}{6, box(val.Handler), box(val.Union), box(val.Annotation)})
 		} else {
-			e.Encode([]interface{}{6, Box(val.Handler), Box(val.Union)})
+			e.Encode([]interface{}{6, box(val.Handler), box(val.Union)})
 		}
 	case Record:
-		items := make(map[string]*CborBox)
+		items := make(map[string]*cborBox)
 		for k, v := range val {
-			items[k] = Box(v)
+			items[k] = box(v)
 		}
 		// we rely on the EncodeOptions having Canonical set
 		// so that we get sorted keys in our map
 		output := []interface{}{7, items}
 		e.Encode(output)
 	case RecordLit:
-		items := make(map[string]*CborBox)
+		items := make(map[string]*cborBox)
 		for k, v := range val {
-			items[k] = Box(v)
+			items[k] = box(v)
 		}
 		// we rely on the EncodeOptions having Canonical set
 		// so that we get sorted keys in our map
 		output := []interface{}{8, items}
 		e.Encode(output)
 	case Field:
-		e.Encode([]interface{}{9, Box(val.Record), val.FieldName})
+		e.Encode([]interface{}{9, box(val.Record), val.FieldName})
 	case UnionType:
-		items := make(map[string]*CborBox)
+		items := make(map[string]*cborBox)
 		for k, v := range val {
-			items[k] = Box(v)
+			items[k] = box(v)
 		}
 		// we rely on the EncodeOptions having Canonical set
 		// so that we get sorted keys in our map
@@ -557,7 +560,7 @@ func (box *CborBox) CodecEncodeSelf(e *codec.Encoder) {
 	case BoolLit:
 		e.Encode(bool(val))
 	case BoolIf:
-		e.Encode([]interface{}{14, Box(val.Cond), Box(val.T), Box(val.F)})
+		e.Encode([]interface{}{14, box(val.Cond), box(val.T), box(val.F)})
 	case NaturalLit:
 		e.Encode(append([]interface{}{15}, int(val)))
 	case IntegerLit:
@@ -573,7 +576,7 @@ func (box *CborBox) CodecEncodeSelf(e *codec.Encoder) {
 	case TextLit:
 		output := []interface{}{18}
 		for _, chunk := range val.Chunks {
-			output = append(output, chunk.Prefix, Box(chunk.Expr))
+			output = append(output, chunk.Prefix, box(chunk.Expr))
 		}
 		output = append(output, val.Suffix)
 		e.Encode(output)
@@ -634,33 +637,47 @@ func (box *CborBox) CodecEncodeSelf(e *codec.Encoder) {
 		output[0] = 25
 		for i, binding := range val.Bindings {
 			output[3*i+1] = binding.Variable
-			output[3*i+2] = Box(binding.Annotation)
-			output[3*i+3] = Box(binding.Value)
+			output[3*i+2] = box(binding.Annotation)
+			output[3*i+3] = box(binding.Value)
 		}
-		output[len(output)-1] = Box(val.Body)
+		output[len(output)-1] = box(val.Body)
 		e.Encode(output)
 	case Annot:
-		e.Encode([]interface{}{26, Box(val.Expr), Box(val.Annotation)})
+		e.Encode([]interface{}{26, box(val.Expr), box(val.Annotation)})
 	default:
-		e.Encode(box.Content)
+		e.Encode(b.content)
 	}
 }
 
-func (box *CborBox) CodecDecodeSelf(d *codec.Decoder) {
+func (b *cborBox) CodecDecodeSelf(d *codec.Decoder) {
 	var raw interface{}
 	d.MustDecode(&raw)
-	expr, err := Decode(raw)
+	expr, err := decode(raw)
 	if err != nil {
 		panic(err)
 	}
-	box.Content = expr
+	b.content = expr
 }
 
-func NewCborHandle() codec.CborHandle {
+// EncodeAsCbor encodes an Expr as CBOR and writes it to the io.Writer
+func EncodeAsCbor(w io.Writer, e Expr) error {
+	enc := codec.NewEncoder(w, cbor)
+	return enc.Encode(box(e))
+}
+
+// DecodeAsCbor decodes CBOR from the io.Reader and returns the resulting Expr
+func DecodeAsCbor(r io.Reader) (Expr, error) {
+	var b cborBox
+	dec := codec.NewDecoder(r, cbor)
+	err := dec.Decode(&b)
+	return b.content, err
+}
+
+func newCborHandle() *codec.CborHandle {
 	var h codec.CborHandle
 	h.Canonical = true
 	h.SkipUnexpectedTags = true
-	return h
+	return &h
 }
 
 const (
