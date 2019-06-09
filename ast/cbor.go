@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/url"
 	"path"
 
@@ -566,12 +567,22 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 	case IntegerLit:
 		e.Encode(append([]interface{}{16}, int(val)))
 	case DoubleLit:
-		// TODO: size appropriately
-		single := float32(val)
-		if float64(single) == float64(val) {
-			e.Encode(single)
+		// special-case values to encode as float16
+		if float64(val) == 0.0 { // 0.0
+			e.Encode(codec.Raw([]byte{0xf9, 0x00, 0x00}))
+		} else if math.IsNaN(float64(val)) { // NaN
+			e.Encode(codec.Raw([]byte{0xf9, 0x7e, 0x00}))
+		} else if math.IsInf(float64(val), 1) { // Infinity
+			e.Encode(codec.Raw([]byte{0xf9, 0x7c, 0x00}))
+		} else if math.IsInf(float64(val), -1) { // -Infinity
+			e.Encode(codec.Raw([]byte{0xf9, 0xfc, 0x00}))
 		} else {
-			e.Encode(float64(val))
+			single := float32(val)
+			if float64(single) == float64(val) {
+				e.Encode(single)
+			} else {
+				e.Encode(float64(val))
+			}
 		}
 	case TextLit:
 		output := []interface{}{18}
@@ -677,6 +688,7 @@ func newCborHandle() *codec.CborHandle {
 	var h codec.CborHandle
 	h.Canonical = true
 	h.SkipUnexpectedTags = true
+	h.Raw = true
 	return &h
 }
 

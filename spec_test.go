@@ -21,8 +21,6 @@ import (
 )
 
 var expectedFailures = []string{
-	// FIXME binary encoding doesn't match here
-	"TestParserAccepts/doubleA.dhall",
 	"TestParserAccepts/unionA.dhall", // deprecated syntax
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
@@ -49,7 +47,6 @@ var expectedFailures = []string{
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
 	"TestSemanticHash/haskell-tutorial/projection", // requires projection
-	"TestSemanticHash/prelude/Natural/toDouble/1A", // Double binary encoding issues
 	"TestSemanticHash/simple/integerToDouble",      // oversized int (we don't support bigints)
 }
 
