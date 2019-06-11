@@ -99,10 +99,17 @@ DoubleQuoteEscaped ←
      / 'n' { return []byte("\n"), nil }
      / 'r' { return []byte("\r"), nil }
      / 't' { return []byte("\t"), nil }
-     / 'u' HexDig HexDig HexDig HexDig {
-        i, err := strconv.ParseInt(string(c.text[1:]), 16, 32)
-        return []byte(string([]rune{rune(i)})), err
-     }
+     / 'u' u:UnicodeEscape { return u, nil }
+
+UnicodeEscape ←
+        HexDig HexDig HexDig HexDig {
+            i, err := strconv.ParseInt(string(c.text), 16, 32)
+            return []byte(string([]rune{rune(i)})), err
+        }
+      / '{' HexDig+ '}' {
+            i, err := strconv.ParseInt(string(c.text[1:len(c.text)-1]), 16, 32)
+            return []byte(string([]rune{rune(i)})), err
+        }
 
 DoubleQuoteChar ←
      [\x20-\x21]
