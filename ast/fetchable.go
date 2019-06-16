@@ -83,11 +83,7 @@ func (l Local) ChainOnto(base Fetchable) (Fetchable, error) {
 		if l.IsRelativeToHome() {
 			return nil, errors.New("Can't get home-relative path from remote import")
 		}
-		relativeURL, err := url.Parse(string(l))
-		if err != nil {
-			return nil, err
-		}
-		newURL := r.url.ResolveReference(relativeURL)
+		newURL := r.url.ResolveReference(l.asRelativeRef())
 		return Remote{url: newURL}, nil
 	default:
 		return l, nil
@@ -97,6 +93,28 @@ func (l Local) ChainOnto(base Fetchable) (Fetchable, error) {
 func (l Local) IsAbs() bool              { return path.IsAbs(string(l)) }
 func (l Local) IsRelativeToParent() bool { return strings.HasPrefix(string(l), "..") }
 func (l Local) IsRelativeToHome() bool   { return string(l)[0] == '~' }
+
+//asRelativeRef converts a local path to a relative reference
+func (l Local) asRelativeRef() *url.URL {
+	if l.IsAbs() || l.IsRelativeToHome() {
+		panic("Can't convert absolute or home-relative path to relative reference")
+	}
+	var s strings.Builder
+	if l.IsRelativeToParent() {
+		s.WriteString("..")
+	} else {
+		s.WriteString(".")
+	}
+	for _, segment := range l.PathComponents() {
+		s.WriteString("/")
+		s.WriteString(url.PathEscape(segment))
+	}
+	u, err := url.Parse(s.String())
+	if err != nil {
+		panic(err)
+	}
+	return u
+}
 
 func (l Local) PathComponents() []string {
 	if l.IsAbs() || l.IsRelativeToHome() || l.IsRelativeToParent() {
