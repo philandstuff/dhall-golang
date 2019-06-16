@@ -77,9 +77,6 @@ func (l Local) ChainOnto(base Fetchable) (Fetchable, error) {
 		}
 		return Local(path.Join(path.Dir(string(r)), string(l))), nil
 	case Remote:
-		if l.IsAbs() || l.IsRelativeToHome() {
-			return l, nil
-		}
 		if l.IsAbs() {
 			return nil, errors.New("Can't get absolute path from remote import")
 		}

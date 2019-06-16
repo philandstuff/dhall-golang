@@ -22,8 +22,13 @@ func makeRemote(u string) Remote {
 
 var _ = DescribeTable("ChainOnto", func(fetchable, base, expected Fetchable) {
 	actual, err := fetchable.ChainOnto(base)
-	Expect(actual).To(Equal(expected))
-	Expect(err).ToNot(HaveOccurred())
+	if expected == nil {
+		Expect(actual).To(BeNil())
+		Expect(err).To(HaveOccurred())
+	} else {
+		Expect(actual).To(Equal(expected))
+		Expect(err).ToNot(HaveOccurred())
+	}
 },
 	Entry("Missing onto EnvVar", Missing{}, EnvVar(""), Missing{}),
 	Entry("Missing onto Local", Missing{}, Local(""), Missing{}),
@@ -43,11 +48,11 @@ var _ = DescribeTable("ChainOnto", func(fetchable, base, expected Fetchable) {
 	Entry("Parent-relative local onto Missing", Local("../foo"), Missing{}, Local("../foo")),
 	Entry("Home-relative local onto EnvVar", Local("~/foo"), EnvVar("bar"), Local("~/foo")),
 	Entry("Home-relative local onto Local", Local("~/foo"), Local("/bar/baz"), Local("~/foo")),
-	Entry("Home-relative local onto Remote", Local("~/foo"), makeRemote("https://example.com/bar/baz"), Local("~/foo")),
+	Entry("Home-relative local onto Remote", Local("~/foo"), makeRemote("https://example.com/bar/baz"), nil),
 	Entry("Home-relative local onto Missing", Local("~/foo"), Missing{}, Local("~/foo")),
 	Entry("Absolute local onto EnvVar", Local("/foo"), EnvVar("bar"), Local("/foo")),
 	Entry("Absolute local onto Local", Local("/foo"), Local("/bar/baz"), Local("/foo")),
-	Entry("Absolute local onto Remote", Local("/foo"), makeRemote("https://example.com/bar/baz"), Local("/foo")),
+	Entry("Absolute local onto Remote", Local("/foo"), makeRemote("https://example.com/bar/baz"), nil),
 	Entry("Absolute local onto Missing", Local("/foo"), Missing{}, Local("/foo")),
 	Entry("Remote onto EnvVar", makeRemote("https://example.com/foo"), EnvVar("bar"), makeRemote("https://example.com/foo")),
 	Entry("Remote onto Local", makeRemote("https://example.com/foo"), Local(""), makeRemote("https://example.com/foo")),
