@@ -26,7 +26,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/pathTerminationUnion",  // needs union literals, which I won't implement
 	"TestParserAccepts/unit/import/quotedPaths",           // needs.. quoted paths
 	"TestParserAccepts/unit/import/unicodePaths",          // needs quoted paths
-	"TestParserAccepts/unit/import/urlsA",                 // needs all the URL features
 	"TestParserAccepts/unit/import/urls/potPourri",        // needs all the URL features
 	"TestParserAccepts/unit/import/urls/quotedPath",       // needs quotedPaths
 	"TestParserAccepts/unit/recordProjectionByExpression", // not implemented yet
