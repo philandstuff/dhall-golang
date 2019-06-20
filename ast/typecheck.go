@@ -258,11 +258,11 @@ func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 func (l Let) TypeWith(ctx *TypeContext) (Expr, error) {
 	binding := l.Bindings[0]
 	x := binding.Variable
-	a1 := binding.Value.Normalize()
 	valueType, err := binding.Value.TypeWith(ctx)
 	if err != nil {
 		return nil, err
 	}
+	a1 := binding.Value.Normalize()
 	if binding.Annotation != nil {
 		_, err := binding.Annotation.TypeWith(ctx)
 		if err != nil {
