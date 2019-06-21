@@ -281,7 +281,23 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					return nil, err
 				}
 				return Field{Record: recordOrUnionType, FieldName: label}, nil
-				// case 10: // projection
+			case 10: // projection
+				record, err := decode(val[1])
+				if err != nil {
+					return nil, err
+				}
+				fieldNames := make([]string, len(val)-2)
+				for i, fieldNameWrapped := range val[2:] {
+					fieldName, err := unwrapString(fieldNameWrapped)
+					if err != nil {
+						return nil, err
+					}
+					fieldNames[i] = fieldName
+				}
+				return Project{
+					Record:     record,
+					FieldNames: fieldNames,
+				}, nil
 			case 11: // union type
 				m, err := decodeMap(val[1])
 				if err != nil {
@@ -536,8 +552,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 		// we rely on the EncodeOptions having Canonical set
 		// so that we get sorted keys in our map
-		output := []interface{}{7, items}
-		e.Encode(output)
+		e.Encode([]interface{}{7, items})
 	case RecordLit:
 		items := make(map[string]*cborBox)
 		for k, v := range val {
@@ -545,10 +560,17 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 		// we rely on the EncodeOptions having Canonical set
 		// so that we get sorted keys in our map
-		output := []interface{}{8, items}
-		e.Encode(output)
+		e.Encode([]interface{}{8, items})
 	case Field:
 		e.Encode([]interface{}{9, box(val.Record), val.FieldName})
+	case Project:
+		output := make([]interface{}, len(val.FieldNames)+2)
+		output[0] = 10
+		output[1] = box(val.Record)
+		for i, name := range val.FieldNames {
+			output[i+2] = name
+		}
+		e.Encode(output)
 	case UnionType:
 		items := make(map[string]*cborBox)
 		for k, v := range val {
@@ -556,8 +578,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 		// we rely on the EncodeOptions having Canonical set
 		// so that we get sorted keys in our map
-		output := []interface{}{11, items}
-		e.Encode(output)
+		e.Encode([]interface{}{11, items})
 	case BoolLit:
 		e.Encode(bool(val))
 	case BoolIf:

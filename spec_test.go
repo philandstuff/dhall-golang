@@ -26,27 +26,24 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/pathTerminationUnion",  // needs union literals, which I won't implement
 	"TestParserAccepts/unit/import/quotedPaths",           // needs.. quoted paths
 	"TestParserAccepts/unit/import/unicodePaths",          // needs quoted paths
-	"TestParserAccepts/unit/import/urls/potPourri",        // needs all the URL features
+	"TestParserAccepts/unit/import/urls/potPourri",        // net/url doesn't parse authorities in the way the test expects
 	"TestParserAccepts/unit/import/urls/quotedPath",       // needs quotedPaths
 	"TestParserAccepts/unit/recordProjectionByExpression", // not implemented yet
 	"TestParserAccepts/unit/UnionLit",                     // not going to implement union literals
 	"TestTypecheckFails/duplicateFields.dhall",            // in dhall-golang, duplicate fields a parse error, not a type error
 	"TestTypecheckFails/unit/README",                      // FIXME, shouldn't need excluding
-	"TestTypecheckFails/unit/RecordProjection",
 	"TestTypecheckFails/customHeadersUsingBoundVariable",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
-	"TestTypeInference/unit/RecordProjection",
-	"TestTypeInference/unit/UnionLiteral", // deprecated union literal syntax
-	"TestNormalization/haskell-tutorial/projection",
+	"TestTypeInference/unit/RecordProjectionByType",
+	"TestTypeInference/unit/UnionLiteral",             // deprecated union literal syntax
 	"TestNormalization/prelude/JSON/Type",             // test bug, fixed in dhall-lang/dhall-lang#599
 	"TestNormalization/simple/integerToDoubleA.dhall", // requires bigint representation, which the standard itself does not require
-	"TestNormalization/unit/RecordProjection",
+	"TestNormalization/unit/RecordProjectionType",
 	"TestNormalization/unit/UnionLiteral",
 	"TestImport/customHeadersA.dhall",
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
-	"TestSemanticHash/haskell-tutorial/projection", // requires projection
-	"TestSemanticHash/simple/integerToDouble",      // oversized int (we don't support bigints)
+	"TestSemanticHash/simple/integerToDouble", // oversized int (we don't support bigints)
 }
 
 func pass(t *testing.T) {

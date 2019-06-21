@@ -510,14 +510,33 @@ FirstApplicationExpression ←
 
 ImportExpression ← Import / SelectorExpression
 
-SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ AnyLabel)* {
+SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {
     expr := e.(Expr)
     labels := ls.([]interface{})
     for _, labelSelector := range labels {
-        label := labelSelector.([]interface{})[3]
-        expr = Field{expr, label.(string)}
+        selectorIface := labelSelector.([]interface{})[3]
+        switch selector := selectorIface.(type) {
+            case string:
+                expr = Field{expr, selector}
+            case []string:
+                expr = Project{expr, selector}
+            default:
+                return nil, errors.New("unimplemented")
+        }
     }
     return expr, nil
+}
+
+Selector ← AnyLabel / Labels
+
+Labels ← '{' _ optclauses:( AnyLabel _ (',' _ AnyLabel _ )* )? '}' {
+    if optclauses == nil { return []string{}, nil }
+    clauses := optclauses.([]interface{})
+    labels := []string{clauses[0].(string)}
+    for _, next := range clauses[2].([]interface{}) {
+        labels = append(labels, next.([]interface{})[2].(string))
+    }
+    return labels, nil
 }
 
 PrimitiveExpression ←

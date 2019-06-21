@@ -719,6 +719,36 @@ func (f Field) TypeWith(ctx *TypeContext) (Expr, error) {
 	return &Pi{f.FieldName, alternativeType, unionType}, nil
 }
 
+func (p Project) TypeWith(ctx *TypeContext) (Expr, error) {
+	rtWrapped, err := p.Record.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rt, ok := rtWrapped.(Record)
+	if !ok {
+		return nil, fmt.Errorf("Can't project from a %v", rtWrapped)
+	}
+	rtt, err := rt.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make(Record, len(p.FieldNames))
+	if len(p.FieldNames) == 0 {
+		if rtt != Type {
+			return nil, fmt.Errorf("Can't project empty list from a %v, a record of %v", rt, rtt)
+		}
+		return result, nil
+	}
+	for _, name := range p.FieldNames {
+		var ok bool
+		result[name], ok = rt[name]
+		if !ok {
+			return nil, fmt.Errorf("Tried to project nonexistent field %s", name)
+		}
+	}
+	return result, nil
+}
+
 func (u UnionType) TypeWith(ctx *TypeContext) (Expr, error) {
 	if len(u) == 0 {
 		return Type, nil

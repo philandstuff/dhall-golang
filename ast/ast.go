@@ -133,6 +133,12 @@ type (
 		FieldName string
 	}
 
+	// e.{x,y,z}
+	Project struct {
+		Record     Expr
+		FieldNames []string
+	}
+
 	UnionType map[string]Expr // < x : Natural | y >
 	Merge     struct {
 		Handler    Expr
@@ -287,6 +293,7 @@ var (
 	_ Expr = Record(map[string]Expr{})
 	_ Expr = RecordLit(map[string]Expr{})
 	_ Expr = Field{}
+	_ Expr = Project{}
 	_ Expr = UnionType{}
 	_ Expr = Merge{}
 	_ Expr = Embed(Import{})
@@ -438,6 +445,11 @@ func Shift(d int, v Var, e Expr) Expr {
 			Record:    Shift(d, v, e.Record),
 			FieldName: e.FieldName,
 		}
+	case Project:
+		return Project{
+			Record:     Shift(d, v, e.Record),
+			FieldNames: e.FieldNames,
+		}
 	case UnionType:
 		fields := make(map[string]Expr, len(e))
 		for name, val := range e {
@@ -565,6 +577,11 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return Field{
 			Record:    Subst(v, c, e.Record),
 			FieldName: e.FieldName,
+		}
+	case Project:
+		return Project{
+			Record:     Subst(v, c, e.Record),
+			FieldNames: e.FieldNames,
 		}
 	case UnionType:
 		fields := make(map[string]Expr, len(e))
@@ -825,6 +842,10 @@ func (r RecordLit) String() string {
 
 func (f Field) String() string {
 	return fmt.Sprintf("%v.%s", f.Record, f.FieldName)
+}
+
+func (p Project) String() string {
+	return fmt.Sprintf("%v.{%s}", p.Record, strings.Join(p.FieldNames, ","))
 }
 
 func (u UnionType) String() string {
@@ -1408,9 +1429,24 @@ func (f Field) Normalize() Expr {
 	r := f.Record.Normalize()
 	if rl, ok := r.(RecordLit); ok {
 		val := rl[f.FieldName]
-		return val.Normalize()
+		return val
 	}
 	return Field{Record: r, FieldName: f.FieldName}
+}
+
+func (p Project) Normalize() Expr {
+	if len(p.FieldNames) == 0 {
+		return RecordLit{}
+	}
+	r := p.Record.Normalize()
+	if rl, ok := r.(RecordLit); ok {
+		result := make(RecordLit, len(p.FieldNames))
+		for _, name := range p.FieldNames {
+			result[name] = rl[name]
+		}
+		return result
+	}
+	return Project{Record: r, FieldNames: p.FieldNames}
 }
 
 func (u UnionType) Normalize() Expr {
@@ -1612,6 +1648,13 @@ func (f Field) AlphaNormalize() Expr {
 	return Field{
 		Record:    f.Record.AlphaNormalize(),
 		FieldName: f.FieldName,
+	}
+}
+
+func (p Project) AlphaNormalize() Expr {
+	return Project{
+		Record:     p.Record.AlphaNormalize(),
+		FieldNames: p.FieldNames,
 	}
 }
 
