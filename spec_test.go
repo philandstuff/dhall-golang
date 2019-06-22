@@ -19,27 +19,33 @@ import (
 )
 
 var expectedFailures = []string{
-	"TestParserAccepts/unionA.dhall", // deprecated syntax
+	// union literals
+	"TestParserAccepts/unionA.dhall",
+	"TestParserAccepts/unit/import/pathTerminationUnion",
+	"TestParserAccepts/unit/UnionLit",
+	"TestTypeInference/simple/alternativesAreTypesA.dhall",
+	"TestTypeInference/unit/UnionLiteral",
+	"TestNormalization/unit/UnionLiteral",
+	// needs `using`
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
-	"TestParserAccepts/unit/import/pathTerminationUnion", // needs union literals, which I won't implement
-	"TestParserAccepts/unit/import/quotedPaths",          // needs.. quoted paths
-	"TestParserAccepts/unit/import/unicodePaths",         // needs quoted paths
-	"TestParserAccepts/unit/import/urls/potPourri",       // net/url doesn't parse authorities in the way the test expects
-	"TestParserAccepts/unit/import/urls/quotedPath",      // needs quotedPaths
-	"TestParserAccepts/unit/UnionLit",                    // not going to implement union literals
-	"TestTypecheckFails/duplicateFields.dhall",           // in dhall-golang, duplicate fields a parse error, not a type error
-	"TestTypecheckFails/unit/README",                     // FIXME, shouldn't need excluding
 	"TestTypecheckFails/customHeadersUsingBoundVariable",
-	"TestTypeInference/simple/alternativesAreTypesA.dhall", // old union literals
-	"TestTypeInference/unit/UnionLiteral",                  // deprecated union literal syntax
-	"TestNormalization/prelude/JSON/Type",                  // test bug, fixed in dhall-lang/dhall-lang#599
-	"TestNormalization/simple/integerToDoubleA.dhall",      // requires bigint representation, which the standard itself does not require
-	"TestNormalization/unit/UnionLiteral",
 	"TestImport/customHeadersA.dhall",
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
-	"TestSemanticHash/simple/integerToDouble", // oversized int (we don't support bigints)
+	// needs bigint support
+	"TestNormalization/simple/integerToDoubleA.dhall",
+	"TestSemanticHash/simple/integerToDouble",
+	// needs quoted paths in local imports
+	"TestParserAccepts/unit/import/unicodePaths",
+	// needs quoted paths in URLs
+	"TestParserAccepts/unit/import/quotedPaths",     // needs.. quoted paths
+	"TestParserAccepts/unit/import/urls/quotedPath", // needs quotedPaths
+	// other
+	"TestParserAccepts/unit/import/urls/potPourri", // net/url doesn't parse authorities in the way the test expects
+	"TestTypecheckFails/duplicateFields.dhall",     // in dhall-golang, duplicate fields a parse error, not a type error
+	"TestTypecheckFails/unit/README",               // FIXME, shouldn't need excluding
+	"TestNormalization/prelude/JSON/Type",          // test bug, fixed in dhall-lang/dhall-lang#599
 }
 
 func pass(t *testing.T) {
