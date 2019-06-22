@@ -3,11 +3,9 @@ package main_test
 import (
 	"bytes"
 	"encoding/hex"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -146,7 +144,7 @@ func expectEqualCbor(t *testing.T, expected, actual []byte) {
 func runTestOnEachFile(
 	t *testing.T,
 	dir string,
-	test func(*testing.T, io.Reader),
+	test func(*testing.T, string),
 ) {
 	err := filepath.Walk(dir,
 		func(testPath string, info os.FileInfo, err error) error {
@@ -156,19 +154,12 @@ func runTestOnEachFile(
 			if err != nil {
 				return err
 			}
-			reader, err := os.Open(testPath)
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer reader.Close()
 			name := strings.Replace(testPath, dir, "", 1)
-			wd, _ := os.Getwd()
-			os.Chdir(path.Dir(testPath))
 			t.Run(name, func(t *testing.T) {
-				test(t, reader)
+				t.Parallel()
+				test(t, testPath)
 				pass(t)
 			})
-			os.Chdir(wd)
 			return nil
 		})
 	if err != nil {
@@ -176,31 +167,10 @@ func runTestOnEachFile(
 	}
 }
 
-func runTestOnFilePair(t *testing.T, name, pathA, pathB string, test func(*testing.T, io.Reader, io.Reader)) {
-	aReader, err := os.Open(pathA)
-	defer aReader.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-	bReader, err := os.Open(pathB)
-	defer bReader.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	wd, _ := os.Getwd()
-	os.Chdir(path.Dir(pathA))
-	t.Run(name, func(t *testing.T) {
-		test(t, aReader, bReader)
-		pass(t)
-	})
-	os.Chdir(wd)
-}
-
 func runTestOnFilePairs(
 	t *testing.T,
 	dir, suffixA, suffixB string,
-	test func(*testing.T, io.Reader, io.Reader),
+	test func(*testing.T, string, string),
 ) {
 	err := filepath.Walk(dir,
 		func(aPath string, info os.FileInfo, err error) error {
@@ -211,7 +181,11 @@ func runTestOnFilePairs(
 				bPath := strings.Replace(aPath, suffixA, suffixB, 1)
 				testName := strings.Replace(aPath, dir, "", 1)
 
-				runTestOnFilePair(t, testName, aPath, bPath, test)
+				t.Run(testName, func(t *testing.T) {
+					t.Parallel()
+					test(t, aPath, bPath)
+					pass(t)
+				})
 			}
 			return nil
 		})
@@ -221,8 +195,8 @@ func runTestOnFilePairs(
 }
 
 func TestParserRejects(t *testing.T) {
-	runTestOnEachFile(t, "dhall-lang/tests/parser/failure/", func(t *testing.T, reader io.Reader) {
-		_, err := parser.ParseReader(t.Name(), reader)
+	runTestOnEachFile(t, "dhall-lang/tests/parser/failure/", func(t *testing.T, testPath string) {
+		_, err := parser.ParseFile(testPath)
 
 		expectError(t, err)
 	})
@@ -231,23 +205,23 @@ func TestParserRejects(t *testing.T) {
 func TestParserAccepts(t *testing.T) {
 	runTestOnFilePairs(t, "dhall-lang/tests/parser/success/",
 		"A.dhall", "B.dhallb",
-		func(t *testing.T, aReader, bReader io.Reader) {
+		func(t *testing.T, aPath, bPath string) {
 			actualBuf := new(bytes.Buffer)
-			parsed, err := parser.ParseReader(t.Name(), aReader)
+			parsed, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
 
 			err = ast.EncodeAsCbor(actualBuf, parsed.(ast.Expr))
 			expectNoError(t, err)
 
-			expected, err := ioutil.ReadAll(bReader)
+			expected, err := ioutil.ReadFile(bPath)
 			expectNoError(t, err)
 			expectEqualCbor(t, expected, actualBuf.Bytes())
 		})
 }
 
 func TestTypecheckFails(t *testing.T) {
-	runTestOnEachFile(t, "dhall-lang/tests/typecheck/failure/", func(t *testing.T, reader io.Reader) {
-		parsed, err := parser.ParseReader(t.Name(), reader)
+	runTestOnEachFile(t, "dhall-lang/tests/typecheck/failure/", func(t *testing.T, testPath string) {
+		parsed, err := parser.ParseFile(testPath)
 
 		expectNoError(t, err)
 
@@ -265,17 +239,17 @@ func TestTypecheckFails(t *testing.T) {
 func TestTypechecks(t *testing.T) {
 	runTestOnFilePairs(t, "dhall-lang/tests/typecheck/success/",
 		"A.dhall", "B.dhall",
-		func(t *testing.T, aReader, bReader io.Reader) {
-			parsedA, err := parser.ParseReader(t.Name(), aReader)
+		func(t *testing.T, aPath, bPath string) {
+			parsedA, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
 
-			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA.(ast.Expr))
+			resolvedA, err := imports.Load(parsedA.(ast.Expr), ast.Local(aPath))
 			expectNoError(t, err)
 
-			resolvedB, err := imports.Load(parsedB.(ast.Expr))
+			resolvedB, err := imports.Load(parsedB.(ast.Expr), ast.Local(bPath))
 			expectNoError(t, err)
 
 			annot := ast.Annot{
@@ -290,11 +264,11 @@ func TestTypechecks(t *testing.T) {
 func TestTypeInference(t *testing.T) {
 	runTestOnFilePairs(t, "dhall-lang/tests/type-inference/success/",
 		"A.dhall", "B.dhall",
-		func(t *testing.T, aReader, bReader io.Reader) {
-			parsedA, err := parser.ParseReader(t.Name(), aReader)
+		func(t *testing.T, aPath, bPath string) {
+			parsedA, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
 
-			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
 			inferredType, err := parsedA.(ast.Expr).TypeWith(ast.EmptyContext())
@@ -307,11 +281,11 @@ func TestTypeInference(t *testing.T) {
 func TestAlphaNormalization(t *testing.T) {
 	runTestOnFilePairs(t, "dhall-lang/tests/alpha-normalization/success/",
 		"A.dhall", "B.dhall",
-		func(t *testing.T, aReader, bReader io.Reader) {
-			parsedA, err := parser.ParseReader(t.Name(), aReader)
+		func(t *testing.T, aPath, bPath string) {
+			parsedA, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
 
-			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
 			normA := parsedA.(ast.Expr).AlphaNormalize()
@@ -324,17 +298,17 @@ func TestAlphaNormalization(t *testing.T) {
 func TestNormalization(t *testing.T) {
 	runTestOnFilePairs(t, "dhall-lang/tests/normalization/success/",
 		"A.dhall", "B.dhall",
-		func(t *testing.T, aReader, bReader io.Reader) {
-			parsedA, err := parser.ParseReader(t.Name(), aReader)
+		func(t *testing.T, aPath, bPath string) {
+			parsedA, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
 
-			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA.(ast.Expr))
+			resolvedA, err := imports.Load(parsedA.(ast.Expr), ast.Local(aPath))
 			expectNoError(t, err)
 
-			resolvedB, err := imports.Load(parsedB.(ast.Expr))
+			resolvedB, err := imports.Load(parsedB.(ast.Expr), ast.Local(bPath))
 			expectNoError(t, err)
 
 			normA := resolvedA.(ast.Expr).Normalize()
@@ -345,34 +319,32 @@ func TestNormalization(t *testing.T) {
 }
 
 func TestImportFails(t *testing.T) {
-	runTestOnEachFile(t, "dhall-lang/tests/import/failure/", func(t *testing.T, reader io.Reader) {
-		parsed, err := parser.ParseReader(t.Name(), reader)
+	runTestOnEachFile(t, "dhall-lang/tests/import/failure/", func(t *testing.T, testPath string) {
+		parsed, err := parser.ParseFile(testPath)
 		expectNoError(t, err)
 
-		_, err = imports.Load(parsed.(ast.Expr))
+		_, err = imports.Load(parsed.(ast.Expr), ast.Local(testPath))
 		expectError(t, err)
 	})
 }
 
 func TestImport(t *testing.T) {
 	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
+	expectNoError(t, err)
 	os.Setenv("XDG_CACHE_HOME", cwd+"/dhall-lang/tests/import/cache")
 	runTestOnFilePairs(t, "dhall-lang/tests/import/success/",
 		"A.dhall", "B.dhall",
-		func(t *testing.T, aReader, bReader io.Reader) {
-			parsedA, err := parser.ParseReader(t.Name(), aReader)
+		func(t *testing.T, aPath, bPath string) {
+			parsedA, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
 
-			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA.(ast.Expr))
+			resolvedA, err := imports.Load(parsedA.(ast.Expr), ast.Local(aPath))
 			expectNoError(t, err)
 
-			resolvedB, err := imports.Load(parsedB.(ast.Expr))
+			resolvedB, err := imports.Load(parsedB.(ast.Expr), ast.Local(bPath))
 			expectNoError(t, err)
 
 			expectEqualExprs(t, resolvedB, resolvedA)
@@ -383,16 +355,16 @@ func TestSemanticHash(t *testing.T) {
 	sha256re := regexp.MustCompile("^sha256:([0-9a-fA-F]{64})\n$")
 	runTestOnFilePairs(t, "dhall-lang/tests/semantic-hash/success/",
 		"A.dhall", "B.hash",
-		func(t *testing.T, aReader, bReader io.Reader) {
-			parsedA, err := parser.ParseReader(t.Name(), aReader)
+		func(t *testing.T, aPath, bPath string) {
+			parsedA, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
-			resolvedA, err := imports.Load(parsedA.(ast.Expr))
+			resolvedA, err := imports.Load(parsedA.(ast.Expr), ast.Local(aPath))
 			expectNoError(t, err)
 
 			actualHash, err := ast.SemanticHash(resolvedA)
 			expectNoError(t, err)
 
-			expectedHashStr, err := ioutil.ReadAll(bReader)
+			expectedHashStr, err := ioutil.ReadFile(bPath)
 			expectNoError(t, err)
 
 			groups := sha256re.FindSubmatch(expectedHashStr)
@@ -411,11 +383,14 @@ func TestSemanticHash(t *testing.T) {
 func TestBinaryDecode(t *testing.T) {
 	runTestOnFilePairs(t, "dhall-lang/tests/binary-decode/success/",
 		"A.dhallb", "B.dhall",
-		func(t *testing.T, aReader, bReader io.Reader) {
+		func(t *testing.T, aPath, bPath string) {
+			aReader, err := os.Open(aPath)
+			expectNoError(t, err)
+			defer aReader.Close()
 			expr, err := ast.DecodeAsCbor(aReader)
 			expectNoError(t, err)
 
-			parsedB, err := parser.ParseReader(t.Name(), bReader)
+			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
 			expectEqualExprs(t, parsedB.(ast.Expr), expr)
@@ -423,8 +398,13 @@ func TestBinaryDecode(t *testing.T) {
 }
 
 func TestBinaryDecodeFails(t *testing.T) {
-	runTestOnEachFile(t, "dhall-lang/tests/binary-decode/failure/", func(t *testing.T, reader io.Reader) {
-		_, err := ast.DecodeAsCbor(reader)
+	runTestOnEachFile(t, "dhall-lang/tests/binary-decode/failure/", func(t *testing.T, testPath string) {
+		reader, err := os.Open(testPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer reader.Close()
+		_, err = ast.DecodeAsCbor(reader)
 		expectError(t, err)
 	})
 }
