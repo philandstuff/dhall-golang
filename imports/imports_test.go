@@ -56,10 +56,15 @@ var _ = Describe("Import resolution", func() {
 			Expect(actual).To(Equal(NaturalPlus(NaturalLit(2), NaturalLit(2))))
 		})
 		It("Rejects import cycles", func() {
-			os.Setenv("CYCLE", "env:CYCLE")
-			_, err := Load(Embed(MakeEnvVarImport("CYCLE", Code)))
-
-			Expect(err).To(HaveOccurred())
+			result := make(chan error)
+			go func() {
+				os.Setenv("CYCLE", "env:CYCLE")
+				_, err := Load(Embed(MakeEnvVarImport("CYCLE", Code)))
+				if err != nil {
+					result <- err
+				}
+			}()
+			Eventually(result).Should(Receive())
 		})
 	})
 	Describe("http imports", func() {
@@ -197,9 +202,14 @@ var _ = Describe("Import resolution", func() {
 			Expect(actual).To(Equal(NaturalPlus(NaturalLit(2), NaturalLit(2))))
 		})
 		It("Rejects import cycles", func() {
-			_, err := Load(Embed(MakeLocalImport("./testdata/cycle1.dhall", Code)))
-
-			Expect(err).To(HaveOccurred())
+			result := make(chan error)
+			go func() {
+				_, err := Load(Embed(MakeLocalImport("./testdata/cycle1.dhall", Code)))
+				if err != nil {
+					result <- err
+				}
+			}()
+			Eventually(result).Should(Receive())
 		})
 	})
 	DescribeTable("Other subexpressions", expectResolves,

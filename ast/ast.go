@@ -661,13 +661,20 @@ func (t Builtin) String() string {
 }
 
 func (d DoubleLit) String() string {
-	if math.IsInf(float64(d), 1) {
+	f := float64(d)
+	if math.IsInf(f, 1) {
 		return "Infinity"
 	}
-	if math.IsInf(float64(d), -1) {
+	if math.IsInf(f, -1) {
 		return "-Infinity"
 	}
-	return fmt.Sprintf("%g", d)
+	// if we have a whole number, we need to append .0 to it so we get a valid
+	// Double literal
+	if f == float64(int64(f)) {
+		return fmt.Sprintf("%#v.0", float64(d))
+	} else {
+		return fmt.Sprintf("%#v", float64(d))
+	}
 }
 
 func (t TextLit) String() string {

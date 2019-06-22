@@ -22,6 +22,16 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 	case Embed:
 		i := Import(e)
 		here := i.Fetchable
+		origin := ast.NullOrigin
+		if len(ancestors) >= 1 {
+			origin = ancestors[len(ancestors)-1].Origin()
+
+			var err error
+			here, err = here.ChainOnto(ancestors[len(ancestors)-1])
+			if err != nil {
+				return nil, err
+			}
+		}
 		for _, ancestor := range ancestors {
 			if ancestor == here {
 				return nil, fmt.Errorf("Detected import cycle in %s", ancestor)
@@ -33,20 +43,8 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				return expr, nil
 			}
 		}
-		var r Fetchable
-		r = i.Fetchable
-		origin := ast.NullOrigin
-		if len(ancestors) >= 1 {
-			origin = ancestors[len(ancestors)-1].Origin()
-
-			var err error
-			r, err = r.ChainOnto(ancestors[len(ancestors)-1])
-			if err != nil {
-				return nil, err
-			}
-		}
 		imports := append(ancestors, here)
-		content, err := r.Fetch(origin)
+		content, err := here.Fetch(origin)
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +53,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			expr = TextLit{Suffix: content}
 		} else {
 			// dynamicExpr may contain more imports
-			dynamicExpr, err := ResolveStringAsExpr(r.Name(), content)
+			dynamicExpr, err := ResolveStringAsExpr(here.Name(), content)
 			if err != nil {
 				return nil, err
 			}
