@@ -258,22 +258,28 @@ func (app *App) TypeWith(ctx *TypeContext) (Expr, error) {
 func (l Let) TypeWith(ctx *TypeContext) (Expr, error) {
 	binding := l.Bindings[0]
 	x := binding.Variable
+	// Γ ⊢ a₀ : A₁
 	valueType, err := binding.Value.TypeWith(ctx)
 	if err != nil {
 		return nil, err
 	}
+	// a₀ ⇥ a₁
 	a1 := binding.Value.Normalize()
 	if binding.Annotation != nil {
+		// Γ ⊢ A₀ : i
 		_, err := binding.Annotation.TypeWith(ctx)
 		if err != nil {
 			return nil, err
 		}
+		// A₀ ≡ A₁
 		if !judgmentallyEqual(binding.Annotation, valueType) {
 			return nil, fmt.Errorf("in let binding, was expecting type %v but saw %v", binding.Annotation, valueType)
 		}
 	}
 
 	// TODO: optimization where binding.Value is a term
+
+	// ↑(1, x, 0, a₁) = a₂
 	a2 := Shift(1, Var{x, 0}, a1)
 
 	rest := l.Body
@@ -281,13 +287,12 @@ func (l Let) TypeWith(ctx *TypeContext) (Expr, error) {
 		rest = Let{Bindings: l.Bindings[1:], Body: l.Body}
 	}
 
+	// b₀[x ≔ a₂] = b₁
 	b1 := Subst(Var{x, 0}, a2, rest)
+	// ↑(-1, x, 0, b₁) = b₂
 	b2 := Shift(-1, Var{x, 0}, b1)
-	retval, err := b2.TypeWith(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return retval, nil
+	// Γ ⊢ b₂ : B
+	return b2.TypeWith(ctx)
 }
 
 func (a Annot) TypeWith(ctx *TypeContext) (Expr, error) {
@@ -745,6 +750,38 @@ func (p Project) TypeWith(ctx *TypeContext) (Expr, error) {
 		if !ok {
 			return nil, fmt.Errorf("Tried to project nonexistent field %s", name)
 		}
+	}
+	return result, nil
+}
+
+func (p ProjectType) TypeWith(ctx *TypeContext) (Expr, error) {
+	rtWrapped, err := p.Record.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rt, ok := rtWrapped.(Record)
+	if !ok {
+		return nil, fmt.Errorf("Can't project from a %v", rtWrapped)
+	}
+	_, err = p.Selector.TypeWith(ctx)
+	if err != nil {
+		return nil, err
+	}
+	selectorWrapped := p.Selector.Normalize()
+	selector, ok := selectorWrapped.(Record)
+	if !ok {
+		return nil, fmt.Errorf("Can't use a %v to project from a record", rtWrapped)
+	}
+	result := make(Record, len(selector))
+	for name, typ := range selector {
+		origType, ok := rt[name]
+		if !ok {
+			return nil, fmt.Errorf("Tried to project nonexistent field %s", name)
+		}
+		if !judgmentallyEqual(typ, origType) {
+			return nil, fmt.Errorf("While projecting field %s, selector type %v didn't match record type %v", name, typ, origType)
+		}
+		result[name] = typ
 	}
 	return result, nil
 }

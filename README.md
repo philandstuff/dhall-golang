@@ -29,7 +29,7 @@ Go bindings for dhall.
  - [X] Integers
    - [x] Integer/toDouble and Integer/show
  - [X] Doubles
-   - [ ] Double/show (it exists but doesn't pass tests)
+   - [x] Double/show (it exists but doesn't pass tests)
  - [X] Lists
    - [x] `l # r` list append
    - [x] List/* functions
@@ -43,7 +43,8 @@ Go bindings for dhall.
    - [x] Optional/fold and Optional/build
  - [x] Records
    - [x] `f.a`
-   - [ ] `f.{ xs… }`
+   - [x] `f.{ xs… }`
+   - [x] `f.(s)`
    - [x] `l ∧ r`
    - [x] `l ⫽ r`
    - [x] `l ⩓ r`

@@ -520,6 +520,8 @@ SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {
                 expr = Field{expr, selector}
             case []string:
                 expr = Project{expr, selector}
+            case Expr:
+                expr = ProjectType{expr, selector}
             default:
                 return nil, errors.New("unimplemented")
         }
@@ -527,7 +529,7 @@ SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {
     return expr, nil
 }
 
-Selector ← AnyLabel / Labels
+Selector ← AnyLabel / Labels / TypeSelector
 
 Labels ← '{' _ optclauses:( AnyLabel _ (',' _ AnyLabel _ )* )? '}' {
     if optclauses == nil { return []string{}, nil }
@@ -538,6 +540,8 @@ Labels ← '{' _ optclauses:( AnyLabel _ (',' _ AnyLabel _ )* )? '}' {
     }
     return labels, nil
 }
+
+TypeSelector ← '(' _ e:Expression _ ')' { return e, nil }
 
 PrimitiveExpression ←
       DoubleLiteral

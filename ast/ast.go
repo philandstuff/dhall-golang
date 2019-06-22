@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -137,6 +138,12 @@ type (
 	Project struct {
 		Record     Expr
 		FieldNames []string
+	}
+
+	// e.(r)
+	ProjectType struct {
+		Record   Expr
+		Selector Expr
 	}
 
 	UnionType map[string]Expr // < x : Natural | y >
@@ -294,6 +301,7 @@ var (
 	_ Expr = RecordLit(map[string]Expr{})
 	_ Expr = Field{}
 	_ Expr = Project{}
+	_ Expr = ProjectType{}
 	_ Expr = UnionType{}
 	_ Expr = Merge{}
 	_ Expr = Embed(Import{})
@@ -450,6 +458,11 @@ func Shift(d int, v Var, e Expr) Expr {
 			Record:     Shift(d, v, e.Record),
 			FieldNames: e.FieldNames,
 		}
+	case ProjectType:
+		return ProjectType{
+			Record:   Shift(d, v, e.Record),
+			Selector: Shift(d, v, e.Selector),
+		}
 	case UnionType:
 		fields := make(map[string]Expr, len(e))
 		for name, val := range e {
@@ -582,6 +595,11 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return Project{
 			Record:     Subst(v, c, e.Record),
 			FieldNames: e.FieldNames,
+		}
+	case ProjectType:
+		return ProjectType{
+			Record:   Subst(v, c, e.Record),
+			Selector: Subst(v, c, e.Selector),
 		}
 	case UnionType:
 		fields := make(map[string]Expr, len(e))
@@ -846,6 +864,10 @@ func (f Field) String() string {
 
 func (p Project) String() string {
 	return fmt.Sprintf("%v.{%s}", p.Record, strings.Join(p.FieldNames, ","))
+}
+
+func (p ProjectType) String() string {
+	return fmt.Sprintf("%v.(%v)", p.Record, p.Selector)
 }
 
 func (u UnionType) String() string {
@@ -1449,6 +1471,19 @@ func (p Project) Normalize() Expr {
 	return Project{Record: r, FieldNames: p.FieldNames}
 }
 
+func (p ProjectType) Normalize() Expr {
+	r := p.Record.Normalize()
+	// if `p` typechecks, `p.Selector.Normalize()` has to be a Record, so this
+	// is safe
+	s := p.Selector.Normalize().(Record)
+	fieldNames := make([]string, 0, len(s))
+	for fieldName, _ := range s {
+		fieldNames = append(fieldNames, fieldName)
+	}
+	sort.Strings(fieldNames)
+	return Project{Record: r, FieldNames: fieldNames}.Normalize()
+}
+
 func (u UnionType) Normalize() Expr {
 	fields := make(map[string]Expr, len(u))
 	for name, val := range u {
@@ -1655,6 +1690,13 @@ func (p Project) AlphaNormalize() Expr {
 	return Project{
 		Record:     p.Record.AlphaNormalize(),
 		FieldNames: p.FieldNames,
+	}
+}
+
+func (p ProjectType) AlphaNormalize() Expr {
+	return ProjectType{
+		Record:   p.Record.AlphaNormalize(),
+		Selector: p.Selector.AlphaNormalize(),
 	}
 }
 

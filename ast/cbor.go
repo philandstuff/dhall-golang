@@ -286,18 +286,30 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				if err != nil {
 					return nil, err
 				}
-				fieldNames := make([]string, len(val)-2)
-				for i, fieldNameWrapped := range val[2:] {
-					fieldName, err := unwrapString(fieldNameWrapped)
+				switch val[2].(type) {
+				case string: // r.{x,y}
+					fieldNames := make([]string, len(val)-2)
+					for i, fieldNameWrapped := range val[2:] {
+						fieldName, err := unwrapString(fieldNameWrapped)
+						if err != nil {
+							return nil, err
+						}
+						fieldNames[i] = fieldName
+					}
+					return Project{
+						Record:     record,
+						FieldNames: fieldNames,
+					}, nil
+				case []interface{}: // r.(t)
+					projectType, err := decode(val[2].([]interface{})[0])
 					if err != nil {
 						return nil, err
 					}
-					fieldNames[i] = fieldName
+					return ProjectType{
+						Record:   record,
+						Selector: projectType,
+					}, nil
 				}
-				return Project{
-					Record:     record,
-					FieldNames: fieldNames,
-				}, nil
 			case 11: // union type
 				m, err := decodeMap(val[1])
 				if err != nil {
@@ -571,6 +583,13 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 			output[i+2] = name
 		}
 		e.Encode(output)
+	case ProjectType:
+		e.Encode([]interface{}{
+			10,
+			box(val.Record),
+			[]interface{}{
+				box(val.Selector),
+			}})
 	case UnionType:
 		items := make(map[string]*cborBox)
 		for k, v := range val {
