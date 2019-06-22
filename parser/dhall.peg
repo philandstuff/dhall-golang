@@ -295,9 +295,16 @@ PathCharacter ←
    / '\x7c'
    / '\x7e'
 
+QuotedPathCharacter ←
+     [\x20-\x21]
+   / [\x23-\x2e]
+   / [\x30-\U0010ffff]
+
 UnquotedPathComponent ← PathCharacter+ { return string(c.text), nil }
+QuotedPathComponent ← QuotedPathCharacter+ { return string(c.text), nil }
 
 PathComponent ← '/' u:UnquotedPathComponent { return u, nil }
+              / '/' '"' q:QuotedPathComponent '"' { return q, nil }
 
 Path ← cs:PathComponent+ {
     // urgh, have to convert []interface{} to []string

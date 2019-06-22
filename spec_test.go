@@ -36,8 +36,6 @@ var expectedFailures = []string{
 	// needs bigint support
 	"TestNormalization/simple/integerToDoubleA.dhall",
 	"TestSemanticHash/simple/integerToDouble",
-	// needs quoted paths in local imports
-	"TestParserAccepts/unit/import/unicodePaths",
 	// needs quoted paths in URLs
 	"TestParserAccepts/unit/import/quotedPaths",     // needs.. quoted paths
 	"TestParserAccepts/unit/import/urls/quotedPath", // needs quotedPaths
