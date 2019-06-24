@@ -43,7 +43,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/urls/potPourri", // net/url doesn't parse authorities in the way the test expects
 	"TestTypecheckFails/duplicateFields.dhall",     // in dhall-golang, duplicate fields a parse error, not a type error
 	"TestTypecheckFails/unit/README",               // FIXME, shouldn't need excluding
-	"TestNormalization/prelude/JSON/Type",          // test bug, fixed in dhall-lang/dhall-lang#599
 }
 
 func pass(t *testing.T) {
