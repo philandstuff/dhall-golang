@@ -18,6 +18,13 @@ type Missing struct{}
 
 const NullOrigin = "null"
 
+var LocationType = UnionType{
+	"Local":       Text,
+	"Remote":      Text,
+	"Environment": Text,
+	"Missing":     nil,
+}
+
 type Fetchable interface {
 	Name() string
 	Origin() string
@@ -27,6 +34,7 @@ type Fetchable interface {
 	Fetch(origin string) (string, error)
 	ChainOnto(base Fetchable) (Fetchable, error)
 	String() string
+	AsLocation() Expr
 }
 
 var _ Fetchable = EnvVar("")
@@ -51,6 +59,9 @@ func (e EnvVar) Fetch(origin string) (string, error) {
 }
 func (e EnvVar) ChainOnto(base Fetchable) (Fetchable, error) {
 	return e, nil
+}
+func (e EnvVar) AsLocation() Expr {
+	return Apply(Field{LocationType, "Environment"}, TextLit{Suffix: e.String()})
 }
 
 func (l Local) Name() string { return string(l) }
@@ -123,11 +134,10 @@ func (l Local) PathComponents() []string {
 		return strings.Split(string(l), "/")
 	}
 }
-
+func (l Local) AsLocation() Expr {
+	return Apply(Field{LocationType, "Local"}, TextLit{Suffix: l.String()})
+}
 func MakeRemote(u *url.URL) (Remote, error) {
-	if u.EscapedPath() == "/" || u.EscapedPath() == "" {
-		return Remote{}, errors.New("URLs must have a nonempty path")
-	}
 	return Remote{url: u}, nil
 }
 
@@ -175,6 +185,9 @@ func (r Remote) Authority() string {
 	return r.url.Host
 }
 func (r Remote) PathComponents() []string {
+	if r.url.Path == "" || r.url.Path == "/" {
+		return []string{""}
+	}
 	escapedComps := strings.Split(r.url.EscapedPath()[1:], "/")
 	unescapedComps := make([]string, len(escapedComps))
 	for i, comp := range escapedComps {
@@ -193,6 +206,9 @@ func (r Remote) Query() *string {
 	}
 	return &r.url.RawQuery
 }
+func (r Remote) AsLocation() Expr {
+	return Apply(Field{LocationType, "Remote"}, TextLit{Suffix: r.String()})
+}
 
 func (Missing) Name() string   { return "" }
 func (Missing) Origin() string { return NullOrigin }
@@ -202,4 +218,7 @@ func (Missing) Fetch(origin string) (string, error) {
 }
 func (Missing) ChainOnto(base Fetchable) (Fetchable, error) {
 	return Missing{}, nil
+}
+func (Missing) AsLocation() Expr {
+	return Field{LocationType, "Missing"}
 }

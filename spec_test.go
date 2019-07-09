@@ -30,6 +30,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
 	"TestTypecheckFails/customHeadersUsingBoundVariable",
+	"TestImport/asLocationA.dhall", // fixed by dhall-lang #633
 	"TestImport/customHeadersA.dhall",
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",

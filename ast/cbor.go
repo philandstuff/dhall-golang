@@ -633,10 +633,8 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		e.Encode(output)
 	case Embed:
 		r := val.Fetchable
-		mode := 0
-		if val.ImportMode == RawText {
-			mode = 1
-		}
+		// we have crafted the ImportMode constants to match the expected CBOR values
+		mode := val.ImportMode
 		switch rr := r.(type) {
 		case EnvVar:
 			e.Encode([]interface{}{24, val.Hash, mode, 6, string(rr)})
@@ -679,7 +677,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 			toEncode = append(toEncode, rr.Query())
 			e.Encode(toEncode)
 		case Missing:
-			e.Encode([]interface{}{24, nil, 0, 7})
+			e.Encode([]interface{}{24, nil, mode, 7})
 		default:
 			panic("can't happen")
 		}

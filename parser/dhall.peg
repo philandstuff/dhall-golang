@@ -235,6 +235,7 @@ Keyword ←
 Optional ← "Optional"
 Text ← "Text"
 List ← "List"
+Location ← "Location"
 
 Combine ← "/\\" / '∧'
 CombineTypes ← "//\\\\" / '⩓'
@@ -324,7 +325,9 @@ AbsolutePath ← p:Path { return Local(path.Join("/", p.(string))), nil }
 
 Scheme ← "http" 's'?
 
-HttpRaw ← Scheme "://" Authority Path ( '?' Query )? { return url.ParseRequestURI(string(c.text)) }
+HttpRaw ← Scheme "://" Authority UrlPath ( '?' Query )? { return url.ParseRequestURI(string(c.text)) }
+
+UrlPath ← (PathComponent / '/' Segment)*
 
 Authority ← (Userinfo '@')? Host (':' Port)?
 
@@ -344,6 +347,8 @@ IPv6address ← (HexDig)* ':' (HexDig / ':' / '.')* {
 
 RegName ← (Unreserved / PctEncoded / SubDelims)*
 
+Segment ← PChar*
+
 PChar ← Unreserved / PctEncoded / SubDelims / [:@]
 
 Query ← (PChar / [/?])*
@@ -352,7 +357,7 @@ PctEncoded ← '%' HexDig HexDig
 
 Unreserved ← [A-Za-z0-9._~-]
 
-SubDelims ← "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+SubDelims ← "!" / "$" / "&" / "'" / "*" / "+" / ";" / "="
 
 Http ← u:HttpRaw { return MakeRemote(u.(*url.URL)) }
 
@@ -417,6 +422,7 @@ ImportHashed ← i:ImportType h:(_1 Hash)? {
 }
 
 Import ← i:ImportHashed _ As _1 Text { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}), nil }
+       / i:ImportHashed _ As _1 Location { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Location}), nil }
        / i:ImportHashed { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Code}), nil }
 
 

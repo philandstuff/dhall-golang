@@ -317,6 +317,7 @@ type ImportMode byte
 const (
 	Code ImportMode = iota
 	RawText
+	Location
 )
 
 type Import struct {

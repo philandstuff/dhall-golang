@@ -32,6 +32,10 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				return nil, err
 			}
 		}
+		if i.ImportMode == Location {
+			return here.AsLocation(), nil
+		}
+
 		for _, ancestor := range ancestors {
 			if ancestor == here {
 				return nil, fmt.Errorf("Detected import cycle in %s", ancestor)
