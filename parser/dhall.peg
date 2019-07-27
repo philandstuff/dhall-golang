@@ -33,6 +33,25 @@ func ParseOperator(opcode int, first, rest interface{}) Expr {
     return out
 }
 
+func IsNonCharacter(r rune) bool {
+     return r & 0xfffe == 0xfffe
+}
+
+func ValidCodepoint(r rune) bool {
+     return utf8.ValidRune(r) && !IsNonCharacter(r)
+}
+
+// Helper for parsing unicode code points
+func ParseCodepoint(codepointText string) ([]byte, error) {
+    i, err := strconv.ParseInt(codepointText, 16, 32)
+    if err != nil { return nil, err }
+    r := rune(i)
+    if !ValidCodepoint(r) {
+        return nil, fmt.Errorf("%s is not a valid unicode code point", codepointText)
+    }
+    return []byte(string([]rune{r})), nil
+}
+
 }
 
 DhallFile ← e:CompleteExpression EOF { return e, nil }
@@ -41,16 +60,40 @@ CompleteExpression ← _ e:Expression _ { return e, nil }
 
 EOL ← "\n" / "\r\n" { return []byte{'\n'}, nil }
 
+ValidNonAscii ←
+    [\u0080-\uD7FF]
+  / [\uE000-\uFFFD]
+  / [\U00010000-\U0001FFFD]
+  / [\U00020000-\U0002FFFD]
+  / [\U00030000-\U0003FFFD]
+  / [\U00040000-\U0004FFFD]
+  / [\U00050000-\U0005FFFD]
+  / [\U00060000-\U0006FFFD]
+  / [\U00070000-\U0007FFFD]
+  / [\U00080000-\U0008FFFD]
+  / [\U00090000-\U0009FFFD]
+  / [\U000A0000-\U000AFFFD]
+  / [\U000B0000-\U000BFFFD]
+  / [\U000C0000-\U000CFFFD]
+  / [\U000D0000-\U000DFFFD]
+  / [\U000E0000-\U000EFFFD]
+  / [\U000F0000-\U000FFFFD]
+  / [\U000100000-\U00010FFFD]
+
 BlockComment ← "{-" BlockCommentContinue
 
-BlockCommentChunk ←
-    BlockComment
-  / [\t\u0020-\U0010ffff]
+BlockCommentChar ←
+    [\x20-\x7f]
+  / ValidNonAscii
+  / '\t'
   / EOL
 
-BlockCommentContinue ← "-}" / BlockCommentChunk BlockCommentContinue
+BlockCommentContinue ←
+      "-}"
+    / BlockComment BlockCommentContinue
+    / BlockCommentChar BlockCommentContinue
 
-NotEOL ← [\t\u0020-\U0010ffff]
+NotEOL ← [\x20-\x7f] / ValidNonAscii / '\t'
 
 LineComment ← "--" content:(NotEOL* { return string(c.text), nil}) EOL { return content, nil }
 
@@ -103,18 +146,17 @@ DoubleQuoteEscaped ←
 
 UnicodeEscape ←
         HexDig HexDig HexDig HexDig {
-            i, err := strconv.ParseInt(string(c.text), 16, 32)
-            return []byte(string([]rune{rune(i)})), err
+            return ParseCodepoint(string(c.text))
         }
       / '{' HexDig+ '}' {
-            i, err := strconv.ParseInt(string(c.text[1:len(c.text)-1]), 16, 32)
-            return []byte(string([]rune{rune(i)})), err
+            return ParseCodepoint(string(c.text[1:len(c.text)-1]))
         }
 
 DoubleQuoteChar ←
      [\x20-\x21]
    / [\x23-\x5b]
-   / [\x5d-\U0010ffff]
+   / [\x5d-\x7f]
+   / ValidNonAscii
 
 DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
     var str strings.Builder
@@ -147,7 +189,8 @@ EscapedQuotePair ← "'''" { return []byte("''"), nil }
 EscapedInterpolation ← "''${" { return []byte("$\u007b"), nil }
 
 SingleQuoteChar ←
-     [\x20-\U0010ffff]
+     [\x20-\x7f]
+   / ValidNonAscii
    / '\t'
    / EOL
 
@@ -299,7 +342,8 @@ PathCharacter ←
 QuotedPathCharacter ←
      [\x20-\x21]
    / [\x23-\x2e]
-   / [\x30-\U0010ffff]
+   / [\x30-\x7f]
+   / ValidNonAscii
 
 UnquotedPathComponent ← PathCharacter+ { return string(c.text), nil }
 QuotedPathComponent ← QuotedPathCharacter+ { return string(c.text), nil }

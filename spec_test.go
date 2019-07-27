@@ -20,11 +20,21 @@ import (
 
 var expectedFailures = []string{
 	// union literals
+	"TestParserAccepts/toMap",
 	"TestParserAccepts/unionA.dhall",
 	"TestParserAccepts/unit/import/pathTerminationUnion",
+	"TestParserAccepts/unit/ListLitEmptyPrecedence",
+	"TestParserAccepts/unit/ListLitEmpty2",
 	"TestParserAccepts/unit/UnionLit",
+	"TestTypecheckFails/unit/OptionalDeprecatedSyntaxAbsent.dhall",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall",
+	"TestTypeInference/unit/ListLiteralEmptyNormalizeAnnotation",
+	"TestTypeInference/unit/ToMap",
 	"TestTypeInference/unit/UnionLiteral",
+	"TestNormalization/unit/EmptyToMap",
+	"TestNormalization/unit/ListNormalizeTypeAnnotation",
+	"TestNormalization/unit/RecordProjectionNormalizeFields",
+	"TestNormalization/unit/ToMap",
 	"TestNormalization/unit/UnionLiteral",
 	// needs `using`
 	"TestParserAccepts/unit/import/inlineUsing",
