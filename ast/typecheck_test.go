@@ -102,7 +102,7 @@ var _ = Describe("TypeCheck in empty context", func() {
 	DescribeTable("List types",
 		expectType,
 		Entry("([] : List Natural) : List Natural",
-			EmptyList{Natural},
+			EmptyList{Apply(List, Natural)},
 			Apply(List, Natural)),
 		Entry("[3] : List Natural",
 			MakeList(NaturalLit(3)),

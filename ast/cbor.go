@@ -218,7 +218,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					if err != nil {
 						return nil, err
 					}
-					return EmptyList{Type: t}, nil
+					return EmptyList{Type: Apply(List, t)}, nil
 				}
 				items := make([]Expr, len(val)-2)
 				for i, rawItem := range val[2:] {
@@ -477,6 +477,12 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					return nil, err
 				}
 				return Annot{expr, annotation}, nil
+			case 28: // [] : T -- but not in form [] : List T
+				t, err := decode(val[1])
+				if err != nil {
+					return nil, err
+				}
+				return EmptyList{Type: t}, nil
 			}
 		}
 	}
@@ -539,7 +545,13 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 	case Operator:
 		e.Encode([]interface{}{3, val.OpCode, box(val.L), box(val.R)})
 	case EmptyList:
-		e.Encode([]interface{}{4, box(val.Type)})
+		if app, ok := val.Type.(*App); ok {
+			if app.Fn == List {
+				e.Encode([]interface{}{4, box(app.Arg)})
+				break
+			}
+		}
+		e.Encode([]interface{}{28, box(val.Type)})
 	case NonEmptyList:
 		items := []Expr(val)
 		output := make([]interface{}, len(items)+2)

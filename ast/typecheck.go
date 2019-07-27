@@ -563,12 +563,24 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 func (IntegerLit) TypeWith(*TypeContext) (Expr, error) { return Integer, nil }
 
 func (l EmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
-	t := l.Type
-	err := assertSimpleType(ctx, t, Type)
+	// Γ ⊢ T₀ : c
+	_, err := NormalizedTypeWith(l.Type, ctx)
 	if err != nil {
 		return nil, err
 	}
-	return Apply(List, t), nil
+	lt := l.Type.Normalize()
+	// T₀ ⇥ List T₁
+	if app, ok := lt.(*App); ok {
+		if app.Fn == List {
+			// T₁ :⇥ Type
+			err := assertSimpleType(ctx, app.Arg, Type)
+			if err != nil {
+				return nil, err
+			}
+			return app, nil
+		}
+	}
+	return nil, fmt.Errorf("An empty list must be annotated with a List type, but I saw %v", l.Type)
 }
 
 func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {

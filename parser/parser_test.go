@@ -127,7 +127,7 @@ baz
 		Entry("List Natural", `List Natural`, Apply(List, Natural)),
 		Entry("[3]", `[3]`, MakeList(NaturalLit(3))),
 		Entry("[3,4]", `[3,4]`, MakeList(NaturalLit(3), NaturalLit(4))),
-		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Natural}),
+		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Apply(List, Natural)}),
 		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), Apply(List, Natural)}),
 		Entry("a # b", `a # b`, ListAppend(MkVar("a"), MkVar("b"))),
 	)

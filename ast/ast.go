@@ -116,7 +116,8 @@ type (
 
 	IntegerLit int
 
-	// `[] : List Natural` == EmptyList{Natural}
+	// `[] : List Natural` == EmptyList{Apply(List,Natural)}
+	// `[] : T` == EmptyList{T}
 	EmptyList struct{ Type Expr }
 	// `[2,3,4]` == NonEmptyList(2,3,4)
 	NonEmptyList []Expr
@@ -293,7 +294,7 @@ var (
 	_ Expr = Integer
 	_ Expr = IntegerLit(3)
 	_ Expr = List
-	_ Expr = EmptyList{Natural}
+	_ Expr = EmptyList{Apply(List, Natural)}
 	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
 	_ Expr = Optional
 	_ Expr = Some{NaturalLit(3)}
@@ -807,7 +808,7 @@ func (i IntegerLit) String() string {
 }
 
 func (l EmptyList) String() string {
-	return fmt.Sprintf("[] : List %v", l.Type)
+	return fmt.Sprintf("[] : %v", l.Type)
 }
 
 func (l NonEmptyList) String() string {
@@ -1003,12 +1004,12 @@ func (app *App) Normalize() Expr {
 								MakeList(MkVar("a")),
 								MkVar("as"),
 							)}},
-					EmptyList{A0},
+					EmptyList{Apply(List, A0)},
 				).Normalize()
 			case ListReverse:
 				switch list := a0.(type) {
 				case EmptyList:
-					return EmptyList{f1.Arg}
+					return EmptyList{Apply(List, f1.Arg)}
 				case NonEmptyList:
 					output := make([]Expr, len(list))
 					for i, a := range list {
@@ -1037,7 +1038,7 @@ func (app *App) Normalize() Expr {
 			case ListIndexed:
 				switch list := a0.(type) {
 				case EmptyList:
-					return EmptyList{Record{"index": Natural, "value": f1.Arg}}
+					return EmptyList{Apply(List, Record{"index": Natural, "value": f1.Arg})}
 				case NonEmptyList:
 					output := make([]Expr, len(list))
 					for i, a := range list {

@@ -518,7 +518,7 @@ e:OperatorExpression a:(_ Annotation)? {
         return Annot{e.(Expr), a.([]interface{})[1].(Expr)}, nil
     }
 
-EmptyList ← '[' _ ']' _ ':' _1 List _ a:ImportExpression {
+EmptyList ← '[' _ ']' _ ':' _1 a:ApplicationExpression {
           return EmptyList{a.(Expr)},nil
 }
 
