@@ -696,6 +696,58 @@ func (r RecordLit) TypeWith(ctx *TypeContext) (Expr, error) {
 	return Record(fieldTypes), nil
 }
 
+func (t ToMap) TypeWith(ctx *TypeContext) (Expr, error) {
+	rt1, err := NormalizedTypeWith(t.Record, ctx)
+	if err != nil {
+		return nil, err
+	}
+	rt2, ok := rt1.(Record)
+	if !ok {
+		return nil, errors.New("`toMap` must be called on a record")
+	}
+	if t.Type == nil {
+		// Γ ⊢ e :⇥ { x : T₀, xs… }
+		if len(rt2) == 0 {
+			return nil, errors.New("An unannotated `toMap` must be called on a nonempty record")
+		}
+		var elemType Expr
+		for _, v := range rt2 {
+			if elemType == nil {
+				elemType = v
+			} else {
+				if !judgmentallyEqual(elemType, v) {
+					return nil, fmt.Errorf("fields must be the same type, but saw different types %v and %v", elemType, v)
+				}
+			}
+		}
+		return Apply(List, Record(map[string]Expr{"mapKey": Text, "mapValue": elemType})), nil
+	} else {
+		// Γ ⊢ e :⇥ {}
+		if len(rt2) != 0 {
+			// see dhall-lang#671
+			return nil, errors.New("Cannot annotate `toMap` on a nonempty record")
+		}
+		// Γ ⊢ T₀ :⇥ Type
+		err = assertNormalizedTypeIs(t.Type, ctx, Type,
+			errors.New("in `toMap {} : T`, T must be a Type"))
+		if err != nil {
+			return nil, err
+		}
+
+		// T₀ ⇥ List { mapKey : Text, mapValue : T₁ }
+		normType := t.Type.Normalize()
+		app, ok := normType.(*App)
+		if !ok || app.Fn != List {
+			return nil, errors.New("toMap must be annotated with `List { mapKey : Text, mapValue : T }`")
+		}
+		entryType, ok := app.Arg.(Record)
+		if !ok || len(entryType) != 2 || entryType["mapKey"] != Text || entryType["mapValue"] == nil {
+			return nil, errors.New("toMap must be annotated with `List { mapKey : Text, mapValue : T }`")
+		}
+		return app, nil
+	}
+}
+
 func (f Field) TypeWith(ctx *TypeContext) (Expr, error) {
 	// Γ ⊢ u : c (used in the union case below)
 	rt, err := NormalizedTypeWith(f.Record, ctx)

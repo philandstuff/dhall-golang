@@ -128,6 +128,12 @@ type (
 
 	Record    map[string]Expr // { x : Natural }
 	RecordLit map[string]Expr // { x = 3 }
+	// toMap t
+	// toMap t : T
+	ToMap struct {
+		Record Expr
+		Type   Expr // optional
+	}
 
 	// e.x
 	Field struct {
@@ -294,12 +300,13 @@ var (
 	_ Expr = Integer
 	_ Expr = IntegerLit(3)
 	_ Expr = List
-	_ Expr = EmptyList{Apply(List, Natural)}
+	_ Expr = EmptyList{}
 	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
 	_ Expr = Optional
 	_ Expr = Some{NaturalLit(3)}
 	_ Expr = Record(map[string]Expr{})
 	_ Expr = RecordLit(map[string]Expr{})
+	_ Expr = ToMap{}
 	_ Expr = Field{}
 	_ Expr = Project{}
 	_ Expr = ProjectType{}
@@ -450,6 +457,12 @@ func Shift(d int, v Var, e Expr) Expr {
 			fields[name] = Shift(d, v, val)
 		}
 		return RecordLit(fields)
+	case ToMap:
+		shifted := ToMap{Record: Shift(d, v, e.Record)}
+		if e.Type != nil {
+			shifted.Type = Shift(d, v, e.Type)
+		}
+		return shifted
 	case Field:
 		return Field{
 			Record:    Shift(d, v, e.Record),
@@ -588,6 +601,12 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			fields[name] = Subst(v, c, val)
 		}
 		return RecordLit(fields)
+	case ToMap:
+		shifted := ToMap{Record: Subst(v, c, e.Record)}
+		if e.Type != nil {
+			shifted.Type = Subst(v, c, e.Type)
+		}
+		return shifted
 	case Field:
 		return Field{
 			Record:    Subst(v, c, e.Record),
@@ -858,6 +877,13 @@ func (r RecordLit) String() string {
 	}
 	out.WriteString(" }")
 	return out.String()
+}
+
+func (t ToMap) String() string {
+	if t.Type != nil {
+		return fmt.Sprintf("toMap %v : %v", t.Record, t.Type)
+	}
+	return fmt.Sprintf("toMap %v", t.Record)
 }
 
 func (f Field) String() string {
@@ -1449,6 +1475,30 @@ func (r RecordLit) Normalize() Expr {
 	return RecordLit(fields)
 }
 
+func (t ToMap) Normalize() Expr {
+	record := t.Record.Normalize()
+	if recordLit, ok := record.(RecordLit); ok {
+		if len(recordLit) == 0 {
+			return EmptyList{t.Type.Normalize()}
+		}
+		keys := make([]string, 0)
+		for k, _ := range recordLit {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		output := make([]Expr, 0)
+		for _, k := range keys {
+			output = append(output, RecordLit{"mapKey": TextLit{Suffix: k}, "mapValue": recordLit[k]})
+		}
+		return NonEmptyList(output)
+	}
+	output := ToMap{Record: record}
+	if t.Type != nil {
+		output.Type = t.Type.Normalize()
+	}
+	return output
+}
+
 func (f Field) Normalize() Expr {
 	r := f.Record.Normalize()
 	if rl, ok := r.(RecordLit); ok {
@@ -1679,6 +1729,14 @@ func (r RecordLit) AlphaNormalize() Expr {
 		fields[name] = val.AlphaNormalize()
 	}
 	return RecordLit(fields)
+}
+
+func (t ToMap) AlphaNormalize() Expr {
+	alpha := ToMap{Record: t.Record.AlphaNormalize()}
+	if t.Type != nil {
+		alpha.Type = t.Type.AlphaNormalize()
+	}
+	return alpha
 }
 
 func (f Field) AlphaNormalize() Expr {

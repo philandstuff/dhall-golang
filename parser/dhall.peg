@@ -266,6 +266,7 @@ False ← "False"
 Infinity ← "Infinity"
 NaN ← "NaN"
 Some ← "Some"
+toMap ← "toMap"
 
 Keyword ←
     If / Then / Else
@@ -273,7 +274,7 @@ Keyword ←
   / Using / Missing / As
   / True / False
   / Infinity / NaN
-  / Merge / Some
+  / Merge / Some / toMap
 
 Optional ← "Optional"
 Text ← "Text"
@@ -508,6 +509,7 @@ Expression ←
           return Merge{Handler:h.(Expr), Union:u.(Expr), Annotation:a.(Expr)}, nil
       }
     / EmptyList
+    / toMap _1 e:ImportExpression _ ':' _1 t:ApplicationExpression { return ToMap{e.(Expr), t.(Expr)}, nil }
     / AnnotatedExpression
 
 Annotation ← ':' _1 a:Expression { return a, nil }
@@ -563,6 +565,7 @@ FirstApplicationExpression ←
              return Merge{Handler:h.(Expr), Union:u.(Expr)}, nil
           }
      / Some _1 e:ImportExpression { return Some{e.(Expr)}, nil }
+     / toMap _1 e:ImportExpression { return ToMap{Record: e.(Expr)}, nil }
      / ImportExpression
 
 ImportExpression ← Import / SelectorExpression

@@ -477,6 +477,20 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					return nil, err
 				}
 				return Annot{expr, annotation}, nil
+			case 27: // toMap
+				record, err := decode(val[1])
+				if err != nil {
+					return nil, err
+				}
+				output := ToMap{Record: record}
+				if len(val) > 2 {
+					typ, err := decode(val[2])
+					if err != nil {
+						return nil, err
+					}
+					output.Type = typ
+				}
+				return output, nil
 			case 28: // [] : T -- but not in form [] : List T
 				t, err := decode(val[1])
 				if err != nil {
@@ -585,6 +599,12 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		// we rely on the EncodeOptions having Canonical set
 		// so that we get sorted keys in our map
 		e.Encode([]interface{}{8, items})
+	case ToMap:
+		if val.Type != nil {
+			e.Encode([]interface{}{27, box(val.Record), box(val.Type)})
+		} else {
+			e.Encode([]interface{}{27, box(val.Record)})
+		}
 	case Field:
 		e.Encode([]interface{}{9, box(val.Record), val.FieldName})
 	case Project:
