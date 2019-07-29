@@ -19,18 +19,16 @@ import (
 )
 
 var expectedFailures = []string{
-	// union literals
-	"TestParserAccepts/unionA.dhall",
-	"TestParserAccepts/unit/import/pathTerminationUnion",
-	"TestParserAccepts/unit/UnionLit",
-	"TestTypeInference/simple/alternativesAreTypesA.dhall",
-	"TestTypeInference/unit/UnionLiteral",
-	"TestNormalization/unit/UnionLiteral",
+	// Natural/subtract
+	"TestTypeInference/unit/NaturalSubtract",
+	"TestNormalization/unit/NaturalSubtractZero",
+	"TestNormalization/unit/NaturalSubtractGreater",
+	"TestNormalization/unit/NaturalSubtractLess",
+	"TestNormalization/unit/NaturalSubtractFromZero",
 	// needs `using`
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
 	"TestTypecheckFails/customHeadersUsingBoundVariable",
-	"TestImport/asLocationA.dhall", // fixed by dhall-lang #633
 	"TestImport/customHeadersA.dhall",
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
