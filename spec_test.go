@@ -25,7 +25,6 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/UnionLit",
 	"TestTypeInference/simple/alternativesAreTypesA.dhall",
 	"TestTypeInference/unit/UnionLiteral",
-	"TestNormalization/unit/RecordProjectionNormalizeFields",
 	"TestNormalization/unit/UnionLiteral",
 	// needs `using`
 	"TestParserAccepts/unit/import/inlineUsing",

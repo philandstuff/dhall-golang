@@ -1520,7 +1520,9 @@ func (p Project) Normalize() Expr {
 		}
 		return result
 	}
-	return Project{Record: r, FieldNames: p.FieldNames}
+	output := Project{Record: r, FieldNames: p.FieldNames}
+	sort.Strings(output.FieldNames)
+	return output
 }
 
 func (p ProjectType) Normalize() Expr {
