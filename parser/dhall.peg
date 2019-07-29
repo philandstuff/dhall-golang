@@ -225,6 +225,7 @@ Reserved ←
   / "Natural/odd" { return NaturalOdd, nil }
   / "Natural/toInteger" { return NaturalToInteger, nil }
   / "Natural/show" { return NaturalShow, nil }
+  / "Natural/subtract" { return NaturalSubtract, nil }
   / "Integer/toDouble" { return IntegerToDouble, nil }
   / "Integer/show" { return IntegerShow, nil }
   / "Double/show" { return DoubleShow, nil }

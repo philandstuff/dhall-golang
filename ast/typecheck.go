@@ -93,6 +93,8 @@ func (b Builtin) TypeWith(ctx *TypeContext) (Expr, error) {
 		return FnType(Natural, Integer), nil
 	case NaturalShow:
 		return FnType(Natural, Text), nil
+	case NaturalSubtract:
+		return FnType(Natural, FnType(Natural, Natural)), nil
 	case IntegerToDouble:
 		return FnType(Integer, Double), nil
 	case IntegerShow:

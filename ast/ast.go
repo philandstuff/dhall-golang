@@ -186,6 +186,7 @@ const (
 	NaturalOdd       = Builtin("Natural/odd")
 	NaturalToInteger = Builtin("Natural/toInteger")
 	NaturalShow      = Builtin("Natural/show")
+	NaturalSubtract  = Builtin("Natural/subtract")
 
 	IntegerToDouble = Builtin("Integer/toDouble")
 	IntegerShow     = Builtin("Integer/show")
@@ -1009,6 +1010,22 @@ func (app *App) Normalize() Expr {
 			}
 		case Builtin: // two args: (Foo/bar f1.Arg a0)
 			switch f2 {
+			case NaturalSubtract:
+				m, mOk := f1.Arg.(NaturalLit)
+				n, nOk := a0.(NaturalLit)
+				if mOk && nOk {
+					if n >= m {
+						return NaturalLit(n - m)
+					} else {
+						return NaturalLit(0)
+					}
+				}
+				if m == NaturalLit(0) {
+					return a0
+				}
+				if n == NaturalLit(0) {
+					return NaturalLit(0)
+				}
 			case ListBuild:
 				if ap0, ok := a0.(*App); ok {
 					if ap1, ok := ap0.Fn.(*App); ok {

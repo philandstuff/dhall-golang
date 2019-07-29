@@ -19,12 +19,6 @@ import (
 )
 
 var expectedFailures = []string{
-	// Natural/subtract
-	"TestTypeInference/unit/NaturalSubtract",
-	"TestNormalization/unit/NaturalSubtractZero",
-	"TestNormalization/unit/NaturalSubtractGreater",
-	"TestNormalization/unit/NaturalSubtractLess",
-	"TestNormalization/unit/NaturalSubtractFromZero",
 	// needs `using`
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
