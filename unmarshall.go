@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/philandstuff/dhall-golang/ast"
@@ -24,11 +25,13 @@ func reflectValToDhallVal(val reflect.Value, typ ast.Expr) ast.Expr {
 			return ast.NaturalLit(val.Int())
 		case ast.Integer:
 			return ast.IntegerLit(val.Int())
+			// TODO: TextLit
 		case ast.List:
 			panic("wrong Kind")
 		default:
 			panic("unknown Builtin")
 		}
+		// TODO: RecordLit
 	case *ast.App:
 		switch e.Fn {
 		case ast.List:
@@ -83,11 +86,23 @@ func unmarshal(e ast.Expr, v reflect.Value) {
 		v.SetInt(int64(e))
 	case ast.IntegerLit:
 		v.SetInt(int64(e))
+	case ast.TextLit:
+		// FIXME: ensure TextLit doesn't have interpolations
+		v.SetString(e.Suffix)
 	case ast.NonEmptyList:
 		slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 		for i, expr := range e {
 			unmarshal(expr, slice.Index(i))
 		}
 		v.Set(slice)
+	case ast.RecordLit:
+		structType := v.Type()
+		if structType.Kind() != reflect.Struct {
+			panic(fmt.Sprintf("Can't convert record to %v", v))
+		}
+		for i := 0; i < structType.NumField(); i++ {
+			// FIXME ignores fields in RecordLit not in Struct
+			unmarshal(e[structType.Field(i).Name], v.Field(i))
+		}
 	}
 }

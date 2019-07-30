@@ -18,6 +18,11 @@ func UnmarshalAndCompare(input ast.Expr, ptr interface{}, expected interface{}) 
 		To(Equal(expected))
 }
 
+type testStruct struct {
+	Foo int
+	Bar string
+}
+
 var _ = Describe("Unmarshal", func() {
 	DescribeTable("Simple types", UnmarshalAndCompare,
 		Entry("unmarshals DoubleLit into *float32",
@@ -34,6 +39,8 @@ var _ = Describe("Unmarshal", func() {
 			ast.IntegerLit(5), new(int), 5),
 		Entry("unmarshals IntegerLit into *int",
 			ast.IntegerLit(5), new(int64), int64(5)),
+		Entry("unmarshals TextLit into *string",
+			ast.TextLit{Suffix: "lalala"}, new(string), "lalala"),
 	)
 	DescribeTable("Compound types", UnmarshalAndCompare,
 		Entry("unmarshals List Integer into int slice",
@@ -52,6 +59,10 @@ var _ = Describe("Unmarshal", func() {
 			ast.MakeList(ast.MakeList(ast.True, ast.False)),
 			new([][]bool),
 			[][]bool{{true, false}}),
+		Entry("unmarshals {Foo : Natural, Bar : Text} into struct",
+			ast.RecordLit{"Foo": ast.NaturalLit(3), "Bar": ast.TextLit{Suffix: "xyzzy"}},
+			new(testStruct),
+			testStruct{Foo: 3, Bar: "xyzzy"}),
 	)
 	Describe("Function types", func() {
 		It("Unmarshals the identity int function", func() {
