@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/philandstuff/dhall-golang/ast"
@@ -72,55 +71,56 @@ func dhallShim(out reflect.Type, dhallFunc *ast.LambdaExpr) func([]reflect.Value
 }
 
 func unmarshal(e ast.Expr, v reflect.Value) {
-	switch e := e.(type) {
-	case *ast.LambdaExpr:
+	switch v.Kind() {
+	case reflect.Map:
+		// initialise with new (non-nil) value
+		v.Set(reflect.MakeMap(v.Type()))
+		e := e.(ast.NonEmptyList)
+		recordLit := e[0].(ast.RecordLit)
+		if len(recordLit) != 2 {
+			panic("can only unmarshal `List {mapKey : T, mapValue : U}` into go map")
+		}
+		for _, r := range e {
+			entry := r.(ast.RecordLit)
+			key := reflect.New(v.Type().Key()).Elem()
+			val := reflect.New(v.Type().Elem()).Elem()
+			unmarshal(entry["mapKey"], key)
+			unmarshal(entry["mapValue"], val)
+			v.SetMapIndex(key, val)
+		}
+	case reflect.Struct:
+		e := e.(ast.RecordLit)
+		structType := v.Type()
+		for i := 0; i < structType.NumField(); i++ {
+			// FIXME ignores fields in RecordLit not in Struct
+			unmarshal(e[structType.Field(i).Name], v.Field(i))
+		}
+	case reflect.Func:
+		e := e.(*ast.LambdaExpr)
 		fnType := v.Type()
 		returnType := fnType.Out(0)
 		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e))
 		v.Set(fn)
-	case ast.DoubleLit:
-		v.SetFloat(float64(e))
-	case ast.BoolLit:
-		v.SetBool(bool(e))
-	case ast.NaturalLit:
-		v.SetInt(int64(e))
-	case ast.IntegerLit:
-		v.SetInt(int64(e))
-	case ast.TextLit:
-		// FIXME: ensure TextLit doesn't have interpolations
-		v.SetString(e.Suffix)
-	case ast.NonEmptyList:
-		// special casing for map
-		if v.Kind() == reflect.Map {
-			recordLit := e[0].(ast.RecordLit)
-			if len(recordLit) != 2 {
-				panic("can only unmarshal `List {mapKey : T, mapValue : U}` into go map")
-			}
-			// initialise with new (non-nil) value
-			v.Set(reflect.MakeMap(v.Type()))
-			for _, r := range e {
-				entry := r.(ast.RecordLit)
-				key := reflect.New(v.Type().Key()).Elem()
-				val := reflect.New(v.Type().Elem()).Elem()
-				unmarshal(entry["mapKey"], key)
-				unmarshal(entry["mapValue"], val)
-				v.SetMapIndex(key, val)
-			}
-			return
-		}
+	case reflect.Slice:
+		e := e.(ast.NonEmptyList)
 		slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 		for i, expr := range e {
 			unmarshal(expr, slice.Index(i))
 		}
 		v.Set(slice)
-	case ast.RecordLit:
-		structType := v.Type()
-		if structType.Kind() != reflect.Struct {
-			panic(fmt.Sprintf("Can't convert record to %v", v))
-		}
-		for i := 0; i < structType.NumField(); i++ {
-			// FIXME ignores fields in RecordLit not in Struct
-			unmarshal(e[structType.Field(i).Name], v.Field(i))
+	default:
+		switch e := e.(type) {
+		case ast.DoubleLit:
+			v.SetFloat(float64(e))
+		case ast.BoolLit:
+			v.SetBool(bool(e))
+		case ast.NaturalLit:
+			v.SetInt(int64(e))
+		case ast.IntegerLit:
+			v.SetInt(int64(e))
+		case ast.TextLit:
+			// FIXME: ensure TextLit doesn't have interpolations
+			v.SetString(e.Suffix)
 		}
 	}
 }
