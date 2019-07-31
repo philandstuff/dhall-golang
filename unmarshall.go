@@ -24,7 +24,8 @@ func reflectValToDhallVal(val reflect.Value, typ ast.Expr) ast.Expr {
 			return ast.NaturalLit(val.Int())
 		case ast.Integer:
 			return ast.IntegerLit(val.Int())
-			// TODO: TextLit
+		case ast.Text:
+			return ast.TextLit{Suffix: val.String()}
 		case ast.List:
 			panic("wrong Kind")
 		default:

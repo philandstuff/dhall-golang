@@ -100,6 +100,17 @@ var _ = Describe("Unmarshal", func() {
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(int64(3))).To(Equal(int64(3)))
 		})
+		It("Unmarshals the identity string function", func() {
+			var fn func(string) string
+			dhallFn := &ast.LambdaExpr{
+				Label: "x",
+				Type:  ast.Text,
+				Body:  ast.MkVar("x"),
+			}
+			Unmarshal(dhallFn, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn("foo")).To(Equal("foo"))
+		})
 		It("Unmarshals the int successor function", func() {
 			var fn func(int) int
 			dhallFn := &ast.LambdaExpr{
