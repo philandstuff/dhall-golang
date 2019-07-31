@@ -75,6 +75,9 @@ func unmarshal(e ast.Expr, v reflect.Value) {
 	case reflect.Map:
 		// initialise with new (non-nil) value
 		v.Set(reflect.MakeMap(v.Type()))
+		if _, ok := e.(ast.EmptyList); ok {
+			return
+		}
 		e := e.(ast.NonEmptyList)
 		recordLit := e[0].(ast.RecordLit)
 		if len(recordLit) != 2 {
@@ -102,6 +105,10 @@ func unmarshal(e ast.Expr, v reflect.Value) {
 		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e))
 		v.Set(fn)
 	case reflect.Slice:
+		if _, ok := e.(ast.EmptyList); ok {
+			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
+			return
+		}
 		e := e.(ast.NonEmptyList)
 		slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 		for i, expr := range e {

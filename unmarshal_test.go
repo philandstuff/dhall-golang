@@ -55,6 +55,10 @@ var _ = Describe("Unmarshal", func() {
 			ast.MakeList(ast.True, ast.False),
 			new([]bool),
 			[]bool{true, false}),
+		Entry("unmarshals empty List Bool into slice",
+			ast.EmptyList{ast.Bool},
+			new([]bool),
+			[]bool{}),
 		Entry("unmarshals List (List Bool) into slice",
 			ast.MakeList(ast.MakeList(ast.True, ast.False)),
 			new([][]bool),
@@ -68,6 +72,10 @@ var _ = Describe("Unmarshal", func() {
 				ast.RecordLit{"mapKey": ast.NaturalLit(5), "mapValue": ast.TextLit{Suffix: "buzz"}}),
 			new(map[int]string),
 			map[int]string{3: "fizz", 5: "buzz"}),
+		Entry("unmarshals empty List {mapKey : Natural, mapValue : Text} into map",
+			ast.EmptyList{ast.Record{"mapKey": ast.Natural, "mapValue": ast.Text}},
+			new(map[int]string),
+			map[int]string{}),
 	)
 	Describe("Function types", func() {
 		It("Unmarshals the identity int function", func() {
