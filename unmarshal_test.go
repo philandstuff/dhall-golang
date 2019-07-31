@@ -63,6 +63,11 @@ var _ = Describe("Unmarshal", func() {
 			ast.RecordLit{"Foo": ast.NaturalLit(3), "Bar": ast.TextLit{Suffix: "xyzzy"}},
 			new(testStruct),
 			testStruct{Foo: 3, Bar: "xyzzy"}),
+		Entry("unmarshals List {mapKey : Natural, mapValue : Text} into map",
+			ast.MakeList(ast.RecordLit{"mapKey": ast.NaturalLit(3), "mapValue": ast.TextLit{Suffix: "fizz"}},
+				ast.RecordLit{"mapKey": ast.NaturalLit(5), "mapValue": ast.TextLit{Suffix: "buzz"}}),
+			new(map[int]string),
+			map[int]string{3: "fizz", 5: "buzz"}),
 	)
 	Describe("Function types", func() {
 		It("Unmarshals the identity int function", func() {

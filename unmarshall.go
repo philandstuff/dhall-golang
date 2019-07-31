@@ -90,6 +90,24 @@ func unmarshal(e ast.Expr, v reflect.Value) {
 		// FIXME: ensure TextLit doesn't have interpolations
 		v.SetString(e.Suffix)
 	case ast.NonEmptyList:
+		// special casing for map
+		if v.Kind() == reflect.Map {
+			recordLit := e[0].(ast.RecordLit)
+			if len(recordLit) != 2 {
+				panic("can only unmarshal `List {mapKey : T, mapValue : U}` into go map")
+			}
+			// initialise with new (non-nil) value
+			v.Set(reflect.MakeMap(v.Type()))
+			for _, r := range e {
+				entry := r.(ast.RecordLit)
+				key := reflect.New(v.Type().Key()).Elem()
+				val := reflect.New(v.Type().Elem()).Elem()
+				unmarshal(entry["mapKey"], key)
+				unmarshal(entry["mapValue"], val)
+				v.SetMapIndex(key, val)
+			}
+			return
+		}
 		slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 		for i, expr := range e {
 			unmarshal(expr, slice.Index(i))
