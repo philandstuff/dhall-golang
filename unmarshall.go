@@ -71,7 +71,29 @@ func dhallShim(out reflect.Type, dhallFunc *ast.LambdaExpr) func([]reflect.Value
 	}
 }
 
+// flattenOptional(e) returns:
+// nil                if e is None T
+// flattenOptional(x) if e is Some x
+// e                  otherwise
+// note that there may be options buried deeper in e; we just strip any outer
+// Optional layers.
+func flattenOptional(e ast.Expr) ast.Expr {
+	if some, ok := e.(ast.Some); ok {
+		return flattenOptional(some.Val)
+	}
+	if app, ok := e.(*ast.App); ok {
+		if app.Fn == ast.None {
+			return nil
+		}
+	}
+	return e
+}
+
 func unmarshal(e ast.Expr, v reflect.Value) {
+	e = flattenOptional(e)
+	if e == nil {
+		return
+	}
 	switch v.Kind() {
 	case reflect.Map:
 		// initialise with new (non-nil) value
