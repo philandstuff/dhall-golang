@@ -2,6 +2,7 @@ package main
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/philandstuff/dhall-golang/ast"
 )
@@ -89,12 +90,92 @@ func flattenOptional(e ast.Expr) ast.Expr {
 	return e
 }
 
+// assumes e : ast.Type
+func dhallTypeToReflectType(e ast.Expr) reflect.Type {
+	switch e := e.(type) {
+	case ast.Builtin:
+		switch e {
+		case ast.Double:
+			return reflect.TypeOf(float64(0))
+		case ast.Bool:
+			return reflect.TypeOf(true)
+		case ast.Integer:
+			return reflect.TypeOf(int(0))
+		case ast.Natural:
+			return reflect.TypeOf(uint(0))
+		case ast.Text:
+			return reflect.TypeOf("foo")
+		}
+	case *ast.App:
+		switch e.Fn {
+		case ast.List:
+			return reflect.SliceOf(dhallTypeToReflectType(e.Arg))
+		case ast.Optional:
+			return dhallTypeToReflectType(e.Arg)
+		}
+	case ast.Record:
+		fields := make([]reflect.StructField, 0)
+		for k, v := range e {
+			fields = append(fields, reflect.StructField{
+				// force upper case first letter
+				Name: strings.Title(k),
+				Type: dhallTypeToReflectType(v),
+			})
+		}
+		return reflect.StructOf(fields)
+	}
+	// Pi types?
+	// union types
+	panic("unknown type")
+}
+
 func unmarshal(e ast.Expr, v reflect.Value) {
 	e = flattenOptional(e)
 	if e == nil {
 		return
 	}
 	switch v.Kind() {
+	case reflect.Interface:
+		switch e := e.(type) {
+		case ast.DoubleLit:
+			v.Set(reflect.ValueOf(float64(e)))
+		case ast.BoolLit:
+			v.Set(reflect.ValueOf(bool(e)))
+		case ast.NaturalLit:
+			v.Set(reflect.ValueOf(uint(e)))
+		case ast.IntegerLit:
+			v.Set(reflect.ValueOf(int(e)))
+		case ast.TextLit:
+			// FIXME ensure TextLit is uninterpolated
+			v.Set(reflect.ValueOf(e.Suffix))
+		case ast.EmptyList:
+			// check if it's a list of map entries
+			if r, ok := e.Type.(ast.Record); ok {
+				if len(r) == 2 {
+					for k := range r {
+						if k != "mapKey" && k != "mapValue" {
+							goto notmap
+						}
+					}
+					// it's a map; the record has exactly 2 keys and they are
+					// "mapKey" and "mapValue"
+					v.Set(reflect.MakeMap(reflect.MapOf(
+						dhallTypeToReflectType(r["mapKey"]),
+						dhallTypeToReflectType(r["mapValue"]),
+					)))
+					return
+				}
+			}
+		notmap:
+			sliceType := reflect.SliceOf(dhallTypeToReflectType(e.Type))
+			v.Set(reflect.MakeSlice(sliceType, 0, 0))
+		case ast.NonEmptyList:
+			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
+			for i, expr := range e {
+				unmarshal(expr, slice.Index(i))
+			}
+			v.Set(slice)
+		}
 	case reflect.Map:
 		// initialise with new (non-nil) value
 		v.Set(reflect.MakeMap(v.Type()))
