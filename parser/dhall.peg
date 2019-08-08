@@ -404,7 +404,7 @@ Unreserved ← [A-Za-z0-9._~-]
 
 SubDelims ← "!" / "$" / "&" / "'" / "*" / "+" / ";" / "="
 
-Http ← u:HttpRaw { return MakeRemote(u.(*url.URL)) }
+Http ← u:HttpRaw { return MakeRemote(u.(*url.URL)), nil }
 
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
 

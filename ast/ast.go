@@ -344,7 +344,7 @@ func MakeLocalImport(path string, mode ImportMode) Import {
 // only for generating test data - discards errors
 func MakeRemoteImport(uri string, mode ImportMode) Import {
 	parsedURI, _ := url.ParseRequestURI(uri)
-	remote, _ := MakeRemote(parsedURI)
+	remote := MakeRemote(parsedURI)
 	return MakeImport(remote, mode)
 }
 

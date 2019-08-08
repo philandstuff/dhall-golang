@@ -16,7 +16,7 @@ import (
 
 func makeRemote(u string) Remote {
 	parsed, _ := url.ParseRequestURI(u)
-	remote, _ := MakeRemote(parsed)
+	remote := MakeRemote(parsed)
 	return remote
 }
 
