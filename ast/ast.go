@@ -851,14 +851,18 @@ func (s Some) String() string {
 func (r Record) String() string {
 	var out strings.Builder
 	out.WriteString("{ ")
-	fields := map[string]Expr(r)
+	keys := make([]string, 0)
+	for name := range r {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
 	first := true
-	for name, expr := range fields {
+	for _, key := range keys {
 		if !first {
 			out.WriteString(", ")
 		}
 		first = false
-		out.WriteString(fmt.Sprintf("%s : %v", name, expr))
+		out.WriteString(fmt.Sprintf("%s : %v", key, r[key]))
 	}
 	out.WriteString(" }")
 	return out.String()
@@ -867,14 +871,18 @@ func (r Record) String() string {
 func (r RecordLit) String() string {
 	var out strings.Builder
 	out.WriteString("{ ")
-	fields := map[string]Expr(r)
+	keys := make([]string, 0)
+	for name := range r {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
 	first := true
-	for name, expr := range fields {
+	for _, key := range keys {
 		if !first {
 			out.WriteString(", ")
 		}
 		first = false
-		out.WriteString(fmt.Sprintf("%s = %v", name, expr))
+		out.WriteString(fmt.Sprintf("%s = %v", key, r[key]))
 	}
 	out.WriteString(" }")
 	return out.String()
