@@ -307,8 +307,8 @@ func TestNormalization(t *testing.T) {
 			resolvedB, err := imports.Load(parsedB.(ast.Expr), ast.Local(bPath))
 			expectNoError(t, err)
 
-			normA := resolvedA.(ast.Expr).Normalize()
-			normB := resolvedB.(ast.Expr).Normalize()
+			normA := resolvedA.(ast.Expr).Normalize().AlphaNormalize()
+			normB := resolvedB.(ast.Expr).Normalize().AlphaNormalize()
 
 			expectEqualExprs(t, normB, normA)
 		})
