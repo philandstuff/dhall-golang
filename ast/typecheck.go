@@ -972,6 +972,6 @@ func (m Merge) TypeWith(ctx *TypeContext) (Expr, error) {
 	return outputType, nil
 }
 
-func (e Embed) TypeWith(ctx *TypeContext) (Expr, error) {
+func (Import) TypeWith(ctx *TypeContext) (Expr, error) {
 	return nil, errors.New("Cannot typecheck an expression with unresolved imports")
 }

@@ -159,8 +159,6 @@ type (
 		Union      Expr
 		Annotation Expr // optional
 	}
-
-	Embed Import
 )
 
 const (
@@ -312,7 +310,7 @@ var (
 	_ Expr = ProjectType{}
 	_ Expr = UnionType{}
 	_ Expr = Merge{}
-	_ Expr = Embed(Import{})
+	_ Expr = Import{}
 )
 
 type ImportHashed struct {
@@ -497,7 +495,7 @@ func Shift(d int, v Var, e Expr) Expr {
 			output.Annotation = Shift(d, v, e.Annotation)
 		}
 		return output
-	case Embed:
+	case Import:
 		return e
 	}
 	panic("missing switch case in Shift()")
@@ -641,7 +639,7 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			output.Annotation = Subst(v, c, e.Annotation)
 		}
 		return output
-	case Embed:
+	case Import:
 		return e
 	}
 	panic("missing switch case in Subst()")
@@ -934,8 +932,8 @@ func (m Merge) String() string {
 	}
 }
 
-func (e Embed) String() string {
-	return e.Fetchable.String()
+func (i Import) String() string {
+	return i.Fetchable.String()
 }
 
 func (c Const) Normalize() Expr { return c }
@@ -1588,7 +1586,7 @@ func (m Merge) Normalize() Expr {
 	return output
 }
 
-func (e Embed) Normalize() Expr {
+func (Import) Normalize() Expr {
 	panic("Can't normalize an expression with unresolved imports")
 }
 
@@ -1794,7 +1792,7 @@ func (m Merge) AlphaNormalize() Expr {
 	return output
 }
 
-func (e Embed) AlphaNormalize() Expr {
+func (Import) AlphaNormalize() Expr {
 	panic("Can't normalize an expression with unresolved imports")
 }
 

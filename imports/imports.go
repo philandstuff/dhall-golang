@@ -19,9 +19,8 @@ func ResolveStringAsExpr(name, content string) (Expr, error) {
 
 func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 	switch e := e.(type) {
-	case Embed:
-		i := Import(e)
-		here := i.Fetchable
+	case Import:
+		here := e.Fetchable
 		origin := ast.NullOrigin
 		if len(ancestors) >= 1 {
 			origin = ancestors[len(ancestors)-1].Origin()
@@ -32,7 +31,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				return nil, err
 			}
 		}
-		if i.ImportMode == Location {
+		if e.ImportMode == Location {
 			return here.AsLocation(), nil
 		}
 
@@ -41,9 +40,9 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				return nil, fmt.Errorf("Detected import cycle in %s", ancestor)
 			}
 		}
-		if i.Hash != nil {
+		if e.Hash != nil {
 			// fetch from cache if available
-			if expr := fetchFromCache(i.Hash); expr != nil {
+			if expr := fetchFromCache(e.Hash); expr != nil {
 				return expr, nil
 			}
 		}
@@ -53,7 +52,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			return nil, err
 		}
 		var expr Expr
-		if i.ImportMode == RawText {
+		if e.ImportMode == RawText {
 			expr = TextLit{Suffix: content}
 		} else {
 			// dynamicExpr may contain more imports
@@ -75,13 +74,13 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			}
 		}
 		// check hash, if supplied
-		if i.Hash != nil {
+		if e.Hash != nil {
 			actualHash, err := ast.SemanticHash(expr)
 			if err != nil {
 				return nil, err
 			}
-			if !bytes.Equal(i.Hash, actualHash[:]) {
-				return nil, fmt.Errorf("Failed integrity check: expected %x but saw %x", i.Hash, actualHash)
+			if !bytes.Equal(e.Hash, actualHash[:]) {
+				return nil, fmt.Errorf("Failed integrity check: expected %x but saw %x", e.Hash, actualHash)
 			}
 			// store in cache
 			saveToCache(actualHash, expr)
