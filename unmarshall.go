@@ -2,6 +2,7 @@ package main
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/philandstuff/dhall-golang/ast"
@@ -115,11 +116,17 @@ func dhallTypeToReflectType(e ast.Expr) reflect.Type {
 		}
 	case ast.Record:
 		fields := make([]reflect.StructField, 0)
-		for k, v := range e {
+		// go through fields alphabetically
+		fieldNames := make([]string, 0)
+		for k := range e {
+			fieldNames = append(fieldNames, k)
+		}
+		sort.Strings(fieldNames)
+		for _, k := range fieldNames {
 			fields = append(fields, reflect.StructField{
 				// force upper case first letter
 				Name: strings.Title(k),
-				Type: dhallTypeToReflectType(v),
+				Type: dhallTypeToReflectType(e[k]),
 			})
 		}
 		return reflect.StructOf(fields)

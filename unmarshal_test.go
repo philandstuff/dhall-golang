@@ -136,15 +136,15 @@ var _ = Describe("Unmarshal", func() {
 			ast.EmptyList{ast.Record{"Foo": ast.Integer, "Bar": ast.Text}},
 			new(interface{}),
 			[]struct {
-				Foo int
 				Bar string
+				Foo int
 			}{}),
 		Entry("unmarshals empty List {foo : Integer, bar : Text} into interface{}",
 			ast.EmptyList{ast.Record{"foo": ast.Integer, "bar": ast.Text}},
 			new(interface{}),
 			[]struct {
-				Foo int
 				Bar string
+				Foo int
 			}{}),
 		Entry("unmarshals empty List {mapKey : Integer, mapValue : Text} into interface{}",
 			ast.EmptyList{ast.Record{"mapKey": ast.Integer, "mapValue": ast.Text}},
