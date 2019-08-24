@@ -52,7 +52,7 @@ type (
 		TypeWith(*TypeContext) (Expr, error)
 	}
 
-	Const int
+	Universe int
 
 	Var struct {
 		Name  string
@@ -168,7 +168,7 @@ type (
 )
 
 const (
-	Type Const = iota
+	Type Universe = iota
 	Kind
 	Sort
 )
@@ -366,7 +366,7 @@ func MakeImport(fetchable Fetchable, mode ImportMode) Import {
 
 func Shift(d int, v Var, e Expr) Expr {
 	switch e := e.(type) {
-	case Const:
+	case Universe:
 		return e
 	case Var:
 		if v.Name == e.Name && v.Index <= e.Index {
@@ -517,7 +517,7 @@ func Shift(d int, v Var, e Expr) Expr {
 // Subst(x, C, B) == B[x := C]
 func Subst(v Var, c Expr, b Expr) Expr {
 	switch e := b.(type) {
-	case Const:
+	case Universe:
 		return e
 	case Var:
 		if e == v {
@@ -665,7 +665,7 @@ func IsFreeIn(e Expr, x string) bool {
 	return !judgmentallyEqual(e, e2)
 }
 
-func (c Const) String() string {
+func (c Universe) String() string {
 	if c == Type {
 		return "Type"
 	} else if c == Kind {
@@ -955,8 +955,8 @@ func (i Import) String() string {
 	return i.Fetchable.String()
 }
 
-func (c Const) Normalize() Expr { return c }
-func (v Var) Normalize() Expr   { return v }
+func (c Universe) Normalize() Expr { return c }
+func (v Var) Normalize() Expr      { return v }
 
 func (lam *LambdaExpr) Normalize() Expr {
 	return &LambdaExpr{
@@ -1690,8 +1690,8 @@ func (Import) Normalize() Expr {
 	panic("Can't normalize an expression with unresolved imports")
 }
 
-func (c Const) AlphaNormalize() Expr { return c }
-func (v Var) AlphaNormalize() Expr   { return v }
+func (c Universe) AlphaNormalize() Expr { return c }
+func (v Var) AlphaNormalize() Expr      { return v }
 
 func (lam *LambdaExpr) AlphaNormalize() Expr {
 	if lam.Label == "_" {

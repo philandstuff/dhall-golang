@@ -518,7 +518,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		} else {
 			e.Encode([]interface{}{val.Name, val.Index})
 		}
-	case Const:
+	case Universe:
 		switch val {
 		case Type:
 			e.Encode("Type")

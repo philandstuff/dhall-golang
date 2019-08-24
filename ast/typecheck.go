@@ -45,7 +45,7 @@ func assertNormalizedTypeIs(expr Expr, ctx *TypeContext, expectedType Expr, msg 
 	return nil
 }
 
-func (c Const) TypeWith(ctx *TypeContext) (Expr, error) {
+func (c Universe) TypeWith(ctx *TypeContext) (Expr, error) {
 	switch c {
 	case Type:
 		return Kind, nil
@@ -189,7 +189,7 @@ func (lam *LambdaExpr) TypeWith(ctx *TypeContext) (Expr, error) {
 	return p, nil
 }
 
-func Rule(a Const, b Const) (Const, error) {
+func Rule(a Universe, b Universe) (Universe, error) {
 	if b == Type {
 		return Type, nil
 	}
@@ -207,7 +207,7 @@ func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	kA, ok := tA.(Const)
+	kA, ok := tA.(Universe)
 	if !ok {
 		return nil, fmt.Errorf("Expected %v to be a Const", tA)
 	}
@@ -216,7 +216,7 @@ func (pi *Pi) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	kB, ok := tB.(Const)
+	kB, ok := tB.(Universe)
 	if !ok {
 		return nil, errors.New("Wrong kind for body of pi type")
 	}
@@ -541,7 +541,7 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 			return nil, err
 		}
 		// if lr and rr are Records, then lt and rt must be Consts
-		if lt.(Const) > rt.(Const) {
+		if lt.(Universe) > rt.(Universe) {
 			return lt, nil
 		} else {
 			return rt, nil
@@ -658,7 +658,7 @@ func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		kk, ok := k.(Const)
+		kk, ok := k.(Universe)
 		if !ok {
 			return nil, errors.New("Invalid field type")
 		}
@@ -855,7 +855,7 @@ func (u UnionType) TypeWith(ctx *TypeContext) (Expr, error) {
 	if len(u) == 0 {
 		return Type, nil
 	}
-	var c Const
+	var c Universe
 	first := true
 	for _, typ := range u {
 		if typ == nil {
@@ -868,7 +868,7 @@ func (u UnionType) TypeWith(ctx *TypeContext) (Expr, error) {
 		}
 		if first {
 			var ok bool
-			c, ok = k.(Const)
+			c, ok = k.(Universe)
 			if !ok {
 				return nil, errors.New("Invalid alternative type")
 			}

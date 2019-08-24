@@ -9,7 +9,7 @@ import (
 )
 
 var _ = DescribeTable("Rule",
-	func(a Const, b Const, expected Const) {
+	func(a Universe, b Universe, expected Universe) {
 		actual, err := Rule(a, b)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(actual).To(Equal(expected))
