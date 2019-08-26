@@ -20,22 +20,68 @@ import (
 
 var expectedFailures = []string{
 	// needs `using`
+	"TestParserAccepts/unit/import/Headers",
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
 	"TestTypecheckFails/customHeadersUsingBoundVariable",
 	"TestImport/customHeadersA.dhall",
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
+
 	// needs bigint support
 	"TestNormalization/simple/integerToDoubleA.dhall",
 	"TestSemanticHash/simple/integerToDouble",
+
 	// needs quoted paths in URLs
 	"TestParserAccepts/unit/import/quotedPaths",     // needs.. quoted paths
 	"TestParserAccepts/unit/import/urls/quotedPath", // needs quotedPaths
+
+	// needs assert and ===
+	"TestParserAccepts/unit/Assert",
+	"TestParserAccepts/unit/operators/Equivalence",
+	"TestTypecheckFails/unit/AssertTriviallyFalse",
+	"TestTypecheckFails/unit/AssertAlphaTrap",
+	"TestTypecheckFails/unit/Equivalence",
+	"TestTypeInference/unit/Assert",
+	"TestTypeInference/unit/Equivalence",
+	"TestNormalization/unit/Assert",
+	"TestNormalization/unit/Equivalence",
+	// the prelude is full of asserts now, so doesn't parse
+	"TestTypechecks/prelude",
+	"TestSemanticHash/prelude",
+	// these depend on Prelude/Text/concatMap
+	"TestNormalization/remoteSystems",
+	"TestSemanticHash/remoteSystems",
+	// related to dependent types
+	"TestTypeInference/unit/FunctionTypeTypeKind",
+	"TestTypeInference/unit/FunctionDependentType",
+
+	// needs mixed records
+	"TestTypechecks/RecordTypeMixedKinds",
+	"TestTypechecks/simple/combineMixedRecords",
+	"TestTypechecks/simple/RecordMixedKinds",
+	"TestTypechecks/simple/RightBiasedRecordMergeMixedKinds",
+	"TestTypechecks/simple/RecursiveRecordMergeMixedKinds",
+	"TestTypechecks/preferMixedRecords",
+	"TestTypeInference/simple/RecordTypeMixedKinds",
+	"TestTypeInference/unit/RecursiveRecordMergeBoolType",
+	"TestTypeInference/simple/RecordTypeMixedKinds",
+
 	// other
 	"TestParserAccepts/unit/import/urls/potPourri", // net/url doesn't parse authorities in the way the test expects
-	"TestTypecheckFails/duplicateFields.dhall",     // in dhall-golang, duplicate fields a parse error, not a type error
-	"TestTypecheckFails/unit/README",               // FIXME, shouldn't need excluding
+
+	// upstream problems, PR to dhall-lang incoming
+	"TestNormalization/unit/RecursiveRecordMergeWithinFieldSelection3A.dhall",
+	"TestNormalization/unit/RightBiasedMergeWithinFieldSelection3A",
+	"TestNormalization/unit/NaturalBuildImplementationA.dhall",
+
+	// in dhall-golang, duplicate fields & alternatives are a parse error, not a
+	// type error
+	"TestTypecheckFails/duplicateFields.dhall", // TODO: remove from upstream, now redundant
+	"TestTypecheckFails/unit/RecordTypeDuplicateFields.dhall",
+	"TestTypecheckFails/unit/RecordLitDuplicateFields.dhall",
+	"TestTypecheckFails/unit/UnionTypeDuplicateVariants",
+	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
 }
 
 func pass(t *testing.T) {
@@ -300,9 +346,8 @@ func TestNormalization(t *testing.T) {
 			expectNoError(t, err)
 
 			normA := resolvedA.(ast.Expr).Normalize()
-			normB := resolvedB.(ast.Expr).Normalize()
 
-			expectEqualExprs(t, normB, normA)
+			expectEqualExprs(t, resolvedB, normA)
 		})
 }
 

@@ -527,7 +527,7 @@ EmptyList ← '[' _ ']' _ ':' _1 a:ApplicationExpression {
 
 OperatorExpression ← ImportAltExpression
 
-ImportAltExpression    ← first:OrExpression           rest:(_ "?" _ OrExpression)*
+ImportAltExpression    ← first:OrExpression           rest:(_ "?" _1 OrExpression)*
   {return ParseOperator(ImportAltOp, first, rest), nil}
 OrExpression           ← first:PlusExpression         rest:(_ "||" _ PlusExpression)*
   {return ParseOperator(OrOp, first, rest), nil}
@@ -674,10 +674,15 @@ NonEmptyUnionType ← first:UnionVariant rest:(_ '|' _ UnionVariant)* {
     if rest == nil { return UnionType(alternatives), nil }
     for _, alternativeSyntax := range rest.([]interface{}) {
         alternative := alternativeSyntax.([]interface{})[3].([]interface{})
+        name := alternative[0].(string)
+        if _, ok := alternatives[name]; ok {
+            return nil, fmt.Errorf("Duplicate alternative %s in union", name)
+        }
+
         if alternative[1] == nil {
-            alternatives[alternative[0].(string)] = nil
+            alternatives[name] = nil
         } else {
-            alternatives[alternative[0].(string)] = alternative[1].([]interface{})[3].(Expr)
+            alternatives[name] = alternative[1].([]interface{})[3].(Expr)
         }
     }
     return UnionType(alternatives), nil

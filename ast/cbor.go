@@ -34,6 +34,7 @@ var nameToBuiltin = map[string]Expr{
 	"Natural/odd":       NaturalOdd,
 	"Natural/toInteger": NaturalToInteger,
 	"Natural/show":      NaturalShow,
+	"Natural/subtract":  NaturalSubtract,
 
 	"Integer/toDouble": IntegerToDouble,
 	"Integer/show":     IntegerShow,
@@ -379,33 +380,26 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					if err != nil {
 						return nil, err
 					}
-					u, err := url.Parse(scheme + "://" + authority)
-					if err != nil {
-						return nil, err
-					}
 					urlPath := "/"
-					rawPath := "/"
 					for i := 6; i < len(val)-1; i++ {
 						pathComponent, err := unwrapString(val[i])
 						if err != nil {
 							return nil, err
 						}
 
-						rawPath = path.Join(rawPath, url.PathEscape(pathComponent))
 						urlPath = path.Join(urlPath, pathComponent)
 					}
-					u.Path = urlPath
-					if urlPath != rawPath {
-						u.RawPath = rawPath
-					}
+					query := ""
 					if val[len(val)-1] != nil {
-						u.RawQuery, err = unwrapString(val[len(val)-1])
+						content, err := unwrapString(val[len(val)-1])
 						if err != nil {
 							return nil, err
 						}
-						if u.RawQuery == "" {
-							u.ForceQuery = true
-						}
+						query = "?" + content
+					}
+					u, err := url.Parse(scheme + "://" + authority + urlPath + query)
+					if err != nil {
+						return nil, err
 					}
 					f = Remote{url: u}
 				case 2, 3, 4, 5:
@@ -714,14 +708,22 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 			panic("can't happen")
 		}
 	case Let:
-		output := make([]interface{}, len(val.Bindings)*3+2)
-		output[0] = 25
-		for i, binding := range val.Bindings {
-			output[3*i+1] = binding.Variable
-			output[3*i+2] = box(binding.Annotation)
-			output[3*i+3] = box(binding.Value)
+		output := []interface{}{25}
+		// flatten multiple lets into one
+		for {
+			for _, binding := range val.Bindings {
+				output = append(output, binding.Variable)
+				output = append(output, box(binding.Annotation))
+				output = append(output, box(binding.Value))
+			}
+			// there's probably a nicer way to do this...
+			next_let, ok := val.Body.(Let)
+			if !ok {
+				break
+			}
+			val = next_let
 		}
-		output[len(output)-1] = box(val.Body)
+		output = append(output, box(val.Body))
 		e.Encode(output)
 	case Annot:
 		e.Encode([]interface{}{26, box(val.Expr), box(val.Annotation)})

@@ -188,17 +188,7 @@ func (r Remote) PathComponents() []string {
 	if r.url.Path == "" || r.url.Path == "/" {
 		return []string{""}
 	}
-	escapedComps := strings.Split(r.url.EscapedPath()[1:], "/")
-	unescapedComps := make([]string, len(escapedComps))
-	for i, comp := range escapedComps {
-		var err error
-		unescapedComps[i], err = url.PathUnescape(comp)
-		if err != nil {
-			// can't happen, surely
-			panic(fmt.Sprintf("Got error %v", err))
-		}
-	}
-	return unescapedComps
+	return strings.Split(r.url.EscapedPath()[1:], "/")
 }
 func (r Remote) Query() *string {
 	if r.url.RawQuery == "" && !r.url.ForceQuery {

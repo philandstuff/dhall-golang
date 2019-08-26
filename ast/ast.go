@@ -365,6 +365,8 @@ func Shift(d int, v Var, e Expr) Expr {
 	case Var:
 		if v.Name == e.Name && v.Index <= e.Index {
 			if e.Index+d < 0 {
+				// this can be triggered by merge -- see
+				// dhall-lang/tests/typecheck/unit/MergeHandlerFreeVar
 				panic("tried to shift to negative")
 			}
 			return Var{Name: e.Name, Index: e.Index + d}
@@ -1028,10 +1030,13 @@ func (app *App) Normalize() Expr {
 						return NaturalLit(0)
 					}
 				}
-				if m == NaturalLit(0) {
+				if mOk && m == NaturalLit(0) {
 					return a0
 				}
-				if n == NaturalLit(0) {
+				if nOk && n == NaturalLit(0) {
+					return NaturalLit(0)
+				}
+				if judgmentallyEqual(f1.Arg, a0) {
 					return NaturalLit(0)
 				}
 			case ListBuild:
@@ -1125,13 +1130,11 @@ func (app *App) Normalize() Expr {
 					return ap.Arg
 				}
 			}
-			if l, ok := a0.(*LambdaExpr); ok {
-				return Apply(l,
-					Natural,
-					&LambdaExpr{"x", Natural, NaturalPlus(MkVar("x"), NaturalLit(1))},
-					NaturalLit(0),
-				).Normalize()
-			}
+			return Apply(a0,
+				Natural,
+				&LambdaExpr{"x", Natural, NaturalPlus(MkVar("x"), NaturalLit(1))},
+				NaturalLit(0),
+			).Normalize()
 		case NaturalIsZero:
 			if n, ok := a0.(NaturalLit); ok {
 				if n == 0 {
@@ -1449,6 +1452,9 @@ func (op Operator) Normalize() Expr {
 			}
 			return output
 		}
+		if judgmentallyEqual(L, R) {
+			return L
+		}
 	case RecordTypeMergeOp:
 		Lr, Lok := L.(Record)
 		Rr, Rok := R.(Record)
@@ -1529,6 +1535,64 @@ func (f Field) Normalize() Expr {
 	if rl, ok := r.(RecordLit); ok {
 		val := rl[f.FieldName]
 		return val
+	}
+	if op, ok := r.(Operator); ok && (op.OpCode == RightBiasedRecordMergeOp || op.OpCode == RecordMergeOp) {
+		if lLit, ok := op.L.(RecordLit); ok {
+			if _, ok := lLit[f.FieldName]; ok {
+				// t₀ ⇥ { x = v, … } ⫽ t₁
+				return Field{
+					Record: Operator{
+						L:      RecordLit{f.FieldName: lLit[f.FieldName]},
+						R:      op.R,
+						OpCode: op.OpCode,
+					},
+					FieldName: f.FieldName,
+				}
+			} else {
+				// t₀ ⇥ { xs… } ⫽ t₁   t₁.x ⇥ v
+				// ──────────────────────────── ; x ∉ xs
+				return Field{
+					Record:    op.R,
+					FieldName: f.FieldName,
+				}.Normalize()
+			}
+		}
+		if rLit, ok := op.R.(RecordLit); ok {
+			if _, ok := rLit[f.FieldName]; ok {
+				// t₀ ⇥ t₁ ⫽ { x = v, … }
+				if op.OpCode == RightBiasedRecordMergeOp {
+					return rLit[f.FieldName]
+				} else {
+					return Field{
+						Record: Operator{
+							L:      op.L,
+							R:      RecordLit{f.FieldName: rLit[f.FieldName]},
+							OpCode: op.OpCode,
+						},
+						FieldName: f.FieldName,
+					}
+				}
+			} else {
+				// t₀ ⇥ t₁ ⫽ { xs… }   t₁.x ⇥ v
+				// ──────────────────────────── ; x ∉ xs
+				return Field{
+					Record:    op.L,
+					FieldName: f.FieldName,
+				}.Normalize()
+			}
+		}
+	}
+	if proj, ok := f.Record.(Project); ok {
+		return Field{
+			Record:    proj.Record,
+			FieldName: f.FieldName,
+		}.Normalize()
+	}
+	if proj, ok := f.Record.(ProjectType); ok {
+		return Field{
+			Record:    proj.Record,
+			FieldName: f.FieldName,
+		}.Normalize()
 	}
 	return Field{Record: r, FieldName: f.FieldName}
 }

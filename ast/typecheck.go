@@ -707,11 +707,9 @@ func (t ToMap) TypeWith(ctx *TypeContext) (Expr, error) {
 	if !ok {
 		return nil, errors.New("`toMap` must be called on a record")
 	}
-	if t.Type == nil {
+	if len(rt2) != 0 {
+		// nonempty record
 		// Γ ⊢ e :⇥ { x : T₀, xs… }
-		if len(rt2) == 0 {
-			return nil, errors.New("An unannotated `toMap` must be called on a nonempty record")
-		}
 		var elemType Expr
 		for _, v := range rt2 {
 			if elemType == nil {
@@ -722,12 +720,23 @@ func (t ToMap) TypeWith(ctx *TypeContext) (Expr, error) {
 				}
 			}
 		}
-		return Apply(List, Record(map[string]Expr{"mapKey": Text, "mapValue": elemType})), nil
+		inferred := Apply(List, Record(map[string]Expr{"mapKey": Text, "mapValue": elemType}))
+		if t.Type == nil {
+			return inferred, nil
+		} else {
+			// Γ ⊢ toMap e : T₀   T₀ ≡ T₁
+			if !judgmentallyEqual(inferred, t.Type) {
+				return nil, errors.New("inferred type of toMap didn't match annotation")
+			}
+			// therefore
+			// Γ ⊢ ( toMap e : T₁ ) : T₁
+			return t.Type, nil
+		}
 	} else {
+		// empty record
 		// Γ ⊢ e :⇥ {}
-		if len(rt2) != 0 {
-			// see dhall-lang#671
-			return nil, errors.New("Cannot annotate `toMap` on a nonempty record")
+		if t.Type == nil {
+			return nil, errors.New("`toMap` on an empty record must have an annotation")
 		}
 		// Γ ⊢ T₀ :⇥ Type
 		err = assertNormalizedTypeIs(t.Type, ctx, Type,
@@ -888,7 +897,7 @@ func (u UnionType) TypeWith(ctx *TypeContext) (Expr, error) {
 	return c, nil
 }
 
-func (m Merge) TypeWith(ctx *TypeContext) (Expr, error) {
+func (m Merge) TypeWith(ctx *TypeContext) (e Expr, outerr error) {
 	ht, err := NormalizedTypeWith(m.Handler, ctx)
 	if err != nil {
 		return nil, err
@@ -957,6 +966,14 @@ func (m Merge) TypeWith(ctx *TypeContext) (Expr, error) {
 				// error reporting
 				return nil, fmt.Errorf("Variable %s used in function type body %s", altName, pi.Body)
 			}
+			// the following call to Shift() may panic -- see
+			// dhall-lang/tests/typecheck/unit/MergeHandlerFreeVar for an
+			// example of when this may happen
+			defer func() {
+				if r := recover(); r == "tried to shift to negative" {
+					outerr = fmt.Errorf("Unbound variable %s", pi.Label)
+				}
+			}()
 			thisOutputType := Shift(-1, Var{Name: pi.Label, Index: 0}, pi.Body)
 			if outputType == nil {
 				outputType = thisOutputType
