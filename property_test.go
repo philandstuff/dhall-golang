@@ -74,6 +74,9 @@ func ListOf(inner gopter.Gen) gopter.Gen {
 // }
 
 func TestParseWhatYouWrite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping slow test in short mode")
+	}
 	properties := gopter.NewProperties(nil)
 
 	properties.Property("written expressions parse back as themselves",

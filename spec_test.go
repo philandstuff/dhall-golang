@@ -18,6 +18,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+var slowTests = []string{
+	"TestParserAccepts/largeExpressionA",
+	"TestTypechecks/preludeA",
+}
+
 var expectedFailures = []string{
 	// union literals
 	"TestParserAccepts/unionA.dhall",
@@ -59,7 +64,7 @@ func failf(t *testing.T, format string, args ...interface{}) {
 	t.Helper()
 	for _, prefix := range expectedFailures {
 		if strings.HasPrefix(t.Name(), prefix) {
-			t.Skipf(format, args...)
+			t.Skip("Skipping expected failure")
 			return
 		}
 	}
@@ -152,6 +157,13 @@ func runTestOnEachFile(
 			}
 			name := strings.Replace(testPath, dir, "", 1)
 			t.Run(name, func(t *testing.T) {
+				if testing.Short() {
+					for _, prefix := range slowTests {
+						if strings.HasPrefix(t.Name(), prefix) {
+							t.Skip("Skipping slow tests in short mode")
+						}
+					}
+				}
 				t.Parallel()
 				test(t, testPath)
 				pass(t)
@@ -178,6 +190,14 @@ func runTestOnFilePairs(
 				testName := strings.Replace(aPath, dir, "", 1)
 
 				t.Run(testName, func(t *testing.T) {
+					if testing.Short() {
+						for _, prefix := range slowTests {
+							if strings.HasPrefix(t.Name(), prefix) {
+								t.Skip("Skipping slow tests in short mode")
+							}
+						}
+					}
+
 					t.Parallel()
 					test(t, aPath, bPath)
 					pass(t)
