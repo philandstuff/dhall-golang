@@ -193,13 +193,11 @@ func Rule(a Const, b Const) (Const, error) {
 	if b == Type {
 		return Type, nil
 	}
-	if a == Kind && b == Kind {
-		return Kind, nil
+	if a > b {
+		return a, nil
+	} else {
+		return b, nil
 	}
-	if a == Sort && (b == Kind || b == Sort) {
-		return Sort, nil
-	}
-	return -1, errors.New("Dependent types are not allowed")
 }
 
 // Γ₀ ⊢ ∀(x : A) → B : c

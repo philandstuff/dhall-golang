@@ -44,10 +44,6 @@ var expectedFailures = []string{
 	// urgh IEEE floating point; NaN != NaN :(
 	"TestTypeInference/unit/AssertNaNA",
 
-	// related to dependent types
-	"TestTypeInference/unit/FunctionTypeTypeKind",
-	"TestTypeInference/unit/FunctionDependentType",
-
 	// needs mixed records
 	"TestTypechecks/RecordTypeMixedKinds",
 	"TestTypechecks/simple/combineMixedRecords",

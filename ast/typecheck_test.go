@@ -8,26 +8,20 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var Error = Const(-1)
-
 var _ = DescribeTable("Rule",
 	func(a Const, b Const, expected Const) {
 		actual, err := Rule(a, b)
-		if expected == Error {
-			Expect(err).To(HaveOccurred())
-		} else {
-			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(expected))
-		}
+		Expect(err).ToNot(HaveOccurred())
+		Expect(actual).To(Equal(expected))
 	},
 	Entry("Type → Type : Type", Type, Type, Type),
 	Entry("Kind → Type : Type", Kind, Type, Type),
 	Entry("Sort → Type : Type", Sort, Type, Type),
-	Entry("Type → Kind : !!!!", Type, Kind, Error),
+	Entry("Type → Kind : Kind", Kind, Kind, Kind),
 	Entry("Kind → Kind : Kind", Kind, Kind, Kind),
 	Entry("Sort → Kind : Sort", Sort, Kind, Sort),
-	Entry("Type → Sort : !!!!", Type, Sort, Error),
-	Entry("Kind → Sort : !!!!", Kind, Sort, Error),
+	Entry("Type → Sort : Sort", Type, Sort, Sort),
+	Entry("Kind → Sort : Sort", Kind, Sort, Sort),
 	Entry("Sort → Sort : Type", Sort, Sort, Sort),
 )
 
