@@ -206,7 +206,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				if err != nil {
 					return nil, err
 				}
-				if opcode > 11 {
+				if opcode > 12 {
 					return nil, fmt.Errorf("CBOR decode error: unknown operator code %d", opcode)
 				}
 				return Operator{OpCode: int(opcode), L: l, R: r}, nil
@@ -364,6 +364,12 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					return nil, err
 				}
 				return TextLit{Chunks: chunks, Suffix: s}, nil
+			case 19: // assert
+				annot, err := decode(val[1])
+				if err != nil {
+					return nil, err
+				}
+				return Assert{Annotation: annot}, nil
 			case 24: // imports
 				importLabel, err := unwrapInt(val[3])
 				if err != nil {
@@ -657,6 +663,8 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 		output = append(output, val.Suffix)
 		e.Encode(output)
+	case Assert:
+		e.Encode([]interface{}{19, box(val.Annotation)})
 	case Embed:
 		r := val.Fetchable
 		// we have crafted the ImportMode constants to match the expected CBOR values

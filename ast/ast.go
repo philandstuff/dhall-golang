@@ -160,6 +160,10 @@ type (
 		Annotation Expr // optional
 	}
 
+	Assert struct {
+		Annotation Expr
+	}
+
 	Embed Import
 )
 
@@ -221,6 +225,7 @@ const (
 	RightBiasedRecordMergeOp
 	RecordTypeMergeOp
 	ImportAltOp
+	EquivOp
 )
 
 type Operator struct {
@@ -313,6 +318,7 @@ var (
 	_ Expr = ProjectType{}
 	_ Expr = UnionType{}
 	_ Expr = Merge{}
+	_ Expr = Assert{}
 	_ Expr = Embed(Import{})
 )
 
@@ -500,6 +506,8 @@ func Shift(d int, v Var, e Expr) Expr {
 			output.Annotation = Shift(d, v, e.Annotation)
 		}
 		return output
+	case Assert:
+		return Assert{Annotation: Shift(d, v, e.Annotation)}
 	case Embed:
 		return e
 	}
@@ -644,6 +652,8 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			output.Annotation = Subst(v, c, e.Annotation)
 		}
 		return output
+	case Assert:
+		return Assert{Annotation: Subst(v, c, e.Annotation)}
 	case Embed:
 		return e
 	}
@@ -819,6 +829,8 @@ func (op Operator) String() string {
 		opStr = "⩓"
 	case ImportAltOp:
 		opStr = "?"
+	case EquivOp:
+		opStr = "≡"
 	default:
 		panic(fmt.Sprintf("unknown opcode in Operator struct %#v", op))
 	}
@@ -935,6 +947,10 @@ func (m Merge) String() string {
 	} else {
 		return fmt.Sprintf("merge %s %s", m.Handler, m.Union)
 	}
+}
+
+func (a Assert) String() string {
+	return fmt.Sprintf("assert : %v", a.Annotation)
 }
 
 func (e Embed) String() string {
@@ -1669,6 +1685,10 @@ func (m Merge) Normalize() Expr {
 	return output
 }
 
+func (a Assert) Normalize() Expr {
+	return Assert{Annotation: a.Annotation.Normalize()}
+}
+
 func (e Embed) Normalize() Expr {
 	panic("Can't normalize an expression with unresolved imports")
 }
@@ -1873,6 +1893,10 @@ func (m Merge) AlphaNormalize() Expr {
 		output.Annotation = m.Annotation.Normalize()
 	}
 	return output
+}
+
+func (a Assert) AlphaNormalize() Expr {
+	return Assert{Annotation: a.Annotation.AlphaNormalize()}
 }
 
 func (e Embed) AlphaNormalize() Expr {

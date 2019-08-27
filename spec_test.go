@@ -41,22 +41,9 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/quotedPaths",     // needs.. quoted paths
 	"TestParserAccepts/unit/import/urls/quotedPath", // needs quotedPaths
 
-	// needs assert and ===
-	"TestParserAccepts/unit/Assert",
-	"TestParserAccepts/unit/operators/Equivalence",
-	"TestTypecheckFails/unit/AssertTriviallyFalse",
-	"TestTypecheckFails/unit/AssertAlphaTrap",
-	"TestTypecheckFails/unit/Equivalence",
-	"TestTypeInference/unit/Assert",
-	"TestTypeInference/unit/Equivalence",
-	"TestNormalization/unit/Assert",
-	"TestNormalization/unit/Equivalence",
-	// the prelude is full of asserts now, so doesn't parse
-	"TestTypechecks/prelude",
-	"TestSemanticHash/prelude",
-	// these depend on Prelude/Text/concatMap
-	"TestNormalization/remoteSystems",
-	"TestSemanticHash/remoteSystems",
+	// urgh IEEE floating point; NaN != NaN :(
+	"TestTypeInference/unit/AssertNaNA",
+
 	// related to dependent types
 	"TestTypeInference/unit/FunctionTypeTypeKind",
 	"TestTypeInference/unit/FunctionDependentType",

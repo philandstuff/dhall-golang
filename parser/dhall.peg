@@ -268,6 +268,7 @@ Infinity ← "Infinity"
 NaN ← "NaN"
 Some ← "Some"
 toMap ← "toMap"
+assert ← "assert"
 
 Keyword ←
     If / Then / Else
@@ -284,6 +285,7 @@ Location ← "Location"
 
 Combine ← "/\\" / '∧'
 CombineTypes ← "//\\\\" / '⩓'
+Equivalent ← "===" / '≡'
 Prefer ← "//" / '⫽'
 Lambda ← '\\' / 'λ'
 Forall ← "forall" / '∀'
@@ -511,6 +513,7 @@ Expression ←
       }
     / EmptyList
     / toMap _1 e:ImportExpression _ ':' _1 t:ApplicationExpression { return ToMap{e.(Expr), t.(Expr)}, nil }
+    / assert _ ':' _1 a:Expression { return Assert{Annotation: a.(Expr)}, nil }
     / AnnotatedExpression
 
 Annotation ← ':' _1 a:Expression { return a, nil }
@@ -549,8 +552,10 @@ TimesExpression        ← first:EqualExpression        rest:(_ '*' _ e:EqualExp
   {return ParseOperator(TimesOp, first, rest), nil}
 EqualExpression        ← first:NotEqualExpression     rest:(_ "==" _ e:NotEqualExpression)*
   {return ParseOperator(EqOp, first, rest), nil}
-NotEqualExpression     ← first:ApplicationExpression  rest:(_ "!=" _ e:ApplicationExpression)*
+NotEqualExpression     ← first:EquivalentExpression  rest:(_ "!=" _ e:EquivalentExpression)*
   {return ParseOperator(NeOp, first, rest), nil}
+EquivalentExpression     ← first:ApplicationExpression  rest:(_ Equivalent _ e:ApplicationExpression)*
+  {return ParseOperator(EquivOp, first, rest), nil}
 
 ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression)* {
           e := f.(Expr)

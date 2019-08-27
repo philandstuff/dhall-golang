@@ -558,6 +558,27 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 			return nil, err
 		}
 		return lt, nil
+	case EquivOp:
+		A0, err := op.L.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		A1, err := op.R.TypeWith(ctx)
+		if err != nil {
+			return nil, err
+		}
+		err = assertNormalizedTypeIs(A0, ctx, Type, errors.New("The ≡ operator compares terms"))
+		if err != nil {
+			return nil, err
+		}
+		err = assertNormalizedTypeIs(A1, ctx, Type, errors.New("The ≡ operator compares terms"))
+		if err != nil {
+			return nil, err
+		}
+		if !judgmentallyEqual(A0, A1) {
+			return nil, errors.New("`x === y` requires x and y to be the same type")
+		}
+		return Type, nil
 	}
 	return nil, fmt.Errorf("Unknown opcode in %+v", op)
 }
@@ -989,6 +1010,22 @@ func (m Merge) TypeWith(ctx *TypeContext) (e Expr, outerr error) {
 		return nil, fmt.Errorf("Expression was annotated as type %s but inferred type was %s", m.Annotation, outputType)
 	}
 	return outputType, nil
+}
+
+func (a Assert) TypeWith(ctx *TypeContext) (Expr, error) {
+	err := assertNormalizedTypeIs(a.Annotation, ctx, Type, errors.New("assert must be annotated with a Type"))
+	if err != nil {
+		return nil, err
+	}
+	annot := a.Annotation.Normalize()
+	equiv, ok := annot.(Operator)
+	if !ok || equiv.OpCode != EquivOp {
+		return nil, errors.New("assert must be annotated with an equivalence")
+	}
+	if !judgmentallyEqual(equiv.L, equiv.R) {
+		return nil, fmt.Errorf("assertion failed: %v ≢ %v", equiv.L, equiv.R)
+	}
+	return annot, nil
 }
 
 func (e Embed) TypeWith(ctx *TypeContext) (Expr, error) {
