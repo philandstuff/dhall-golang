@@ -467,7 +467,7 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 		if !ok {
 			return nil, fmt.Errorf("The ∧ operator operates on records, not %v", lt)
 		}
-		ltt, err := NormalizedTypeWith(lt, ctx)
+		_, err = NormalizedTypeWith(lt, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -479,14 +479,9 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 		if !ok {
 			return nil, fmt.Errorf("The ∧ operator operates on records, not %v", rt)
 		}
-		rtt, err := NormalizedTypeWith(rt, ctx)
+		_, err = NormalizedTypeWith(rt, ctx)
 		if err != nil {
 			return nil, err
-		}
-		if ltt != rtt {
-			// trying to mix a record of Types with a record of Kinds
-			// (or Sorts)
-			return nil, fmt.Errorf("Can't merge a record of type %v (a %v) with record of type %v (a %v)", lt, ltt, rt, rtt)
 		}
 		return mergeRecords(ltr, rtr)
 	case RightBiasedRecordMergeOp:
@@ -498,7 +493,7 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 		if !ok {
 			return nil, fmt.Errorf("The ⫽ operator operates on records, not %v", lt)
 		}
-		ltt, err := NormalizedTypeWith(lt, ctx)
+		_, err = NormalizedTypeWith(lt, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -510,14 +505,9 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 		if !ok {
 			return nil, fmt.Errorf("The ⫽ operator operates on records, not %v", rt)
 		}
-		rtt, err := NormalizedTypeWith(rt, ctx)
+		_, err = NormalizedTypeWith(rt, ctx)
 		if err != nil {
 			return nil, err
-		}
-		if ltt != rtt {
-			// trying to mix a record of Types with a record of Kinds
-			// (or Sorts)
-			return nil, fmt.Errorf("Can't merge a record of type %v (a %v) with record of type %v (a %v)", lt, ltt, rt, rtt)
 		}
 		output := make(Record)
 		for k, v := range ltr {
@@ -536,26 +526,26 @@ func (op Operator) TypeWith(ctx *TypeContext) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		if lt != rt {
-			// trying to mix a record of Types with a record of Kinds
-			// (or Sorts)
-			return nil, fmt.Errorf("Can't merge a record of type %v (a %v) with record of type %v (a %v)", op.L, lt, op.R, rt)
-		}
 
 		lr, ok := op.L.Normalize().(Record)
 		if !ok {
-			return nil, fmt.Errorf("The ∧ operator operates on records, not %v", lt)
+			return nil, fmt.Errorf("The ⩓ operator operates on records, not %v", lt)
 		}
 		rr, ok := op.R.Normalize().(Record)
 		if !ok {
-			return nil, fmt.Errorf("The ∧ operator operates on records, not %v", rt)
+			return nil, fmt.Errorf("The ⩓ operator operates on records, not %v", rt)
 		}
 		// ensure that the records are safe to merge
 		_, err = mergeRecords(lr, rr)
 		if err != nil {
 			return nil, err
 		}
-		return lt, nil
+		// if lr and rr are Records, then lt and rt must be Consts
+		if lt.(Const) > rt.(Const) {
+			return lt, nil
+		} else {
+			return rt, nil
+		}
 	case EquivOp:
 		A0, err := op.L.TypeWith(ctx)
 		if err != nil {
@@ -664,25 +654,19 @@ func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {
 	if len(fields) == 0 {
 		return Type, nil
 	}
-	var c Const
-	first := true
+	c := Type
 	for _, typ := range fields {
 		k, err := typ.TypeWith(ctx)
 		if err != nil {
 			return nil, err
 		}
-		if first {
-			var ok bool
-			c, ok = k.(Const)
-			if !ok {
-				return nil, errors.New("Invalid field type")
-			}
-		} else {
-			if c.Normalize() != k.Normalize() {
-				return nil, fmt.Errorf("can't mix %s and %s", c, k)
-			}
+		kk, ok := k.(Const)
+		if !ok {
+			return nil, errors.New("Invalid field type")
 		}
-		first = false
+		if kk > c {
+			c = kk
+		}
 	}
 	return c, nil
 }
@@ -693,26 +677,16 @@ func (r RecordLit) TypeWith(ctx *TypeContext) (Expr, error) {
 		return Record(fields), nil
 	}
 	fieldTypes := make(map[string]Expr, len(fields))
-	var c Expr
-	first := true
 	for name, val := range fields {
 		typ, err := val.TypeWith(ctx)
 		if err != nil {
 			return nil, err
 		}
-		k, err := typ.TypeWith(ctx)
+		_, err = typ.TypeWith(ctx)
 		if err != nil {
 			return nil, err
 		}
-		if first {
-			c = k
-		} else {
-			if c.Normalize() != k.Normalize() {
-				return nil, fmt.Errorf("can't mix %s and %s", c, k)
-			}
-		}
 		fieldTypes[name] = typ
-		first = false
 	}
 	return Record(fieldTypes), nil
 }

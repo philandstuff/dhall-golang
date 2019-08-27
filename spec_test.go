@@ -44,17 +44,6 @@ var expectedFailures = []string{
 	// urgh IEEE floating point; NaN != NaN :(
 	"TestTypeInference/unit/AssertNaNA",
 
-	// needs mixed records
-	"TestTypechecks/RecordTypeMixedKinds",
-	"TestTypechecks/simple/combineMixedRecords",
-	"TestTypechecks/simple/RecordMixedKinds",
-	"TestTypechecks/simple/RightBiasedRecordMergeMixedKinds",
-	"TestTypechecks/simple/RecursiveRecordMergeMixedKinds",
-	"TestTypechecks/preferMixedRecords",
-	"TestTypeInference/simple/RecordTypeMixedKinds",
-	"TestTypeInference/unit/RecursiveRecordMergeBoolType",
-	"TestTypeInference/simple/RecordTypeMixedKinds",
-
 	// other
 	"TestParserAccepts/unit/import/urls/potPourri", // net/url doesn't parse authorities in the way the test expects
 
