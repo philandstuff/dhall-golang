@@ -22,7 +22,7 @@ var _ = DescribeTable("Rule",
 	Entry("Sort → Kind : Sort", Sort, Kind, Sort),
 	Entry("Type → Sort : Sort", Type, Sort, Sort),
 	Entry("Kind → Sort : Sort", Kind, Sort, Sort),
-	Entry("Sort → Sort : Type", Sort, Sort, Sort),
+	Entry("Sort → Sort : Sort", Sort, Sort, Sort),
 )
 
 func expectType(in, expectedType Expr) {
