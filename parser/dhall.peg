@@ -469,9 +469,9 @@ ImportHashed ← i:ImportType h:(_1 Hash)? {
     return out, nil
 }
 
-Import ← i:ImportHashed _ As _1 Text { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}), nil }
-       / i:ImportHashed _ As _1 Location { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Location}), nil }
-       / i:ImportHashed { return Embed(Import{ImportHashed: i.(ImportHashed), ImportMode: Code}), nil }
+Import ← i:ImportHashed _ As _1 Text { return Import{ImportHashed: i.(ImportHashed), ImportMode: RawText}, nil }
+       / i:ImportHashed _ As _1 Location { return Import{ImportHashed: i.(ImportHashed), ImportMode: Location}, nil }
+       / i:ImportHashed { return Import{ImportHashed: i.(ImportHashed), ImportMode: Code}, nil }
 
 
 LetBinding ← Let _1 label:NonreservedLabel _ a:(Annotation _)?

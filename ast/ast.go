@@ -319,7 +319,7 @@ var (
 	_ Expr = UnionType{}
 	_ Expr = Merge{}
 	_ Expr = Assert{}
-	_ Expr = Embed(Import{})
+	_ Expr = Import{}
 )
 
 type ImportHashed struct {
@@ -508,7 +508,7 @@ func Shift(d int, v Var, e Expr) Expr {
 		return output
 	case Assert:
 		return Assert{Annotation: Shift(d, v, e.Annotation)}
-	case Embed:
+	case Import:
 		return e
 	}
 	panic("missing switch case in Shift()")
@@ -654,7 +654,7 @@ func Subst(v Var, c Expr, b Expr) Expr {
 		return output
 	case Assert:
 		return Assert{Annotation: Subst(v, c, e.Annotation)}
-	case Embed:
+	case Import:
 		return e
 	}
 	panic("missing switch case in Subst()")
@@ -951,8 +951,8 @@ func (a Assert) String() string {
 	return fmt.Sprintf("assert : %v", a.Annotation)
 }
 
-func (e Embed) String() string {
-	return e.Fetchable.String()
+func (i Import) String() string {
+	return i.Fetchable.String()
 }
 
 func (c Const) Normalize() Expr { return c }
@@ -1686,7 +1686,7 @@ func (a Assert) Normalize() Expr {
 	return Assert{Annotation: a.Annotation.Normalize()}
 }
 
-func (e Embed) Normalize() Expr {
+func (Import) Normalize() Expr {
 	panic("Can't normalize an expression with unresolved imports")
 }
 
@@ -1895,7 +1895,7 @@ func (a Assert) AlphaNormalize() Expr {
 	return Assert{Annotation: a.Annotation.AlphaNormalize()}
 }
 
-func (e Embed) AlphaNormalize() Expr {
+func (Import) AlphaNormalize() Expr {
 	panic("Can't normalize an expression with unresolved imports")
 }
 

@@ -438,7 +438,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				default:
 					return nil, fmt.Errorf("CBOR decode error: couldn't decode %#v", val)
 				}
-				return Embed(Import{ImportHashed: ImportHashed{Fetchable: f}}), nil
+				return Import{ImportHashed: ImportHashed{Fetchable: f}}, nil
 			case 25: // let
 				if len(val)%3 != 2 {
 					return nil, fmt.Errorf("CBOR decode error: unexpected array length %d when decoding let", len(val))
@@ -664,7 +664,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		e.Encode(output)
 	case Assert:
 		e.Encode([]interface{}{19, box(val.Annotation)})
-	case Embed:
+	case Import:
 		r := val.Fetchable
 		// we have crafted the ImportMode constants to match the expected CBOR values
 		mode := val.ImportMode
