@@ -39,11 +39,11 @@ func reflectValToDhallVal(val reflect.Value, typ ast.Expr) ast.Expr {
 			if val.Len() == 0 {
 				return ast.EmptyList{Type: e.Arg}
 			}
-			slice := make([]ast.Expr, val.Len())
+			l := make(ast.NonEmptyList, val.Len())
 			for i := 0; i < val.Len(); i++ {
-				slice[i] = reflectValToDhallVal(val.Index(i), e.Arg)
+				l[i] = reflectValToDhallVal(val.Index(i), e.Arg)
 			}
-			return ast.NonEmptyList(slice)
+			return l
 		default:
 			panic("unknown app")
 		}

@@ -119,7 +119,7 @@ type (
 	// `[] : List Natural` == EmptyList{Apply(List,Natural)}
 	// `[] : T` == EmptyList{T}
 	EmptyList struct{ Type Expr }
-	// `[2,3,4]` == NonEmptyList(2,3,4)
+	// `[2,3,4]` == NonEmptyList{2,3,4}
 	NonEmptyList []Expr
 
 	// `Some 3` == Some(3)
@@ -264,7 +264,7 @@ const (
 )
 
 func MakeList(first Expr, rest ...Expr) NonEmptyList {
-	return NonEmptyList(append([]Expr{first}, rest...))
+	return append(NonEmptyList{first}, rest...)
 }
 
 func MakeLet(body Expr, bindings ...Binding) Let {
@@ -307,11 +307,11 @@ var (
 	_ Expr = IntegerLit(3)
 	_ Expr = List
 	_ Expr = EmptyList{}
-	_ Expr = NonEmptyList([]Expr{NaturalLit(3)})
+	_ Expr = NonEmptyList{NaturalLit(3)}
 	_ Expr = Optional
 	_ Expr = Some{NaturalLit(3)}
-	_ Expr = Record(map[string]Expr{})
-	_ Expr = RecordLit(map[string]Expr{})
+	_ Expr = Record{}
+	_ Expr = RecordLit{}
 	_ Expr = ToMap{}
 	_ Expr = Field{}
 	_ Expr = Project{}
@@ -447,25 +447,25 @@ func Shift(d int, v Var, e Expr) Expr {
 	case EmptyList:
 		return EmptyList{Type: Shift(d, v, e.Type)}
 	case NonEmptyList:
-		exprs := make([]Expr, len([]Expr(e)))
-		for i, expr := range []Expr(e) {
-			exprs[i] = Shift(d, v, expr)
+		newList := make(NonEmptyList, len(e))
+		for i, expr := range e {
+			newList[i] = Shift(d, v, expr)
 		}
-		return NonEmptyList(exprs)
+		return newList
 	case Some:
 		return Some{Shift(d, v, e.Val)}
 	case Record:
-		fields := make(map[string]Expr, len(e))
+		r := make(Record, len(e))
 		for name, val := range e {
-			fields[name] = Shift(d, v, val)
+			r[name] = Shift(d, v, val)
 		}
-		return Record(fields)
+		return r
 	case RecordLit:
-		fields := make(map[string]Expr, len(e))
+		r := make(RecordLit, len(e))
 		for name, val := range e {
-			fields[name] = Shift(d, v, val)
+			r[name] = Shift(d, v, val)
 		}
-		return RecordLit(fields)
+		return r
 	case ToMap:
 		shifted := ToMap{Record: Shift(d, v, e.Record)}
 		if e.Type != nil {
@@ -488,15 +488,15 @@ func Shift(d int, v Var, e Expr) Expr {
 			Selector: Shift(d, v, e.Selector),
 		}
 	case UnionType:
-		fields := make(map[string]Expr, len(e))
+		u := make(UnionType, len(e))
 		for name, val := range e {
 			if val == nil {
-				fields[name] = nil
+				u[name] = nil
 				continue
 			}
-			fields[name] = Shift(d, v, val)
+			u[name] = Shift(d, v, val)
 		}
-		return UnionType(fields)
+		return u
 	case Merge:
 		output := Merge{
 			Handler: Shift(d, v, e.Handler),
@@ -593,25 +593,25 @@ func Subst(v Var, c Expr, b Expr) Expr {
 	case EmptyList:
 		return EmptyList{Type: Subst(v, c, e.Type)}
 	case NonEmptyList:
-		exprs := make([]Expr, len([]Expr(e)))
-		for i, expr := range []Expr(e) {
-			exprs[i] = Subst(v, c, expr)
+		newList := make(NonEmptyList, len(e))
+		for i, expr := range e {
+			newList[i] = Subst(v, c, expr)
 		}
-		return NonEmptyList(exprs)
+		return newList
 	case Some:
 		return Some{Subst(v, c, e.Val)}
 	case Record:
-		fields := make(map[string]Expr, len(e))
+		r := make(Record, len(e))
 		for name, val := range e {
-			fields[name] = Subst(v, c, val)
+			r[name] = Subst(v, c, val)
 		}
-		return Record(fields)
+		return r
 	case RecordLit:
-		fields := make(map[string]Expr, len(e))
+		r := make(RecordLit, len(e))
 		for name, val := range e {
-			fields[name] = Subst(v, c, val)
+			r[name] = Subst(v, c, val)
 		}
-		return RecordLit(fields)
+		return r
 	case ToMap:
 		shifted := ToMap{Record: Subst(v, c, e.Record)}
 		if e.Type != nil {
@@ -634,15 +634,15 @@ func Subst(v Var, c Expr, b Expr) Expr {
 			Selector: Subst(v, c, e.Selector),
 		}
 	case UnionType:
-		fields := make(map[string]Expr, len(e))
+		u := make(UnionType, len(e))
 		for name, val := range e {
 			if val == nil {
-				fields[name] = nil
+				u[name] = nil
 				continue
 			}
-			fields[name] = Subst(v, c, val)
+			u[name] = Subst(v, c, val)
 		}
-		return UnionType(fields)
+		return u
 	case Merge:
 		output := Merge{
 			Handler: Subst(v, c, e.Handler),
@@ -848,9 +848,8 @@ func (l EmptyList) String() string {
 func (l NonEmptyList) String() string {
 	var out strings.Builder
 	out.WriteString("[ ")
-	exprs := []Expr(l)
-	out.WriteString(fmt.Sprint(exprs[0]))
-	for _, expr := range exprs[1:] {
+	out.WriteString(fmt.Sprint(l[0]))
+	for _, expr := range l[1:] {
 		out.WriteString(", ")
 		out.WriteString(fmt.Sprint(expr))
 	}
@@ -924,9 +923,8 @@ func (p ProjectType) String() string {
 func (u UnionType) String() string {
 	var out strings.Builder
 	out.WriteString("< ")
-	fields := map[string]Expr(u)
 	first := true
-	for name, expr := range fields {
+	for name, expr := range u {
 		if !first {
 			out.WriteString(" | ")
 		}
@@ -1083,11 +1081,11 @@ func (app *App) Normalize() Expr {
 				case EmptyList:
 					return EmptyList{Apply(List, f1.Arg)}
 				case NonEmptyList:
-					output := make([]Expr, len(list))
+					output := make(NonEmptyList, len(list))
 					for i, a := range list {
 						output[len(list)-i-1] = a
 					}
-					return NonEmptyList(output)
+					return output
 				}
 			case ListLength:
 				switch list := a0.(type) {
@@ -1112,11 +1110,11 @@ func (app *App) Normalize() Expr {
 				case EmptyList:
 					return EmptyList{Apply(List, Record{"index": Natural, "value": f1.Arg})}
 				case NonEmptyList:
-					output := make([]Expr, len(list))
+					output := make(NonEmptyList, len(list))
 					for i, a := range list {
 						output[i] = RecordLit{"index": NaturalLit(i), "value": a}
 					}
-					return NonEmptyList(output)
+					return output
 				}
 			case OptionalBuild:
 				if ap0, ok := a0.(*App); ok {
@@ -1437,7 +1435,7 @@ func (op Operator) Normalize() Expr {
 		lList, lOk := L.(NonEmptyList)
 		rList, rOk := R.(NonEmptyList)
 		if lOk && rOk {
-			return NonEmptyList(append(lList, rList...))
+			return append(lList, rList...)
 		}
 	case RecordMergeOp:
 		Lr, Lok := L.(RecordLit)
@@ -1494,12 +1492,11 @@ func (i IntegerLit) Normalize() Expr { return i }
 
 func (l EmptyList) Normalize() Expr { return EmptyList{l.Type.Normalize()} }
 func (l NonEmptyList) Normalize() Expr {
-	exprs := []Expr(l)
-	vals := make([]Expr, len(exprs))
-	for i, expr := range exprs {
-		vals[i] = expr.Normalize()
+	norm := make(NonEmptyList, len(l))
+	for i, expr := range l {
+		norm[i] = expr.Normalize()
 	}
-	return NonEmptyList(vals)
+	return norm
 }
 
 func (s Some) Normalize() Expr {
@@ -1507,19 +1504,19 @@ func (s Some) Normalize() Expr {
 }
 
 func (r Record) Normalize() Expr {
-	fields := make(map[string]Expr, len(r))
+	norm := make(Record, len(r))
 	for name, val := range r {
-		fields[name] = val.Normalize()
+		norm[name] = val.Normalize()
 	}
-	return Record(fields)
+	return norm
 }
 
 func (r RecordLit) Normalize() Expr {
-	fields := make(map[string]Expr, len(r))
+	norm := make(RecordLit, len(r))
 	for name, val := range r {
-		fields[name] = val.Normalize()
+		norm[name] = val.Normalize()
 	}
-	return RecordLit(fields)
+	return norm
 }
 
 func (t ToMap) Normalize() Expr {
@@ -1533,11 +1530,11 @@ func (t ToMap) Normalize() Expr {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		output := make([]Expr, 0)
+		output := make(NonEmptyList, 0)
 		for _, k := range keys {
 			output = append(output, RecordLit{"mapKey": TextLit{Suffix: k}, "mapValue": recordLit[k]})
 		}
-		return NonEmptyList(output)
+		return output
 	}
 	output := ToMap{Record: record}
 	if t.Type != nil {
@@ -1644,16 +1641,16 @@ func (p ProjectType) Normalize() Expr {
 }
 
 func (u UnionType) Normalize() Expr {
-	fields := make(map[string]Expr, len(u))
+	norm := make(UnionType, len(u))
 	for name, val := range u {
 		if val == nil {
 			// empty alternative
-			fields[name] = nil
+			norm[name] = nil
 			continue
 		}
-		fields[name] = val.Normalize()
+		norm[name] = val.Normalize()
 	}
-	return UnionType(fields)
+	return norm
 }
 
 func (m Merge) Normalize() Expr {
@@ -1814,12 +1811,11 @@ func (i IntegerLit) AlphaNormalize() Expr { return i }
 
 func (l EmptyList) AlphaNormalize() Expr { return EmptyList{l.Type.AlphaNormalize()} }
 func (l NonEmptyList) AlphaNormalize() Expr {
-	exprs := []Expr(l)
-	vals := make([]Expr, len(exprs))
-	for i, expr := range exprs {
-		vals[i] = expr.AlphaNormalize()
+	norm := make(NonEmptyList, len(l))
+	for i, expr := range l {
+		norm[i] = expr.AlphaNormalize()
 	}
-	return NonEmptyList(vals)
+	return norm
 }
 
 func (s Some) AlphaNormalize() Expr {
@@ -1827,19 +1823,19 @@ func (s Some) AlphaNormalize() Expr {
 }
 
 func (r Record) AlphaNormalize() Expr {
-	fields := make(map[string]Expr, len(r))
+	norm := make(Record, len(r))
 	for name, val := range r {
-		fields[name] = val.AlphaNormalize()
+		norm[name] = val.AlphaNormalize()
 	}
-	return Record(fields)
+	return norm
 }
 
 func (r RecordLit) AlphaNormalize() Expr {
-	fields := make(map[string]Expr, len(r))
+	norm := make(RecordLit, len(r))
 	for name, val := range r {
-		fields[name] = val.AlphaNormalize()
+		norm[name] = val.AlphaNormalize()
 	}
-	return RecordLit(fields)
+	return norm
 }
 
 func (t ToMap) AlphaNormalize() Expr {
@@ -1872,16 +1868,16 @@ func (p ProjectType) AlphaNormalize() Expr {
 }
 
 func (u UnionType) AlphaNormalize() Expr {
-	fields := make(map[string]Expr, len(u))
+	norm := make(UnionType, len(u))
 	for name, val := range u {
 		if val == nil {
 			// empty alternative
-			fields[name] = nil
+			norm[name] = nil
 			continue
 		}
-		fields[name] = val.AlphaNormalize()
+		norm[name] = val.AlphaNormalize()
 	}
-	return UnionType(fields)
+	return norm
 }
 
 func (m Merge) AlphaNormalize() Expr {

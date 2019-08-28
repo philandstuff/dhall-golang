@@ -221,7 +221,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					}
 					return EmptyList{Type: Apply(List, t)}, nil
 				}
-				items := make([]Expr, len(val)-2)
+				items := make(NonEmptyList, len(val)-2)
 				for i, rawItem := range val[2:] {
 					var err error
 					items[i], err = decode(rawItem)
@@ -229,7 +229,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 						return nil, err
 					}
 				}
-				return NonEmptyList(items), nil
+				return items, nil
 			case 5: // Some
 				if len(val) != 3 || val[1] != nil {
 					return nil, fmt.Errorf("CBOR decode error: malformed Some expression: %v", val)
@@ -567,11 +567,10 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 		e.Encode([]interface{}{28, box(val.Type)})
 	case NonEmptyList:
-		items := []Expr(val)
-		output := make([]interface{}, len(items)+2)
+		output := make([]interface{}, len(val)+2)
 		output[0] = 4
 		output[1] = nil
-		for i, item := range items {
+		for i, item := range val {
 			output[i+2] = box(item)
 		}
 		e.Encode(output)
