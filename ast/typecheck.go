@@ -584,8 +584,7 @@ func (l EmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 }
 
 func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
-	exprs := []Expr(l)
-	t, err := exprs[0].TypeWith(ctx)
+	t, err := l[0].TypeWith(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -594,7 +593,7 @@ func (l NonEmptyList) TypeWith(ctx *TypeContext) (Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, elem := range exprs[1:] {
+	for _, elem := range l[1:] {
 		t2, err := elem.TypeWith(ctx)
 		if err != nil {
 			return nil, err
@@ -639,13 +638,12 @@ func (s Some) TypeWith(ctx *TypeContext) (Expr, error) {
 }
 
 func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {
-	fields := map[string]Expr(r)
-	if len(fields) == 0 {
+	if len(r) == 0 {
 		return Type, nil
 	}
 	var c Const
 	first := true
-	for _, typ := range fields {
+	for _, typ := range r {
 		k, err := typ.TypeWith(ctx)
 		if err != nil {
 			return nil, err
@@ -667,14 +665,13 @@ func (r Record) TypeWith(ctx *TypeContext) (Expr, error) {
 }
 
 func (r RecordLit) TypeWith(ctx *TypeContext) (Expr, error) {
-	fields := map[string]Expr(r)
-	if len(fields) == 0 {
-		return Record(fields), nil
+	if len(r) == 0 {
+		return Record{}, nil
 	}
-	fieldTypes := make(map[string]Expr, len(fields))
+	recordType := make(Record, len(r))
 	var c Expr
 	first := true
-	for name, val := range fields {
+	for name, val := range r {
 		typ, err := val.TypeWith(ctx)
 		if err != nil {
 			return nil, err
@@ -690,10 +687,10 @@ func (r RecordLit) TypeWith(ctx *TypeContext) (Expr, error) {
 				return nil, fmt.Errorf("can't mix %s and %s", c, k)
 			}
 		}
-		fieldTypes[name] = typ
+		recordType[name] = typ
 		first = false
 	}
-	return Record(fieldTypes), nil
+	return recordType, nil
 }
 
 func (t ToMap) TypeWith(ctx *TypeContext) (Expr, error) {
@@ -720,7 +717,7 @@ func (t ToMap) TypeWith(ctx *TypeContext) (Expr, error) {
 				}
 			}
 		}
-		return Apply(List, Record(map[string]Expr{"mapKey": Text, "mapValue": elemType})), nil
+		return Apply(List, Record{"mapKey": Text, "mapValue": elemType}), nil
 	} else {
 		// Γ ⊢ e :⇥ {}
 		if len(rt2) != 0 {

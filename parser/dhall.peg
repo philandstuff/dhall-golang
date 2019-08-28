@@ -615,10 +615,10 @@ PrimitiveExpression ←
     / '(' _  e:Expression _ ')' { return e, nil }
 
 RecordTypeOrLiteral ←
-      '=' { return RecordLit(map[string]Expr{}), nil }
+      '=' { return RecordLit{}, nil }
     / NonEmptyRecordType
     / NonEmptyRecordLiteral
-    / "" { return Record(map[string]Expr{}), nil }
+    / "" { return Record{}, nil }
 
 RecordTypeField ← name:AnyLabel _ ':' _1 expr:Expression {
     return []interface{}{name, expr}, nil
@@ -627,7 +627,7 @@ MoreRecordType ← _ ',' _ f:RecordTypeField {return f, nil}
 NonEmptyRecordType ←
       first:RecordTypeField rest:MoreRecordType* {
           fields := rest.([]interface{})
-          content := make(map[string]Expr, len(fields)+1)
+          content := make(Record, len(fields)+1)
           content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Expr)
           for _, field := range(fields) {
               fieldName := field.([]interface{})[0].(string)
@@ -636,7 +636,7 @@ NonEmptyRecordType ←
               }
               content[fieldName] = field.([]interface{})[1].(Expr)
           }
-          return Record(content), nil
+          return content, nil
       }
 
 RecordLiteralField ← name:AnyLabel _ '=' _ expr:Expression {
@@ -646,7 +646,7 @@ MoreRecordLiteral ← _ ',' _ f:RecordLiteralField {return f, nil}
 NonEmptyRecordLiteral ←
       first:RecordLiteralField rest:MoreRecordLiteral* {
           fields := rest.([]interface{})
-          content := make(map[string]Expr, len(fields)+1)
+          content := make(RecordLit, len(fields)+1)
           content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Expr)
           for _, field := range(fields) {
               fieldName := field.([]interface{})[0].(string)
@@ -655,7 +655,7 @@ NonEmptyRecordLiteral ←
               }
               content[fieldName] = field.([]interface{})[1].(Expr)
           }
-          return RecordLit(content), nil
+          return content, nil
       }
 
 UnionType ← NonEmptyUnionType / EmptyUnionType
@@ -663,7 +663,7 @@ UnionType ← NonEmptyUnionType / EmptyUnionType
 EmptyUnionType ← "" { return UnionType{}, nil }
 
 NonEmptyUnionType ← first:UnionVariant rest:(_ '|' _ UnionVariant)* {
-    alternatives := make(map[string]Expr)
+    alternatives := make(UnionType)
     first2 := first.([]interface{})
     if first2[1] == nil {
         alternatives[first2[0].(string)] = nil
@@ -679,7 +679,7 @@ NonEmptyUnionType ← first:UnionVariant rest:(_ '|' _ UnionVariant)* {
             alternatives[alternative[0].(string)] = alternative[1].([]interface{})[3].(Expr)
         }
     }
-    return UnionType(alternatives), nil
+    return alternatives, nil
 }
 
 UnionVariant ← AnyLabel (_ ':' _1 Expression)?
@@ -689,12 +689,12 @@ MoreList ← ',' _ e:Expression _ {return e, nil}
 NonEmptyListLiteral ←
       '[' _ first:Expression _ rest:MoreList* ']' {
           exprs := rest.([]interface{})
-          content := make([]Expr, len(exprs)+1)
+          content := make(NonEmptyList, len(exprs)+1)
           content[0] = first.(Expr)
           for i, expr := range(exprs) {
               content[i+1] = expr.(Expr)
           }
-          return NonEmptyList(content), nil
+          return content, nil
       }
 
 EOF ← !.

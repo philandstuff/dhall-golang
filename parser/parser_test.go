@@ -137,12 +137,12 @@ baz
 		Entry("None Natural", `None Natural`, Apply(None, Natural)),
 	)
 	DescribeTable("records", ParseAndCompare,
-		Entry("{}", `{}`, Record(map[string]Expr{})),
-		Entry("{=}", `{=}`, RecordLit(map[string]Expr{})),
-		Entry("{foo : Natural}", `{foo : Natural}`, Record(map[string]Expr{"foo": Natural})),
-		Entry("{foo = 3}", `{foo = 3}`, RecordLit(map[string]Expr{"foo": NaturalLit(3)})),
-		Entry("{foo : Natural, bar : Integer}", `{foo : Natural, bar: Integer}`, Record(map[string]Expr{"foo": Natural, "bar": Integer})),
-		Entry("{foo = 3 , bar = +3}", `{foo = 3 , bar = +3}`, RecordLit(map[string]Expr{"foo": NaturalLit(3), "bar": IntegerLit(3)})),
+		Entry("{}", `{}`, Record{}),
+		Entry("{=}", `{=}`, RecordLit{}),
+		Entry("{foo : Natural}", `{foo : Natural}`, Record{"foo": Natural}),
+		Entry("{foo = 3}", `{foo = 3}`, RecordLit{"foo": NaturalLit(3)}),
+		Entry("{foo : Natural, bar : Integer}", `{foo : Natural, bar: Integer}`, Record{"foo": Natural, "bar": Integer}),
+		Entry("{foo = 3 , bar = +3}", `{foo = 3 , bar = +3}`, RecordLit{"foo": NaturalLit(3), "bar": IntegerLit(3)}),
 		Entry("t.x", `t.x`, Field{MkVar("t"), "x"}),
 		Entry("t.x.y", `t.x.y`, Field{Field{MkVar("t"), "x"}, "y"}),
 	)

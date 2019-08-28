@@ -217,7 +217,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		}
 		return EmptyList{Type: resolvedType}, nil
 	case NonEmptyList:
-		newList := make([]Expr, len(e))
+		newList := make(NonEmptyList, len(e))
 		for i, item := range e {
 			var err error
 			newList[i], err = Load(item, ancestors...)
@@ -225,9 +225,9 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				return nil, err
 			}
 		}
-		return NonEmptyList(newList), nil
+		return newList, nil
 	case Record:
-		newRecord := make(map[string]Expr, len(e))
+		newRecord := make(Record, len(e))
 		for k, v := range e {
 			var err error
 			newRecord[k], err = Load(v, ancestors...)
@@ -235,9 +235,9 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				return nil, err
 			}
 		}
-		return Record(newRecord), nil
+		return newRecord, nil
 	case RecordLit:
-		newRecord := make(map[string]Expr, len(e))
+		newRecord := make(RecordLit, len(e))
 		for k, v := range e {
 			var err error
 			newRecord[k], err = Load(v, ancestors...)
@@ -245,7 +245,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				return nil, err
 			}
 		}
-		return RecordLit(newRecord), nil
+		return newRecord, nil
 	case Field:
 		newRecord, err := Load(e.Record, ancestors...)
 		if err != nil {
