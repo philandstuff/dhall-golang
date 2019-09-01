@@ -6,12 +6,12 @@ import . "github.com/philandstuff/dhall-golang/core"
 // first fresh variable index named `quote`.  Normally this will be 0 if there
 // are no variables called `quote` in the context.
 func Quote(v Value) Term {
-	return quote(quoteContext{}, v, LocalVar{})
+	return quoteWith(quoteContext{}, v, LocalVar{})
 }
 
 // quote, rebinding the given LocalVar back as a BoundVar
 func quoteAndRebindLocal(v Value, l LocalVar) Term {
-	return quote(quoteContext{}, v, l)
+	return quoteWith(quoteContext{}, v, l)
 }
 
 // a quoteContext records how many binders of each variable name we have passed
@@ -26,7 +26,7 @@ func (q quoteContext) extend(name string) quoteContext {
 	return newCtx
 }
 
-func quote(ctx quoteContext, v Value, l LocalVar) Term {
+func quoteWith(ctx quoteContext, v Value, l LocalVar) Term {
 	switch v := v.(type) {
 	case Universe:
 		return v
@@ -51,25 +51,25 @@ func quote(ctx quoteContext, v Value, l LocalVar) Term {
 		bodyVal := v.Fn(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return LambdaTerm{
 			Label: v.Label,
-			Type:  quote(ctx, v.Domain, l),
-			Body:  quote(ctx.extend(v.Label), bodyVal, l),
+			Type:  quoteWith(ctx, v.Domain, l),
+			Body:  quoteWith(ctx.extend(v.Label), bodyVal, l),
 		}
 	case PiValue:
 		bodyVal := v.Range(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return PiTerm{
 			Label: v.Label,
-			Type:  quote(ctx, v.Domain, l),
-			Body:  quote(ctx.extend(v.Label), bodyVal, l),
+			Type:  quoteWith(ctx, v.Domain, l),
+			Body:  quoteWith(ctx.extend(v.Label), bodyVal, l),
 		}
 	case AppNeutral:
 		return AppTerm{
-			Fn:  quote(ctx, v.Fn, l),
-			Arg: quote(ctx, v.Arg, l),
+			Fn:  quoteWith(ctx, v.Fn, l),
+			Arg: quoteWith(ctx, v.Arg, l),
 		}
 	case NaturalLit:
 		return v
 	case EmptyListVal:
-		return EmptyList{Type: quote(ctx, v.Type, l)}
+		return EmptyList{Type: quoteWith(ctx, v.Type, l)}
 	}
 	panic("unknown Value type")
 }

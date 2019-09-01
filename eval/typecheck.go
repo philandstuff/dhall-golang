@@ -7,10 +7,10 @@ import (
 	. "github.com/philandstuff/dhall-golang/core"
 )
 
-type Context map[string][]Value
+type context map[string][]Value
 
-func (ctx Context) extend(name string, t Value) Context {
-	newctx := Context{}
+func (ctx context) extend(name string, t Value) context {
+	newctx := context{}
 	for k, v := range ctx {
 		newctx[k] = v
 	}
@@ -29,7 +29,11 @@ func functionCheck(input Universe, output Universe) Universe {
 	}
 }
 
-func TypeOf(gamma Context, t Term) (Value, error) {
+func TypeOf(t Term) (Value, error) {
+	return typeWith(context{}, t)
+}
+
+func typeWith(ctx context, t Term) (Value, error) {
 	switch t := t.(type) {
 	case Universe:
 		switch t {
@@ -54,7 +58,7 @@ func TypeOf(gamma Context, t Term) (Value, error) {
 	case BoundVar:
 		return nil, mkTypeError(typeCheckBoundVar)
 	case LocalVar:
-		if vals, ok := gamma[t.Name]; ok {
+		if vals, ok := ctx[t.Name]; ok {
 			if t.Index < len(vals) {
 				return vals[t.Index], nil
 			}
@@ -64,11 +68,11 @@ func TypeOf(gamma Context, t Term) (Value, error) {
 	case FreeVar:
 		return nil, errors.New("typecheck freevar unimp")
 	case AppTerm:
-		fnType, err := TypeOf(gamma, t.Fn)
+		fnType, err := typeWith(ctx, t.Fn)
 		if err != nil {
 			return nil, err
 		}
-		argType, err := TypeOf(gamma, t.Arg)
+		argType, err := typeWith(ctx, t.Arg)
 		if err != nil {
 			return nil, err
 		}
@@ -85,21 +89,21 @@ func TypeOf(gamma Context, t Term) (Value, error) {
 		return bodyType, nil
 	case LambdaTerm:
 		pi := PiTerm{Label: t.Label, Type: t.Type}
-		freshLocal := LocalVar{Name: t.Label, Index: len(gamma[t.Label])}
-		bt, err := TypeOf(
-			gamma.extend(t.Label, Eval(t.Type, Env{})),
+		freshLocal := LocalVar{Name: t.Label, Index: len(ctx[t.Label])}
+		bt, err := typeWith(
+			ctx.extend(t.Label, Eval(t.Type, Env{})),
 			subst(t.Label, freshLocal, t.Body))
 		if err != nil {
 			return nil, err
 		}
 		pi.Body = quoteAndRebindLocal(bt, freshLocal)
-		_, err = TypeOf(gamma, pi)
+		_, err = typeWith(ctx, pi)
 		if err != nil {
 			return nil, err
 		}
 		return Eval(pi, Env{}), nil
 	case PiTerm:
-		inUniv, err := TypeOf(gamma, t.Type)
+		inUniv, err := typeWith(ctx, t.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -107,9 +111,9 @@ func TypeOf(gamma Context, t Term) (Value, error) {
 		if !ok {
 			return nil, mkTypeError(invalidInputType)
 		}
-		freshLocal := LocalVar{Name: t.Label, Index: len(gamma[t.Label])}
-		outUniv, err := TypeOf(
-			gamma.extend(t.Label, Eval(t.Type, Env{})),
+		freshLocal := LocalVar{Name: t.Label, Index: len(ctx[t.Label])}
+		outUniv, err := typeWith(
+			ctx.extend(t.Label, Eval(t.Type, Env{})),
 			subst(t.Label, freshLocal, t.Body))
 		if err != nil {
 			return nil, err
@@ -122,7 +126,7 @@ func TypeOf(gamma Context, t Term) (Value, error) {
 	case NaturalLit:
 		return Natural, nil
 	case EmptyList:
-		_, err := TypeOf(gamma, t.Type)
+		_, err := typeWith(ctx, t.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +140,7 @@ func TypeOf(gamma Context, t Term) (Value, error) {
 }
 
 type typeError struct {
-	ctx     Context
+	ctx     context
 	message typeMessage
 }
 

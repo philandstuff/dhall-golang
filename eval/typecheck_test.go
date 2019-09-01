@@ -24,23 +24,18 @@ var _ = DescribeTable("functionCheck",
 )
 
 func typecheckTest(t Term, expectedType Term) {
-	actualType, err := TypeOf(Context{}, t)
+	actualType, err := TypeOf(t)
 	Ω(err).ShouldNot(HaveOccurred())
 	Ω(Quote(actualType)).Should(
 		Equal(expectedType))
 }
 
 var _ = t.Describe("TypeOf", func() {
-	t.Describe("Const", func() {
-		t.It("⊦ Type : Kind", func() {
-			Expect(TypeOf(Context{}, Type)).
-				To(Equal(Kind))
-		})
-		t.It("⊦ Kind : Sort", func() {
-			Expect(TypeOf(Context{}, Kind)).
-				To(Equal(Sort))
-		})
-	})
+	DescribeTable("Universe",
+		typecheckTest,
+		Entry("Type : Kind", Type, Kind),
+		Entry("Kind : Sort", Kind, Sort),
+	)
 	DescribeTable("Builtin",
 		typecheckTest,
 		Entry(`Natural : Type`, Natural, Type),
@@ -48,10 +43,10 @@ var _ = t.Describe("TypeOf", func() {
 	)
 	DescribeTable("Lambda",
 		typecheckTest,
-		Entry("⊦ λ(x : Natural) → x : ∀(x : Natural) → Natural",
+		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
 			Mkλ("x", Natural, Bound("x")),
 			MkΠ("x", Natural, Natural)),
-		Entry("⊦ λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
+		Entry("λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
 			Mkλ("a", Type,
 				EmptyList{Apply(List, Bound("a"))}),
 			MkΠ("a", Type, Apply(List, Bound("a")))),
@@ -72,7 +67,7 @@ var _ = t.Describe("TypeOf", func() {
 	)
 	DescribeTable("Expected failures",
 		func(t Term) {
-			_, err := TypeOf(Context{}, t)
+			_, err := TypeOf(t)
 			Ω(err).Should(HaveOccurred())
 		},
 		// Universe
