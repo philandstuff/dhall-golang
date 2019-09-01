@@ -41,6 +41,14 @@ type (
 		Index int
 	}
 
+	// a LocalVar is an internal sentinel value used by TypeOf() in the process
+	// of typechecking the body of lambdas and pis
+	// FIXME: should this be unexported?
+	LocalVar struct {
+		Name  string
+		Index int
+	}
+
 	// a QuoteVar is an internal sentinel value used by Quote() in the process
 	// of converting Values back to Terms
 	// FIXME: should this be unexported?
@@ -64,6 +72,10 @@ func (BoundVar) isTerm() {}
 func (FreeVar) isTerm()    {}
 func (FreeVar) isNeutral() {}
 func (FreeVar) isValue()   {}
+
+func (LocalVar) isTerm()    {}
+func (LocalVar) isNeutral() {}
+func (LocalVar) isValue()   {}
 
 func (QuoteVar) isNeutral() {}
 func (QuoteVar) isValue()   {}

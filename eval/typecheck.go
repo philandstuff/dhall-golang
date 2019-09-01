@@ -9,6 +9,26 @@ import (
 
 type Context map[string][]Value
 
+func (ctx Context) extend(name string, t Value) Context {
+	newctx := Context{}
+	for k, v := range ctx {
+		newctx[k] = v
+	}
+	newctx[name] = append(newctx[name], t)
+	return newctx
+}
+
+func functionCheck(input Universe, output Universe) Universe {
+	switch {
+	case output == Type:
+		return Type
+	case input < output:
+		return output
+	default:
+		return input
+	}
+}
+
 func TypeOf(gamma Context, t Term) (Value, error) {
 	switch t := t.(type) {
 	case Universe:
@@ -32,6 +52,8 @@ func TypeOf(gamma Context, t Term) (Value, error) {
 			return nil, mkTypeError(unhandledTypeCase)
 		}
 	case BoundVar:
+		return nil, mkTypeError(typeCheckBoundVar)
+	case LocalVar:
 		if vals, ok := gamma[t.Name]; ok {
 			if t.Index < len(vals) {
 				return vals[t.Index], nil
@@ -62,26 +84,41 @@ func TypeOf(gamma Context, t Term) (Value, error) {
 		bodyType := piType.Range(argType)
 		return bodyType, nil
 	case LambdaTerm:
-		gammaPrime := Context{}
-		for k, v := range gamma {
-			gammaPrime[k] = v
-		}
-		k, err := TypeOf(gamma, t.Type)
-		if err != nil {
-			return nil, err
-		}
-		// FIXME: need to introduce Rule() for higher functions
-		if k != Type {
-			return nil, errors.New("A lambda's argument must be a term (for now)")
-		}
-		gammaPrime[t.Label] = append(gammaPrime[t.Label], Eval(t.Type, Env{}))
 		pi := PiTerm{Label: t.Label, Type: t.Type}
-		bt, err := TypeOf(gammaPrime, t.Body)
+		freshLocal := LocalVar{Name: t.Label, Index: len(gamma[t.Label])}
+		bt, err := TypeOf(
+			gamma.extend(t.Label, Eval(t.Type, Env{})),
+			subst(t.Label, freshLocal, t.Body))
 		if err != nil {
 			return nil, err
 		}
-		pi.Body = Quote(bt)
+		pi.Body = quoteAndRebindLocal(bt, freshLocal)
+		_, err = TypeOf(gamma, pi)
+		if err != nil {
+			return nil, err
+		}
 		return Eval(pi, Env{}), nil
+	case PiTerm:
+		inUniv, err := TypeOf(gamma, t.Type)
+		if err != nil {
+			return nil, err
+		}
+		i, ok := inUniv.(Universe)
+		if !ok {
+			return nil, mkTypeError(invalidInputType)
+		}
+		freshLocal := LocalVar{Name: t.Label, Index: len(gamma[t.Label])}
+		outUniv, err := TypeOf(
+			gamma.extend(t.Label, Eval(t.Type, Env{})),
+			subst(t.Label, freshLocal, t.Body))
+		if err != nil {
+			return nil, err
+		}
+		o, ok := outUniv.(Universe)
+		if !ok {
+			return nil, mkTypeError(invalidOutputType)
+		}
+		return functionCheck(i, o), nil
 	case NaturalLit:
 		return Natural, nil
 	case EmptyList:
@@ -153,7 +190,11 @@ func typeMismatch(expectedType, actualType Term) typeMessage {
 
 var (
 	invalidListType   = staticTypeMessage{"Invalid type for ❰List❱"}
+	invalidInputType  = staticTypeMessage{"Invalid function input"}
+	invalidOutputType = staticTypeMessage{"Invalid function output"}
 	notAFunction      = staticTypeMessage{"Not a function"}
 	untyped           = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
+
 	unhandledTypeCase = staticTypeMessage{"Internal error: unhandled case in TypeOf()"}
+	typeCheckBoundVar = staticTypeMessage{"Internal error: shouldn't ever see BoundVar in TypeOf()"}
 )

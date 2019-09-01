@@ -1,64 +1,71 @@
-package eval_test
+package eval
 
 import (
 	. "github.com/philandstuff/dhall-golang/core"
-	. "github.com/philandstuff/dhall-golang/eval"
 
+	t "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("TypeOf", func() {
-	Describe("Const", func() {
-		It("⊦ Type : Kind", func() {
+var _ = DescribeTable("functionCheck",
+	func(in, out, expected Universe) {
+		Expect(functionCheck(in, out)).To(Equal(expected))
+	},
+	Entry(`Type ↝ Type : Type`, Type, Type, Type),
+	Entry(`Kind ↝ Type : Type`, Kind, Type, Type),
+	Entry(`Sort ↝ Type : Type`, Sort, Type, Type),
+	Entry(`Type ↝ Kind : Kind`, Type, Kind, Kind),
+	Entry(`Kind ↝ Kind : Kind`, Kind, Kind, Kind),
+	Entry(`Sort ↝ Kind : Sort`, Sort, Kind, Sort),
+	Entry(`Type ↝ Sort : Sort`, Type, Sort, Sort),
+	Entry(`Kind ↝ Sort : Sort`, Kind, Sort, Sort),
+	Entry(`Sort ↝ Sort : Sort`, Sort, Sort, Sort),
+)
+
+func typecheckTest(t Term, expectedType Term) {
+	actualType, err := TypeOf(Context{}, t)
+	Ω(err).ShouldNot(HaveOccurred())
+	Ω(Quote(actualType)).Should(
+		Equal(expectedType))
+}
+
+var _ = t.Describe("TypeOf", func() {
+	t.Describe("Const", func() {
+		t.It("⊦ Type : Kind", func() {
 			Expect(TypeOf(Context{}, Type)).
 				To(Equal(Kind))
 		})
-		It("⊦ Kind : Sort", func() {
+		t.It("⊦ Kind : Sort", func() {
 			Expect(TypeOf(Context{}, Kind)).
 				To(Equal(Sort))
 		})
 	})
 	DescribeTable("Builtin",
-		func(t Term, expectedType Term) {
-			actualType, err := TypeOf(Context{}, t)
-			Ω(err).ShouldNot(HaveOccurred())
-			Ω(Quote(actualType)).Should(
-				Equal(expectedType))
-		},
+		typecheckTest,
 		Entry(`Natural : Type`, Natural, Type),
 		Entry(`List : Type -> Type`, List, FnType(Type, Type)),
 	)
-	Describe("Lambda", func() {
-		It("⊦ λ(x : Natural) → x : ∀(x : Natural) → Natural", func() {
-			t, err := TypeOf(Context{}, Mkλ("x", Natural, Bound("x")))
-			Ω(err).ShouldNot(HaveOccurred())
-			Ω(Quote(t)).Should(
-				Equal(MkΠ("x", Natural, Natural)))
-		})
-		XIt("⊦ λ(a : Type) → [] : List a : ∀(a : Type) → List a", func() {
-			t, err := TypeOf(Context{}, Mkλ("x", Natural, Bound("x")))
-			Ω(err).ShouldNot(HaveOccurred())
-			Ω(Quote(t)).Should(
-				Equal(MkΠ("x", Type, Bound("x"))))
-		})
-	})
+	DescribeTable("Lambda",
+		typecheckTest,
+		Entry("⊦ λ(x : Natural) → x : ∀(x : Natural) → Natural",
+			Mkλ("x", Natural, Bound("x")),
+			MkΠ("x", Natural, Natural)),
+		Entry("⊦ λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
+			Mkλ("a", Type,
+				EmptyList{Apply(List, Bound("a"))}),
+			MkΠ("a", Type, Apply(List, Bound("a")))),
+	)
+	DescribeTable("Pi",
+		typecheckTest,
+		Entry(`Natural → Natural : Type`, FnType(Natural, Natural), Type),
+	)
 	DescribeTable("Application",
-		func(t Term, expectedType Term) {
-			actualType, err := TypeOf(Context{}, t)
-			Ω(err).ShouldNot(HaveOccurred())
-			Ω(Quote(actualType)).Should(
-				Equal(expectedType))
-		},
+		typecheckTest,
 		Entry(`List Natural : Type`, Apply(List, Natural), Type),
 	)
 	DescribeTable("Others",
-		func(t Term, expectedType Term) {
-			actualType, err := TypeOf(Context{}, t)
-			Ω(err).ShouldNot(HaveOccurred())
-			Ω(Quote(actualType)).Should(
-				Equal(expectedType))
-		},
+		typecheckTest,
 		Entry(`3 : Natural`, NaturalLit(3), Natural),
 		Entry(`[] : List Natural : List Natural`,
 			EmptyList{Apply(List, Natural)}, Apply(List, Natural)),

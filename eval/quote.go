@@ -6,7 +6,12 @@ import . "github.com/philandstuff/dhall-golang/core"
 // first fresh variable index named `quote`.  Normally this will be 0 if there
 // are no variables called `quote` in the context.
 func Quote(v Value) Term {
-	return quote(quoteContext{}, v)
+	return quote(quoteContext{}, v, LocalVar{})
+}
+
+// quote, rebinding the given LocalVar back as a BoundVar
+func quoteAndRebindLocal(v Value, l LocalVar) Term {
+	return quote(quoteContext{}, v, l)
 }
 
 // a quoteContext records how many binders of each variable name we have passed
@@ -21,7 +26,7 @@ func (q quoteContext) extend(name string) quoteContext {
 	return newCtx
 }
 
-func quote(ctx quoteContext, v Value) Term {
+func quote(ctx quoteContext, v Value, l LocalVar) Term {
 	switch v := v.(type) {
 	case Universe:
 		return v
@@ -29,34 +34,42 @@ func quote(ctx quoteContext, v Value) Term {
 		return v
 	case FreeVar:
 		return v
+	case LocalVar:
+		if v == l {
+			return BoundVar{
+				Name:  v.Name,
+				Index: ctx[v.Name],
+			}
+		}
+		return v
 	case QuoteVar:
 		return BoundVar{
 			Name:  v.Name,
 			Index: ctx[v.Name] - v.Index - 1,
 		}
 	case LambdaValue:
-		bodyVal := v.Fn(QuoteVar{v.Label, ctx[v.Label]})
+		bodyVal := v.Fn(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return LambdaTerm{
 			Label: v.Label,
-			Type:  quote(ctx, v.Domain),
-			Body:  quote(ctx.extend(v.Label), bodyVal),
+			Type:  quote(ctx, v.Domain, l),
+			Body:  quote(ctx.extend(v.Label), bodyVal, l),
 		}
 	case PiValue:
-		bodyVal := v.Range(QuoteVar{v.Label, ctx[v.Label]})
+		bodyVal := v.Range(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return PiTerm{
 			Label: v.Label,
-			Type:  quote(ctx, v.Domain),
-			Body:  quote(ctx.extend(v.Label), bodyVal),
+			Type:  quote(ctx, v.Domain, l),
+			Body:  quote(ctx.extend(v.Label), bodyVal, l),
 		}
 	case AppNeutral:
 		return AppTerm{
-			Fn:  quote(ctx, v.Fn),
-			Arg: quote(ctx, v.Arg),
+			Fn:  quote(ctx, v.Fn, l),
+			Arg: quote(ctx, v.Arg, l),
 		}
 	case NaturalLit:
 		return v
 	case EmptyListVal:
-		return EmptyList{Type: quote(ctx, v.Type)}
+		return EmptyList{Type: quote(ctx, v.Type, l)}
 	}
 	panic("unknown Value type")
 }

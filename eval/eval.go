@@ -1,6 +1,10 @@
 package eval
 
-import . "github.com/philandstuff/dhall-golang/core"
+import (
+	"fmt"
+
+	. "github.com/philandstuff/dhall-golang/core"
+)
 
 type Env map[string][]Value
 
@@ -11,7 +15,12 @@ func Eval(t Term, e Env) Value {
 	case Builtin:
 		return t
 	case BoundVar:
+		if t.Index >= len(e[t.Name]) {
+			panic(fmt.Sprintf("Eval failed on %v in env %v", t, e))
+		}
 		return e[t.Name][t.Index]
+	case LocalVar:
+		return t
 	case FreeVar:
 		return t
 	case LambdaTerm:
