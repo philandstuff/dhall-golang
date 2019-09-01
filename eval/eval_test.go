@@ -27,7 +27,7 @@ var _ = Describe("Eval", func() {
 	Describe("application", func() {
 		It("To neutral", func() {
 			Expect(Eval(Apply(FreeVar{Name: "f"}, FreeVar{Name: "x"}), Env{})).
-				To(Equal(AppNeutral{Fn: FreeVar{Name: "f"}, Arg: FreeVar{Name: "x"}}))
+				To(Equal(AppValue{Fn: FreeVar{Name: "f"}, Arg: FreeVar{Name: "x"}}))
 		})
 		It("To lambda", func() {
 			Expect(Eval(Apply(

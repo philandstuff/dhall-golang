@@ -61,7 +61,7 @@ func quoteWith(ctx quoteContext, v Value, l LocalVar) Term {
 			Type:  quoteWith(ctx, v.Domain, l),
 			Body:  quoteWith(ctx.extend(v.Label), bodyVal, l),
 		}
-	case AppNeutral:
+	case AppValue:
 		return AppTerm{
 			Fn:  quoteWith(ctx, v.Fn, l),
 			Arg: quoteWith(ctx, v.Arg, l),

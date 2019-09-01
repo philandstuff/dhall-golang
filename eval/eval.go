@@ -53,16 +53,10 @@ func Eval(t Term, e Env) Value {
 		if f, ok := fn.(LambdaValue); ok {
 			return f.Fn(arg)
 		}
-		if _, ok := fn.(PiValue); ok {
-			panic("pi not implemented")
+		return AppValue{
+			Fn:  fn,
+			Arg: arg,
 		}
-		if f, ok := fn.(Neutral); ok {
-			return AppNeutral{
-				Fn:  f,
-				Arg: arg,
-			}
-		}
-		panic("appterm unimp")
 	case NaturalLit:
 		return t
 	case EmptyList:

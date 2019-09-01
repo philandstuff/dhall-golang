@@ -10,11 +10,6 @@ type Value interface {
 	isValue()
 }
 
-type Neutral interface {
-	Value
-	isNeutral()
-}
-
 type Universe int
 
 const (
@@ -64,21 +59,15 @@ func (Universe) isValue() {}
 func (Builtin) isTerm()  {}
 func (Builtin) isValue() {}
 
-// FIXME: List is neutral, but List/map isn't
-func (Builtin) isNeutral() {}
-
 func (BoundVar) isTerm() {}
 
-func (FreeVar) isTerm()    {}
-func (FreeVar) isNeutral() {}
-func (FreeVar) isValue()   {}
+func (FreeVar) isTerm()  {}
+func (FreeVar) isValue() {}
 
-func (LocalVar) isTerm()    {}
-func (LocalVar) isNeutral() {}
-func (LocalVar) isValue()   {}
+func (LocalVar) isTerm()  {}
+func (LocalVar) isValue() {}
 
-func (QuoteVar) isNeutral() {}
-func (QuoteVar) isValue()   {}
+func (QuoteVar) isValue() {}
 
 func Bound(name string) BoundVar {
 	return BoundVar{Name: name}
@@ -163,8 +152,8 @@ type (
 		Range  func(Value) Value
 	}
 
-	AppNeutral struct {
-		Fn  Neutral
+	AppValue struct {
+		Fn  Value
 		Arg Value
 	}
 )
@@ -172,8 +161,7 @@ type (
 func (LambdaValue) isValue() {}
 func (PiValue) isValue()     {}
 
-func (AppNeutral) isNeutral() {}
-func (AppNeutral) isValue()   {}
+func (AppValue) isValue() {}
 
 func MkΠval(label string, d Value, r func(Value) Value) PiValue {
 	return PiValue{

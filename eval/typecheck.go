@@ -130,7 +130,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, ok := Eval(t.Type, Env{}).(AppNeutral)
+		_, ok := Eval(t.Type, Env{}).(AppValue)
 		if !ok {
 			return nil, mkTypeError(invalidListType)
 		}
