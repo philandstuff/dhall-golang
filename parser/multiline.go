@@ -3,17 +3,17 @@ package parser
 import (
 	"strings"
 
-	"github.com/philandstuff/dhall-golang/ast"
+	"github.com/philandstuff/dhall-golang/core"
 )
 
 //RemoveLeadingCommonIndent
-// removes the common leading indent from a TextLit, as defined in standard/multiline.md
-func RemoveLeadingCommonIndent(text ast.TextLit) ast.TextLit {
+// removes the common leading indent from a TextLitTerm, as defined in standard/multiline.md
+func RemoveLeadingCommonIndent(text core.TextLitTerm) core.TextLitTerm {
 	prefix := longestCommonIndentPrefix(text)
-	trimmedText := ast.TextLit{Suffix: strings.ReplaceAll(text.Suffix, "\n"+prefix, "\n")}
+	trimmedText := core.TextLitTerm{Suffix: strings.ReplaceAll(text.Suffix, "\n"+prefix, "\n")}
 	for _, chunk := range text.Chunks {
 		// trim lines other than the first (everywhere after a '\n')
-		trimmedText.Chunks = append(trimmedText.Chunks, ast.Chunk{
+		trimmedText.Chunks = append(trimmedText.Chunks, core.Chunk{
 			Prefix: strings.ReplaceAll(chunk.Prefix, "\n"+prefix, "\n"),
 			Expr:   chunk.Expr,
 		})
@@ -35,7 +35,7 @@ func nonBlankLinesPlusPossibleBlankLastLine(s string) []string {
 	return lines
 }
 
-func allNonBlankLines(text ast.TextLit) []string {
+func allNonBlankLines(text core.TextLitTerm) []string {
 	if len(text.Chunks) == 0 {
 		return nonBlankLinesPlusPossibleBlankLastLine(text.Suffix)
 	}
@@ -60,7 +60,7 @@ func allNonBlankLines(text ast.TextLit) []string {
 	return lines
 }
 
-func longestCommonIndentPrefix(text ast.TextLit) string {
+func longestCommonIndentPrefix(text core.TextLitTerm) string {
 	lines := allNonBlankLines(text)
 	if len(lines) == 0 {
 		return ""

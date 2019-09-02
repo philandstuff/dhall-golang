@@ -19,16 +19,16 @@ import (
 "unicode"
 "unicode/utf8"
 )
-import . "github.com/philandstuff/dhall-golang/ast"
+import . "github.com/philandstuff/dhall-golang/core"
 
 // Helper function for parsing all the operator parsing blocks
 // see OrExpression for an example of how this is used
-func ParseOperator(opcode int, first, rest interface{}) Expr {
-    out := first.(Expr)
+func ParseOperator(opcode int, first, rest interface{}) Term {
+    out := first.(Term)
     if rest == nil { return out }
     for _, b := range rest.([]interface{}) {
-        nextExpr := b.([]interface{})[3].(Expr)
-        out = Operator{OpCode: opcode, L: out, R: nextExpr}
+        nextTerm := b.([]interface{})[3].(Term)
+        out = OpTerm{OpCode: opcode, L: out, R: nextTerm}
     }
     return out
 }
@@ -165,14 +165,14 @@ DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
         switch e := chunk.(type) {
         case []byte:
                 str.Write(e)
-        case Expr:
+        case Term:
                 outChunks = append(outChunks, Chunk{str.String(), e})
                 str.Reset()
         default:
                 return nil, errors.New("can't happen")
         }
     }
-    return TextLit{Chunks: outChunks, Suffix: str.String()}, nil
+    return TextLitTerm{Chunks: outChunks, Suffix: str.String()}, nil
 }
 
 SingleQuoteContinue ←
@@ -202,14 +202,14 @@ SingleQuoteLiteral ← "''" EOL content:SingleQuoteContinue {
         switch e := chunk[0].(type) {
         case []byte:
             str.Write(e)
-        case Expr:
+        case Term:
                 outChunks = append(outChunks, Chunk{str.String(), e})
                 str.Reset()
         default:
             return nil, errors.New("unimplemented")
         }
     }
-    return RemoveLeadingCommonIndent(TextLit{Chunks: outChunks, Suffix: str.String()}), nil
+    return RemoveLeadingCommonIndent(TextLitTerm{Chunks: outChunks, Suffix: str.String()}), nil
 }
 
 Interpolation ← "${" e:CompleteExpression "}" { return e, nil }
@@ -479,41 +479,41 @@ LetBinding ← Let _1 label:NonreservedLabel _ a:(Annotation _)?
     if a != nil {
         return Binding{
             Variable: label.(string),
-            Annotation: a.([]interface{})[0].(Expr),
-            Value: v.(Expr),
+            Annotation: a.([]interface{})[0].(Term),
+            Value: v.(Term),
         }, nil
     } else {
         return Binding{
             Variable: label.(string),
-            Value: v.(Expr),
+            Value: v.(Term),
         }, nil
     }
 }
 
 Expression ←
       Lambda _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
-          return &LambdaExpr{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
+          return &LambdaTerm{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
       }
     / If _1 cond:Expression _ Then _1 t:Expression _ Else _1 f:Expression {
-          return BoolIf{cond.(Expr),t.(Expr),f.(Expr)},nil
+          return BoolIf{cond.(Term),t.(Term),f.(Term)},nil
       }
     / bindings:LetBinding+ In _1 b:Expression {
         bs := make([]Binding, len(bindings.([]interface{})))
         for i, binding := range bindings.([]interface{}) {
             bs[i] = binding.(Binding)
         }
-        return MakeLet(b.(Expr), bs...), nil
+        return MakeLet(b.(Term), bs...), nil
       }
     / Forall _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
-          return &Pi{Label:label.(string), Type:t.(Expr), Body: body.(Expr)}, nil
+          return &Pi{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
       }
-    / o:OperatorExpression _ Arrow _ e:Expression { return FnType(o.(Expr),e.(Expr)), nil }
+    / o:OperatorExpression _ Arrow _ e:Expression { return FnType(o.(Term),e.(Term)), nil }
     / Merge _1 h:ImportExpression _1 u:ImportExpression _ ':' _1 a:ApplicationExpression {
-          return Merge{Handler:h.(Expr), Union:u.(Expr), Annotation:a.(Expr)}, nil
+          return Merge{Handler:h.(Term), Union:u.(Term), Annotation:a.(Term)}, nil
       }
     / EmptyList
-    / toMap _1 e:ImportExpression _ ':' _1 t:ApplicationExpression { return ToMap{e.(Expr), t.(Expr)}, nil }
-    / assert _ ':' _1 a:Expression { return Assert{Annotation: a.(Expr)}, nil }
+    / toMap _1 e:ImportExpression _ ':' _1 t:ApplicationExpression { return ToMap{e.(Term), t.(Term)}, nil }
+    / assert _ ':' _1 a:Expression { return Assert{Annotation: a.(Term)}, nil }
     / AnnotatedExpression
 
 Annotation ← ':' _1 a:Expression { return a, nil }
@@ -521,11 +521,11 @@ Annotation ← ':' _1 a:Expression { return a, nil }
 AnnotatedExpression ←
 e:OperatorExpression a:(_ Annotation)? {
         if a == nil { return e, nil }
-        return Annot{e.(Expr), a.([]interface{})[1].(Expr)}, nil
+        return Annot{e.(Term), a.([]interface{})[1].(Term)}, nil
     }
 
 EmptyList ← '[' _ ']' _ ':' _1 a:ApplicationExpression {
-          return EmptyList{a.(Expr)},nil
+          return EmptyList{a.(Term)},nil
 }
 
 OperatorExpression ← ImportAltExpression
@@ -558,26 +558,26 @@ EquivalentExpression     ← first:ApplicationExpression  rest:(_ Equivalent _ e
   {return ParseOperator(EquivOp, first, rest), nil}
 
 ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression)* {
-          e := f.(Expr)
+          e := f.(Term)
           if rest == nil { return e, nil }
           for _, arg := range rest.([]interface{}) {
-              e = Apply(e, arg.([]interface{})[1].(Expr))
+              e = Apply(e, arg.([]interface{})[1].(Term))
           }
           return e,nil
       }
 
 FirstApplicationExpression ←
        Merge _1 h:ImportExpression _1 u:ImportExpression {
-             return Merge{Handler:h.(Expr), Union:u.(Expr)}, nil
+             return Merge{Handler:h.(Term), Union:u.(Term)}, nil
           }
-     / Some _1 e:ImportExpression { return Some{e.(Expr)}, nil }
-     / toMap _1 e:ImportExpression { return ToMap{Record: e.(Expr)}, nil }
+     / Some _1 e:ImportExpression { return Some{e.(Term)}, nil }
+     / toMap _1 e:ImportExpression { return ToMap{Record: e.(Term)}, nil }
      / ImportExpression
 
 ImportExpression ← Import / SelectorExpression
 
 SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {
-    expr := e.(Expr)
+    expr := e.(Term)
     labels := ls.([]interface{})
     for _, labelSelector := range labels {
         selectorIface := labelSelector.([]interface{})[3]
@@ -586,7 +586,7 @@ SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {
                 expr = Field{expr, selector}
             case []string:
                 expr = Project{expr, selector}
-            case Expr:
+            case Term:
                 expr = ProjectType{expr, selector}
             default:
                 return nil, errors.New("unimplemented")
@@ -634,13 +634,13 @@ NonEmptyRecordType ←
       first:RecordTypeField rest:MoreRecordType* {
           fields := rest.([]interface{})
           content := make(Record, len(fields)+1)
-          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Expr)
+          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Term)
           for _, field := range(fields) {
               fieldName := field.([]interface{})[0].(string)
               if _, ok := content[fieldName]; ok {
                   return nil, fmt.Errorf("Duplicate field %s in record", fieldName)
               }
-              content[fieldName] = field.([]interface{})[1].(Expr)
+              content[fieldName] = field.([]interface{})[1].(Term)
           }
           return content, nil
       }
@@ -653,13 +653,13 @@ NonEmptyRecordLiteral ←
       first:RecordLiteralField rest:MoreRecordLiteral* {
           fields := rest.([]interface{})
           content := make(RecordLit, len(fields)+1)
-          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Expr)
+          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Term)
           for _, field := range(fields) {
               fieldName := field.([]interface{})[0].(string)
               if _, ok := content[fieldName]; ok {
                   return nil, fmt.Errorf("Duplicate field %s in record", fieldName)
               }
-              content[fieldName] = field.([]interface{})[1].(Expr)
+              content[fieldName] = field.([]interface{})[1].(Term)
           }
           return content, nil
       }
@@ -674,7 +674,7 @@ NonEmptyUnionType ← first:UnionVariant rest:(_ '|' _ UnionVariant)* {
     if first2[1] == nil {
         alternatives[first2[0].(string)] = nil
     } else {
-        alternatives[first2[0].(string)] = first2[1].([]interface{})[3].(Expr)
+        alternatives[first2[0].(string)] = first2[1].([]interface{})[3].(Term)
     }
     if rest == nil { return UnionType(alternatives), nil }
     for _, alternativeSyntax := range rest.([]interface{}) {
@@ -687,7 +687,7 @@ NonEmptyUnionType ← first:UnionVariant rest:(_ '|' _ UnionVariant)* {
         if alternative[1] == nil {
             alternatives[name] = nil
         } else {
-            alternatives[name] = alternative[1].([]interface{})[3].(Expr)
+            alternatives[name] = alternative[1].([]interface{})[3].(Term)
         }
     }
     return alternatives, nil
@@ -701,9 +701,9 @@ NonEmptyListLiteral ←
       '[' _ first:Expression _ rest:MoreList* ']' {
           exprs := rest.([]interface{})
           content := make(NonEmptyList, len(exprs)+1)
-          content[0] = first.(Expr)
+          content[0] = first.(Term)
           for i, expr := range(exprs) {
-              content[i+1] = expr.(Expr)
+              content[i+1] = expr.(Term)
           }
           return content, nil
       }

@@ -21,8 +21,44 @@ const (
 type Builtin string
 
 const (
-	Natural Builtin = "Natural"
-	List    Builtin = "List"
+	Double   = Builtin("Double")
+	Text     = Builtin("Text")
+	Bool     = Builtin("Bool")
+	Natural  = Builtin("Natural")
+	Integer  = Builtin("Integer")
+	List     = Builtin("List")
+	Optional = Builtin("Optional")
+	None     = Builtin("None")
+
+	NaturalBuild     = Builtin("Natural/build")
+	NaturalFold      = Builtin("Natural/fold")
+	NaturalIsZero    = Builtin("Natural/isZero")
+	NaturalEven      = Builtin("Natural/even")
+	NaturalOdd       = Builtin("Natural/odd")
+	NaturalToInteger = Builtin("Natural/toInteger")
+	NaturalShow      = Builtin("Natural/show")
+	NaturalSubtract  = Builtin("Natural/subtract")
+
+	IntegerToDouble = Builtin("Integer/toDouble")
+	IntegerShow     = Builtin("Integer/show")
+
+	DoubleShow = Builtin("Double/show")
+
+	TextShow = Builtin("Text/show")
+
+	ListBuild   = Builtin("List/build")
+	ListFold    = Builtin("List/fold")
+	ListLength  = Builtin("List/length")
+	ListHead    = Builtin("List/head")
+	ListLast    = Builtin("List/last")
+	ListIndexed = Builtin("List/indexed")
+	ListReverse = Builtin("List/reverse")
+
+	OptionalBuild = Builtin("Optional/build")
+	OptionalFold  = Builtin("Optional/fold")
+
+	True  = BoolLit(true)
+	False = BoolLit(false)
 )
 
 type (
@@ -90,11 +126,18 @@ type (
 		Fn  Term
 		Arg Term
 	}
+
+	OpTerm struct {
+		OpCode int
+		L      Term
+		R      Term
+	}
 )
 
 func (LambdaTerm) isTerm() {}
 func (PiTerm) isTerm()     {}
 func (AppTerm) isTerm()    {}
+func (OpTerm) isTerm()     {}
 
 func Lambda(label string, t Term, body Term) LambdaTerm {
 	return LambdaTerm{
@@ -135,6 +178,24 @@ func Apply(fn Term, arg Term) AppTerm {
 		Arg: arg,
 	}
 }
+
+// Opcodes for use in the OpTerm type
+// These numbers match the binary encoding label numbers
+const (
+	OrOp = iota
+	AndOp
+	EqOp
+	NeOp
+	PlusOp
+	TimesOp
+	TextAppendOp
+	ListAppendOp
+	RecordMergeOp
+	RightBiasedRecordMergeOp
+	RecordTypeMergeOp
+	ImportAltOp
+	EquivOp
+)
 
 type (
 	// a lambda value is a go function
@@ -187,6 +248,20 @@ type (
 	// [] : List a
 	EmptyList    struct{ Type Term }
 	EmptyListVal struct{ Type Value }
+
+	Chunk struct {
+		Prefix string
+		Expr   Term
+	}
+	Chunks      []Chunk
+	TextLitTerm struct {
+		Chunks Chunks
+		Suffix string
+	}
+
+	BoolLit    bool
+	DoubleLit  float64
+	IntegerLit int
 )
 
 func (NaturalLit) isTerm()  {}
