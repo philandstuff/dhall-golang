@@ -215,6 +215,7 @@ func runTestOnFilePairs(
 }
 
 func TestParserRejects(t *testing.T) {
+	t.Parallel()
 	runTestOnEachFile(t, "dhall-lang/tests/parser/failure/", func(t *testing.T, testPath string) {
 		_, err := parser.ParseFile(testPath)
 
@@ -223,6 +224,7 @@ func TestParserRejects(t *testing.T) {
 }
 
 func TestParserAccepts(t *testing.T) {
+	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/parser/success/",
 		"A.dhall", "B.dhallb",
 		func(t *testing.T, aPath, bPath string) {
@@ -249,6 +251,7 @@ func BenchmarkParserLargeExpression(b *testing.B) {
 }
 
 func TestTypecheckFails(t *testing.T) {
+	t.Parallel()
 	runTestOnEachFile(t, "dhall-lang/tests/typecheck/failure/", func(t *testing.T, testPath string) {
 		parsed, err := parser.ParseFile(testPath)
 
@@ -266,6 +269,7 @@ func TestTypecheckFails(t *testing.T) {
 }
 
 func TestTypechecks(t *testing.T) {
+	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/typecheck/success/",
 		"A.dhall", "B.dhall",
 		func(t *testing.T, aPath, bPath string) {
@@ -291,6 +295,7 @@ func TestTypechecks(t *testing.T) {
 }
 
 func TestTypeInference(t *testing.T) {
+	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/type-inference/success/",
 		"A.dhall", "B.dhall",
 		func(t *testing.T, aPath, bPath string) {
@@ -308,6 +313,7 @@ func TestTypeInference(t *testing.T) {
 }
 
 func TestAlphaNormalization(t *testing.T) {
+	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/alpha-normalization/success/",
 		"A.dhall", "B.dhall",
 		func(t *testing.T, aPath, bPath string) {
@@ -325,6 +331,7 @@ func TestAlphaNormalization(t *testing.T) {
 }
 
 func TestNormalization(t *testing.T) {
+	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/normalization/success/",
 		"A.dhall", "B.dhall",
 		func(t *testing.T, aPath, bPath string) {
@@ -347,6 +354,7 @@ func TestNormalization(t *testing.T) {
 }
 
 func TestImportFails(t *testing.T) {
+	t.Parallel()
 	runTestOnEachFile(t, "dhall-lang/tests/import/failure/", func(t *testing.T, testPath string) {
 		parsed, err := parser.ParseFile(testPath)
 		expectNoError(t, err)
@@ -357,6 +365,7 @@ func TestImportFails(t *testing.T) {
 }
 
 func TestImport(t *testing.T) {
+	t.Parallel()
 	cwd, err := os.Getwd()
 	expectNoError(t, err)
 	os.Setenv("XDG_CACHE_HOME", cwd+"/dhall-lang/tests/import/cache")
@@ -380,6 +389,7 @@ func TestImport(t *testing.T) {
 }
 
 func TestSemanticHash(t *testing.T) {
+	t.Parallel()
 	sha256re := regexp.MustCompile("^sha256:([0-9a-fA-F]{64})\n$")
 	runTestOnFilePairs(t, "dhall-lang/tests/semantic-hash/success/",
 		"A.dhall", "B.hash",
@@ -409,6 +419,7 @@ func TestSemanticHash(t *testing.T) {
 }
 
 func TestBinaryDecode(t *testing.T) {
+	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/binary-decode/success/",
 		"A.dhallb", "B.dhall",
 		func(t *testing.T, aPath, bPath string) {
@@ -426,6 +437,7 @@ func TestBinaryDecode(t *testing.T) {
 }
 
 func TestBinaryDecodeFails(t *testing.T) {
+	t.Parallel()
 	runTestOnEachFile(t, "dhall-lang/tests/binary-decode/failure/", func(t *testing.T, testPath string) {
 		reader, err := os.Open(testPath)
 		if err != nil {
