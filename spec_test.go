@@ -239,6 +239,15 @@ func TestParserAccepts(t *testing.T) {
 		})
 }
 
+func BenchmarkParserLargeExpression(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		_, err := parser.ParseFile("dhall-lang/tests/parser/success/largeExpressionA.dhall")
+		if err != nil {
+			b.Fatalf("Parse error: %v", err)
+		}
+	}
+}
+
 func TestTypecheckFails(t *testing.T) {
 	runTestOnEachFile(t, "dhall-lang/tests/typecheck/failure/", func(t *testing.T, testPath string) {
 		parsed, err := parser.ParseFile(testPath)
