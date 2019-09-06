@@ -47,14 +47,8 @@ var expectedFailures = []string{
 	// other
 	"TestParserAccepts/unit/import/urls/potPourri", // net/url doesn't parse authorities in the way the test expects
 
-	// upstream problems, PR to dhall-lang incoming
-	"TestNormalization/unit/RecursiveRecordMergeWithinFieldSelection3A.dhall",
-	"TestNormalization/unit/RightBiasedMergeWithinFieldSelection3A",
-	"TestNormalization/unit/NaturalBuildImplementationA.dhall",
-
 	// in dhall-golang, duplicate fields & alternatives are a parse error, not a
 	// type error
-	"TestTypecheckFails/duplicateFields.dhall", // TODO: remove from upstream, now redundant
 	"TestTypecheckFails/unit/RecordTypeDuplicateFields.dhall",
 	"TestTypecheckFails/unit/RecordLitDuplicateFields.dhall",
 	"TestTypecheckFails/unit/UnionTypeDuplicateVariants",
