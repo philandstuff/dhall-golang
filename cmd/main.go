@@ -12,8 +12,6 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-//go:generate pigeon -optimize-grammar -optimize-parser -o parser/dhall.go parser/dhall.peg
-
 func main() {
 	expr, err := parser.ParseReader("-", os.Stdin)
 	if err != nil {

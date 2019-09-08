@@ -1,4 +1,4 @@
-package main_test
+package dhall_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestMain(t *testing.T) {
+func TestDhall(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Main Suite")
 }
