@@ -7,9 +7,9 @@ import (
 	. "github.com/philandstuff/dhall-golang/core"
 )
 
-type context map[string][]Value
+type context map[string][]Term
 
-func (ctx context) extend(name string, t Value) context {
+func (ctx context) extend(name string, t Term) context {
 	newctx := context{}
 	for k, v := range ctx {
 		newctx[k] = v
@@ -29,11 +29,11 @@ func functionCheck(input Universe, output Universe) Universe {
 	}
 }
 
-func TypeOf(t Term) (Value, error) {
+func TypeOf(t Term) (Term, error) {
 	return typeWith(context{}, t)
 }
 
-func typeWith(ctx context, t Term) (Value, error) {
+func typeWith(ctx context, t Term) (Term, error) {
 	switch t := t.(type) {
 	case Universe:
 		switch t {
@@ -51,7 +51,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		case Natural:
 			return Type, nil
 		case List:
-			return FnTypeVal(Type, Type), nil
+			return FnType(Type, Type), nil
 		default:
 			return nil, mkTypeError(unhandledTypeCase)
 		}
@@ -76,32 +76,32 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		piType, ok := fnType.(PiValue)
+		piType, ok := fnType.(PiTerm)
 		if !ok {
 			return nil, mkTypeError(notAFunction)
 		}
-		expectedType := Quote(piType.Domain)
-		actualType := Quote(argType)
+		expectedType := piType.Type
+		actualType := argType
 		if !judgmentallyEqual(expectedType, actualType) {
 			return nil, mkTypeError(typeMismatch(expectedType, actualType))
 		}
-		bodyType := piType.Range(argType)
-		return bodyType, nil
+		bodyTypeVal := Eval(piType, Env{}).(PiValue).Range(Eval(argType, Env{}))
+		return Quote(bodyTypeVal), nil
 	case LambdaTerm:
 		pi := PiTerm{Label: t.Label, Type: t.Type}
 		freshLocal := LocalVar{Name: t.Label, Index: len(ctx[t.Label])}
 		bt, err := typeWith(
-			ctx.extend(t.Label, Eval(t.Type, Env{})),
+			ctx.extend(t.Label, t.Type),
 			subst(t.Label, freshLocal, t.Body))
 		if err != nil {
 			return nil, err
 		}
-		pi.Body = quoteAndRebindLocal(bt, freshLocal)
+		pi.Body = rebindLocal(freshLocal, bt)
 		_, err = typeWith(ctx, pi)
 		if err != nil {
 			return nil, err
 		}
-		return Eval(pi, Env{}), nil
+		return pi, nil
 	case PiTerm:
 		inUniv, err := typeWith(ctx, t.Type)
 		if err != nil {
@@ -113,7 +113,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		}
 		freshLocal := LocalVar{Name: t.Label, Index: len(ctx[t.Label])}
 		outUniv, err := typeWith(
-			ctx.extend(t.Label, Eval(t.Type, Env{})),
+			ctx.extend(t.Label, t.Type),
 			subst(t.Label, freshLocal, t.Body))
 		if err != nil {
 			return nil, err
@@ -134,7 +134,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if !ok {
 			return nil, mkTypeError(invalidListType)
 		}
-		return Eval(t.Type, Env{}), nil
+		return t.Type, nil
 	}
 	return nil, mkTypeError(unhandledTypeCase)
 }
