@@ -3,7 +3,7 @@ package parser_test
 import (
 	"math"
 
-	. "github.com/philandstuff/dhall-golang/ast"
+	. "github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/parser"
 
 	. "github.com/onsi/ginkgo"
@@ -44,7 +44,7 @@ var _ = Describe("Expression", func() {
 		Entry("Bool", `Bool`, Bool),
 		Entry("True", `True`, BoolLit(true)),
 		Entry("False", `False`, BoolLit(false)),
-		Entry("if True then x else y", `if True then x else y`, BoolIf{True, MkVar("x"), MkVar("y")}),
+		Entry("if True then x else y", `if True then x else y`, IfTerm{True, Bound("x"), Bound("y")}),
 	)
 	DescribeTable("naturals", ParseAndCompare,
 		Entry("Natural", `Natural`, Natural),
@@ -60,68 +60,68 @@ var _ = Describe("Expression", func() {
 		Entry("Plus without whitespace", `3 +5`, Apply(NaturalLit(3), IntegerLit(5))),
 	)
 	DescribeTable("double-quoted text literals", ParseAndCompare,
-		Entry("Empty TextLit", `""`, TextLit{}),
-		Entry("Simple TextLit", `"foo"`, TextLit{Suffix: "foo"}),
-		Entry(`TextLit escape "`, `"\""`, TextLit{Suffix: `"`}),
-		Entry(`TextLit escape $`, `"\$"`, TextLit{Suffix: `$`}),
-		Entry(`TextLit escape \`, `"\\"`, TextLit{Suffix: `\`}),
-		Entry(`TextLit escape /`, `"\/"`, TextLit{Suffix: `/`}),
-		Entry(`TextLit escape \b`, `"\b"`, TextLit{Suffix: "\b"}),
-		Entry(`TextLit escape \f`, `"\f"`, TextLit{Suffix: "\f"}),
-		Entry(`TextLit escape \n`, `"\n"`, TextLit{Suffix: "\n"}),
-		Entry(`TextLit escape \r`, `"\r"`, TextLit{Suffix: "\r"}),
-		Entry(`TextLit escape \t`, `"\t"`, TextLit{Suffix: "\t"}),
-		Entry(`TextLit escape \u2200`, `"\u2200"`, TextLit{Suffix: "∀"}),
-		Entry(`TextLit escape \u03bb`, `"\u03bb"`, TextLit{Suffix: "λ"}),
-		Entry(`TextLit escape \u03BB`, `"\u03BB"`, TextLit{Suffix: "λ"}),
-		Entry("Interpolated TextLit", `"foo ${"bar"} baz"`,
-			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
+		Entry("Empty TextLitTerm", `""`, TextLitTerm{}),
+		Entry("Simple TextLitTerm", `"foo"`, TextLitTerm{Suffix: "foo"}),
+		Entry(`TextLitTerm escape "`, `"\""`, TextLitTerm{Suffix: `"`}),
+		Entry(`TextLitTerm escape $`, `"\$"`, TextLitTerm{Suffix: `$`}),
+		Entry(`TextLitTerm escape \`, `"\\"`, TextLitTerm{Suffix: `\`}),
+		Entry(`TextLitTerm escape /`, `"\/"`, TextLitTerm{Suffix: `/`}),
+		Entry(`TextLitTerm escape \b`, `"\b"`, TextLitTerm{Suffix: "\b"}),
+		Entry(`TextLitTerm escape \f`, `"\f"`, TextLitTerm{Suffix: "\f"}),
+		Entry(`TextLitTerm escape \n`, `"\n"`, TextLitTerm{Suffix: "\n"}),
+		Entry(`TextLitTerm escape \r`, `"\r"`, TextLitTerm{Suffix: "\r"}),
+		Entry(`TextLitTerm escape \t`, `"\t"`, TextLitTerm{Suffix: "\t"}),
+		Entry(`TextLitTerm escape \u2200`, `"\u2200"`, TextLitTerm{Suffix: "∀"}),
+		Entry(`TextLitTerm escape \u03bb`, `"\u03bb"`, TextLitTerm{Suffix: "λ"}),
+		Entry(`TextLitTerm escape \u03BB`, `"\u03BB"`, TextLitTerm{Suffix: "λ"}),
+		Entry("Interpolated TextLitTerm", `"foo ${"bar"} baz"`,
+			TextLitTerm{Chunks{Chunk{"foo ", TextLitTerm{Suffix: "bar"}}},
 				" baz"},
 		),
 	)
 	DescribeTable("single-quoted text literals", ParseAndCompare,
-		Entry("Empty TextLit", `''
-''`, TextLit{}),
-		Entry("Simple TextLit with no newlines", `''
-foo''`, TextLit{Suffix: "foo"}),
-		Entry("Simple TextLit with newlines", `''
+		Entry("Empty TextLitTerm", `''
+''`, TextLitTerm{}),
+		Entry("Simple TextLitTerm with no newlines", `''
+foo''`, TextLitTerm{Suffix: "foo"}),
+		Entry("Simple TextLitTerm with newlines", `''
 foo
-''`, TextLit{Suffix: "foo\n"}),
-		Entry("TextLit with space indent", `''
+''`, TextLitTerm{Suffix: "foo\n"}),
+		Entry("TextLitTerm with space indent", `''
   foo
   bar
-  ''`, TextLit{Suffix: "foo\nbar\n"}),
-		Entry("TextLit with tab indent", `''
+  ''`, TextLitTerm{Suffix: "foo\nbar\n"}),
+		Entry("TextLitTerm with tab indent", `''
 		foo
 		bar
-		''`, TextLit{Suffix: "foo\nbar\n"}),
-		Entry("TextLit with mixed tab/space indent", `''
+		''`, TextLitTerm{Suffix: "foo\nbar\n"}),
+		Entry("TextLitTerm with mixed tab/space indent", `''
 	  foo
 	  bar
-	  ''`, TextLit{Suffix: "foo\nbar\n"}),
-		Entry("TextLit with weird indenting", `''
+	  ''`, TextLitTerm{Suffix: "foo\nbar\n"}),
+		Entry("TextLitTerm with weird indenting", `''
 	    foo
 	  	bar
-	  ''`, TextLit{Suffix: "  foo\n\tbar\n"}),
+	  ''`, TextLitTerm{Suffix: "  foo\n\tbar\n"}),
 		Entry(`Escape ''`, `''
 '''
-''`, TextLit{Suffix: "''\n"}),
+''`, TextLitTerm{Suffix: "''\n"}),
 		Entry(`Escape ${`, `''
 ''${
-''`, TextLit{Suffix: "${\n"}),
+''`, TextLitTerm{Suffix: "${\n"}),
 		Entry("Interpolation", `''
 foo ${"bar"}
 baz
 ''`,
-			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
+			TextLitTerm{Chunks{Chunk{"foo ", TextLitTerm{Suffix: "bar"}}},
 				"\nbaz\n"},
 		),
 	)
 	DescribeTable("simple expressions", ParseAndCompare,
-		Entry("Identifier", `x`, MkVar("x")),
-		Entry("Identifier with index", `x@1`, Var{"x", 1}),
-		Entry("Identifier with reserved prefix", `Listicle`, MkVar("Listicle")),
-		Entry("Identifier with reserved prefix and index", `Listicle@3`, Var{"Listicle", 3}),
+		Entry("Identifier", `x`, Bound("x")),
+		Entry("Identifier with index", `x@1`, BoundVar{"x", 1}),
+		Entry("Identifier with reserved prefix", `Listicle`, Bound("Listicle")),
+		Entry("Identifier with reserved prefix and index", `Listicle@3`, BoundVar{"Listicle", 3}),
 	)
 	DescribeTable("lists", ParseAndCompare,
 		Entry("List Natural", `List Natural`, Apply(List, Natural)),
@@ -129,7 +129,7 @@ baz
 		Entry("[3,4]", `[3,4]`, MakeList(NaturalLit(3), NaturalLit(4))),
 		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Apply(List, Natural)}),
 		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), Apply(List, Natural)}),
-		Entry("a # b", `a # b`, ListAppend(MkVar("a"), MkVar("b"))),
+		Entry("a # b", `a # b`, ListAppend(Bound("a"), Bound("b"))),
 	)
 	DescribeTable("optionals", ParseAndCompare,
 		Entry("Optional Natural", `Optional Natural`, Apply(Optional, Natural)),
@@ -137,14 +137,14 @@ baz
 		Entry("None Natural", `None Natural`, Apply(None, Natural)),
 	)
 	DescribeTable("records", ParseAndCompare,
-		Entry("{}", `{}`, Record{}),
+		Entry("{}", `{}`, RecordType{}),
 		Entry("{=}", `{=}`, RecordLit{}),
-		Entry("{foo : Natural}", `{foo : Natural}`, Record{"foo": Natural}),
+		Entry("{foo : Natural}", `{foo : Natural}`, RecordType{"foo": Natural}),
 		Entry("{foo = 3}", `{foo = 3}`, RecordLit{"foo": NaturalLit(3)}),
-		Entry("{foo : Natural, bar : Integer}", `{foo : Natural, bar: Integer}`, Record{"foo": Natural, "bar": Integer}),
+		Entry("{foo : Natural, bar : Integer}", `{foo : Natural, bar: Integer}`, RecordType{"foo": Natural, "bar": Integer}),
 		Entry("{foo = 3 , bar = +3}", `{foo = 3 , bar = +3}`, RecordLit{"foo": NaturalLit(3), "bar": IntegerLit(3)}),
-		Entry("t.x", `t.x`, Field{MkVar("t"), "x"}),
-		Entry("t.x.y", `t.x.y`, Field{Field{MkVar("t"), "x"}, "y"}),
+		Entry("t.x", `t.x`, Field{Bound("t"), "x"}),
+		Entry("t.x.y", `t.x.y`, Field{Field{Bound("t"), "x"}, "y"}),
 	)
 	DescribeTable("imports", ParseAndCompare,
 		Entry("bash envvar text import", `env:FOO as Text`, MakeEnvVarImport("FOO", RawText)),
@@ -178,59 +178,59 @@ baz
 	DescribeTable("lambda expressions", ParseAndCompare,
 		Entry("simple λ",
 			`λ(foo : bar) → baz`,
-			&LambdaExpr{
-				"foo", MkVar("bar"), MkVar("baz")}),
+			LambdaTerm{
+				"foo", Bound("bar"), Bound("baz")}),
 		Entry(`simple \`,
 			`\(foo : bar) → baz`,
-			&LambdaExpr{
-				"foo", MkVar("bar"), MkVar("baz")}),
+			LambdaTerm{
+				"foo", Bound("bar"), Bound("baz")}),
 		Entry("with line comment",
 			"λ(foo : bar) --asdf\n → baz",
-			&LambdaExpr{
-				"foo", MkVar("bar"), MkVar("baz")}),
+			LambdaTerm{
+				"foo", Bound("bar"), Bound("baz")}),
 		Entry("with block comment",
 			"λ(foo : bar) {-asdf\n-} → baz",
-			&LambdaExpr{
-				"foo", MkVar("bar"), MkVar("baz")}),
+			LambdaTerm{
+				"foo", Bound("bar"), Bound("baz")}),
 		Entry("simple ∀",
 			`∀(foo : bar) → baz`,
-			&Pi{"foo", MkVar("bar"), MkVar("baz")}),
+			PiTerm{"foo", Bound("bar"), Bound("baz")}),
 		Entry("arrow type has implicit _ var",
 			`foo → bar`,
-			FnType(MkVar("foo"), MkVar("bar"))),
+			FnType(Bound("foo"), Bound("bar"))),
 		Entry(`simple forall`,
 			`forall(foo : bar) → baz`,
-			&Pi{"foo", MkVar("bar"), MkVar("baz")}),
+			PiTerm{"foo", Bound("bar"), Bound("baz")}),
 		Entry("with line comment",
 			"∀(foo : bar) --asdf\n → baz",
-			&Pi{"foo", MkVar("bar"), MkVar("baz")}),
+			PiTerm{"foo", Bound("bar"), Bound("baz")}),
 	)
 	DescribeTable("applications", ParseAndCompare,
 		Entry("identifier application",
 			`foo bar`,
 			Apply(
-				MkVar("foo"),
-				MkVar("bar"),
+				Bound("foo"),
+				Bound("bar"),
 			)),
 		Entry("lambda application",
 			`(λ(foo : bar) → baz) quux`,
 			Apply(
-				&LambdaExpr{
-					"foo", MkVar("bar"), MkVar("baz")},
-				MkVar("quux"))),
+				LambdaTerm{
+					"foo", Bound("bar"), Bound("baz")},
+				Bound("quux"))),
 	)
 	DescribeTable("lets", ParseAndCompare,
 		Entry("simple let",
 			`let x = y in z`,
-			MakeLet(MkVar("z"), Binding{
-				Variable: "x", Value: MkVar("y"),
+			MakeLet(Bound("z"), Binding{
+				Variable: "x", Value: Bound("y"),
 			})),
 		Entry("lambda application",
 			`(λ(foo : bar) → baz) quux`,
 			Apply(
-				&LambdaExpr{
-					"foo", MkVar("bar"), MkVar("baz")},
-				MkVar("quux"))),
+				LambdaTerm{
+					"foo", Bound("bar"), Bound("baz")},
+				Bound("quux"))),
 	)
 	Describe("Expected failures", func() {
 		// these keywords should fail to parse unless they're part of

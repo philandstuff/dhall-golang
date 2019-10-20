@@ -323,9 +323,9 @@ DeBruijn ← _ '@' _ index:NaturalLiteral { return int(index.(NaturalLit)), nil 
 
 Variable ← name:NonreservedLabel index:DeBruijn? {
     if index != nil {
-        return Var{Name:name.(string), Index:index.(int)}, nil
+        return BoundVar{Name:name.(string), Index:index.(int)}, nil
     } else {
-        return Var{Name:name.(string)}, nil
+        return BoundVar{Name:name.(string)}, nil
     }
 }
 
@@ -492,10 +492,10 @@ LetBinding ← Let _1 label:NonreservedLabel _ a:(Annotation _)?
 
 Expression ←
       Lambda _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
-          return &LambdaTerm{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
+          return LambdaTerm{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
       }
     / If _1 cond:Expression _ Then _1 t:Expression _ Else _1 f:Expression {
-          return BoolIf{cond.(Term),t.(Term),f.(Term)},nil
+          return IfTerm{cond.(Term),t.(Term),f.(Term)},nil
       }
     / bindings:LetBinding+ In _1 b:Expression {
         bs := make([]Binding, len(bindings.([]interface{})))
@@ -505,7 +505,7 @@ Expression ←
         return MakeLet(b.(Term), bs...), nil
       }
     / Forall _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
-          return &Pi{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
+          return PiTerm{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
       }
     / o:OperatorExpression _ Arrow _ e:Expression { return FnType(o.(Term),e.(Term)), nil }
     / Merge _1 h:ImportExpression _1 u:ImportExpression _ ':' _1 a:ApplicationExpression {
@@ -624,7 +624,7 @@ RecordTypeOrLiteral ←
       '=' { return RecordLit{}, nil }
     / NonEmptyRecordType
     / NonEmptyRecordLiteral
-    / "" { return Record{}, nil }
+    / "" { return RecordType{}, nil }
 
 RecordTypeField ← name:AnyLabel _ ':' _1 expr:Expression {
     return []interface{}{name, expr}, nil
@@ -633,7 +633,7 @@ MoreRecordType ← _ ',' _ f:RecordTypeField {return f, nil}
 NonEmptyRecordType ←
       first:RecordTypeField rest:MoreRecordType* {
           fields := rest.([]interface{})
-          content := make(Record, len(fields)+1)
+          content := make(RecordType, len(fields)+1)
           content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Term)
           for _, field := range(fields) {
               fieldName := field.([]interface{})[0].(string)

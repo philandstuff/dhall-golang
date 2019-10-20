@@ -7,8 +7,7 @@ import (
 )
 
 func judgmentallyEqual(t1 Term, t2 Term) bool {
-	// TODO: alpha normalization
-	ne1 := Eval(t1, Env{})
-	ne2 := Eval(t2, Env{})
-	return reflect.DeepEqual(ne1, ne2)
+	ne1 := AlphaBetaEval(t1)
+	ne2 := AlphaBetaEval(t2)
+	return reflect.DeepEqual(Quote(ne1), Quote(ne2))
 }

@@ -48,7 +48,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 	case Builtin:
 		switch t {
-		case Natural:
+		case Bool, Natural:
 			return Type, nil
 		case List:
 			return FnType(Type, Type), nil
@@ -56,7 +56,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 			return nil, mkTypeError(unhandledTypeCase)
 		}
 	case BoundVar:
-		return nil, mkTypeError(typeCheckBoundVar)
+		return nil, mkTypeError(typeCheckBoundVar(t))
 	case LocalVar:
 		if vals, ok := ctx[t.Name]; ok {
 			if t.Index < len(vals) {
@@ -85,7 +85,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if !judgmentallyEqual(expectedType, actualType) {
 			return nil, mkTypeError(typeMismatch(expectedType, actualType))
 		}
-		bodyTypeVal := Eval(piType, Env{}).(PiValue).Range(Eval(argType, Env{}))
+		bodyTypeVal := Eval(piType).(PiValue).Range(Eval(argType))
 		return Quote(bodyTypeVal), nil
 	case LambdaTerm:
 		pi := PiTerm{Label: t.Label, Type: t.Type}
@@ -125,16 +125,72 @@ func typeWith(ctx context, t Term) (Term, error) {
 		return functionCheck(i, o), nil
 	case NaturalLit:
 		return Natural, nil
+	case Let:
+		return nil, errors.New("Let type unimplemented")
+	case Annot:
+		if t.Annotation == Sort {
+			return nil, errors.New("Sort annotation unimplemented")
+		}
+		// Γ ⊢ T₀ : i
+		if _, err := typeWith(ctx, t.Annotation); err != nil {
+			return nil, err
+		}
+		// Γ ⊢ t : T₁
+		actualType, err := typeWith(ctx, t.Expr)
+		if err != nil {
+			return nil, err
+		}
+		// T₀ ≡ T₁
+		if !judgmentallyEqual(t.Annotation, actualType) {
+			return nil, fmt.Errorf("Annotation mismatch: inferred type %v but annotated %v", actualType, t.Annotation)
+		}
+		// ─────────────────
+		// Γ ⊢ (t : T₀) : T₀
+		return t.Annotation, nil
+	case DoubleLit:
+		return Double, nil
+	case TextLitTerm:
+		return nil, errors.New("TextLitTerm type unimplemented")
+	case BoolLit:
+		return Bool, nil
+	case IfTerm:
+		return nil, errors.New("IfTerm type unimplemented")
+	case IntegerLit:
+		return Integer, nil
+	case OpTerm:
+		return nil, errors.New("OpTerm type unimplemented")
 	case EmptyList:
 		_, err := typeWith(ctx, t.Type)
 		if err != nil {
 			return nil, err
 		}
-		_, ok := Eval(t.Type, Env{}).(AppValue)
+		_, ok := Eval(t.Type).(AppValue)
 		if !ok {
 			return nil, mkTypeError(invalidListType)
 		}
 		return t.Type, nil
+	case NonEmptyList:
+		return nil, errors.New("NonEmptyList type unimplemented")
+	case Some:
+		return nil, errors.New("Some type unimplemented")
+	case RecordType:
+		return nil, errors.New("RecordType type unimplemented")
+	case RecordLit:
+		return nil, errors.New("RecordLit type unimplemented")
+	case ToMap:
+		return nil, errors.New("ToMap type unimplemented")
+	case Field:
+		return nil, errors.New("Field type unimplemented")
+	case Project:
+		return nil, errors.New("Project type unimplemented")
+	case ProjectType:
+		return nil, errors.New("ProjectType type unimplemented")
+	case UnionType:
+		return nil, errors.New("UnionType type unimplemented")
+	case Merge:
+		return nil, errors.New("Merge type unimplemented")
+	case Assert:
+		return nil, errors.New("Assert type unimplemented")
 	}
 	return nil, mkTypeError(unhandledTypeCase)
 }
@@ -192,6 +248,13 @@ func typeMismatch(expectedType, actualType Term) typeMessage {
 	}
 }
 
+func typeCheckBoundVar(boundVar Term) typeMessage {
+	return oneArgTypeMessage{
+		format: "Internal error: shouldn't ever see BoundVar in TypeOf(), but saw %s",
+		expr:   boundVar,
+	}
+}
+
 var (
 	invalidListType   = staticTypeMessage{"Invalid type for ❰List❱"}
 	invalidInputType  = staticTypeMessage{"Invalid function input"}
@@ -200,5 +263,4 @@ var (
 	untyped           = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
 
 	unhandledTypeCase = staticTypeMessage{"Internal error: unhandled case in TypeOf()"}
-	typeCheckBoundVar = staticTypeMessage{"Internal error: shouldn't ever see BoundVar in TypeOf()"}
 )

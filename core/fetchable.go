@@ -1,4 +1,4 @@
-package ast
+package core
 
 import (
 	"errors"
@@ -34,7 +34,7 @@ type Fetchable interface {
 	Fetch(origin string) (string, error)
 	ChainOnto(base Fetchable) (Fetchable, error)
 	String() string
-	AsLocation() Expr
+	AsLocation() Term
 }
 
 var _ Fetchable = EnvVar("")
@@ -60,8 +60,8 @@ func (e EnvVar) Fetch(origin string) (string, error) {
 func (e EnvVar) ChainOnto(base Fetchable) (Fetchable, error) {
 	return e, nil
 }
-func (e EnvVar) AsLocation() Expr {
-	return Apply(Field{LocationType, "Environment"}, TextLit{Suffix: e.String()})
+func (e EnvVar) AsLocation() Term {
+	return Apply(Field{LocationType, "Environment"}, TextLitTerm{Suffix: e.String()})
 }
 
 func (l Local) Name() string { return string(l) }
@@ -134,8 +134,8 @@ func (l Local) PathComponents() []string {
 		return strings.Split(string(l), "/")
 	}
 }
-func (l Local) AsLocation() Expr {
-	return Apply(Field{LocationType, "Local"}, TextLit{Suffix: l.String()})
+func (l Local) AsLocation() Term {
+	return Apply(Field{LocationType, "Local"}, TextLitTerm{Suffix: l.String()})
 }
 func MakeRemote(u *url.URL) Remote {
 	return Remote{url: u}
@@ -196,8 +196,8 @@ func (r Remote) Query() *string {
 	}
 	return &r.url.RawQuery
 }
-func (r Remote) AsLocation() Expr {
-	return Apply(Field{LocationType, "Remote"}, TextLit{Suffix: r.String()})
+func (r Remote) AsLocation() Term {
+	return Apply(Field{LocationType, "Remote"}, TextLitTerm{Suffix: r.String()})
 }
 
 func (Missing) Name() string   { return "" }
@@ -209,6 +209,6 @@ func (Missing) Fetch(origin string) (string, error) {
 func (Missing) ChainOnto(base Fetchable) (Fetchable, error) {
 	return Missing{}, nil
 }
-func (Missing) AsLocation() Expr {
+func (Missing) AsLocation() Term {
 	return Field{LocationType, "Missing"}
 }

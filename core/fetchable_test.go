@@ -1,4 +1,4 @@
-package ast_test
+package core_test
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"os"
 
-	. "github.com/philandstuff/dhall-golang/ast"
+	. "github.com/philandstuff/dhall-golang/core"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

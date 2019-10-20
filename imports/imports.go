@@ -4,24 +4,26 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/philandstuff/dhall-golang/ast"
-	. "github.com/philandstuff/dhall-golang/ast"
+	"github.com/philandstuff/dhall-golang/binary"
+	"github.com/philandstuff/dhall-golang/core"
+	. "github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/eval"
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
-func ResolveStringAsExpr(name, content string) (Expr, error) {
+func ResolveStringAsExpr(name, content string) (Term, error) {
 	expr, err := parser.Parse(name, []byte(content))
 	if err != nil {
 		return nil, err
 	}
-	return expr.(Expr), nil
+	return expr.(Term), nil
 }
 
-func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
+func Load(e Term, ancestors ...Fetchable) (Term, error) {
 	switch e := e.(type) {
 	case Import:
 		here := e.Fetchable
-		origin := ast.NullOrigin
+		origin := core.NullOrigin
 		if len(ancestors) >= 1 {
 			origin = ancestors[len(ancestors)-1].Origin()
 
@@ -51,9 +53,9 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		var expr Expr
+		var expr Term
 		if e.ImportMode == RawText {
-			expr = TextLit{Suffix: content}
+			expr = TextLitTerm{Suffix: content}
 		} else {
 			// dynamicExpr may contain more imports
 			dynamicExpr, err := ResolveStringAsExpr(here.Name(), content)
@@ -68,14 +70,14 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			}
 
 			// ensure that expr typechecks in empty context
-			_, err = expr.TypeWith(EmptyContext())
+			_, err = eval.TypeOf(expr)
 			if err != nil {
 				return nil, err
 			}
 		}
 		// check hash, if supplied
 		if e.Hash != nil {
-			actualHash, err := ast.SemanticHash(expr)
+			actualHash, err := binary.SemanticHash(expr)
 			if err != nil {
 				return nil, err
 			}
@@ -86,7 +88,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			saveToCache(actualHash, expr)
 		}
 		return expr, nil
-	case *LambdaExpr:
+	case LambdaTerm:
 		resolvedType, err := Load(e.Type, ancestors...)
 		if err != nil {
 			return nil, err
@@ -95,12 +97,12 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &LambdaExpr{
+		return LambdaTerm{
 			Label: e.Label,
 			Type:  resolvedType,
 			Body:  resolvedBody,
 		}, nil
-	case *Pi:
+	case PiTerm:
 		resolvedType, err := Load(e.Type, ancestors...)
 		if err != nil {
 			return nil, err
@@ -109,12 +111,12 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &Pi{
+		return PiTerm{
 			Label: e.Label,
 			Type:  resolvedType,
 			Body:  resolvedBody,
 		}, nil
-	case *App:
+	case AppTerm:
 		resolvedFn, err := Load(e.Fn, ancestors...)
 		if err != nil {
 			return nil, err
@@ -158,7 +160,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			return nil, err
 		}
 		return Annot{Expr: resolvedExpr, Annotation: resolvedAnnotation}, nil
-	case TextLit:
+	case TextLitTerm:
 		var newChunks Chunks
 		for _, chunk := range e.Chunks {
 			resolvedExpr, err := Load(chunk.Expr, ancestors...)
@@ -170,8 +172,8 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 				Expr:   resolvedExpr,
 			})
 		}
-		return TextLit{newChunks, e.Suffix}, nil
-	case BoolIf:
+		return TextLitTerm{newChunks, e.Suffix}, nil
+	case IfTerm:
 		resolvedCond, err := Load(e.Cond, ancestors...)
 		if err != nil {
 			return nil, err
@@ -184,12 +186,12 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return BoolIf{
+		return IfTerm{
 			Cond: resolvedCond,
 			T:    resolvedT,
 			F:    resolvedF,
 		}, nil
-	case Operator:
+	case OpTerm:
 		if e.OpCode == ImportAltOp {
 			resolvedL, err := Load(e.L, ancestors...)
 			if err == nil {
@@ -209,7 +211,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return Operator{OpCode: e.OpCode, L: resolvedL, R: resolvedR}, nil
+		return OpTerm{OpCode: e.OpCode, L: resolvedL, R: resolvedR}, nil
 	case EmptyList:
 		resolvedType, err := Load(e.Type, ancestors...)
 		if err != nil {
@@ -226,8 +228,8 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			}
 		}
 		return newList, nil
-	case Record:
-		newRecord := make(Record, len(e))
+	case RecordType:
+		newRecord := make(RecordType, len(e))
 		for k, v := range e {
 			var err error
 			newRecord[k], err = Load(v, ancestors...)
@@ -252,6 +254,7 @@ func Load(e Expr, ancestors ...Fetchable) (Expr, error) {
 			return nil, err
 		}
 		return Field{Record: newRecord, FieldName: e.FieldName}, nil
+		// TODO: other new terms (Project, ProjectType etc)
 	default:
 		// Const, NaturalLit, etc
 		return e, nil

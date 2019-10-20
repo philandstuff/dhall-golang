@@ -1,17 +1,20 @@
-package ast
+package binary
 
 import (
 	"bytes"
 	"crypto/sha256"
+
+	"github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/eval"
 )
 
 // SemanticHash returns the semantic hash of an expression.
 // The semantic hash is defined as the multihash-encoded sha256 sum of the CBOR
 // representation of the fully alpha-beta-normalized expression.
-func SemanticHash(e Expr) ([]byte, error) {
-	norm := e.Normalize().AlphaNormalize()
+func SemanticHash(e core.Term) ([]byte, error) {
+	norm := eval.AlphaBetaEval(e)
 	var buf bytes.Buffer
-	err := EncodeAsCbor(&buf, norm)
+	err := EncodeAsCbor(&buf, eval.Quote(norm))
 	if err != nil {
 		return nil, err
 	}

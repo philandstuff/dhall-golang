@@ -57,8 +57,38 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		}
 	case NaturalLit:
 		return v
+	case DoubleLit:
+		return v
+	case IntegerLit:
+		return v
+	case BoolLit:
+		return v
 	case EmptyListVal:
 		return EmptyList{Type: quoteWith(ctx, v.Type)}
+	case NonEmptyListVal:
+		return TextLitTerm{Suffix: "quote NonEmptyListVal unimplemented"}
+	case TextLitVal:
+		return TextLitTerm{Suffix: "quote TextLitVal unimplemented but suffix:" + v.Suffix}
+	case IfVal:
+		return TextLitTerm{Suffix: "quote IfVal unimplemented"}
+	case SomeVal:
+		return Some{Val: quoteWith(ctx, v.Val)}
+	case RecordTypeVal:
+		return TextLitTerm{Suffix: "quote RecordTypeVal unimplemented"}
+	case RecordLitVal:
+		return TextLitTerm{Suffix: "quote RecordLitVal unimplemented"}
+	case ToMapVal:
+		return TextLitTerm{Suffix: "quote ToMapVal unimplemented"}
+	case FieldVal:
+		return TextLitTerm{Suffix: "FieldVal unimplemented"}
+	case ProjectVal:
+		return TextLitTerm{Suffix: "ProjectVal unimplemented"}
+	case UnionTypeVal:
+		return TextLitTerm{Suffix: "UnionTypeVal unimplemented"}
+	case MergeVal:
+		return TextLitTerm{Suffix: "MergeVal unimplemented"}
+	case AssertVal:
+		return Assert{Annotation: quoteWith(ctx, v.Annotation)}
 	}
 	panic("unknown Value type")
 }

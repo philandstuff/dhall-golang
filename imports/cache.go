@@ -6,7 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/philandstuff/dhall-golang/ast"
+	"github.com/philandstuff/dhall-golang/binary"
+	"github.com/philandstuff/dhall-golang/core"
 )
 
 func dhallCacheDir() (string, error) {
@@ -17,7 +18,7 @@ func dhallCacheDir() (string, error) {
 	return path.Join(cacheDir, "dhall"), nil
 }
 
-func fetchFromCache(hash []byte) ast.Expr {
+func fetchFromCache(hash []byte) core.Term {
 	// FIXME: don't swallow these errors, maybe?
 	hash16 := fmt.Sprintf("%x", hash)
 	dir, err := dhallCacheDir()
@@ -28,7 +29,7 @@ func fetchFromCache(hash []byte) ast.Expr {
 	if err != nil {
 		return nil
 	}
-	expr, err := ast.DecodeAsCbor(reader)
+	expr, err := binary.DecodeAsCbor(reader)
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -36,7 +37,7 @@ func fetchFromCache(hash []byte) ast.Expr {
 	return expr
 }
 
-func saveToCache(hash []byte, e ast.Expr) {
+func saveToCache(hash []byte, e core.Term) {
 	hash16 := fmt.Sprintf("%x", hash)
 	dir, err := dhallCacheDir()
 	if err != nil {
@@ -47,5 +48,5 @@ func saveToCache(hash []byte, e ast.Expr) {
 		return
 	}
 	defer file.Close()
-	err = ast.EncodeAsCbor(file, e)
+	err = binary.EncodeAsCbor(file, e)
 }

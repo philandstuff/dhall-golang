@@ -1,4 +1,4 @@
-package ast
+package binary
 
 import (
 	"errors"
@@ -8,12 +8,13 @@ import (
 	"net/url"
 	"path"
 
+	. "github.com/philandstuff/dhall-golang/core"
 	"github.com/ugorji/go/codec"
 )
 
 var cbor = newCborHandle()
 
-var nameToBuiltin = map[string]Expr{
+var nameToBuiltin = map[string]Term{
 	"Type": Type,
 	"Kind": Kind,
 	"Sort": Sort,
@@ -79,9 +80,9 @@ func unwrapString(i interface{}) (string, error) {
 	return "", fmt.Errorf("couldn't interpret %v as string", i)
 }
 
-func decodeMap(i interface{}) (map[string]Expr, error) {
+func decodeMap(i interface{}) (map[string]Term, error) {
 	if val, ok := i.(map[interface{}]interface{}); ok {
-		decodedM := make(map[string]Expr, len(val))
+		decodedM := make(map[string]Term, len(val))
 		for n, t := range val {
 			name, err := unwrapString(n)
 			if err != nil {
@@ -101,11 +102,11 @@ func decodeMap(i interface{}) (map[string]Expr, error) {
 	return nil, fmt.Errorf("couldn't interpret %v as map[string]interface{}", i)
 }
 
-func decode(decodedCbor interface{}) (Expr, error) {
+func decode(decodedCbor interface{}) (Term, error) {
 	switch val := decodedCbor.(type) {
 	case uint64:
 		// _@n
-		return Var{Name: "_", Index: int(val)}, nil
+		return BoundVar{Name: "_", Index: int(val)}, nil
 	case string:
 		// Type, Double, Optional/fold
 		if builtin, ok := nameToBuiltin[val]; ok {
@@ -113,11 +114,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 		}
 		return nil, fmt.Errorf("unrecognized builtin %s", val)
 	case bool:
-		if val {
-			return True, nil
-		} else {
-			return False, nil
-		}
+		return BoolLit(val), nil
 	case float64:
 		return DoubleLit(val), nil
 	case []interface{}:
@@ -132,7 +129,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				if err != nil {
 					return nil, err
 				}
-				return Var{Name: label, Index: int(index)}, nil
+				return BoundVar{Name: label, Index: int(index)}, nil
 			}
 		case uint64:
 			switch label {
@@ -144,7 +141,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				if err != nil {
 					return nil, err
 				}
-				args := make([]Expr, len(val)-2)
+				args := make([]Term, len(val)-2)
 				for i, arg := range val[2:] {
 					args[i], err = decode(arg)
 					if err != nil {
@@ -154,7 +151,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				return Apply(fn, args...), nil
 			case 1, 2: // function or pi
 				name := "_"
-				var t, body Expr
+				var t, body Term
 				var err error
 				switch len(val) {
 				case 3: // implicit _ name
@@ -186,9 +183,9 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					return nil, fmt.Errorf("CBOR decode error: malformed function expression: %v", val)
 				}
 				if label == 1 {
-					return &LambdaExpr{name, t, body}, nil
+					return LambdaTerm{name, t, body}, nil
 				} else {
-					return &Pi{name, t, body}, nil
+					return PiTerm{name, t, body}, nil
 				}
 			case 3: // operator
 				if len(val) != 4 {
@@ -209,7 +206,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				if opcode > 12 {
 					return nil, fmt.Errorf("CBOR decode error: unknown operator code %d", opcode)
 				}
-				return Operator{OpCode: int(opcode), L: l, R: r}, nil
+				return OpTerm{OpCode: int(opcode), L: l, R: r}, nil
 			case 4: // list
 				if val[1] != nil {
 					if len(val) > 2 {
@@ -240,7 +237,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				}
 				return Some{val}, nil
 			case 6: // merge
-				var annotation Expr
+				var annotation Term
 				var err error
 				switch len(val) {
 				case 4:
@@ -268,7 +265,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					return nil, err
 				}
 				if label == 7 {
-					return Record(m), nil
+					return RecordType(m), nil
 				} else {
 					return RecordLit(m), nil
 				}
@@ -332,7 +329,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				if err != nil {
 					return nil, err
 				}
-				return BoolIf{Cond: cond, T: tBranch, F: fBranch}, nil
+				return IfTerm{Cond: cond, T: tBranch, F: fBranch}, nil
 			case 15: // natural literal
 				n, err := unwrapUint(val[1])
 				if err != nil {
@@ -363,7 +360,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 				if err != nil {
 					return nil, err
 				}
-				return TextLit{Chunks: chunks, Suffix: s}, nil
+				return TextLitTerm{Chunks: chunks, Suffix: s}, nil
 			case 19: // assert
 				annot, err := decode(val[1])
 				if err != nil {
@@ -407,7 +404,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					if err != nil {
 						return nil, err
 					}
-					f = Remote{url: u}
+					f = MakeRemote(u)
 				case 2, 3, 4, 5:
 					var file string
 					if importLabel == 2 {
@@ -453,7 +450,7 @@ func decode(decodedCbor interface{}) (Expr, error) {
 					if err != nil {
 						return nil, err
 					}
-					var annotation Expr
+					var annotation Term
 					if val[i+1] != nil {
 						annotation, err = decode(val[i+1])
 						if err != nil {
@@ -504,15 +501,15 @@ func decode(decodedCbor interface{}) (Expr, error) {
 }
 
 // a marker type for CBOR-encoding purposes
-type cborBox struct{ content Expr }
+type cborBox struct{ content Term }
 
 var _ codec.Selfer = &cborBox{}
 
-func box(expr Expr) *cborBox { return &cborBox{content: expr} }
+func box(expr Term) *cborBox { return &cborBox{content: expr} }
 
 func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 	switch val := b.content.(type) {
-	case Var:
+	case BoundVar:
 		if val.Name == "_" {
 			e.Encode(val.Index)
 		} else {
@@ -531,11 +528,11 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 	case Builtin:
 		e.Encode(string(val))
-	case *App:
+	case AppTerm:
 		fn := val.Fn
 		args := []interface{}{box(val.Arg)}
 		for true {
-			parentapp, ok := fn.(*App)
+			parentapp, ok := fn.(AppTerm)
 			if !ok {
 				break
 			}
@@ -544,22 +541,22 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 		e.Encode(append([]interface{}{0, box(fn)}, args...))
 
-	case *LambdaExpr:
+	case LambdaTerm:
 		if val.Label == "_" {
 			e.Encode([]interface{}{1, box(val.Type), box(val.Body)})
 		} else {
 			e.Encode([]interface{}{1, val.Label, box(val.Type), box(val.Body)})
 		}
-	case *Pi:
+	case PiTerm:
 		if val.Label == "_" {
 			e.Encode([]interface{}{2, box(val.Type), box(val.Body)})
 		} else {
 			e.Encode([]interface{}{2, val.Label, box(val.Type), box(val.Body)})
 		}
-	case Operator:
+	case OpTerm:
 		e.Encode([]interface{}{3, val.OpCode, box(val.L), box(val.R)})
 	case EmptyList:
-		if app, ok := val.Type.(*App); ok {
+		if app, ok := val.Type.(AppTerm); ok {
 			if app.Fn == List {
 				e.Encode([]interface{}{4, box(app.Arg)})
 				break
@@ -582,7 +579,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		} else {
 			e.Encode([]interface{}{6, box(val.Handler), box(val.Union)})
 		}
-	case Record:
+	case RecordType:
 		items := make(map[string]*cborBox)
 		for k, v := range val {
 			items[k] = box(v)
@@ -631,7 +628,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		e.Encode([]interface{}{11, items})
 	case BoolLit:
 		e.Encode(bool(val))
-	case BoolIf:
+	case IfTerm:
 		e.Encode([]interface{}{14, box(val.Cond), box(val.T), box(val.F)})
 	case NaturalLit:
 		e.Encode(append([]interface{}{15}, int(val)))
@@ -655,7 +652,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 				e.Encode(float64(val))
 			}
 		}
-	case TextLit:
+	case TextLitTerm:
 		output := []interface{}{18}
 		for _, chunk := range val.Chunks {
 			output = append(output, chunk.Prefix, box(chunk.Expr))
@@ -724,11 +721,11 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 				output = append(output, box(binding.Value))
 			}
 			// there's probably a nicer way to do this...
-			next_let, ok := val.Body.(Let)
+			nextLet, ok := val.Body.(Let)
 			if !ok {
 				break
 			}
-			val = next_let
+			val = nextLet
 		}
 		output = append(output, box(val.Body))
 		e.Encode(output)
@@ -749,14 +746,14 @@ func (b *cborBox) CodecDecodeSelf(d *codec.Decoder) {
 	b.content = expr
 }
 
-// EncodeAsCbor encodes an Expr as CBOR and writes it to the io.Writer
-func EncodeAsCbor(w io.Writer, e Expr) error {
+// EncodeAsCbor encodes a Term as CBOR and writes it to the io.Writer
+func EncodeAsCbor(w io.Writer, e Term) error {
 	enc := codec.NewEncoder(w, cbor)
 	return enc.Encode(box(e))
 }
 
 // DecodeAsCbor decodes CBOR from the io.Reader and returns the resulting Expr
-func DecodeAsCbor(r io.Reader) (Expr, error) {
+func DecodeAsCbor(r io.Reader) (Term, error) {
 	var b cborBox
 	dec := codec.NewDecoder(r, cbor)
 	err := dec.Decode(&b)
