@@ -48,10 +48,71 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 	case Builtin:
 		switch t {
-		case Bool, Natural:
+		case Bool, Double, Integer, Natural, Text:
 			return Type, nil
+		case DoubleShow:
+			return FnType(Double, Text), nil
+		case IntegerShow:
+			return FnType(Integer, Text), nil
+		case IntegerToDouble:
+			return FnType(Integer, Double), nil
 		case List:
 			return FnType(Type, Type), nil
+		case ListBuild:
+			return MkΠ("a", Type,
+				FnType(MkΠ("list", Type,
+					MkΠ("cons", FnType(Bound("a"), FnType(Bound("list"), Bound("list"))),
+						MkΠ("nil", Bound("list"),
+							Bound("list")))),
+					Apply(List, Bound("a")))), nil
+		case ListFold:
+			return MkΠ("a", Type,
+				FnType(Apply(List, Bound("a")),
+					MkΠ("list", Type,
+						MkΠ("cons", FnType(Bound("a"), FnType(Bound("list"), Bound("list"))),
+							MkΠ("nil", Bound("list"),
+								Bound("list")))))), nil
+		case ListLength:
+			return MkΠ("a", Type,
+				FnType(Apply(List, Bound("a")),
+					Natural)), nil
+		case ListHead, ListLast:
+			return MkΠ("a", Type,
+				FnType(Apply(List, Bound("a")),
+					Apply(Optional, Bound("a")))), nil
+		case ListReverse:
+			return MkΠ("a", Type,
+				FnType(Apply(List, Bound("a")),
+					Apply(List, Bound("a")))), nil
+		case ListIndexed:
+			return MkΠ("a", Type,
+				FnType(Apply(List, Bound("a")),
+					Apply(List, RecordType{"index": Natural, "value": Bound("a")}))), nil
+		case NaturalBuild:
+			return FnType(MkΠ("natural", Type,
+				MkΠ("succ", FnType(Bound("natural"), Bound("natural")),
+					MkΠ("zero", Bound("natural"),
+						Bound("natural")))),
+				Natural), nil
+		case NaturalFold:
+			return FnType(
+				Natural,
+				MkΠ("natural", Type,
+					MkΠ("succ", FnType(Bound("natural"), Bound("natural")),
+						MkΠ("zero", Bound("natural"),
+							Bound("natural"))))), nil
+		case NaturalIsZero, NaturalOdd, NaturalEven:
+			return FnType(Natural, Bool), nil
+		case NaturalShow:
+			return FnType(Natural, Text), nil
+		case NaturalToInteger:
+			return FnType(Natural, Integer), nil
+		case NaturalSubtract:
+			return FnType(Natural, FnType(Natural, Natural)), nil
+		case None:
+			return MkΠ("A", Type, Apply(Optional, Bound("A"))), nil
+		case TextShow:
+			return FnType(Text, Text), nil
 		default:
 			return nil, mkTypeError(unhandledTypeCase)
 		}
@@ -128,12 +189,11 @@ func typeWith(ctx context, t Term) (Term, error) {
 	case Let:
 		return nil, errors.New("Let type unimplemented")
 	case Annot:
-		if t.Annotation == Sort {
-			return nil, errors.New("Sort annotation unimplemented")
-		}
-		// Γ ⊢ T₀ : i
-		if _, err := typeWith(ctx, t.Annotation); err != nil {
-			return nil, err
+		if t.Annotation != Sort {
+			// Γ ⊢ T₀ : i
+			if _, err := typeWith(ctx, t.Annotation); err != nil {
+				return nil, err
+			}
 		}
 		// Γ ⊢ t : T₁
 		actualType, err := typeWith(ctx, t.Expr)
@@ -142,7 +202,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		// T₀ ≡ T₁
 		if !judgmentallyEqual(t.Annotation, actualType) {
-			return nil, fmt.Errorf("Annotation mismatch: inferred type %v but annotated %v", actualType, t.Annotation)
+			return nil, mkTypeError(annotMismatch(t.Annotation, actualType))
 		}
 		// ─────────────────
 		// Γ ⊢ (t : T₀) : T₀
@@ -154,7 +214,32 @@ func typeWith(ctx context, t Term) (Term, error) {
 	case BoolLit:
 		return Bool, nil
 	case IfTerm:
-		return nil, errors.New("IfTerm type unimplemented")
+		condType, err := typeWith(ctx, t.Cond)
+		if err != nil {
+			return nil, err
+		}
+		if condType != Bool {
+			return nil, mkTypeError(invalidPredicate)
+		}
+		L, err := typeWith(ctx, t.T)
+		if err != nil {
+			return nil, err
+		}
+		// no need to check for err here
+		if t, _ := typeWith(ctx, L); t != Type {
+			return nil, mkTypeError(ifBranchMustBeTerm)
+		}
+		R, err := typeWith(ctx, t.F)
+		if err != nil {
+			return nil, err
+		}
+		if t, _ := typeWith(ctx, R); t != Type {
+			return nil, mkTypeError(ifBranchMustBeTerm)
+		}
+		if !judgmentallyEqual(L, R) {
+			return nil, mkTypeError(ifBranchMismatch)
+		}
+		return L, nil
 	case IntegerLit:
 		return Integer, nil
 	case OpTerm:
@@ -170,9 +255,40 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return t.Type, nil
 	case NonEmptyList:
-		return nil, errors.New("NonEmptyList type unimplemented")
+		T0, err := typeWith(ctx, t[0])
+		if err != nil {
+			return nil, err
+		}
+		T0type, err := typeWith(ctx, T0)
+		if err != nil {
+			return nil, err
+		}
+		if T0type != Type {
+			return nil, mkTypeError(invalidListType)
+		}
+		for _, e := range t[1:] {
+			T1, err := typeWith(ctx, e)
+			if err != nil {
+				return nil, err
+			}
+			if !judgmentallyEqual(T0, T1) {
+				return nil, mkTypeError(mismatchedListElements(T0, T1))
+			}
+		}
+		return Apply(List, T0), nil
 	case Some:
-		return nil, errors.New("Some type unimplemented")
+		A, err := typeWith(ctx, t.Val)
+		if err != nil {
+			return nil, err
+		}
+		Atype, err := typeWith(ctx, A)
+		if err != nil {
+			return nil, err
+		}
+		if Atype != Type {
+			return nil, mkTypeError(invalidSome)
+		}
+		return Apply(Optional, A), nil
 	case RecordType:
 		return nil, errors.New("RecordType type unimplemented")
 	case RecordLit:
@@ -238,6 +354,16 @@ func unboundVariable(e Term) typeMessage {
 	}
 }
 
+func annotMismatch(expectedType, actualType Term) typeMessage {
+	return twoArgTypeMessage{
+		format: "Expression doesn't match annotation\n" +
+			"\n" +
+			"expected %v but got %v",
+		expr0: expectedType,
+		expr1: actualType,
+	}
+}
+
 func typeMismatch(expectedType, actualType Term) typeMessage {
 	return twoArgTypeMessage{
 		format: "Wrong type of function argument\n" +
@@ -245,6 +371,16 @@ func typeMismatch(expectedType, actualType Term) typeMessage {
 			"expected %v but got %v",
 		expr0: expectedType,
 		expr1: actualType,
+	}
+}
+
+func mismatchedListElements(firstType, nthType Term) typeMessage {
+	return twoArgTypeMessage{
+		format: "List elements should all have the same type\n" +
+			"\n" +
+			"first element had type %v but there was an element of type %v",
+		expr0: firstType,
+		expr1: nthType,
 	}
 }
 
@@ -256,11 +392,15 @@ func typeCheckBoundVar(boundVar Term) typeMessage {
 }
 
 var (
-	invalidListType   = staticTypeMessage{"Invalid type for ❰List❱"}
-	invalidInputType  = staticTypeMessage{"Invalid function input"}
-	invalidOutputType = staticTypeMessage{"Invalid function output"}
-	notAFunction      = staticTypeMessage{"Not a function"}
-	untyped           = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
+	ifBranchMismatch   = staticTypeMessage{"❰if❱ branches must have matching types"}
+	ifBranchMustBeTerm = staticTypeMessage{"❰if❱ branch is not a term"}
+	invalidListType    = staticTypeMessage{"Invalid type for ❰List❱"}
+	invalidInputType   = staticTypeMessage{"Invalid function input"}
+	invalidOutputType  = staticTypeMessage{"Invalid function output"}
+	invalidPredicate   = staticTypeMessage{"Invalid predicate for ❰if❱"}
+	invalidSome        = staticTypeMessage{"❰Some❱ argument has the wrong type"}
+	notAFunction       = staticTypeMessage{"Not a function"}
+	untyped            = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
 
 	unhandledTypeCase = staticTypeMessage{"Internal error: unhandled case in TypeOf()"}
 )
