@@ -53,7 +53,22 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 	case NaturalLit:
 		return t
 	case Let:
-		return TextLitTerm{Suffix: "let unimplemented"}
+		newLet := Let{}
+		for _, b := range t.Bindings {
+			newBinding := Binding{
+				Variable: b.Variable,
+				Value:    substAtLevel(i, name, replacement, b.Value),
+			}
+			if b.Annotation != nil {
+				newBinding.Annotation = substAtLevel(i, name, replacement, b.Annotation)
+			}
+			newLet.Bindings = append(newLet.Bindings, newBinding)
+			if b.Variable == name {
+				i = i + 1
+			}
+		}
+		newLet.Body = substAtLevel(i, name, replacement, t.Body)
+		return newLet
 	case Annot:
 		return substAtLevel(i, name, replacement, t.Expr)
 	case DoubleLit:

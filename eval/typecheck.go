@@ -18,6 +18,53 @@ func (ctx context) extend(name string, t Term) context {
 	return newctx
 }
 
+func (ctx context) freshLocal(name string) LocalVar {
+	return LocalVar{Name: name, Index: len(ctx[name])}
+}
+
+// assert that a type is exactly expectedType (no judgmentallyEqual
+// here)
+func assertSimpleType(ctx context, expr, expectedType Term) error {
+	actualType, err := normalizedTypeWith(ctx, expr)
+	if err != nil {
+		return err
+	}
+	if actualType != expectedType {
+		return mkTypeError(wrongOperandType(expectedType, actualType))
+	}
+	return nil
+}
+
+func normalizedTypeWith(ctx context, t Term) (Term, error) {
+	typ, err := typeWith(ctx, t)
+	if err != nil {
+		return nil, err
+	}
+	return Quote(Eval(typ)), nil
+}
+
+func assertNormalizedTypeIs(ctx context, expr Term, expectedType Term, msg error) error {
+	t, err := normalizedTypeWith(ctx, expr)
+	if err != nil {
+		return err
+	}
+	if t != expectedType {
+		return msg
+	}
+	return nil
+}
+
+// This returns
+//  Term: the element type of a list type
+//  Bool: whether it succeeded
+func listElementType(e Term) (Term, bool) {
+	app, ok := e.(AppTerm)
+	if !ok || app.Fn != List {
+		return nil, false
+	}
+	return app.Arg, true
+}
+
 func functionCheck(input Universe, output Universe) Universe {
 	switch {
 	case output == Type:
@@ -56,7 +103,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 			return FnType(Integer, Text), nil
 		case IntegerToDouble:
 			return FnType(Integer, Double), nil
-		case List:
+		case List, Optional:
 			return FnType(Type, Type), nil
 		case ListBuild:
 			return MkΠ("a", Type,
@@ -111,6 +158,20 @@ func typeWith(ctx context, t Term) (Term, error) {
 			return FnType(Natural, FnType(Natural, Natural)), nil
 		case None:
 			return MkΠ("A", Type, Apply(Optional, Bound("A"))), nil
+		case OptionalBuild:
+			return MkΠ("a", Type,
+				FnType(MkΠ("optional", Type,
+					MkΠ("just", FnType(Bound("a"), Bound("optional")),
+						MkΠ("nothing", Bound("optional"),
+							Bound("optional")))),
+					Apply(Optional, Bound("a")))), nil
+		case OptionalFold:
+			return MkΠ("a", Type,
+				FnType(Apply(Optional, Bound("a")),
+					MkΠ("optional", Type,
+						MkΠ("just", FnType(Bound("a"), Bound("optional")),
+							MkΠ("nothing", Bound("optional"),
+								Bound("optional")))))), nil
 		case TextShow:
 			return FnType(Text, Text), nil
 		default:
@@ -150,7 +211,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		return Quote(bodyTypeVal), nil
 	case LambdaTerm:
 		pi := PiTerm{Label: t.Label, Type: t.Type}
-		freshLocal := LocalVar{Name: t.Label, Index: len(ctx[t.Label])}
+		freshLocal := ctx.freshLocal(t.Label)
 		bt, err := typeWith(
 			ctx.extend(t.Label, t.Type),
 			subst(t.Label, freshLocal, t.Body))
@@ -172,7 +233,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if !ok {
 			return nil, mkTypeError(invalidInputType)
 		}
-		freshLocal := LocalVar{Name: t.Label, Index: len(ctx[t.Label])}
+		freshLocal := ctx.freshLocal(t.Label)
 		outUniv, err := typeWith(
 			ctx.extend(t.Label, t.Type),
 			subst(t.Label, freshLocal, t.Body))
@@ -187,7 +248,33 @@ func typeWith(ctx context, t Term) (Term, error) {
 	case NaturalLit:
 		return Natural, nil
 	case Let:
-		return nil, errors.New("Let type unimplemented")
+		body := t.Body
+		binding := t.Bindings[0]
+		rest := t.Bindings[1:]
+		for {
+			value := Quote(Eval(binding.Value))
+			body = subst(binding.Variable, value, body)
+			for i, b := range rest {
+				rest[i].Value = subst(binding.Variable, value, b.Value)
+				if b.Annotation != nil {
+					rest[i].Annotation = subst(binding.Variable, value, b.Annotation)
+				}
+			}
+			bindingType, err := typeWith(ctx, binding.Value)
+			if err != nil {
+				return nil, err
+			}
+			if binding.Annotation != nil && !judgmentallyEqual(bindingType, binding.Annotation) {
+				return nil, mkTypeError(annotMismatch(binding.Annotation, bindingType))
+			}
+			ctx = ctx.extend(binding.Variable, bindingType)
+			if len(rest) == 0 {
+				break
+			}
+			binding = rest[0]
+			rest = rest[1:]
+		}
+		return typeWith(ctx, body)
 	case Annot:
 		if t.Annotation != Sort {
 			// Γ ⊢ T₀ : i
@@ -210,7 +297,14 @@ func typeWith(ctx context, t Term) (Term, error) {
 	case DoubleLit:
 		return Double, nil
 	case TextLitTerm:
-		return nil, errors.New("TextLitTerm type unimplemented")
+		for _, chunk := range t.Chunks {
+			err := assertNormalizedTypeIs(ctx, chunk.Expr, Text,
+				errors.New("Interpolated expression is not Text"))
+			if err != nil {
+				return nil, err
+			}
+		}
+		return Text, nil
 	case BoolLit:
 		return Bool, nil
 	case IfTerm:
@@ -243,17 +337,76 @@ func typeWith(ctx context, t Term) (Term, error) {
 	case IntegerLit:
 		return Integer, nil
 	case OpTerm:
-		return nil, errors.New("OpTerm type unimplemented")
+		switch t.OpCode {
+		case OrOp, AndOp, EqOp, NeOp:
+			err := assertSimpleType(ctx, t.L, Bool)
+			if err != nil {
+				return nil, err
+			}
+			err = assertSimpleType(ctx, t.R, Bool)
+			if err != nil {
+				return nil, err
+			}
+			return Bool, nil
+		case PlusOp, TimesOp:
+			err := assertSimpleType(ctx, t.L, Natural)
+			if err != nil {
+				return nil, err
+			}
+			err = assertSimpleType(ctx, t.R, Natural)
+			if err != nil {
+				return nil, err
+			}
+			return Natural, nil
+		case TextAppendOp:
+			err := assertSimpleType(ctx, t.L, Text)
+			if err != nil {
+				return nil, err
+			}
+			err = assertSimpleType(ctx, t.R, Text)
+			if err != nil {
+				return nil, err
+			}
+			return Text, nil
+		case ListAppendOp:
+			lt, err := normalizedTypeWith(ctx, t.L)
+			if err != nil {
+				return nil, err
+			}
+			rt, err := normalizedTypeWith(ctx, t.R)
+			if err != nil {
+				return nil, err
+			}
+
+			lElemT, ok := listElementType(lt)
+			if !ok {
+				return nil, fmt.Errorf("Can't use list concatenate operator on a %s", lt)
+			}
+			rElemT, ok := listElementType(rt)
+			if !ok {
+				return nil, fmt.Errorf("Can't use list concatenate operator on a %s", rt)
+			}
+			if !judgmentallyEqual(lElemT, rElemT) {
+				return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
+			}
+			return lt, nil
+		default:
+			return nil, fmt.Errorf("Internal error: unknown opcode %v", t.OpCode)
+		}
 	case EmptyList:
 		_, err := typeWith(ctx, t.Type)
 		if err != nil {
 			return nil, err
 		}
-		_, ok := Eval(t.Type).(AppValue)
+		listType := Eval(t.Type)
+		app, ok := listType.(AppValue)
 		if !ok {
 			return nil, mkTypeError(invalidListType)
 		}
-		return t.Type, nil
+		if app.Fn != List {
+			return nil, mkTypeError(invalidListType)
+		}
+		return Quote(listType), nil
 	case NonEmptyList:
 		T0, err := typeWith(ctx, t[0])
 		if err != nil {
@@ -290,9 +443,34 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return Apply(Optional, A), nil
 	case RecordType:
-		return nil, errors.New("RecordType type unimplemented")
+		recordUniverse := Type
+		for _, v := range t {
+			fieldUniverse, err := normalizedTypeWith(ctx, v)
+			if err != nil {
+				return nil, err
+			}
+			if u, ok := fieldUniverse.(Universe); ok {
+				if recordUniverse < u {
+					recordUniverse = u
+				}
+			} else {
+				return nil, mkTypeError(invalidFieldType)
+			}
+		}
+		return recordUniverse, nil
 	case RecordLit:
-		return nil, errors.New("RecordLit type unimplemented")
+		recordType := RecordType{}
+		for k, v := range t {
+			fieldType, err := normalizedTypeWith(ctx, v)
+			if err != nil {
+				return nil, err
+			}
+			recordType[k] = fieldType
+		}
+		if _, err := typeWith(ctx, recordType); err != nil {
+			return nil, err
+		}
+		return recordType, nil
 	case ToMap:
 		return nil, errors.New("ToMap type unimplemented")
 	case Field:
@@ -364,6 +542,14 @@ func annotMismatch(expectedType, actualType Term) typeMessage {
 	}
 }
 
+func wrongOperandType(expectedType, actualType Term) typeMessage {
+	return twoArgTypeMessage{
+		format: "Expected %v but got %v",
+		expr0:  expectedType,
+		expr1:  actualType,
+	}
+}
+
 func typeMismatch(expectedType, actualType Term) typeMessage {
 	return twoArgTypeMessage{
 		format: "Wrong type of function argument\n" +
@@ -394,6 +580,7 @@ func typeCheckBoundVar(boundVar Term) typeMessage {
 var (
 	ifBranchMismatch   = staticTypeMessage{"❰if❱ branches must have matching types"}
 	ifBranchMustBeTerm = staticTypeMessage{"❰if❱ branch is not a term"}
+	invalidFieldType   = staticTypeMessage{"Invalid field type"}
 	invalidListType    = staticTypeMessage{"Invalid type for ❰List❱"}
 	invalidInputType   = staticTypeMessage{"Invalid function input"}
 	invalidOutputType  = staticTypeMessage{"Invalid function output"}

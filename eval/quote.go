@@ -66,7 +66,11 @@ func quoteWith(ctx quoteContext, v Value) Term {
 	case EmptyListVal:
 		return EmptyList{Type: quoteWith(ctx, v.Type)}
 	case NonEmptyListVal:
-		return TextLitTerm{Suffix: "quote NonEmptyListVal unimplemented"}
+		l := NonEmptyList{}
+		for _, e := range v {
+			l = append(l, quoteWith(ctx, e))
+		}
+		return l
 	case TextLitVal:
 		return TextLitTerm{Suffix: "quote TextLitVal unimplemented but suffix:" + v.Suffix}
 	case IfVal:
@@ -74,9 +78,17 @@ func quoteWith(ctx quoteContext, v Value) Term {
 	case SomeVal:
 		return Some{Val: quoteWith(ctx, v.Val)}
 	case RecordTypeVal:
-		return TextLitTerm{Suffix: "quote RecordTypeVal unimplemented"}
+		rt := RecordType{}
+		for k, v := range v {
+			rt[k] = quoteWith(ctx, v)
+		}
+		return rt
 	case RecordLitVal:
-		return TextLitTerm{Suffix: "quote RecordLitVal unimplemented"}
+		rt := RecordLit{}
+		for k, v := range v {
+			rt[k] = quoteWith(ctx, v)
+		}
+		return rt
 	case ToMapVal:
 		return TextLitTerm{Suffix: "quote ToMapVal unimplemented"}
 	case FieldVal:

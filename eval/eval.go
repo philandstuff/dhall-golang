@@ -76,7 +76,16 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			Arg: arg,
 		}
 	case Let:
-		return TextLitVal{Suffix: "let unimplemented"}
+		newEnv := Env{}
+		for k, v := range e {
+			newEnv[k] = v
+		}
+
+		for _, b := range t.Bindings {
+			val := evalWith(b.Value, newEnv, shouldAlphaNormalize)
+			newEnv[b.Variable] = append([]Value{val}, newEnv[b.Variable]...)
+		}
+		return evalWith(t.Body, newEnv, shouldAlphaNormalize)
 	case Annot:
 		return evalWith(t.Expr, e, shouldAlphaNormalize)
 	case DoubleLit:
@@ -100,9 +109,17 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case Some:
 		return SomeVal{evalWith(t.Val, e, shouldAlphaNormalize)}
 	case RecordType:
-		return TextLitVal{Suffix: "RecordType unimplemented"}
+		newRT := RecordTypeVal{}
+		for k, v := range t {
+			newRT[k] = evalWith(v, e, shouldAlphaNormalize)
+		}
+		return newRT
 	case RecordLit:
-		return TextLitVal{Suffix: "RecordLit unimplemented"}
+		newRT := RecordLitVal{}
+		for k, v := range t {
+			newRT[k] = evalWith(v, e, shouldAlphaNormalize)
+		}
+		return newRT
 	case ToMap:
 		return TextLitVal{Suffix: "ToMap unimplemented"}
 	case Field:
