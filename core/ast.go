@@ -68,6 +68,7 @@ const (
 
 type (
 	NaturalEvenVal      struct{}
+	NaturalFoldVal      struct{}
 	NaturalIsZeroVal    struct{}
 	NaturalOddVal       struct{}
 	NaturalShowVal      struct{}
@@ -75,6 +76,7 @@ type (
 )
 
 func (NaturalEvenVal) isValue()      {}
+func (NaturalFoldVal) isValue()      {}
 func (NaturalIsZeroVal) isValue()    {}
 func (NaturalOddVal) isValue()       {}
 func (NaturalShowVal) isValue()      {}
@@ -86,6 +88,22 @@ func (f NaturalEvenVal) Call1(x Value) Value {
 		return BoolLit(n%2 == 0)
 	}
 	return AppValue{Fn: f, Arg: x}
+}
+
+// Call4 implements Callable4
+func (f NaturalFoldVal) Call4(n, T, s, z Value) Value {
+	if n, ok := n.(NaturalLit); ok {
+		result := z
+		for i := 0; i < int(n); i++ {
+			if succ, ok := s.(Callable1); ok {
+				result = succ.Call1(result)
+			} else {
+				result = AppValue{s, result}
+			}
+		}
+		return result
+	}
+	return applyVal(f, n, T, s, z)
 }
 
 // Call1 implements Callable1
@@ -242,6 +260,14 @@ func Apply(fn Term, args ...Term) Term {
 	return out
 }
 
+func applyVal(fn Value, args ...Value) Value {
+	out := fn
+	for _, arg := range args {
+		out = AppValue{Fn: out, Arg: arg}
+	}
+	return out
+}
+
 // Opcodes for use in the OpTerm type
 // These numbers match the binary encoding label numbers
 const (
@@ -291,9 +317,22 @@ type Callable1 interface {
 	Call1(Value) Value
 }
 
+// Callable4 is a function Value that can be called with three Value
+// arguments.
+type Callable4 interface {
+	Value
+	Call4(Value, Value, Value, Value) Value
+}
+
 var (
 	_ Callable1 = LambdaValue{}
 	_ Callable1 = NaturalEvenVal{}
+	_ Callable1 = NaturalIsZeroVal{}
+	_ Callable1 = NaturalOddVal{}
+	_ Callable1 = NaturalShowVal{}
+	_ Callable1 = NaturalToIntegerVal{}
+
+	_ Callable4 = NaturalFoldVal{}
 )
 
 type (

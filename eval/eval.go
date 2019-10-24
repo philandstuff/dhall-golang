@@ -26,6 +26,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		switch t {
 		case NaturalEven:
 			return NaturalEvenVal{}
+		case NaturalFold:
+			return NaturalFoldVal{}
 		case NaturalIsZero:
 			return NaturalIsZeroVal{}
 		case NaturalOdd:
@@ -83,6 +85,15 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		arg := evalWith(t.Arg, e, shouldAlphaNormalize)
 		if f, ok := fn.(Callable1); ok {
 			return f.Call1(arg)
+		}
+		if fn, ok := fn.(AppValue); ok {
+			if fn2, ok := fn.Fn.(AppValue); ok {
+				if fn3, ok := fn2.Fn.(AppValue); ok {
+					if f, ok := fn3.Fn.(Callable4); ok {
+						return f.Call4(fn3.Arg, fn2.Arg, fn.Arg, arg)
+					}
+				}
+			}
 		}
 		return AppValue{
 			Fn:  fn,

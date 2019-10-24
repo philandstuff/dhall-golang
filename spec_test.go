@@ -117,7 +117,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/List",
 	"TestNormalization/unit/Merge",
 	"TestNormalization/unit/NaturalBuild",
-	"TestNormalization/unit/NaturalFold",
 	"TestNormalization/unit/NaturalShow", // TextLitVal quoting is broken
 	"TestNormalization/unit/NaturalSubtract",
 	"TestNormalization/unit/Operator",
