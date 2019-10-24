@@ -7,7 +7,11 @@ import (
 )
 
 func judgmentallyEqual(t1 Term, t2 Term) bool {
-	ne1 := AlphaBetaEval(t1)
-	ne2 := AlphaBetaEval(t2)
-	return reflect.DeepEqual(Quote(ne1), Quote(ne2))
+	v1 := AlphaBetaEval(t1)
+	v2 := AlphaBetaEval(t2)
+	return judgmentallyEqualVals(v1, v2)
+}
+
+func judgmentallyEqualVals(v1 Value, v2 Value) bool {
+	return reflect.DeepEqual(Quote(v1), Quote(v2))
 }

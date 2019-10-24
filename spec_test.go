@@ -88,12 +88,21 @@ var expectedFailures = []string{
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",
 	"TestNormalization/remoteSystems",
-	"TestNormalization/simple",
+	"TestNormalization/simple/doubleShow",
+	"TestNormalization/simple/enum",
+	"TestNormalization/simple/equal",
 	"TestNormalization/simple/integer",
 	"TestNormalization/simple/letenum",
-	"TestNormalization/simple/multiline",
+	"TestNormalization/simple/letlet",
+	"TestNormalization/simple/listBuild",
+	"TestNormalization/simple/multiLine",
+	"TestNormalization/simple/naturalBuild",
 	"TestNormalization/simple/notEqual",
 	"TestNormalization/simple/optional",
+	"TestNormalization/simple/plus",
+	"TestNormalization/simple/simpleAddition",
+	"TestNormalization/simple/sort",
+	"TestNormalization/simple/times",
 	"TestNormalization/simplifications",
 	"TestNormalization/unit/Assert",
 	"TestNormalization/unit/BareInterpolation",
@@ -101,9 +110,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/EmptyAlternative",
 	"TestNormalization/unit/EmptyToMap",
 	"TestNormalization/unit/Equiv",
-	"TestNormalization/unit/FunctionApplicationNormalize",
-	"TestNormalization/unit/FunctionNormalizeArguments",
-	"TestNormalization/unit/If",
 	"TestNormalization/unit/IntegerShow12",
 	"TestNormalization/unit/IntegerShow-12",
 	"TestNormalization/unit/IntegerToDouble12",
@@ -491,7 +497,6 @@ func TestSemanticHash(t *testing.T) {
 }
 
 func TestBinaryDecode(t *testing.T) {
-	t.Skip("Skipping BinaryDecode for now")
 	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/binary-decode/success/",
 		"A.dhallb", "B.dhall",

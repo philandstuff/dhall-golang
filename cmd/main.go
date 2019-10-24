@@ -6,11 +6,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/philandstuff/dhall-golang/binary"
 	"github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/eval"
 	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
-	"github.com/ugorji/go/codec"
 )
 
 func main() {
@@ -28,13 +28,13 @@ func main() {
 	}
 	fmt.Fprint(os.Stderr, inferredType)
 	fmt.Fprintln(os.Stderr)
-	fmt.Println(eval.Eval(resolvedExpr))
-	var ch codec.CborHandle
+	fmt.Println(eval.AlphaBetaEval(resolvedExpr))
+
 	var buf = new(bytes.Buffer)
-	enc := codec.NewEncoder(buf, &ch)
-	dec := codec.NewDecoder(buf, &ch)
-	enc.Encode(eval.Eval(resolvedExpr))
-	var final interface{}
-	dec.Decode(&final)
-	fmt.Printf("%+v\n", final)
+	binary.EncodeAsCbor(buf, eval.Quote(eval.AlphaBetaEval(resolvedExpr)))
+	final, err := binary.DecodeAsCbor(buf)
+	if err != nil {
+		log.Fatalf("failed to decode: %v", err)
+	}
+	fmt.Printf("decoded as %+v\n", final)
 }

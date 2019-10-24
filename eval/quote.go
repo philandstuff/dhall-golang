@@ -74,7 +74,11 @@ func quoteWith(ctx quoteContext, v Value) Term {
 	case TextLitVal:
 		return TextLitTerm{Suffix: "quote TextLitVal unimplemented but suffix:" + v.Suffix}
 	case IfVal:
-		return TextLitTerm{Suffix: "quote IfVal unimplemented"}
+		return IfTerm{
+			Cond: quoteWith(ctx, v.Cond),
+			T:    quoteWith(ctx, v.T),
+			F:    quoteWith(ctx, v.F),
+		}
 	case SomeVal:
 		return Some{Val: quoteWith(ctx, v.Val)}
 	case RecordTypeVal:

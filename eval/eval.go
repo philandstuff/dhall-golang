@@ -95,7 +95,26 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case BoolLit:
 		return t
 	case IfTerm:
-		return TextLitVal{Suffix: "If unimplemented"}
+		condVal := evalWith(t.Cond, e, shouldAlphaNormalize)
+		if condVal == True {
+			return evalWith(t.T, e, shouldAlphaNormalize)
+		}
+		if condVal == False {
+			return evalWith(t.F, e, shouldAlphaNormalize)
+		}
+		tVal := evalWith(t.T, e, shouldAlphaNormalize)
+		fVal := evalWith(t.F, e, shouldAlphaNormalize)
+		if tVal == True && fVal == False {
+			return condVal
+		}
+		if judgmentallyEqualVals(tVal, fVal) {
+			return tVal
+		}
+		return IfVal{
+			Cond: condVal,
+			T:    evalWith(t.T, e, shouldAlphaNormalize),
+			F:    evalWith(t.F, e, shouldAlphaNormalize),
+		}
 	case NaturalLit:
 		return t
 	case IntegerLit:
