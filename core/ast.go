@@ -67,6 +67,63 @@ const (
 )
 
 type (
+	NaturalEvenVal      struct{}
+	NaturalIsZeroVal    struct{}
+	NaturalOddVal       struct{}
+	NaturalShowVal      struct{}
+	NaturalToIntegerVal struct{}
+)
+
+func (NaturalEvenVal) isValue()      {}
+func (NaturalIsZeroVal) isValue()    {}
+func (NaturalOddVal) isValue()       {}
+func (NaturalShowVal) isValue()      {}
+func (NaturalToIntegerVal) isValue() {}
+
+// Call1 implements Callable1
+func (f NaturalEvenVal) Call1(x Value) Value {
+	if n, ok := x.(NaturalLit); ok {
+		return BoolLit(n%2 == 0)
+	}
+	return AppValue{Fn: f, Arg: x}
+}
+
+// Call1 implements Callable1
+func (f NaturalIsZeroVal) Call1(x Value) Value {
+	if n, ok := x.(NaturalLit); ok {
+		return BoolLit(n == 0)
+	}
+	return AppValue{Fn: f, Arg: x}
+}
+
+// Call1 implements Callable1
+func (f NaturalOddVal) Call1(x Value) Value {
+	if n, ok := x.(NaturalLit); ok {
+		return BoolLit(n%2 == 1)
+	}
+	return AppValue{Fn: f, Arg: x}
+}
+
+// Call1 implements Callable1
+func (f NaturalShowVal) Call1(x Value) Value {
+	if n, ok := x.(NaturalLit); ok {
+		return TextLitVal{Suffix: fmt.Sprintf("%d", n)}
+	}
+	return AppValue{Fn: f, Arg: x}
+}
+
+// Call1 implements Callable1
+func (f NaturalToIntegerVal) Call1(x Value) Value {
+	if n, ok := x.(NaturalLit); ok {
+		return IntegerLit(n)
+	}
+	return AppValue{
+		Fn:  f,
+		Arg: x,
+	}
+}
+
+type (
 	BoundVar struct {
 		Name  string
 		Index int
@@ -227,6 +284,18 @@ func TextAppend(l, r Term) Term {
 	return OpTerm{OpCode: TextAppendOp, L: l, R: r}
 }
 
+// Callable1 is a function Value that can be called with one Value
+// argument.
+type Callable1 interface {
+	Value
+	Call1(Value) Value
+}
+
+var (
+	_ Callable1 = LambdaValue{}
+	_ Callable1 = NaturalEvenVal{}
+)
+
 type (
 	// a lambda value is a go function
 	LambdaValue struct {
@@ -250,7 +319,11 @@ type (
 )
 
 func (LambdaValue) isValue() {}
-func (PiValue) isValue()     {}
+
+// Call1 implements Callable1
+func (l LambdaValue) Call1(x Value) Value { return l.Fn(x) }
+
+func (PiValue) isValue() {}
 
 func (AppValue) isValue() {}
 

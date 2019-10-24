@@ -23,7 +23,20 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case Universe:
 		return t
 	case Builtin:
-		return t
+		switch t {
+		case NaturalEven:
+			return NaturalEvenVal{}
+		case NaturalIsZero:
+			return NaturalIsZeroVal{}
+		case NaturalOdd:
+			return NaturalOddVal{}
+		case NaturalShow:
+			return NaturalShowVal{}
+		case NaturalToInteger:
+			return NaturalToIntegerVal{}
+		default:
+			return t
+		}
 	case BoundVar:
 		if t.Index >= len(e[t.Name]) {
 			panic(fmt.Sprintf("Eval: unbound variable %s", t))
@@ -68,8 +81,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case AppTerm:
 		fn := evalWith(t.Fn, e, shouldAlphaNormalize)
 		arg := evalWith(t.Arg, e, shouldAlphaNormalize)
-		if f, ok := fn.(LambdaValue); ok {
-			return f.Fn(arg)
+		if f, ok := fn.(Callable1); ok {
+			return f.Call1(arg)
 		}
 		return AppValue{
 			Fn:  fn,
