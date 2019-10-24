@@ -90,7 +90,17 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		}
 		return l
 	case TextLitVal:
-		return TextLitTerm{Suffix: "quote TextLitVal unimplemented but suffix:" + v.Suffix}
+		var newChunks Chunks
+		for _, chunk := range v.Chunks {
+			newChunks = append(newChunks, Chunk{
+				Prefix: chunk.Prefix,
+				Expr:   quoteWith(ctx, chunk.Expr),
+			})
+		}
+		return TextLitTerm{
+			Chunks: newChunks,
+			Suffix: v.Suffix,
+		}
 	case IfVal:
 		return IfTerm{
 			Cond: quoteWith(ctx, v.Cond),
