@@ -1,9 +1,7 @@
-package eval
+package core
 
 import (
 	"fmt"
-
-	. "github.com/philandstuff/dhall-golang/core"
 )
 
 func subst(name string, replacement, t Term) Term {

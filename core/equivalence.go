@@ -1,9 +1,7 @@
-package eval
+package core
 
 import (
 	"reflect"
-
-	. "github.com/philandstuff/dhall-golang/core"
 )
 
 func judgmentallyEqual(t1 Term, t2 Term) bool {

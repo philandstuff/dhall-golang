@@ -1,8 +1,6 @@
-package eval
+package core
 
 import (
-	. "github.com/philandstuff/dhall-golang/core"
-
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )

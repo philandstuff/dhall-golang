@@ -1,6 +1,4 @@
-package eval
-
-import . "github.com/philandstuff/dhall-golang/core"
+package core
 
 // Quote(v) takes the Value v and turns it back into a Term.  The `i` is the
 // first fresh variable index named `quote`.  Normally this will be 0 if there
@@ -37,6 +35,8 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return NaturalOdd
 	case NaturalShowVal:
 		return NaturalShow
+	case NaturalSubtractVal:
+		return NaturalSubtract
 	case NaturalToIntegerVal:
 		return NaturalToInteger
 	case FreeVar:

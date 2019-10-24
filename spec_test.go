@@ -14,7 +14,6 @@ import (
 
 	"github.com/philandstuff/dhall-golang/binary"
 	"github.com/philandstuff/dhall-golang/core"
-	"github.com/philandstuff/dhall-golang/eval"
 	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
 	"github.com/pkg/errors"
@@ -117,8 +116,8 @@ var expectedFailures = []string{
 	"TestNormalization/unit/List",
 	"TestNormalization/unit/Merge",
 	"TestNormalization/unit/NaturalBuild",
-	"TestNormalization/unit/NaturalShow", // TextLitVal quoting is broken
-	"TestNormalization/unit/NaturalSubtract",
+	"TestNormalization/unit/NaturalShow",              // TextLitVal quoting is broken
+	"TestNormalization/unit/NaturalSubtractNormalize", // TextLitVal quoting is broken
 	"TestNormalization/unit/Operator",
 	"TestNormalization/unit/Optional",
 	"TestNormalization/unit/RecordA",
@@ -340,7 +339,7 @@ func TestTypecheckFails(t *testing.T) {
 			failf(t, "Expected core.Term, got %+v\n", parsed)
 		}
 
-		_, err = eval.TypeOf(expr)
+		_, err = core.TypeOf(expr)
 
 		expectError(t, err)
 	})
@@ -367,7 +366,7 @@ func TestTypechecks(t *testing.T) {
 				Expr:       resolvedA.(core.Term),
 				Annotation: resolvedB.(core.Term),
 			}
-			_, err = eval.TypeOf(annot)
+			_, err = core.TypeOf(annot)
 			expectNoError(t, err)
 		})
 }
@@ -383,7 +382,7 @@ func TestTypeInference(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			inferredType, err := eval.TypeOf(parsedA.(core.Term))
+			inferredType, err := core.TypeOf(parsedA.(core.Term))
 			expectNoError(t, err)
 
 			expectEqualTerms(t, parsedB.(core.Term), inferredType)
@@ -426,9 +425,9 @@ func TestNormalization(t *testing.T) {
 			resolvedB, err := imports.Load(parsedB.(core.Term), core.Local(bPath))
 			expectNoError(t, err)
 
-			normA := eval.Eval(resolvedA.(core.Term))
+			normA := core.Eval(resolvedA.(core.Term))
 
-			expectEqualTerms(t, resolvedB, eval.Quote(normA))
+			expectEqualTerms(t, resolvedB, core.Quote(normA))
 		})
 }
 

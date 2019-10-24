@@ -1,9 +1,7 @@
-package eval
+package core
 
 import (
 	"fmt"
-
-	. "github.com/philandstuff/dhall-golang/core"
 )
 
 type Env map[string][]Value
@@ -34,6 +32,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return NaturalOddVal{}
 		case NaturalShow:
 			return NaturalShowVal{}
+		case NaturalSubtract:
+			return NaturalSubtractVal{}
 		case NaturalToInteger:
 			return NaturalToIntegerVal{}
 		default:
@@ -87,6 +87,9 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return f.Call1(arg)
 		}
 		if fn, ok := fn.(AppValue); ok {
+			if f, ok := fn.Fn.(Callable2); ok {
+				return f.Call2(fn.Arg, arg)
+			}
 			if fn2, ok := fn.Fn.(AppValue); ok {
 				if fn3, ok := fn2.Fn.(AppValue); ok {
 					if f, ok := fn3.Fn.(Callable4); ok {
@@ -95,10 +98,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				}
 			}
 		}
-		return AppValue{
-			Fn:  fn,
-			Arg: arg,
-		}
+		return AppValue{Fn: fn, Arg: arg}
 	case Let:
 		newEnv := Env{}
 		for k, v := range e {

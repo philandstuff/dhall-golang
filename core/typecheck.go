@@ -1,10 +1,8 @@
-package eval
+package core
 
 import (
 	"errors"
 	"fmt"
-
-	. "github.com/philandstuff/dhall-golang/core"
 )
 
 type context map[string][]Term

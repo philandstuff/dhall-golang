@@ -72,6 +72,7 @@ type (
 	NaturalIsZeroVal    struct{}
 	NaturalOddVal       struct{}
 	NaturalShowVal      struct{}
+	NaturalSubtractVal  struct{}
 	NaturalToIntegerVal struct{}
 )
 
@@ -80,6 +81,7 @@ func (NaturalFoldVal) isValue()      {}
 func (NaturalIsZeroVal) isValue()    {}
 func (NaturalOddVal) isValue()       {}
 func (NaturalShowVal) isValue()      {}
+func (NaturalSubtractVal) isValue()  {}
 func (NaturalToIntegerVal) isValue() {}
 
 // Call1 implements Callable1
@@ -130,15 +132,34 @@ func (f NaturalShowVal) Call1(x Value) Value {
 	return AppValue{Fn: f, Arg: x}
 }
 
+// Call2 implements Callable2
+func (f NaturalSubtractVal) Call2(a, b Value) Value {
+	m, mok := a.(NaturalLit)
+	n, nok := b.(NaturalLit)
+	if mok && nok {
+		if n >= m {
+			return NaturalLit(n - m)
+		}
+		return NaturalLit(0)
+	}
+	if a == NaturalLit(0) {
+		return b
+	}
+	if b == NaturalLit(0) {
+		return NaturalLit(0)
+	}
+	if judgmentallyEqualVals(a, b) {
+		return NaturalLit(0)
+	}
+	return applyVal(f, a, b)
+}
+
 // Call1 implements Callable1
 func (f NaturalToIntegerVal) Call1(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return IntegerLit(n)
 	}
-	return AppValue{
-		Fn:  f,
-		Arg: x,
-	}
+	return AppValue{Fn: f, Arg: x}
 }
 
 type (
@@ -317,6 +338,13 @@ type Callable1 interface {
 	Call1(Value) Value
 }
 
+// Callable2 is a function Value that can be called with one Value
+// argument.
+type Callable2 interface {
+	Value
+	Call2(Value, Value) Value
+}
+
 // Callable4 is a function Value that can be called with three Value
 // arguments.
 type Callable4 interface {
@@ -331,6 +359,8 @@ var (
 	_ Callable1 = NaturalOddVal{}
 	_ Callable1 = NaturalShowVal{}
 	_ Callable1 = NaturalToIntegerVal{}
+
+	_ Callable2 = NaturalSubtractVal{}
 
 	_ Callable4 = NaturalFoldVal{}
 )

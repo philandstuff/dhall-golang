@@ -1,8 +1,7 @@
-package eval_test
+package core_test
 
 import (
 	. "github.com/philandstuff/dhall-golang/core"
-	. "github.com/philandstuff/dhall-golang/eval"
 
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"

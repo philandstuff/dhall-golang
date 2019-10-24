@@ -7,7 +7,6 @@ import (
 	"github.com/philandstuff/dhall-golang/binary"
 	"github.com/philandstuff/dhall-golang/core"
 	. "github.com/philandstuff/dhall-golang/core"
-	"github.com/philandstuff/dhall-golang/eval"
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
@@ -70,7 +69,7 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 			}
 
 			// ensure that expr typechecks in empty context
-			_, err = eval.TypeOf(expr)
+			_, err = core.TypeOf(expr)
 			if err != nil {
 				return nil, err
 			}

@@ -1,9 +1,7 @@
-package eval
+package core
 
 import (
-	. "github.com/philandstuff/dhall-golang/core"
-
-	t "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
@@ -30,7 +28,7 @@ func typecheckTest(t Term, expectedType Term) {
 		Equal(expectedType))
 }
 
-var _ = t.Describe("TypeOf", func() {
+var _ = Describe("TypeOf", func() {
 	DescribeTable("Universe",
 		typecheckTest,
 		Entry("Type : Kind", Type, Kind),
