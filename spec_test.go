@@ -98,10 +98,8 @@ var expectedFailures = []string{
 	"TestNormalization/simple/naturalBuild",
 	"TestNormalization/simple/notEqual",
 	"TestNormalization/simple/optional",
-	"TestNormalization/simple/plus",
 	"TestNormalization/simple/simpleAddition",
 	"TestNormalization/simple/sort",
-	"TestNormalization/simple/times",
 	"TestNormalization/simplifications",
 	"TestNormalization/unit/Assert",
 	"TestNormalization/unit/BareInterpolation",
@@ -116,9 +114,13 @@ var expectedFailures = []string{
 	"TestNormalization/unit/List",
 	"TestNormalization/unit/Merge",
 	"TestNormalization/unit/NaturalBuild",
-	"TestNormalization/unit/NaturalShow",              // TextLitVal quoting is broken
-	"TestNormalization/unit/NaturalSubtractNormalize", // TextLitVal quoting is broken
-	"TestNormalization/unit/Operator",
+	"TestNormalization/unit/NaturalShow", // TextLitVal quoting is broken
+	"TestNormalization/unit/OperatorOr",
+	"TestNormalization/unit/OperatorAnd",
+	"TestNormalization/unit/OperatorEqual",
+	"TestNormalization/unit/OperatorNotEq",
+	"TestNormalization/unit/OperatorListConcat",
+	"TestNormalization/unit/OperatorTextConcat",
 	"TestNormalization/unit/Optional",
 	"TestNormalization/unit/RecordA",
 	"TestNormalization/unit/RecordProjection",

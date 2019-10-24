@@ -385,6 +385,12 @@ type (
 		Fn  Value
 		Arg Value
 	}
+
+	OpValue struct {
+		OpCode int
+		L      Value
+		R      Value
+	}
 )
 
 func (LambdaValue) isValue() {}
@@ -395,6 +401,8 @@ func (l LambdaValue) Call1(x Value) Value { return l.Fn(x) }
 func (PiValue) isValue() {}
 
 func (AppValue) isValue() {}
+
+func (OpValue) isValue() {}
 
 func MkΠval(label string, d Value, r func(Value) Value) PiValue {
 	return PiValue{

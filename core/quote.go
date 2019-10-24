@@ -67,6 +67,12 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			Fn:  quoteWith(ctx, v.Fn),
 			Arg: quoteWith(ctx, v.Arg),
 		}
+	case OpValue:
+		return OpTerm{
+			OpCode: v.OpCode,
+			L:      quoteWith(ctx, v.L),
+			R:      quoteWith(ctx, v.R),
+		}
 	case NaturalLit:
 		return v
 	case DoubleLit:

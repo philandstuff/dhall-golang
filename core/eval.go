@@ -144,7 +144,46 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case IntegerLit:
 		return t
 	case OpTerm:
-		return TextLitVal{Suffix: "OpTerm unimplemented"}
+		l := evalWith(t.L, e, shouldAlphaNormalize)
+		r := evalWith(t.R, e, shouldAlphaNormalize)
+		switch t.OpCode {
+		case OrOp, AndOp, EqOp, NeOp, TextAppendOp,
+			ListAppendOp, RecordMergeOp, RightBiasedRecordMergeOp,
+			RecordTypeMergeOp, ImportAltOp, EquivOp:
+			return TextLitVal{Suffix: "OpTerm unimplemented"}
+		case PlusOp:
+			ln, lok := l.(NaturalLit)
+			rn, rok := r.(NaturalLit)
+			if lok && rok {
+				return NaturalLit(ln + rn)
+			}
+			if l == NaturalLit(0) {
+				return r
+			}
+			if r == NaturalLit(0) {
+				return l
+			}
+		case TimesOp:
+			ln, lok := l.(NaturalLit)
+			rn, rok := r.(NaturalLit)
+			if lok && rok {
+				return NaturalLit(ln * rn)
+			}
+			if l == NaturalLit(0) {
+				return NaturalLit(0)
+			}
+			if r == NaturalLit(0) {
+				return NaturalLit(0)
+			}
+			if l == NaturalLit(1) {
+				return r
+			}
+			if r == NaturalLit(1) {
+				return l
+			}
+			return OpValue{OpCode: t.OpCode, L: l, R: r}
+		}
+		return OpValue{OpCode: t.OpCode, L: l, R: r}
 	case EmptyList:
 		return EmptyListVal{Type: evalWith(t.Type, e, shouldAlphaNormalize)}
 	case NonEmptyList:
