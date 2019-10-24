@@ -39,6 +39,12 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return NaturalSubtract
 	case NaturalToIntegerVal:
 		return NaturalToInteger
+	case IntegerShowVal:
+		return IntegerShow
+	case IntegerToDoubleVal:
+		return IntegerToDouble
+	case DoubleShowVal:
+		return DoubleShow
 	case FreeVar:
 		return v
 	case LocalVar:

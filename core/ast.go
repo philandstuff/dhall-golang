@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 )
 
@@ -74,6 +75,11 @@ type (
 	NaturalShowVal      struct{}
 	NaturalSubtractVal  struct{}
 	NaturalToIntegerVal struct{}
+
+	IntegerShowVal     struct{}
+	IntegerToDoubleVal struct{}
+
+	DoubleShowVal struct{}
 )
 
 func (NaturalEvenVal) isValue()      {}
@@ -83,6 +89,11 @@ func (NaturalOddVal) isValue()       {}
 func (NaturalShowVal) isValue()      {}
 func (NaturalSubtractVal) isValue()  {}
 func (NaturalToIntegerVal) isValue() {}
+
+func (IntegerShowVal) isValue()     {}
+func (IntegerToDoubleVal) isValue() {}
+
+func (DoubleShowVal) isValue() {}
 
 // Call1 implements Callable1
 func (f NaturalEvenVal) Call1(x Value) Value {
@@ -158,6 +169,30 @@ func (f NaturalSubtractVal) Call2(a, b Value) Value {
 func (f NaturalToIntegerVal) Call1(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return IntegerLit(n)
+	}
+	return AppValue{Fn: f, Arg: x}
+}
+
+// Call1 implements Callable1
+func (f IntegerShowVal) Call1(x Value) Value {
+	if i, ok := x.(IntegerLit); ok {
+		return TextLitVal{Suffix: fmt.Sprintf("%+d", i)}
+	}
+	return AppValue{Fn: f, Arg: x}
+}
+
+// Call1 implements Callable1
+func (f IntegerToDoubleVal) Call1(x Value) Value {
+	if i, ok := x.(IntegerLit); ok {
+		return DoubleLit(i)
+	}
+	return AppValue{Fn: f, Arg: x}
+}
+
+// Call1 implements Callable1
+func (f DoubleShowVal) Call1(x Value) Value {
+	if d, ok := x.(DoubleLit); ok {
+		return TextLitVal{Suffix: d.String()}
 	}
 	return AppValue{Fn: f, Arg: x}
 }
@@ -359,6 +394,9 @@ var (
 	_ Callable1 = NaturalOddVal{}
 	_ Callable1 = NaturalShowVal{}
 	_ Callable1 = NaturalToIntegerVal{}
+	_ Callable1 = IntegerShowVal{}
+	_ Callable1 = IntegerToDoubleVal{}
+	_ Callable1 = DoubleShowVal{}
 
 	_ Callable2 = NaturalSubtractVal{}
 
@@ -579,6 +617,22 @@ func (DoubleLit) isTerm()   {}
 func (DoubleLit) isValue()  {}
 func (IntegerLit) isTerm()  {}
 func (IntegerLit) isValue() {}
+
+func (d DoubleLit) String() string {
+	f := float64(d)
+	if math.IsInf(f, 1) {
+		return "Infinity"
+	}
+	if math.IsInf(f, -1) {
+		return "-Infinity"
+	}
+	// if we have a whole number, we need to append .0 to it so we get a valid
+	// Double literal
+	if f == float64(int64(f)) {
+		return fmt.Sprintf("%#v.0", float64(d))
+	}
+	return fmt.Sprintf("%#v", float64(d))
+}
 
 func (Some) isTerm()     {}
 func (SomeVal) isValue() {}
