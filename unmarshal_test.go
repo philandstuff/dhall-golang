@@ -181,33 +181,33 @@ var _ = Describe("Unmarshal", func() {
 	Describe("Function types", func() {
 		It("Unmarshals the identity int function", func() {
 			var fn func(int) int
-			dhallFn := core.LambdaValue{
-				Label:  "x",
-				Domain: core.Natural,
-				Fn:     func(x core.Value) core.Value { return x },
-			}
+			dhallFn := core.Eval(core.LambdaTerm{
+				Label: "x",
+				Type:  core.Natural,
+				Body:  core.Bound("x"),
+			})
 			Unmarshal(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(3)).To(Equal(3))
 		})
 		It("Unmarshals the identity int64 function", func() {
 			var fn func(int64) int64
-			dhallFn := core.LambdaValue{
-				Label:  "x",
-				Domain: core.Natural,
-				Fn:     func(x core.Value) core.Value { return x },
-			}
+			dhallFn := core.Eval(core.LambdaTerm{
+				Label: "x",
+				Type:  core.Natural,
+				Body:  core.Bound("x"),
+			})
 			Unmarshal(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(int64(3))).To(Equal(int64(3)))
 		})
 		It("Unmarshals the identity string function", func() {
 			var fn func(string) string
-			dhallFn := core.LambdaValue{
-				Label:  "x",
-				Domain: core.Text,
-				Fn:     func(x core.Value) core.Value { return x },
-			}
+			dhallFn := core.Eval(core.LambdaTerm{
+				Label: "x",
+				Type:  core.Text,
+				Body:  core.Bound("x"),
+			})
 			Unmarshal(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn("foo")).To(Equal("foo"))

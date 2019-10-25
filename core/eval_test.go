@@ -19,14 +19,14 @@ var _ = Describe("Eval", func() {
 	})
 	It("Lambda id function", func() {
 		f := Eval(Lambda("x", Type, BoundVar{Name: "x"})).(LambdaValue)
-		Expect(f.Fn(Type)).
+		Expect(f.Call1(Type)).
 			To(Equal(Type))
 		Expect(f.Label).
 			To(Equal("x"))
 	})
 	It("Lambda id function with alpha normalization", func() {
 		f := AlphaBetaEval(Lambda("x", Type, BoundVar{Name: "x"})).(LambdaValue)
-		Expect(f.Fn(Type)).
+		Expect(f.Call1(Type)).
 			To(Equal(Type))
 		Expect(f.Label).
 			To(Equal("_"))

@@ -23,25 +23,25 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case Builtin:
 		switch t {
 		case NaturalEven:
-			return NaturalEvenVal{}
+			return NaturalEvenVal
 		case NaturalFold:
-			return NaturalFoldVal{}
+			return NaturalFoldVal
 		case NaturalIsZero:
-			return NaturalIsZeroVal{}
+			return NaturalIsZeroVal
 		case NaturalOdd:
-			return NaturalOddVal{}
+			return NaturalOddVal
 		case NaturalShow:
-			return NaturalShowVal{}
+			return NaturalShowVal
 		case NaturalSubtract:
-			return NaturalSubtractVal{}
+			return NaturalSubtractVal
 		case NaturalToInteger:
-			return NaturalToIntegerVal{}
+			return NaturalToIntegerVal
 		case IntegerShow:
-			return IntegerShowVal{}
+			return IntegerShowVal
 		case IntegerToDouble:
-			return IntegerToDoubleVal{}
+			return IntegerToDoubleVal
 		case DoubleShow:
-			return DoubleShowVal{}
+			return DoubleShowVal
 		default:
 			return t
 		}
@@ -58,14 +58,15 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		v := LambdaValue{
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
-			Fn: func(x Value) Value {
+			hasCall1: func(x Value) Value {
 				newEnv := Env{}
 				for k, v := range e {
 					newEnv[k] = v
 				}
 				newEnv[t.Label] = append([]Value{x}, newEnv[t.Label]...)
 				return evalWith(t.Body, newEnv, shouldAlphaNormalize)
-			}}
+			},
+		}
 		if shouldAlphaNormalize {
 			v.Label = "_"
 		}
@@ -90,16 +91,27 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		fn := evalWith(t.Fn, e, shouldAlphaNormalize)
 		arg := evalWith(t.Arg, e, shouldAlphaNormalize)
 		if f, ok := fn.(Callable1); ok {
-			return f.Call1(arg)
+			if result := f.Call1(arg); result != nil {
+				return result
+			}
 		}
 		if fn, ok := fn.(AppValue); ok {
 			if f, ok := fn.Fn.(Callable2); ok {
-				return f.Call2(fn.Arg, arg)
+				if result := f.Call2(fn.Arg, arg); result != nil {
+					return result
+				}
 			}
 			if fn2, ok := fn.Fn.(AppValue); ok {
+				if f, ok := fn2.Fn.(Callable3); ok {
+					if result := f.Call3(fn2.Arg, fn.Arg, arg); result != nil {
+						return result
+					}
+				}
 				if fn3, ok := fn2.Fn.(AppValue); ok {
 					if f, ok := fn3.Fn.(Callable4); ok {
-						return f.Call4(fn3.Arg, fn2.Arg, fn.Arg, arg)
+						if result := f.Call4(fn3.Arg, fn2.Arg, fn.Arg, arg); result != nil {
+							return result
+						}
 					}
 				}
 			}

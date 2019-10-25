@@ -25,25 +25,25 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return v
 	case Builtin:
 		return v
-	case NaturalEvenVal:
+	case naturalEvenVal:
 		return NaturalEven
-	case NaturalFoldVal:
+	case naturalFoldVal:
 		return NaturalFold
-	case NaturalIsZeroVal:
+	case naturalIsZeroVal:
 		return NaturalIsZero
-	case NaturalOddVal:
+	case naturalOddVal:
 		return NaturalOdd
-	case NaturalShowVal:
+	case naturalShowVal:
 		return NaturalShow
-	case NaturalSubtractVal:
+	case naturalSubtractVal:
 		return NaturalSubtract
-	case NaturalToIntegerVal:
+	case naturalToIntegerVal:
 		return NaturalToInteger
-	case IntegerShowVal:
+	case integerShowVal:
 		return IntegerShow
-	case IntegerToDoubleVal:
+	case integerToDoubleVal:
 		return IntegerToDouble
-	case DoubleShowVal:
+	case doubleShowVal:
 		return DoubleShow
 	case FreeVar:
 		return v
@@ -55,7 +55,7 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			Index: ctx[v.Name] - v.Index - 1,
 		}
 	case LambdaValue:
-		bodyVal := v.Fn(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
+		bodyVal := v.Call1(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return LambdaTerm{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),

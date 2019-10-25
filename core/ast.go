@@ -68,134 +68,32 @@ const (
 )
 
 type (
-	NaturalEvenVal      struct{}
-	NaturalFoldVal      struct{}
-	NaturalIsZeroVal    struct{}
-	NaturalOddVal       struct{}
-	NaturalShowVal      struct{}
-	NaturalSubtractVal  struct{}
-	NaturalToIntegerVal struct{}
+	naturalEvenVal      struct{ hasCall1 }
+	naturalFoldVal      struct{ hasCall4 }
+	naturalIsZeroVal    struct{ hasCall1 }
+	naturalOddVal       struct{ hasCall1 }
+	naturalShowVal      struct{ hasCall1 }
+	naturalSubtractVal  struct{ hasCall2 }
+	naturalToIntegerVal struct{ hasCall1 }
 
-	IntegerShowVal     struct{}
-	IntegerToDoubleVal struct{}
+	integerShowVal     struct{ hasCall1 }
+	integerToDoubleVal struct{ hasCall1 }
 
-	DoubleShowVal struct{}
+	doubleShowVal struct{ hasCall1 }
 )
 
-func (NaturalEvenVal) isValue()      {}
-func (NaturalFoldVal) isValue()      {}
-func (NaturalIsZeroVal) isValue()    {}
-func (NaturalOddVal) isValue()       {}
-func (NaturalShowVal) isValue()      {}
-func (NaturalSubtractVal) isValue()  {}
-func (NaturalToIntegerVal) isValue() {}
+func (naturalEvenVal) isValue()      {}
+func (naturalFoldVal) isValue()      {}
+func (naturalIsZeroVal) isValue()    {}
+func (naturalOddVal) isValue()       {}
+func (naturalShowVal) isValue()      {}
+func (naturalSubtractVal) isValue()  {}
+func (naturalToIntegerVal) isValue() {}
 
-func (IntegerShowVal) isValue()     {}
-func (IntegerToDoubleVal) isValue() {}
+func (integerShowVal) isValue()     {}
+func (integerToDoubleVal) isValue() {}
 
-func (DoubleShowVal) isValue() {}
-
-// Call1 implements Callable1
-func (f NaturalEvenVal) Call1(x Value) Value {
-	if n, ok := x.(NaturalLit); ok {
-		return BoolLit(n%2 == 0)
-	}
-	return AppValue{Fn: f, Arg: x}
-}
-
-// Call4 implements Callable4
-func (f NaturalFoldVal) Call4(n, T, s, z Value) Value {
-	if n, ok := n.(NaturalLit); ok {
-		result := z
-		for i := 0; i < int(n); i++ {
-			if succ, ok := s.(Callable1); ok {
-				result = succ.Call1(result)
-			} else {
-				result = AppValue{s, result}
-			}
-		}
-		return result
-	}
-	return applyVal(f, n, T, s, z)
-}
-
-// Call1 implements Callable1
-func (f NaturalIsZeroVal) Call1(x Value) Value {
-	if n, ok := x.(NaturalLit); ok {
-		return BoolLit(n == 0)
-	}
-	return AppValue{Fn: f, Arg: x}
-}
-
-// Call1 implements Callable1
-func (f NaturalOddVal) Call1(x Value) Value {
-	if n, ok := x.(NaturalLit); ok {
-		return BoolLit(n%2 == 1)
-	}
-	return AppValue{Fn: f, Arg: x}
-}
-
-// Call1 implements Callable1
-func (f NaturalShowVal) Call1(x Value) Value {
-	if n, ok := x.(NaturalLit); ok {
-		return TextLitVal{Suffix: fmt.Sprintf("%d", n)}
-	}
-	return AppValue{Fn: f, Arg: x}
-}
-
-// Call2 implements Callable2
-func (f NaturalSubtractVal) Call2(a, b Value) Value {
-	m, mok := a.(NaturalLit)
-	n, nok := b.(NaturalLit)
-	if mok && nok {
-		if n >= m {
-			return NaturalLit(n - m)
-		}
-		return NaturalLit(0)
-	}
-	if a == NaturalLit(0) {
-		return b
-	}
-	if b == NaturalLit(0) {
-		return NaturalLit(0)
-	}
-	if judgmentallyEqualVals(a, b) {
-		return NaturalLit(0)
-	}
-	return applyVal(f, a, b)
-}
-
-// Call1 implements Callable1
-func (f NaturalToIntegerVal) Call1(x Value) Value {
-	if n, ok := x.(NaturalLit); ok {
-		return IntegerLit(n)
-	}
-	return AppValue{Fn: f, Arg: x}
-}
-
-// Call1 implements Callable1
-func (f IntegerShowVal) Call1(x Value) Value {
-	if i, ok := x.(IntegerLit); ok {
-		return TextLitVal{Suffix: fmt.Sprintf("%+d", i)}
-	}
-	return AppValue{Fn: f, Arg: x}
-}
-
-// Call1 implements Callable1
-func (f IntegerToDoubleVal) Call1(x Value) Value {
-	if i, ok := x.(IntegerLit); ok {
-		return DoubleLit(i)
-	}
-	return AppValue{Fn: f, Arg: x}
-}
-
-// Call1 implements Callable1
-func (f DoubleShowVal) Call1(x Value) Value {
-	if d, ok := x.(DoubleLit); ok {
-		return TextLitVal{Suffix: d.String()}
-	}
-	return AppValue{Fn: f, Arg: x}
-}
+func (doubleShowVal) isValue() {}
 
 type (
 	BoundVar struct {
@@ -367,48 +265,123 @@ func TextAppend(l, r Term) Term {
 }
 
 // Callable1 is a function Value that can be called with one Value
-// argument.
+// argument.  Call1() may return nil if normalization isn't possible
+// (for example, `Natural/even x` does not normalize)
 type Callable1 interface {
-	Value
+	Callable2
 	Call1(Value) Value
 }
 
+type hasCall1 func(Value) Value
+
+// Call1 implements Callable1
+func (s hasCall1) Call1(a Value) Value {
+	return s(a)
+}
+
+// Call2 implements Callable2
+func (s hasCall1) Call2(a, b Value) Value {
+	return s.Call1(a).(Callable1).Call1(b)
+}
+
+// Call3 implements Callable3
+func (s hasCall1) Call3(a, b, c Value) Value {
+	return s.Call1(a).(Callable1).Call1(b).(Callable1).Call1(c)
+}
+
+// Call4 implements Callable4
+func (s hasCall1) Call4(a, b, c, d Value) Value {
+	return s.Call1(a).(Callable1).Call1(b).(Callable1).Call1(c).(Callable1).Call1(d)
+}
+
 // Callable2 is a function Value that can be called with one Value
-// argument.
+// argument.  Call2() may return nil if normalization isn't possible
+// (for example, `Natural/subtract x y` does not normalize)
 type Callable2 interface {
-	Value
+	Callable3
 	Call2(Value, Value) Value
 }
 
-// Callable4 is a function Value that can be called with three Value
-// arguments.
+type hasCall2 struct {
+	fn func(Value, Value) Value
+}
+
+// Call2 implements Callable2
+func (s hasCall2) Call2(a, b Value) Value {
+	return s.fn(a, b)
+}
+
+// Call3 implements Callable3
+func (s hasCall2) Call3(a, b, c Value) Value {
+	return s.Call2(a, b).(Callable1).Call1(c)
+}
+
+// Call4 implements Callable4
+func (s hasCall2) Call4(a, b, c, d Value) Value {
+	return s.Call2(a, b).(Callable1).Call1(c).(Callable1).Call1(d)
+}
+
+// Callable3 is a function Value that can be called with one Value
+// argument.  Call3() may return nil if normalization isn't possible.
+type Callable3 interface {
+	Callable4
+	Call3(Value, Value, Value) Value
+}
+
+type hasCall3 struct {
+	fn func(Value, Value, Value) Value
+}
+
+// Call3 implements Callable3
+func (s hasCall3) Call3(a, b, c Value) Value {
+	return s.fn(a, b, c)
+}
+
+// Call4 implements Callable4
+func (s hasCall3) Call4(a, b, c, d Value) Value {
+	return s.Call3(a, b, c).(Callable1).Call1(d)
+}
+
+// Callable4 is a function Value that can be called with one Value
+// argument.  Call4() may return nil if normalization isn't possible.
 type Callable4 interface {
 	Value
 	Call4(Value, Value, Value, Value) Value
 }
 
+type hasCall4 struct {
+	fn func(Value, Value, Value, Value) Value
+}
+
+// Call3 implements Callable3
+func (s hasCall4) Call4(a, b, c, d Value) Value {
+	return s.fn(a, b, c, d)
+}
+
 var (
 	_ Callable1 = LambdaValue{}
-	_ Callable1 = NaturalEvenVal{}
-	_ Callable1 = NaturalIsZeroVal{}
-	_ Callable1 = NaturalOddVal{}
-	_ Callable1 = NaturalShowVal{}
-	_ Callable1 = NaturalToIntegerVal{}
-	_ Callable1 = IntegerShowVal{}
-	_ Callable1 = IntegerToDoubleVal{}
-	_ Callable1 = DoubleShowVal{}
+	_ Callable1 = NaturalEvenVal
+	_ Callable1 = NaturalIsZeroVal
+	_ Callable1 = NaturalOddVal
+	_ Callable1 = NaturalShowVal
+	_ Callable1 = NaturalToIntegerVal
+	_ Callable1 = IntegerShowVal
+	_ Callable1 = IntegerToDoubleVal
+	_ Callable1 = DoubleShowVal
 
-	_ Callable2 = NaturalSubtractVal{}
+	_ Callable2 = NaturalSubtractVal
+	_ Callable2 = LambdaValue{}
 
-	_ Callable4 = NaturalFoldVal{}
+	_ Callable4 = NaturalFoldVal
+	_ Callable4 = LambdaValue{}
 )
 
 type (
 	// a lambda value is a go function
 	LambdaValue struct {
+		hasCall1
 		Label  string
 		Domain Value
-		Fn     func(Value) Value
 	}
 
 	// A PiValue is: the type of the domain, and a go function capturing the
@@ -432,9 +405,6 @@ type (
 )
 
 func (LambdaValue) isValue() {}
-
-// Call1 implements Callable1
-func (l LambdaValue) Call1(x Value) Value { return l.Fn(x) }
 
 func (PiValue) isValue() {}
 
