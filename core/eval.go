@@ -22,6 +22,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		return t
 	case Builtin:
 		switch t {
+		case NaturalBuild:
+			return NaturalBuildVal
 		case NaturalEven:
 			return NaturalEvenVal
 		case NaturalFold:

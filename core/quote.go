@@ -25,6 +25,8 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return v
 	case Builtin:
 		return v
+	case naturalBuildVal:
+		return NaturalBuild
 	case naturalEvenVal:
 		return NaturalEven
 	case naturalFoldVal:

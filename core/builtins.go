@@ -4,6 +4,30 @@ import (
 	"fmt"
 )
 
+func naturalBuild(x Value) Value {
+	var succ Value = LambdaValue{
+		Label:  "x",
+		Domain: Natural,
+		hasCall1: func(x Value) Value {
+			if n, ok := x.(NaturalLit); ok {
+				return NaturalLit(n + 1)
+			}
+			return OpValue{OpCode: PlusOp, L: x, R: NaturalLit(1)}
+		},
+	}
+	if g, ok := x.(Callable3); ok {
+		if result := g.Call3(Natural, succ, NaturalLit(0)); result != nil {
+			return result
+		}
+	}
+	if app, ok := x.(AppValue); ok {
+		if _, ok := app.Fn.(naturalFoldVal); ok {
+			return app.Arg
+		}
+	}
+	return applyVal(x, Natural, succ, NaturalLit(0))
+}
+
 func naturalEven(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return BoolLit(n%2 == 0)
@@ -97,6 +121,7 @@ func doubleShow(x Value) Value {
 }
 
 var (
+	NaturalBuildVal     = naturalBuildVal{naturalBuild}
 	NaturalEvenVal      = naturalEvenVal{naturalEven}
 	NaturalFoldVal      = naturalFoldVal{hasCall4{naturalFold}}
 	NaturalIsZeroVal    = naturalIsZeroVal{naturalIsZero}

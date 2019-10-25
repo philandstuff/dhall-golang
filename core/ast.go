@@ -68,6 +68,7 @@ const (
 )
 
 type (
+	naturalBuildVal     struct{ hasCall1 }
 	naturalEvenVal      struct{ hasCall1 }
 	naturalFoldVal      struct{ hasCall4 }
 	naturalIsZeroVal    struct{ hasCall1 }
@@ -82,6 +83,7 @@ type (
 	doubleShowVal struct{ hasCall1 }
 )
 
+func (naturalBuildVal) isValue()     {}
 func (naturalEvenVal) isValue()      {}
 func (naturalFoldVal) isValue()      {}
 func (naturalIsZeroVal) isValue()    {}
@@ -360,6 +362,7 @@ func (s hasCall4) Call4(a, b, c, d Value) Value {
 
 var (
 	_ Callable1 = LambdaValue{}
+	_ Callable1 = NaturalBuildVal
 	_ Callable1 = NaturalEvenVal
 	_ Callable1 = NaturalIsZeroVal
 	_ Callable1 = NaturalOddVal
@@ -377,7 +380,7 @@ var (
 )
 
 type (
-	// a lambda value is a go function
+	// A LambdaValue is a go function
 	LambdaValue struct {
 		hasCall1
 		Label  string
