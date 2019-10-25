@@ -47,6 +47,10 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return IntegerToDouble
 	case doubleShowVal:
 		return DoubleShow
+	case optionalBuildVal:
+		return OptionalBuild
+	case optionalFoldVal:
+		return OptionalFold
 	case FreeVar:
 		return v
 	case LocalVar:

@@ -81,6 +81,9 @@ type (
 	integerToDoubleVal struct{ hasCall1 }
 
 	doubleShowVal struct{ hasCall1 }
+
+	optionalBuildVal struct{ hasCall2 }
+	optionalFoldVal  struct{ hasCall5 }
 )
 
 func (naturalBuildVal) isValue()     {}
@@ -96,6 +99,9 @@ func (integerShowVal) isValue()     {}
 func (integerToDoubleVal) isValue() {}
 
 func (doubleShowVal) isValue() {}
+
+func (optionalBuildVal) isValue() {}
+func (optionalFoldVal) isValue()  {}
 
 type (
 	BoundVar struct {
@@ -304,13 +310,11 @@ type Callable2 interface {
 	Call2(Value, Value) Value
 }
 
-type hasCall2 struct {
-	fn func(Value, Value) Value
-}
+type hasCall2 func(Value, Value) Value
 
 // Call2 implements Callable2
 func (s hasCall2) Call2(a, b Value) Value {
-	return s.fn(a, b)
+	return s(a, b)
 }
 
 // Call3 implements Callable3
@@ -330,13 +334,11 @@ type Callable3 interface {
 	Call3(Value, Value, Value) Value
 }
 
-type hasCall3 struct {
-	fn func(Value, Value, Value) Value
-}
+type hasCall3 func(Value, Value, Value) Value
 
 // Call3 implements Callable3
 func (s hasCall3) Call3(a, b, c Value) Value {
-	return s.fn(a, b, c)
+	return s(a, b, c)
 }
 
 // Call4 implements Callable4
@@ -351,13 +353,25 @@ type Callable4 interface {
 	Call4(Value, Value, Value, Value) Value
 }
 
-type hasCall4 struct {
-	fn func(Value, Value, Value, Value) Value
+type hasCall4 func(Value, Value, Value, Value) Value
+
+// Call4 implements Callable4
+func (s hasCall4) Call4(a, b, c, d Value) Value {
+	return s(a, b, c, d)
 }
 
-// Call3 implements Callable3
-func (s hasCall4) Call4(a, b, c, d Value) Value {
-	return s.fn(a, b, c, d)
+// Callable5 is a function Value that can be called with one Value
+// argument.  Call5() may return nil if normalization isn't possible.
+type Callable5 interface {
+	Value
+	Call5(Value, Value, Value, Value, Value) Value
+}
+
+type hasCall5 func(Value, Value, Value, Value, Value) Value
+
+// Call5 implements Callable5
+func (s hasCall5) Call5(a, b, c, d, e Value) Value {
+	return s(a, b, c, d, e)
 }
 
 var (
@@ -373,10 +387,13 @@ var (
 	_ Callable1 = DoubleShowVal
 
 	_ Callable2 = NaturalSubtractVal
+	_ Callable2 = OptionalBuildVal
 	_ Callable2 = LambdaValue{}
 
 	_ Callable4 = NaturalFoldVal
 	_ Callable4 = LambdaValue{}
+
+	_ Callable5 = OptionalFoldVal
 )
 
 type (

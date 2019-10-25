@@ -44,6 +44,10 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return IntegerToDoubleVal
 		case DoubleShow:
 			return DoubleShowVal
+		case OptionalBuild:
+			return OptionalBuildVal
+		case OptionalFold:
+			return OptionalFoldVal
 		default:
 			return t
 		}
@@ -115,6 +119,13 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 							return result
 						}
 					}
+					if fn4, ok := fn3.Fn.(AppValue); ok {
+						if f, ok := fn4.Fn.(Callable5); ok {
+							if result := f.Call5(fn4.Arg, fn3.Arg, fn2.Arg, fn.Arg, arg); result != nil {
+								return result
+							}
+						}
+					}
 				}
 			}
 		}
@@ -135,7 +146,17 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case DoubleLit:
 		return t
 	case TextLitTerm:
-		return TextLitVal{Suffix: "TextLit unimplemented but here's the suffix: " + t.Suffix}
+		var newChunks ChunkVals
+		for _, chunk := range t.Chunks {
+			newChunks = append(newChunks, ChunkVal{
+				Prefix: chunk.Prefix,
+				Expr:   evalWith(chunk.Expr, e, shouldAlphaNormalize),
+			})
+		}
+		return TextLitVal{
+			Chunks: newChunks,
+			Suffix: t.Suffix,
+		}
 	case BoolLit:
 		return t
 	case IfTerm:

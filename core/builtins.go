@@ -15,14 +15,14 @@ func naturalBuild(x Value) Value {
 			return OpValue{OpCode: PlusOp, L: x, R: NaturalLit(1)}
 		},
 	}
-	if g, ok := x.(Callable3); ok {
-		if result := g.Call3(Natural, succ, NaturalLit(0)); result != nil {
-			return result
-		}
-	}
 	if app, ok := x.(AppValue); ok {
 		if _, ok := app.Fn.(naturalFoldVal); ok {
 			return app.Arg
+		}
+	}
+	if g, ok := x.(Callable3); ok {
+		if result := g.Call3(Natural, succ, NaturalLit(0)); result != nil {
+			return result
 		}
 	}
 	return applyVal(x, Natural, succ, NaturalLit(0))
@@ -35,7 +35,7 @@ func naturalEven(x Value) Value {
 	return nil
 }
 
-func naturalFold(n, T, s, z Value) Value {
+func naturalFold(n, _, s, z Value) Value {
 	if n, ok := n.(NaturalLit); ok {
 		result := z
 		for i := 0; i < int(n); i++ {
@@ -120,16 +120,57 @@ func doubleShow(x Value) Value {
 	return nil
 }
 
+func optionalBuild(A0, g Value) Value {
+	var some Value = LambdaValue{
+		Label:  "a",
+		Domain: A0,
+		hasCall1: func(a Value) Value {
+			return SomeVal{a}
+		},
+	}
+	if app, ok := g.(AppValue); ok {
+		if app2, ok := app.Fn.(AppValue); ok {
+			if _, ok := app2.Fn.(optionalFoldVal); ok {
+				return app.Arg
+			}
+		}
+	}
+	if g, ok := g.(Callable3); ok {
+		if result := g.Call3(AppValue{Optional, A0}, some, AppValue{None, A0}); result != nil {
+			return result
+		}
+	}
+	return applyVal(g, AppValue{Optional, A0}, some, AppValue{None, A0})
+}
+
+func optionalFold(_, opt, _, some, none Value) Value {
+	if s, ok := opt.(SomeVal); ok {
+		if some, ok := some.(Callable1); ok {
+			return some.Call1(s.Val)
+		}
+		return AppValue{some, s.Val}
+	}
+	if app, ok := opt.(AppValue); ok {
+		if app.Fn == None {
+			return none
+		}
+	}
+	return nil
+}
+
 var (
 	NaturalBuildVal     = naturalBuildVal{naturalBuild}
 	NaturalEvenVal      = naturalEvenVal{naturalEven}
-	NaturalFoldVal      = naturalFoldVal{hasCall4{naturalFold}}
+	NaturalFoldVal      = naturalFoldVal{naturalFold}
 	NaturalIsZeroVal    = naturalIsZeroVal{naturalIsZero}
 	NaturalOddVal       = naturalOddVal{naturalOdd}
 	NaturalShowVal      = naturalShowVal{naturalShow}
-	NaturalSubtractVal  = naturalSubtractVal{hasCall2{naturalSubtract}}
+	NaturalSubtractVal  = naturalSubtractVal{naturalSubtract}
 	NaturalToIntegerVal = naturalToIntegerVal{naturalToInteger}
 	IntegerShowVal      = integerShowVal{integerShow}
 	IntegerToDoubleVal  = integerToDoubleVal{integerToDouble}
 	DoubleShowVal       = doubleShowVal{doubleShow}
+
+	OptionalBuildVal = optionalBuildVal{optionalBuild}
+	OptionalFoldVal  = optionalFoldVal{optionalFold}
 )
