@@ -84,6 +84,8 @@ type (
 
 	optionalBuildVal struct{ hasCall2 }
 	optionalFoldVal  struct{ hasCall5 }
+
+	textShowVal struct{ hasCall1 }
 )
 
 func (naturalBuildVal) isValue()     {}
@@ -102,6 +104,8 @@ func (doubleShowVal) isValue() {}
 
 func (optionalBuildVal) isValue() {}
 func (optionalFoldVal) isValue()  {}
+
+func (textShowVal) isValue() {}
 
 type (
 	BoundVar struct {
@@ -302,6 +306,11 @@ func (s hasCall1) Call4(a, b, c, d Value) Value {
 	return s.Call1(a).(Callable1).Call1(b).(Callable1).Call1(c).(Callable1).Call1(d)
 }
 
+// Call5 implements Callable5
+func (s hasCall1) Call5(a, b, c, d, e Value) Value {
+	return s.Call1(a).(Callable1).Call1(b).(Callable1).Call1(c).(Callable1).Call1(d).(Callable1).Call1(e)
+}
+
 // Callable2 is a function Value that can be called with one Value
 // argument.  Call2() may return nil if normalization isn't possible
 // (for example, `Natural/subtract x y` does not normalize)
@@ -327,6 +336,11 @@ func (s hasCall2) Call4(a, b, c, d Value) Value {
 	return s.Call2(a, b).(Callable1).Call1(c).(Callable1).Call1(d)
 }
 
+// Call5 implements Callable5
+func (s hasCall2) Call5(a, b, c, d, e Value) Value {
+	return s.Call2(a, b).(Callable1).Call1(c).(Callable1).Call1(d).(Callable1).Call1(e)
+}
+
 // Callable3 is a function Value that can be called with one Value
 // argument.  Call3() may return nil if normalization isn't possible.
 type Callable3 interface {
@@ -346,10 +360,15 @@ func (s hasCall3) Call4(a, b, c, d Value) Value {
 	return s.Call3(a, b, c).(Callable1).Call1(d)
 }
 
+// Call5 implements Callable5
+func (s hasCall3) Call5(a, b, c, d, e Value) Value {
+	return s.Call3(a, b, c).(Callable1).Call1(d).(Callable1).Call1(e)
+}
+
 // Callable4 is a function Value that can be called with one Value
 // argument.  Call4() may return nil if normalization isn't possible.
 type Callable4 interface {
-	Value
+	Callable5
 	Call4(Value, Value, Value, Value) Value
 }
 
@@ -358,6 +377,11 @@ type hasCall4 func(Value, Value, Value, Value) Value
 // Call4 implements Callable4
 func (s hasCall4) Call4(a, b, c, d Value) Value {
 	return s(a, b, c, d)
+}
+
+// Call5 implements Callable5
+func (s hasCall4) Call5(a, b, c, d, e Value) Value {
+	return s(a, b, c, d).(Callable1).Call1(e)
 }
 
 // Callable5 is a function Value that can be called with one Value
@@ -376,24 +400,8 @@ func (s hasCall5) Call5(a, b, c, d, e Value) Value {
 
 var (
 	_ Callable1 = LambdaValue{}
-	_ Callable1 = NaturalBuildVal
-	_ Callable1 = NaturalEvenVal
-	_ Callable1 = NaturalIsZeroVal
-	_ Callable1 = NaturalOddVal
-	_ Callable1 = NaturalShowVal
-	_ Callable1 = NaturalToIntegerVal
-	_ Callable1 = IntegerShowVal
-	_ Callable1 = IntegerToDoubleVal
-	_ Callable1 = DoubleShowVal
-
-	_ Callable2 = NaturalSubtractVal
-	_ Callable2 = OptionalBuildVal
 	_ Callable2 = LambdaValue{}
-
-	_ Callable4 = NaturalFoldVal
-	_ Callable4 = LambdaValue{}
-
-	_ Callable5 = OptionalFoldVal
+	_ Callable5 = LambdaValue{}
 )
 
 type (

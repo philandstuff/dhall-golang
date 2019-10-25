@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 )
 
 func naturalBuild(x Value) Value {
@@ -158,6 +159,44 @@ func optionalFold(_, opt, _, some, none Value) Value {
 	return nil
 }
 
+func textShow(a0 Value) Value {
+	if t, ok := a0.(TextLitVal); ok {
+		if t.Chunks == nil || len(t.Chunks) == 0 {
+			var out strings.Builder
+			out.WriteRune('"')
+			for _, r := range t.Suffix {
+				switch r {
+				case '"':
+					out.WriteString(`\"`)
+				case '$':
+					out.WriteString(`\u0024`)
+				case '\\':
+					out.WriteString(`\\`)
+				case '\b':
+					out.WriteString(`\b`)
+				case '\f':
+					out.WriteString(`\f`)
+				case '\n':
+					out.WriteString(`\n`)
+				case '\r':
+					out.WriteString(`\r`)
+				case '\t':
+					out.WriteString(`\t`)
+				default:
+					if r < 0x1f {
+						out.WriteString(fmt.Sprintf(`\u%04x`, r))
+					} else {
+						out.WriteRune(r)
+					}
+				}
+			}
+			out.WriteRune('"')
+			return TextLitVal{Suffix: out.String()}
+		}
+	}
+	return nil
+}
+
 var (
 	NaturalBuildVal     = naturalBuildVal{naturalBuild}
 	NaturalEvenVal      = naturalEvenVal{naturalEven}
@@ -173,4 +212,24 @@ var (
 
 	OptionalBuildVal = optionalBuildVal{optionalBuild}
 	OptionalFoldVal  = optionalFoldVal{optionalFold}
+
+	TextShowVal = textShowVal{textShow}
+
+	_ Callable1 = NaturalBuildVal
+	_ Callable1 = NaturalEvenVal
+	_ Callable1 = NaturalIsZeroVal
+	_ Callable1 = NaturalOddVal
+	_ Callable1 = NaturalShowVal
+	_ Callable1 = NaturalToIntegerVal
+	_ Callable1 = IntegerShowVal
+	_ Callable1 = IntegerToDoubleVal
+	_ Callable1 = DoubleShowVal
+	_ Callable1 = TextShowVal
+
+	_ Callable2 = NaturalSubtractVal
+	_ Callable2 = OptionalBuildVal
+
+	_ Callable4 = NaturalFoldVal
+
+	_ Callable5 = OptionalFoldVal
 )

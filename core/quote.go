@@ -51,6 +51,8 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return OptionalBuild
 	case optionalFoldVal:
 		return OptionalFold
+	case textShowVal:
+		return TextShow
 	case FreeVar:
 		return v
 	case LocalVar:

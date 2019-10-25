@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Env map[string][]Value
@@ -48,6 +49,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return OptionalBuildVal
 		case OptionalFold:
 			return OptionalFoldVal
+		case TextShow:
+			return TextShowVal
 		default:
 			return t
 		}
@@ -146,17 +149,37 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case DoubleLit:
 		return t
 	case TextLitTerm:
+		var str strings.Builder
 		var newChunks ChunkVals
 		for _, chunk := range t.Chunks {
-			newChunks = append(newChunks, ChunkVal{
-				Prefix: chunk.Prefix,
-				Expr:   evalWith(chunk.Expr, e, shouldAlphaNormalize),
-			})
+			str.WriteString(chunk.Prefix)
+			normExpr := evalWith(chunk.Expr, e, shouldAlphaNormalize)
+			if text, ok := normExpr.(TextLitVal); ok {
+				if len(text.Chunks) != 0 {
+					// first chunk gets the rest of str
+					str.WriteString(text.Chunks[0].Prefix)
+					newChunks = append(newChunks,
+						ChunkVal{Prefix: str.String(), Expr: text.Chunks[0].Expr})
+					newChunks = append(newChunks,
+						text.Chunks[1:]...)
+					str.Reset()
+				}
+				str.WriteString(text.Suffix)
+
+			} else {
+				newChunks = append(newChunks, ChunkVal{Prefix: str.String(), Expr: normExpr})
+				str.Reset()
+			}
 		}
-		return TextLitVal{
-			Chunks: newChunks,
-			Suffix: t.Suffix,
+		str.WriteString(t.Suffix)
+		newSuffix := str.String()
+
+		// Special case: "${<expr>}" → <expr>
+		if len(newChunks) == 1 && newChunks[0].Prefix == "" && newSuffix == "" {
+			return newChunks[0].Expr
 		}
+
+		return TextLitVal{Chunks: newChunks, Suffix: newSuffix}
 	case BoolLit:
 		return t
 	case IfTerm:
