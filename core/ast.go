@@ -226,14 +226,6 @@ func Apply(fn Term, args ...Term) Term {
 	return out
 }
 
-func applyVal(fn Value, args ...Value) Value {
-	out := fn
-	for _, arg := range args {
-		out = AppValue{Fn: out, Arg: arg}
-	}
-	return out
-}
-
 // Opcodes for use in the OpTerm type
 // These numbers match the binary encoding label numbers
 const (

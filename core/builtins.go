@@ -21,12 +21,7 @@ func naturalBuild(x Value) Value {
 			return app.Arg
 		}
 	}
-	if g, ok := x.(Callable3); ok {
-		if result := g.Call3(Natural, succ, NaturalLit(0)); result != nil {
-			return result
-		}
-	}
-	return applyVal(x, Natural, succ, NaturalLit(0))
+	return applyVal3(x, Natural, succ, NaturalLit(0))
 }
 
 func naturalEven(x Value) Value {
@@ -136,12 +131,7 @@ func optionalBuild(A0, g Value) Value {
 			}
 		}
 	}
-	if g, ok := g.(Callable3); ok {
-		if result := g.Call3(AppValue{Optional, A0}, some, AppValue{None, A0}); result != nil {
-			return result
-		}
-	}
-	return applyVal(g, AppValue{Optional, A0}, some, AppValue{None, A0})
+	return applyVal3(g, AppValue{Optional, A0}, some, AppValue{None, A0})
 }
 
 func optionalFold(_, opt, _, some, none Value) Value {

@@ -99,40 +99,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case AppTerm:
 		fn := evalWith(t.Fn, e, shouldAlphaNormalize)
 		arg := evalWith(t.Arg, e, shouldAlphaNormalize)
-		if f, ok := fn.(Callable1); ok {
-			if result := f.Call1(arg); result != nil {
-				return result
-			}
-		}
-		if fn, ok := fn.(AppValue); ok {
-			if f, ok := fn.Fn.(Callable2); ok {
-				if result := f.Call2(fn.Arg, arg); result != nil {
-					return result
-				}
-			}
-			if fn2, ok := fn.Fn.(AppValue); ok {
-				if f, ok := fn2.Fn.(Callable3); ok {
-					if result := f.Call3(fn2.Arg, fn.Arg, arg); result != nil {
-						return result
-					}
-				}
-				if fn3, ok := fn2.Fn.(AppValue); ok {
-					if f, ok := fn3.Fn.(Callable4); ok {
-						if result := f.Call4(fn3.Arg, fn2.Arg, fn.Arg, arg); result != nil {
-							return result
-						}
-					}
-					if fn4, ok := fn3.Fn.(AppValue); ok {
-						if f, ok := fn4.Fn.(Callable5); ok {
-							if result := f.Call5(fn4.Arg, fn3.Arg, fn2.Arg, fn.Arg, arg); result != nil {
-								return result
-							}
-						}
-					}
-				}
-			}
-		}
-		return AppValue{Fn: fn, Arg: arg}
+		return applyVal1(fn, arg)
 	case Let:
 		newEnv := Env{}
 		for k, v := range e {
@@ -283,4 +250,61 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	default:
 		panic(fmt.Sprint("unknown term type", t))
 	}
+}
+
+func applyVal1(fn Value, arg Value) Value {
+	if f, ok := fn.(Callable1); ok {
+		if result := f.Call1(arg); result != nil {
+			return result
+		}
+	}
+	if fn, ok := fn.(AppValue); ok {
+		return applyVal2(fn.Fn, fn.Arg, arg)
+	}
+	return AppValue{Fn: fn, Arg: arg}
+}
+
+func applyVal2(fn Value, a, b Value) Value {
+	if f, ok := fn.(Callable2); ok {
+		if result := f.Call2(a, b); result != nil {
+			return result
+		}
+	}
+	if fn, ok := fn.(AppValue); ok {
+		return applyVal3(fn.Fn, fn.Arg, a, b)
+	}
+	return AppValue{AppValue{fn, a}, b}
+}
+
+func applyVal3(fn Value, a, b, c Value) Value {
+	if f, ok := fn.(Callable3); ok {
+		if result := f.Call3(a, b, c); result != nil {
+			return result
+		}
+	}
+	if fn, ok := fn.(AppValue); ok {
+		return applyVal4(fn.Fn, fn.Arg, a, b, c)
+	}
+	return AppValue{AppValue{AppValue{fn, a}, b}, c}
+}
+
+func applyVal4(fn Value, a, b, c, d Value) Value {
+	if f, ok := fn.(Callable4); ok {
+		if result := f.Call4(a, b, c, d); result != nil {
+			return result
+		}
+	}
+	if fn, ok := fn.(AppValue); ok {
+		return applyVal5(fn.Fn, fn.Arg, a, b, c, d)
+	}
+	return AppValue{AppValue{AppValue{AppValue{fn, a}, b}, c}, d}
+}
+
+func applyVal5(fn Value, a, b, c, d, e Value) Value {
+	if f, ok := fn.(Callable5); ok {
+		if result := f.Call5(a, b, c, d, e); result != nil {
+			return result
+		}
+	}
+	return AppValue{AppValue{AppValue{AppValue{AppValue{fn, a}, b}, c}, d}, e}
 }
