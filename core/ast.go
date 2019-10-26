@@ -86,6 +86,14 @@ type (
 	optionalFoldVal  struct{ hasCall5 }
 
 	textShowVal struct{ hasCall1 }
+
+	listBuildVal   struct{ hasCall2 }
+	listFoldVal    struct{ hasCall5 }
+	listLengthVal  struct{ hasCall2 }
+	listHeadVal    struct{ hasCall2 }
+	listLastVal    struct{ hasCall2 }
+	listIndexedVal struct{ hasCall2 }
+	listReverseVal struct{ hasCall2 }
 )
 
 func (naturalBuildVal) isValue()     {}
@@ -106,6 +114,14 @@ func (optionalBuildVal) isValue() {}
 func (optionalFoldVal) isValue()  {}
 
 func (textShowVal) isValue() {}
+
+func (listBuildVal) isValue()   {}
+func (listFoldVal) isValue()    {}
+func (listLengthVal) isValue()  {}
+func (listHeadVal) isValue()    {}
+func (listLastVal) isValue()    {}
+func (listIndexedVal) isValue() {}
+func (listReverseVal) isValue() {}
 
 type (
 	BoundVar struct {

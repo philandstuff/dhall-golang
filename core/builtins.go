@@ -187,6 +187,112 @@ func textShow(a0 Value) Value {
 	return nil
 }
 
+func listBuild(A0, g Value) Value {
+	var cons Value = LambdaValue{
+		Label:  "a",
+		Domain: A0,
+		hasCall1: func(a Value) Value {
+			return LambdaValue{
+				Label:  "as",
+				Domain: AppValue{List, A0},
+				hasCall1: func(as Value) Value {
+					if _, ok := as.(EmptyListVal); ok {
+						return NonEmptyListVal{a}
+					}
+					if as, ok := as.(NonEmptyListVal); ok {
+						return append(NonEmptyListVal{a}, as...)
+					}
+					return OpValue{OpCode: ListAppendOp, L: NonEmptyListVal{a}, R: as}
+				},
+			}
+		},
+	}
+	if app, ok := g.(AppValue); ok {
+		if app2, ok := app.Fn.(AppValue); ok {
+			if _, ok := app2.Fn.(listFoldVal); ok {
+				return app.Arg
+			}
+		}
+	}
+	return applyVal3(g, AppValue{List, A0}, cons, EmptyListVal{AppValue{List, A0}})
+}
+
+func listFold(_, l, _, cons, empty Value) Value {
+	if _, ok := l.(EmptyListVal); ok {
+		return empty
+	}
+	if l, ok := l.(NonEmptyListVal); ok {
+		result := empty
+		for i := len(l) - 1; i >= 0; i-- {
+			result = applyVal2(cons, l[i], result)
+		}
+		return result
+	}
+	return nil
+}
+
+func listLength(_, l Value) Value {
+	if _, ok := l.(EmptyListVal); ok {
+		return NaturalLit(0)
+	}
+	if l, ok := l.(NonEmptyListVal); ok {
+		return NaturalLit(len(l))
+	}
+	return nil
+}
+
+func listHead(T, l Value) Value {
+	if _, ok := l.(EmptyListVal); ok {
+		return AppValue{None, T}
+	}
+	if l, ok := l.(NonEmptyListVal); ok {
+		return SomeVal{l[0]}
+	}
+	return nil
+}
+
+func listLast(T, l Value) Value {
+	if _, ok := l.(EmptyListVal); ok {
+		return AppValue{None, T}
+	}
+	if l, ok := l.(NonEmptyListVal); ok {
+		return SomeVal{l[len(l)-1]}
+	}
+	return nil
+}
+
+func listIndexed(T, l Value) Value {
+	if _, ok := l.(EmptyListVal); ok {
+		return EmptyListVal{AppValue{
+			List,
+			RecordTypeVal{"index": Natural, "value": T},
+		}}
+	}
+	if l, ok := l.(NonEmptyListVal); ok {
+		var result []Value
+		for i, v := range l {
+			result = append(result,
+				RecordLitVal{"index": NaturalLit(i), "value": v})
+		}
+		return NonEmptyListVal(result)
+	}
+	return nil
+}
+
+func listReverse(T, l Value) Value {
+	if _, ok := l.(EmptyListVal); ok {
+		return l
+	}
+	if l, ok := l.(NonEmptyListVal); ok {
+		result := make([]Value, len(l))
+		for i, v := range l {
+			result[len(l)-i-1] = v
+		}
+		return NonEmptyListVal(result)
+	}
+	return nil
+}
+
 var (
 	NaturalBuildVal     = naturalBuildVal{naturalBuild}
 	NaturalEvenVal      = naturalEvenVal{naturalEven}
@@ -204,6 +310,14 @@ var (
 	OptionalFoldVal  = optionalFoldVal{optionalFold}
 
 	TextShowVal = textShowVal{textShow}
+
+	ListBuildVal   = listBuildVal{listBuild}
+	ListFoldVal    = listFoldVal{listFold}
+	ListLengthVal  = listLengthVal{listLength}
+	ListHeadVal    = listHeadVal{listHead}
+	ListLastVal    = listLastVal{listLast}
+	ListIndexedVal = listIndexedVal{listIndexed}
+	ListReverseVal = listReverseVal{listReverse}
 
 	_ Callable1 = NaturalBuildVal
 	_ Callable1 = NaturalEvenVal

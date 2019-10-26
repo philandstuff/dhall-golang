@@ -51,6 +51,20 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return OptionalFoldVal
 		case TextShow:
 			return TextShowVal
+		case ListBuild:
+			return ListBuildVal
+		case ListFold:
+			return ListFoldVal
+		case ListHead:
+			return ListHeadVal
+		case ListIndexed:
+			return ListIndexedVal
+		case ListLength:
+			return ListLengthVal
+		case ListLast:
+			return ListLastVal
+		case ListReverse:
+			return ListReverseVal
 		default:
 			return t
 		}
@@ -218,7 +232,11 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case EmptyList:
 		return EmptyListVal{Type: evalWith(t.Type, e, shouldAlphaNormalize)}
 	case NonEmptyList:
-		return TextLitVal{Suffix: "NonEmptyList unimplemented"}
+		result := make([]Value, len(t))
+		for i, t := range t {
+			result[i] = evalWith(t, e, shouldAlphaNormalize)
+		}
+		return NonEmptyListVal(result)
 	case Some:
 		return SomeVal{evalWith(t.Val, e, shouldAlphaNormalize)}
 	case RecordType:
@@ -236,7 +254,10 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case ToMap:
 		return TextLitVal{Suffix: "ToMap unimplemented"}
 	case Field:
-		return TextLitVal{Suffix: "Field unimplemented"}
+		return FieldVal{
+			Record:    evalWith(t.Record, e, shouldAlphaNormalize),
+			FieldName: t.FieldName,
+		}
 	case Project:
 		return TextLitVal{Suffix: "Project unimplemented"}
 	case ProjectType:

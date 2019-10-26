@@ -53,6 +53,20 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return OptionalFold
 	case textShowVal:
 		return TextShow
+	case listBuildVal:
+		return ListBuild
+	case listFoldVal:
+		return ListFold
+	case listHeadVal:
+		return ListHead
+	case listIndexedVal:
+		return ListIndexed
+	case listLengthVal:
+		return ListLength
+	case listLastVal:
+		return ListLast
+	case listReverseVal:
+		return ListReverse
 	case FreeVar:
 		return v
 	case LocalVar:
@@ -138,7 +152,10 @@ func quoteWith(ctx quoteContext, v Value) Term {
 	case ToMapVal:
 		return TextLitTerm{Suffix: "quote ToMapVal unimplemented"}
 	case FieldVal:
-		return TextLitTerm{Suffix: "FieldVal unimplemented"}
+		return Field{
+			Record:    quoteWith(ctx, v.Record),
+			FieldName: v.FieldName,
+		}
 	case ProjectVal:
 		return TextLitTerm{Suffix: "ProjectVal unimplemented"}
 	case UnionTypeVal:
