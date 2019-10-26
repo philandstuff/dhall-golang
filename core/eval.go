@@ -254,8 +254,12 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case ToMap:
 		return TextLitVal{Suffix: "ToMap unimplemented"}
 	case Field:
+		r := evalWith(t.Record, e, shouldAlphaNormalize)
+		if r, ok := r.(RecordLitVal); ok {
+			return r[t.FieldName]
+		}
 		return FieldVal{
-			Record:    evalWith(t.Record, e, shouldAlphaNormalize),
+			Record:    r,
 			FieldName: t.FieldName,
 		}
 	case Project:

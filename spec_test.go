@@ -82,7 +82,7 @@ var expectedFailures = []string{
 	"TestTypechecks/simple/merge",
 	"TestTypechecks/simple/mixedFieldAccess",
 	"TestTypechecks/simple/unions",
-	"TestNormalization/haskell-tutorial/access",
+	"TestNormalization/haskell-tutorial/access/1A",
 	"TestNormalization/haskell-tutorial/combine",
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/haskell-tutorial/projection",
@@ -92,12 +92,15 @@ var expectedFailures = []string{
 	"TestNormalization/simple/letenum",
 	"TestNormalization/simple/notEqual",
 	"TestNormalization/simple/sort",
-	"TestNormalization/simplifications",
+	"TestNormalization/simplifications/and",
+	"TestNormalization/simplifications/eq",
+	"TestNormalization/simplifications/ne",
+	"TestNormalization/simplifications/or",
+	"TestNormalization/simplifications/rightBiased",
 	"TestNormalization/unit/Assert",
 	"TestNormalization/unit/EmptyAlternative",
 	"TestNormalization/unit/EmptyToMap",
 	"TestNormalization/unit/Equiv",
-	"TestNormalization/unit/ListNormalizeTypeAnnotation", // needs record selection
 	"TestNormalization/unit/Merge",
 	"TestNormalization/unit/OperatorOr",
 	"TestNormalization/unit/OperatorAnd",
@@ -106,7 +109,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/OperatorListConcat",
 	"TestNormalization/unit/OperatorTextConcat",
 	"TestNormalization/unit/RecordProjection",
-	"TestNormalization/unit/RecordSelection",
 	"TestNormalization/unit/Recursive",
 	"TestNormalization/unit/RightBiased",
 	"TestNormalization/unit/ToMap",
@@ -118,7 +120,7 @@ func pass(t *testing.T) {
 	t.Helper()
 	for _, prefix := range expectedFailures {
 		if strings.HasPrefix(t.Name(), prefix) {
-			t.Log("Expected failure, but actually passed")
+			t.Fatal("Expected failure, but actually passed")
 		}
 	}
 }
