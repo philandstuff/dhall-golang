@@ -225,7 +225,10 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			FieldName: v.FieldName,
 		}
 	case ProjectVal:
-		return TextLitTerm{Suffix: "ProjectVal unimplemented"}
+		return Project{
+			Record:     quoteWith(ctx, v.Record),
+			FieldNames: v.FieldNames,
+		}
 	case UnionTypeVal:
 		return TextLitTerm{Suffix: "UnionTypeVal unimplemented"}
 	case MergeVal:

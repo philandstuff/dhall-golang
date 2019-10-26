@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -255,6 +256,13 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		return TextLitVal{Suffix: "ToMap unimplemented"}
 	case Field:
 		r := evalWith(t.Record, e, shouldAlphaNormalize)
+		for {
+			proj, ok := r.(ProjectVal)
+			if !ok {
+				break
+			}
+			r = proj.Record
+		}
 		if r, ok := r.(RecordLitVal); ok {
 			return r[t.FieldName]
 		}
@@ -263,9 +271,37 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			FieldName: t.FieldName,
 		}
 	case Project:
-		return TextLitVal{Suffix: "Project unimplemented"}
+		r := evalWith(t.Record, e, shouldAlphaNormalize)
+		fieldNames := t.FieldNames
+		sort.Strings(fieldNames)
+		if r, ok := r.(RecordLitVal); ok {
+			result := make(RecordLitVal)
+			for _, k := range fieldNames {
+				result[k] = r[k]
+			}
+			return result
+		}
+		if len(fieldNames) == 0 {
+			return RecordLitVal{}
+		}
+		return ProjectVal{
+			Record:     r,
+			FieldNames: fieldNames,
+		}
 	case ProjectType:
-		return TextLitVal{Suffix: "ProjectType unimplemented"}
+		// if `t` typechecks, `t.Selector` has to eval to a
+		// RecordTypeVal, so this is safe
+		s := evalWith(t.Selector, e, shouldAlphaNormalize).(RecordTypeVal)
+		fieldNames := make([]string, 0, len(s))
+		for fieldName := range s {
+			fieldNames = append(fieldNames, fieldName)
+		}
+		return evalWith(
+			Project{
+				Record:     t.Record,
+				FieldNames: fieldNames,
+			},
+			e, shouldAlphaNormalize)
 	case UnionType:
 		return TextLitVal{Suffix: "UnionType unimplemented"}
 	case Merge:
