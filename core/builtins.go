@@ -187,14 +187,17 @@ func textShow(a0 Value) Value {
 	return nil
 }
 
-func listBuild(A0, g Value) Value {
+func (l listBuildVal) Call1(x Value) Value {
+	if l.typ == nil {
+		return listBuildVal{typ: x}
+	}
 	var cons Value = LambdaValue{
 		Label:  "a",
-		Domain: A0,
+		Domain: l.typ,
 		hasCall1: func(a Value) Value {
 			return LambdaValue{
 				Label:  "as",
-				Domain: AppValue{List, A0},
+				Domain: AppValue{List, l.typ},
 				hasCall1: func(as Value) Value {
 					if _, ok := as.(EmptyListVal); ok {
 						return NonEmptyListVal{a}
@@ -207,6 +210,7 @@ func listBuild(A0, g Value) Value {
 			}
 		},
 	}
+	g := x
 	if app, ok := g.(AppValue); ok {
 		if app2, ok := app.Fn.(AppValue); ok {
 			if _, ok := app2.Fn.(listFoldVal); ok {
@@ -214,17 +218,39 @@ func listBuild(A0, g Value) Value {
 			}
 		}
 	}
-	return applyVal3(g, AppValue{List, A0}, cons, EmptyListVal{AppValue{List, A0}})
+	return applyVal3(g, AppValue{List, l.typ}, cons, EmptyListVal{AppValue{List, l.typ}})
 }
 
-func listFold(_, l, _, cons, empty Value) Value {
-	if _, ok := l.(EmptyListVal); ok {
+func (l listFoldVal) Call1(x Value) Value {
+	if l.typ1 == nil {
+		return listFoldVal{typ1: x}
+	}
+	if l.list == nil {
+		return listFoldVal{typ1: l.typ1, list: x}
+	}
+	if l.typ2 == nil {
+		return listFoldVal{
+			typ1: l.typ1,
+			list: l.list,
+			typ2: x,
+		}
+	}
+	if l.cons == nil {
+		return listFoldVal{
+			typ1: l.typ1,
+			list: l.list,
+			typ2: l.typ2,
+			cons: x,
+		}
+	}
+	empty := x
+	if _, ok := l.list.(EmptyListVal); ok {
 		return empty
 	}
-	if l, ok := l.(NonEmptyListVal); ok {
+	if list, ok := l.list.(NonEmptyListVal); ok {
 		result := empty
-		for i := len(l) - 1; i >= 0; i-- {
-			result = applyVal2(cons, l[i], result)
+		for i := len(list) - 1; i >= 0; i-- {
+			result = applyVal2(l.cons, list[i], result)
 		}
 		return result
 	}
@@ -311,8 +337,8 @@ var (
 
 	TextShowVal = textShowVal{textShow}
 
-	ListBuildVal   = listBuildVal{listBuild}
-	ListFoldVal    = listFoldVal{listFold}
+	ListBuildVal   = listBuildVal{}
+	ListFoldVal    = listFoldVal{}
 	ListLengthVal  = listLengthVal{listLength}
 	ListHeadVal    = listHeadVal{listHead}
 	ListLastVal    = listLastVal{listLast}

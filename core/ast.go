@@ -87,8 +87,17 @@ type (
 
 	textShowVal struct{ hasCall1 }
 
-	listBuildVal   struct{ hasCall2 }
-	listFoldVal    struct{ hasCall5 }
+	listBuildVal struct {
+		typ Value
+		// fn  Value
+	}
+	listFoldVal struct {
+		typ1 Value
+		list Value
+		typ2 Value
+		cons Value
+		// empty Value
+	}
 	listLengthVal  struct{ hasCall2 }
 	listHeadVal    struct{ hasCall2 }
 	listLastVal    struct{ hasCall2 }
