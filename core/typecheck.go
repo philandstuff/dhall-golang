@@ -205,7 +205,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if !judgmentallyEqual(expectedType, actualType) {
 			return nil, mkTypeError(typeMismatch(expectedType, actualType))
 		}
-		bodyTypeVal := Eval(piType).(PiValue).Range(Eval(argType))
+		bodyTypeVal := Eval(piType).(PiValue).Range(Eval(t.Arg))
 		return Quote(bodyTypeVal), nil
 	case LambdaTerm:
 		pi := PiTerm{Label: t.Label, Type: t.Type}
