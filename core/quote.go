@@ -1,6 +1,6 @@
 package core
 
-// Quote(v) takes the Value v and turns it back into a Term.  The `i` is the
+// Quote takes the Value v and turns it back into a Term.  The `i` is the
 // first fresh variable index named `quote`.  Normally this will be 0 if there
 // are no variables called `quote` in the context.
 func Quote(v Value) Term {
@@ -30,7 +30,19 @@ func quoteWith(ctx quoteContext, v Value) Term {
 	case naturalEvenVal:
 		return NaturalEven
 	case naturalFoldVal:
-		return NaturalFold
+		var result Term = NaturalFold
+		if v.n == nil {
+			return result
+		}
+		result = AppTerm{result, quoteWith(ctx, v.n)}
+		if v.typ == nil {
+			return result
+		}
+		result = AppTerm{result, quoteWith(ctx, v.typ)}
+		if v.succ == nil {
+			return result
+		}
+		return AppTerm{result, quoteWith(ctx, v.succ)}
 	case naturalIsZeroVal:
 		return NaturalIsZero
 	case naturalOddVal:
@@ -38,6 +50,9 @@ func quoteWith(ctx quoteContext, v Value) Term {
 	case naturalShowVal:
 		return NaturalShow
 	case naturalSubtractVal:
+		if v.a != nil {
+			return AppTerm{NaturalSubtract, quoteWith(ctx, v.a)}
+		}
 		return NaturalSubtract
 	case naturalToIntegerVal:
 		return NaturalToInteger
@@ -48,24 +63,77 @@ func quoteWith(ctx quoteContext, v Value) Term {
 	case doubleShowVal:
 		return DoubleShow
 	case optionalBuildVal:
+		if v.typ != nil {
+			return AppTerm{OptionalBuild, quoteWith(ctx, v.typ)}
+		}
 		return OptionalBuild
 	case optionalFoldVal:
-		return OptionalFold
+		var result Term = OptionalFold
+		if v.typ1 == nil {
+			return result
+		}
+		result = AppTerm{result, quoteWith(ctx, v.typ1)}
+		if v.opt == nil {
+			return result
+		}
+		result = AppTerm{result, quoteWith(ctx, v.opt)}
+		if v.typ2 == nil {
+			return result
+		}
+		result = AppTerm{result, quoteWith(ctx, v.typ2)}
+		if v.some == nil {
+			return result
+		}
+		return AppTerm{result, quoteWith(ctx, v.some)}
 	case textShowVal:
 		return TextShow
 	case listBuildVal:
+		if v.typ != nil {
+			return AppTerm{ListBuild, quoteWith(ctx, v.typ)}
+		}
 		return ListBuild
 	case listFoldVal:
-		return ListFold
+		var result Term = ListFold
+		if v.typ1 == nil {
+			return result
+		}
+		result = AppTerm{result, quoteWith(ctx, v.typ1)}
+		if v.list == nil {
+			return result
+		}
+		result = AppTerm{result, quoteWith(ctx, v.list)}
+		if v.typ2 == nil {
+			return result
+		}
+		result = AppTerm{result, quoteWith(ctx, v.typ2)}
+		if v.cons == nil {
+			return result
+		}
+		return AppTerm{result, quoteWith(ctx, v.cons)}
 	case listHeadVal:
+		if v.typ != nil {
+			return AppTerm{ListHead, quoteWith(ctx, v.typ)}
+		}
 		return ListHead
 	case listIndexedVal:
+		if v.typ != nil {
+			return AppTerm{ListIndexed, quoteWith(ctx, v.typ)}
+		}
 		return ListIndexed
 	case listLengthVal:
+		if v.typ != nil {
+			return AppTerm{ListLength, quoteWith(ctx, v.typ)}
+		}
 		return ListLength
 	case listLastVal:
+		if v.typ != nil {
+			return AppTerm{ListLast, quoteWith(ctx, v.typ)}
+		}
 		return ListLast
 	case listReverseVal:
+		if v.typ != nil {
+			return AppTerm{ListReverse, quoteWith(ctx, v.typ)}
+		}
 		return ListReverse
 	case FreeVar:
 		return v

@@ -135,16 +135,24 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 	case FreeVar:
 		return t
 	case LambdaTerm:
+		j := i
+		if t.Label == local.Name {
+			j = i + 1
+		}
 		return LambdaTerm{
 			Label: t.Label,
 			Type:  rebindAtLevel(i, local, t.Type),
-			Body:  rebindAtLevel(i+1, local, t.Body),
+			Body:  rebindAtLevel(j, local, t.Body),
 		}
 	case PiTerm:
+		j := i
+		if t.Label == local.Name {
+			j = i + 1
+		}
 		return PiTerm{
 			Label: t.Label,
 			Type:  rebindAtLevel(i, local, t.Type),
-			Body:  rebindAtLevel(i+1, local, t.Body),
+			Body:  rebindAtLevel(j, local, t.Body),
 		}
 	case AppTerm:
 		return AppTerm{

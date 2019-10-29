@@ -68,24 +68,38 @@ const (
 )
 
 type (
-	naturalBuildVal     struct{ hasCall1 }
-	naturalEvenVal      struct{ hasCall1 }
-	naturalFoldVal      struct{ hasCall4 }
-	naturalIsZeroVal    struct{ hasCall1 }
-	naturalOddVal       struct{ hasCall1 }
-	naturalShowVal      struct{ hasCall1 }
-	naturalSubtractVal  struct{ hasCall2 }
-	naturalToIntegerVal struct{ hasCall1 }
+	naturalBuildVal struct{}
+	naturalEvenVal  struct{}
+	naturalFoldVal  struct {
+		n    Value
+		typ  Value
+		succ Value
+		// zero Value
+	}
+	naturalIsZeroVal   struct{}
+	naturalOddVal      struct{}
+	naturalShowVal     struct{}
+	naturalSubtractVal struct {
+		a Value
+		// b Value
+	}
+	naturalToIntegerVal struct{}
 
-	integerShowVal     struct{ hasCall1 }
-	integerToDoubleVal struct{ hasCall1 }
+	integerShowVal     struct{}
+	integerToDoubleVal struct{}
 
-	doubleShowVal struct{ hasCall1 }
+	doubleShowVal struct{}
 
-	optionalBuildVal struct{ hasCall2 }
-	optionalFoldVal  struct{ hasCall5 }
+	optionalBuildVal struct{ typ Value }
+	optionalFoldVal  struct {
+		typ1 Value
+		opt  Value
+		typ2 Value
+		some Value
+		// none Value
+	}
 
-	textShowVal struct{ hasCall1 }
+	textShowVal struct{}
 
 	listBuildVal struct {
 		typ Value
@@ -98,11 +112,11 @@ type (
 		cons Value
 		// empty Value
 	}
-	listLengthVal  struct{ hasCall2 }
-	listHeadVal    struct{ hasCall2 }
-	listLastVal    struct{ hasCall2 }
-	listIndexedVal struct{ hasCall2 }
-	listReverseVal struct{ hasCall2 }
+	listLengthVal  struct{ typ Value }
+	listHeadVal    struct{ typ Value }
+	listLastVal    struct{ typ Value }
+	listIndexedVal struct{ typ Value }
+	listReverseVal struct{ typ Value }
 )
 
 func (naturalBuildVal) isValue()     {}
@@ -297,7 +311,7 @@ func TextAppend(l, r Term) Term {
 // argument.  Call1() may return nil if normalization isn't possible
 // (for example, `Natural/even x` does not normalize)
 type Callable1 interface {
-	Callable2
+	Value
 	Call1(Value) Value
 }
 
@@ -308,117 +322,8 @@ func (s hasCall1) Call1(a Value) Value {
 	return s(a)
 }
 
-// Call2 implements Callable2
-func (s hasCall1) Call2(a, b Value) Value {
-	return s.Call1(a).(Callable1).Call1(b)
-}
-
-// Call3 implements Callable3
-func (s hasCall1) Call3(a, b, c Value) Value {
-	return s.Call1(a).(Callable1).Call1(b).(Callable1).Call1(c)
-}
-
-// Call4 implements Callable4
-func (s hasCall1) Call4(a, b, c, d Value) Value {
-	return s.Call1(a).(Callable1).Call1(b).(Callable1).Call1(c).(Callable1).Call1(d)
-}
-
-// Call5 implements Callable5
-func (s hasCall1) Call5(a, b, c, d, e Value) Value {
-	return s.Call1(a).(Callable1).Call1(b).(Callable1).Call1(c).(Callable1).Call1(d).(Callable1).Call1(e)
-}
-
-// Callable2 is a function Value that can be called with one Value
-// argument.  Call2() may return nil if normalization isn't possible
-// (for example, `Natural/subtract x y` does not normalize)
-type Callable2 interface {
-	Callable3
-	Call2(Value, Value) Value
-}
-
-type hasCall2 func(Value, Value) Value
-
-// Call2 implements Callable2
-func (s hasCall2) Call2(a, b Value) Value {
-	return s(a, b)
-}
-
-// Call3 implements Callable3
-func (s hasCall2) Call3(a, b, c Value) Value {
-	return s.Call2(a, b).(Callable1).Call1(c)
-}
-
-// Call4 implements Callable4
-func (s hasCall2) Call4(a, b, c, d Value) Value {
-	return s.Call2(a, b).(Callable1).Call1(c).(Callable1).Call1(d)
-}
-
-// Call5 implements Callable5
-func (s hasCall2) Call5(a, b, c, d, e Value) Value {
-	return s.Call2(a, b).(Callable1).Call1(c).(Callable1).Call1(d).(Callable1).Call1(e)
-}
-
-// Callable3 is a function Value that can be called with one Value
-// argument.  Call3() may return nil if normalization isn't possible.
-type Callable3 interface {
-	Callable4
-	Call3(Value, Value, Value) Value
-}
-
-type hasCall3 func(Value, Value, Value) Value
-
-// Call3 implements Callable3
-func (s hasCall3) Call3(a, b, c Value) Value {
-	return s(a, b, c)
-}
-
-// Call4 implements Callable4
-func (s hasCall3) Call4(a, b, c, d Value) Value {
-	return s.Call3(a, b, c).(Callable1).Call1(d)
-}
-
-// Call5 implements Callable5
-func (s hasCall3) Call5(a, b, c, d, e Value) Value {
-	return s.Call3(a, b, c).(Callable1).Call1(d).(Callable1).Call1(e)
-}
-
-// Callable4 is a function Value that can be called with one Value
-// argument.  Call4() may return nil if normalization isn't possible.
-type Callable4 interface {
-	Callable5
-	Call4(Value, Value, Value, Value) Value
-}
-
-type hasCall4 func(Value, Value, Value, Value) Value
-
-// Call4 implements Callable4
-func (s hasCall4) Call4(a, b, c, d Value) Value {
-	return s(a, b, c, d)
-}
-
-// Call5 implements Callable5
-func (s hasCall4) Call5(a, b, c, d, e Value) Value {
-	return s(a, b, c, d).(Callable1).Call1(e)
-}
-
-// Callable5 is a function Value that can be called with one Value
-// argument.  Call5() may return nil if normalization isn't possible.
-type Callable5 interface {
-	Value
-	Call5(Value, Value, Value, Value, Value) Value
-}
-
-type hasCall5 func(Value, Value, Value, Value, Value) Value
-
-// Call5 implements Callable5
-func (s hasCall5) Call5(a, b, c, d, e Value) Value {
-	return s(a, b, c, d, e)
-}
-
 var (
 	_ Callable1 = LambdaValue{}
-	_ Callable2 = LambdaValue{}
-	_ Callable5 = LambdaValue{}
 )
 
 type (
