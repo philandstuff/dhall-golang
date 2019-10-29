@@ -307,31 +307,29 @@ func TextAppend(l, r Term) Term {
 	return OpTerm{OpCode: TextAppendOp, L: l, R: r}
 }
 
-// Callable1 is a function Value that can be called with one Value
-// argument.  Call1() may return nil if normalization isn't possible
+// Callable is a function Value that can be called with one Value
+// argument.  Call() may return nil if normalization isn't possible
 // (for example, `Natural/even x` does not normalize)
-type Callable1 interface {
+type Callable interface {
 	Value
-	Call1(Value) Value
+	Call(Value) Value
 }
 
-type hasCall1 func(Value) Value
-
-// Call1 implements Callable1
-func (s hasCall1) Call1(a Value) Value {
-	return s(a)
+// Call implements Callable
+func (l LambdaValue) Call(a Value) Value {
+	return l.Fn(a)
 }
 
 var (
-	_ Callable1 = LambdaValue{}
+	_ Callable = LambdaValue{}
 )
 
 type (
 	// A LambdaValue is a go function
 	LambdaValue struct {
-		hasCall1
 		Label  string
 		Domain Value
+		Fn     func(Value) Value
 	}
 
 	// A PiValue is: the type of the domain, and a go function capturing the

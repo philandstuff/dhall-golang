@@ -145,7 +145,7 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			Index: ctx[v.Name] - v.Index - 1,
 		}
 	case LambdaValue:
-		bodyVal := v.Call1(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
+		bodyVal := v.Call(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return LambdaTerm{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),

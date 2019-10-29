@@ -56,7 +56,7 @@ func argNType(fn core.LambdaValue, n int) core.Value {
 	if n == 0 {
 		return fn.Domain
 	}
-	return argNType(fn.Call1(core.FreeVar{}).(core.LambdaValue), n-1)
+	return argNType(fn.Call(core.FreeVar{}).(core.LambdaValue), n-1)
 }
 
 func dhallShim(out reflect.Type, dhallFunc core.LambdaValue) func([]reflect.Value) []reflect.Value {
@@ -64,7 +64,7 @@ func dhallShim(out reflect.Type, dhallFunc core.LambdaValue) func([]reflect.Valu
 		var expr core.Value = dhallFunc
 		for i, arg := range args {
 			dhallArg := reflectValToDhallVal(arg, argNType(dhallFunc, i))
-			expr = expr.(core.Callable1).Call1(dhallArg)
+			expr = expr.(core.Callable).Call(dhallArg)
 		}
 		ptr := reflect.New(out)
 		unmarshal(expr, ptr.Elem())

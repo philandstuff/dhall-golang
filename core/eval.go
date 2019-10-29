@@ -81,7 +81,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		v := LambdaValue{
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
-			hasCall1: func(x Value) Value {
+			Fn: func(x Value) Value {
 				newEnv := Env{}
 				for k, v := range e {
 					newEnv[k] = v
@@ -276,8 +276,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 func applyVal(fn Value, args ...Value) Value {
 	out := fn
 	for _, arg := range args {
-		if f, ok := out.(Callable1); ok {
-			if result := f.Call1(arg); result != nil {
+		if f, ok := out.(Callable); ok {
+			if result := f.Call(arg); result != nil {
 				out = result
 				continue
 			}

@@ -14,17 +14,17 @@ var _ = DescribeTable("Quote",
 	Entry("Kind", Kind, Kind),
 	Entry("Sort", Sort, Sort),
 	Entry(`λ(x : Natural) → x`,
-		LambdaValue{Label: "x", Domain: Natural, hasCall1: func(x Value) Value {
+		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
 			return x
 		}},
 		LambdaTerm{Label: "x", Type: Natural, Body: BoundVar{"x", 0}},
 	),
 	Entry(`λ(x : Natural) → λ(x : Natural) → x`,
-		LambdaValue{Label: "x", Domain: Natural, hasCall1: func(x Value) Value {
+		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
 			return LambdaValue{
-				Label:    "x",
-				Domain:   Natural,
-				hasCall1: func(x Value) Value { return x },
+				Label:  "x",
+				Domain: Natural,
+				Fn:     func(x Value) Value { return x },
 			}
 		}},
 		LambdaTerm{Label: "x", Type: Natural, Body: LambdaTerm{
@@ -32,11 +32,11 @@ var _ = DescribeTable("Quote",
 			Body: BoundVar{"x", 0}}},
 	),
 	Entry(`λ(x : Natural) → λ(x : Natural) → x@1`,
-		LambdaValue{Label: "x", Domain: Natural, hasCall1: func(x1 Value) Value {
+		LambdaValue{Label: "x", Domain: Natural, Fn: func(x1 Value) Value {
 			return LambdaValue{
-				Label:    "x",
-				Domain:   Natural,
-				hasCall1: func(x Value) Value { return x1 },
+				Label:  "x",
+				Domain: Natural,
+				Fn:     func(x Value) Value { return x1 },
 			}
 		}},
 		LambdaTerm{Label: "x", Type: Natural, Body: LambdaTerm{
@@ -44,11 +44,11 @@ var _ = DescribeTable("Quote",
 			Body: BoundVar{"x", 1}}},
 	),
 	Entry(`λ(x : Natural) → λ(y : Natural) → x`,
-		LambdaValue{Label: "x", Domain: Natural, hasCall1: func(x Value) Value {
+		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
 			return LambdaValue{
-				Label:    "y",
-				Domain:   Natural,
-				hasCall1: func(y Value) Value { return x },
+				Label:  "y",
+				Domain: Natural,
+				Fn:     func(y Value) Value { return x },
 			}
 		}},
 		LambdaTerm{Label: "x", Type: Natural, Body: LambdaTerm{

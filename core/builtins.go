@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-func (naturalBuildVal) Call1(x Value) Value {
+func (naturalBuildVal) Call(x Value) Value {
 	var succ Value = LambdaValue{
 		Label:  "x",
 		Domain: Natural,
-		hasCall1: func(x Value) Value {
+		Fn: func(x Value) Value {
 			if n, ok := x.(NaturalLit); ok {
 				return NaturalLit(n + 1)
 			}
@@ -24,14 +24,14 @@ func (naturalBuildVal) Call1(x Value) Value {
 	return applyVal(x, Natural, succ, NaturalLit(0))
 }
 
-func (naturalEvenVal) Call1(x Value) Value {
+func (naturalEvenVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return BoolLit(n%2 == 0)
 	}
 	return nil
 }
 
-func (fold naturalFoldVal) Call1(x Value) Value {
+func (fold naturalFoldVal) Call(x Value) Value {
 	if fold.n == nil {
 		return naturalFoldVal{n: x}
 	}
@@ -59,28 +59,28 @@ func (fold naturalFoldVal) Call1(x Value) Value {
 	return nil
 }
 
-func (naturalIsZeroVal) Call1(x Value) Value {
+func (naturalIsZeroVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return BoolLit(n == 0)
 	}
 	return nil
 }
 
-func (naturalOddVal) Call1(x Value) Value {
+func (naturalOddVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return BoolLit(n%2 == 1)
 	}
 	return nil
 }
 
-func (naturalShowVal) Call1(x Value) Value {
+func (naturalShowVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return TextLitVal{Suffix: fmt.Sprintf("%d", n)}
 	}
 	return nil
 }
 
-func (sub naturalSubtractVal) Call1(x Value) Value {
+func (sub naturalSubtractVal) Call(x Value) Value {
 	if sub.a == nil {
 		return naturalSubtractVal{a: x}
 	}
@@ -104,42 +104,42 @@ func (sub naturalSubtractVal) Call1(x Value) Value {
 	return nil
 }
 
-func (naturalToIntegerVal) Call1(x Value) Value {
+func (naturalToIntegerVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return IntegerLit(n)
 	}
 	return nil
 }
 
-func (integerShowVal) Call1(x Value) Value {
+func (integerShowVal) Call(x Value) Value {
 	if i, ok := x.(IntegerLit); ok {
 		return TextLitVal{Suffix: fmt.Sprintf("%+d", i)}
 	}
 	return nil
 }
 
-func (integerToDoubleVal) Call1(x Value) Value {
+func (integerToDoubleVal) Call(x Value) Value {
 	if i, ok := x.(IntegerLit); ok {
 		return DoubleLit(i)
 	}
 	return nil
 }
 
-func (doubleShowVal) Call1(x Value) Value {
+func (doubleShowVal) Call(x Value) Value {
 	if d, ok := x.(DoubleLit); ok {
 		return TextLitVal{Suffix: d.String()}
 	}
 	return nil
 }
 
-func (build optionalBuildVal) Call1(x Value) Value {
+func (build optionalBuildVal) Call(x Value) Value {
 	if build.typ == nil {
 		return optionalBuildVal{typ: x}
 	}
 	var some Value = LambdaValue{
 		Label:  "a",
 		Domain: build.typ,
-		hasCall1: func(a Value) Value {
+		Fn: func(a Value) Value {
 			return SomeVal{a}
 		},
 	}
@@ -152,7 +152,7 @@ func (build optionalBuildVal) Call1(x Value) Value {
 	return applyVal(g, AppValue{Optional, build.typ}, some, AppValue{None, build.typ})
 }
 
-func (fold optionalFoldVal) Call1(x Value) Value {
+func (fold optionalFoldVal) Call(x Value) Value {
 	if fold.typ1 == nil {
 		return optionalFoldVal{typ1: x}
 	}
@@ -186,7 +186,7 @@ func (fold optionalFoldVal) Call1(x Value) Value {
 	return nil
 }
 
-func (textShowVal) Call1(a0 Value) Value {
+func (textShowVal) Call(a0 Value) Value {
 	if t, ok := a0.(TextLitVal); ok {
 		if t.Chunks == nil || len(t.Chunks) == 0 {
 			var out strings.Builder
@@ -224,18 +224,18 @@ func (textShowVal) Call1(a0 Value) Value {
 	return nil
 }
 
-func (l listBuildVal) Call1(x Value) Value {
+func (l listBuildVal) Call(x Value) Value {
 	if l.typ == nil {
 		return listBuildVal{typ: x}
 	}
 	var cons Value = LambdaValue{
 		Label:  "a",
 		Domain: l.typ,
-		hasCall1: func(a Value) Value {
+		Fn: func(a Value) Value {
 			return LambdaValue{
 				Label:  "as",
 				Domain: AppValue{List, l.typ},
-				hasCall1: func(as Value) Value {
+				Fn: func(as Value) Value {
 					if _, ok := as.(EmptyListVal); ok {
 						return NonEmptyListVal{a}
 					}
@@ -256,7 +256,7 @@ func (l listBuildVal) Call1(x Value) Value {
 	return applyVal(g, AppValue{List, l.typ}, cons, EmptyListVal{AppValue{List, l.typ}})
 }
 
-func (l listFoldVal) Call1(x Value) Value {
+func (l listFoldVal) Call(x Value) Value {
 	if l.typ1 == nil {
 		return listFoldVal{typ1: x}
 	}
@@ -292,7 +292,7 @@ func (l listFoldVal) Call1(x Value) Value {
 	return nil
 }
 
-func (length listLengthVal) Call1(x Value) Value {
+func (length listLengthVal) Call(x Value) Value {
 	if length.typ == nil {
 		return listLengthVal{typ: x}
 	}
@@ -305,7 +305,7 @@ func (length listLengthVal) Call1(x Value) Value {
 	return nil
 }
 
-func (head listHeadVal) Call1(x Value) Value {
+func (head listHeadVal) Call(x Value) Value {
 	if head.typ == nil {
 		return listHeadVal{typ: x}
 	}
@@ -318,7 +318,7 @@ func (head listHeadVal) Call1(x Value) Value {
 	return nil
 }
 
-func (last listLastVal) Call1(x Value) Value {
+func (last listLastVal) Call(x Value) Value {
 	if last.typ == nil {
 		return listLastVal{typ: x}
 	}
@@ -331,7 +331,7 @@ func (last listLastVal) Call1(x Value) Value {
 	return nil
 }
 
-func (indexed listIndexedVal) Call1(x Value) Value {
+func (indexed listIndexedVal) Call(x Value) Value {
 	if indexed.typ == nil {
 		return listIndexedVal{typ: x}
 	}
@@ -352,7 +352,7 @@ func (indexed listIndexedVal) Call1(x Value) Value {
 	return nil
 }
 
-func (rev listReverseVal) Call1(x Value) Value {
+func (rev listReverseVal) Call(x Value) Value {
 	if rev.typ == nil {
 		return listReverseVal{typ: x}
 	}
