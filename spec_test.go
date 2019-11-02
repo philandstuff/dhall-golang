@@ -59,7 +59,7 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/Assert",
 	"TestTypeInference/unit/Equivalence",
 	"TestTypeInference/unit/Merge",
-	"TestTypeInference/unit/RecordProjection",
+	"TestTypeInference/unit/RecordProjectionByType",
 	"TestTypeInference/unit/RecursiveRecordMerge",
 	"TestTypeInference/unit/RecursiveRecordTypeMerge",
 	"TestTypeInference/unit/RightBiasedRecordMerge",

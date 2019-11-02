@@ -486,7 +486,23 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return fieldType, nil
 	case Project:
-		return nil, errors.New("Project type unimplemented")
+		recordType, err := typeWith(ctx, t.Record)
+		if err != nil {
+			return nil, err
+		}
+		recordTypeT, ok := recordType.(RecordType)
+		if !ok {
+			return nil, mkTypeError(cantProject)
+		}
+		result := make(RecordType, len(t.FieldNames))
+		for _, name := range t.FieldNames {
+			var ok bool
+			result[name], ok = recordTypeT[name]
+			if !ok {
+				return nil, mkTypeError(missingField)
+			}
+		}
+		return result, nil
 	case ProjectType:
 		return nil, errors.New("ProjectType type unimplemented")
 	case UnionType:
@@ -600,6 +616,7 @@ var (
 	untyped            = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
 
 	cantAccess   = staticTypeMessage{"Not a record or a union"}
+	cantProject  = staticTypeMessage{"Not a record"}
 	missingField = staticTypeMessage{"Missing record field"}
 
 	unhandledTypeCase = staticTypeMessage{"Internal error: unhandled case in TypeOf()"}
