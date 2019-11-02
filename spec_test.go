@@ -62,7 +62,6 @@ var expectedFailures = []string{
 	"TestTypeInference/unit/RecursiveRecordMerge",
 	"TestTypeInference/unit/RecursiveRecordTypeMerge",
 	"TestTypeInference/unit/RightBiasedRecordMerge",
-	"TestTypeInference/unit/ToMap",
 	"TestTypeInference/unit/Union",
 	"TestTypechecks/prefer",
 	"TestTypechecks/prelude",
@@ -91,7 +90,6 @@ var expectedFailures = []string{
 	"TestNormalization/simplifications/rightBiased",
 	"TestNormalization/unit/Assert",
 	"TestNormalization/unit/EmptyAlternative",
-	"TestNormalization/unit/EmptyToMap",
 	"TestNormalization/unit/Equiv",
 	"TestNormalization/unit/Merge",
 	"TestNormalization/unit/OperatorOr",
@@ -102,7 +100,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/OperatorTextConcat",
 	"TestNormalization/unit/Recursive",
 	"TestNormalization/unit/RightBiased",
-	"TestNormalization/unit/ToMap",
 	"TestNormalization/unit/Union",
 	"TestImport/asLocationA.dhall",
 }

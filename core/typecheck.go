@@ -470,7 +470,56 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return recordType, nil
 	case ToMap:
-		return nil, errors.New("ToMap type unimplemented")
+		recordTypeTerm, err := typeWith(ctx, t.Record)
+		if err != nil {
+			return nil, err
+		}
+		recordType, ok := recordTypeTerm.(RecordType)
+		if !ok {
+			return nil, mkTypeError(cantAccess)
+		}
+
+		if len(recordType) == 0 {
+			if t.Type == nil {
+				return nil, mkTypeError(missingToMapType)
+			}
+			tt, err := typeWith(ctx, t.Type)
+			if err != nil {
+				return nil, err
+			}
+			if tt != Type {
+				return nil, mkTypeError(invalidToMapRecordKind)
+			}
+			tTerm := Quote(Eval(t.Type))
+			t, ok := tTerm.(AppTerm)
+			if !ok || t.Fn != List {
+				return nil, mkTypeError(invalidToMapType(tTerm))
+			}
+			rt, ok := t.Arg.(RecordType)
+			if !ok || len(rt) != 2 || rt["mapKey"] != Text || rt["mapValue"] == nil {
+				return nil, mkTypeError(invalidToMapType(tTerm))
+			}
+			return t, nil
+		}
+
+		var elemType Term
+		for _, v := range recordType {
+			if elemType == nil {
+				elemType = v
+			} else {
+				if !judgmentallyEqual(elemType, v) {
+					return nil, mkTypeError(heterogenousRecordToMap)
+				}
+			}
+		}
+		inferred := AppTerm{List, RecordType{"mapKey": Text, "mapValue": elemType}}
+		if t.Type == nil {
+			return inferred, nil
+		}
+		if !judgmentallyEqual(inferred, t.Type) {
+			return nil, mkTypeError(mapTypeMismatch(inferred, t.Type))
+		}
+		return t.Type, nil
 	case Field:
 		recordTypeTerm, err := typeWith(ctx, t.Record)
 		if err != nil {
@@ -519,7 +568,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		selectorVal := Eval(t.Selector)
 		selector, ok := selectorVal.(RecordTypeVal)
 		if !ok {
-			return nil, errors.New("FIXME better message")
+			return nil, mkTypeError(cantProjectByExpression)
 		}
 		result := make(RecordType, len(selector))
 		for name, typ := range Quote(selector).(RecordType) {
@@ -624,6 +673,25 @@ func mismatchedListElements(firstType, nthType Term) typeMessage {
 	}
 }
 
+func mapTypeMismatch(inferred, annotated Term) typeMessage {
+	return twoArgTypeMessage{
+		format: "❰toMap❱ result type doesn't match annotation" +
+			"\n" +
+			"map had type %v but was annotated %v",
+		expr0: inferred,
+		expr1: annotated,
+	}
+}
+
+func invalidToMapType(expr Term) typeMessage {
+	return oneArgTypeMessage{
+		format: "An empty ❰toMap❱ was annotated with an invalid type" +
+			"\n" +
+			"%v",
+		expr: expr,
+	}
+}
+
 func projectionTypeMismatch(firstType, secondType Term) typeMessage {
 	return twoArgTypeMessage{
 		format: "Projection type mismatch\n" +
@@ -653,9 +721,14 @@ var (
 	notAFunction       = staticTypeMessage{"Not a function"}
 	untyped            = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
 
-	cantAccess   = staticTypeMessage{"Not a record or a union"}
-	cantProject  = staticTypeMessage{"Not a record"}
-	missingField = staticTypeMessage{"Missing record field"}
+	invalidToMapRecordKind  = staticTypeMessage{"❰toMap❱ expects a record of kind ❰Type❱"}
+	heterogenousRecordToMap = staticTypeMessage{"❰toMap❱ expects a homogenous record"}
+	missingToMapType        = staticTypeMessage{"An empty ❰toMap❱ requires a type annotation"}
+
+	cantAccess              = staticTypeMessage{"Not a record or a union"}
+	cantProject             = staticTypeMessage{"Not a record"}
+	cantProjectByExpression = staticTypeMessage{"Selector is not a record type"}
+	missingField            = staticTypeMessage{"Missing record field"}
 
 	unhandledTypeCase = staticTypeMessage{"Internal error: unhandled case in TypeOf()"}
 )

@@ -253,7 +253,27 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		}
 		return newRT
 	case ToMap:
-		return TextLitVal{Suffix: "ToMap unimplemented"}
+		recordVal := evalWith(t.Record, e, shouldAlphaNormalize)
+		record, ok := recordVal.(RecordLitVal)
+		if ok {
+			if len(record) == 0 {
+				return EmptyListVal{Type: evalWith(t.Type, e, shouldAlphaNormalize)}
+			}
+			fieldnames := []string{}
+			for k := range record {
+				fieldnames = append(fieldnames, k)
+			}
+			sort.Strings(fieldnames)
+			result := make(NonEmptyListVal, len(fieldnames))
+			for i, k := range fieldnames {
+				result[i] = RecordLitVal{"mapKey": TextLitVal{Suffix: k}, "mapValue": record[k]}
+			}
+			return result
+		}
+		return ToMapVal{
+			Record: record,
+			Type:   evalWith(t.Type, e, shouldAlphaNormalize),
+		}
 	case Field:
 		r := evalWith(t.Record, e, shouldAlphaNormalize)
 		for {
