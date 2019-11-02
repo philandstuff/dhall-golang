@@ -118,7 +118,15 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 			Selector: substAtLevel(i, name, replacement, t.Selector),
 		}
 	case UnionType:
-		return TextLitTerm{Suffix: "UnionType unimplemented"}
+		result := make(UnionType, len(t))
+		for k, v := range t {
+			if v == nil {
+				result[k] = nil
+				continue
+			}
+			result[k] = substAtLevel(i, name, replacement, v)
+		}
+		return result
 	case Merge:
 		return TextLitTerm{Suffix: "Merge unimplemented"}
 	case Assert:
@@ -248,7 +256,15 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 			Selector: rebindAtLevel(i, local, t.Selector),
 		}
 	case UnionType:
-		return TextLitTerm{Suffix: "UnionType unimplemented"}
+		result := make(UnionType, len(t))
+		for k, v := range t {
+			if v == nil {
+				result[k] = nil
+				continue
+			}
+			result[k] = rebindAtLevel(i, local, v)
+		}
+		return result
 	case Merge:
 		return TextLitTerm{Suffix: "Merge unimplemented"}
 	case Assert:

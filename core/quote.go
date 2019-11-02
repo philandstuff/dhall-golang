@@ -230,7 +230,15 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			FieldNames: v.FieldNames,
 		}
 	case UnionTypeVal:
-		return TextLitTerm{Suffix: "UnionTypeVal unimplemented"}
+		result := UnionType{}
+		for k, v := range v {
+			if v == nil {
+				result[k] = nil
+				continue
+			}
+			result[k] = quoteWith(ctx, v)
+		}
+		return result
 	case MergeVal:
 		return TextLitTerm{Suffix: "MergeVal unimplemented"}
 	case AssertVal:

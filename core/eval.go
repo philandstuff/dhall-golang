@@ -323,7 +323,15 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			},
 			e, shouldAlphaNormalize)
 	case UnionType:
-		return TextLitVal{Suffix: "UnionType unimplemented"}
+		result := make(UnionTypeVal, len(t))
+		for k, v := range t {
+			if v == nil {
+				result[k] = nil
+				continue
+			}
+			result[k] = evalWith(v, e, shouldAlphaNormalize)
+		}
+		return result
 	case Merge:
 		return TextLitVal{Suffix: "Merge unimplemented"}
 	case Assert:

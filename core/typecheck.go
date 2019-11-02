@@ -526,14 +526,30 @@ func typeWith(ctx context, t Term) (Term, error) {
 			return nil, err
 		}
 		recordType, ok := recordTypeTerm.(RecordType)
+		if ok {
+			fieldType, ok := recordType[t.FieldName]
+			if !ok {
+				return nil, mkTypeError(missingField)
+			}
+			return fieldType, nil
+		}
+		unionTypeVal := Quote(Eval(t.Record))
+		unionType, ok := unionTypeVal.(UnionType)
 		if !ok {
 			return nil, mkTypeError(cantAccess)
 		}
-		fieldType, ok := recordType[t.FieldName]
+		alternativeType, ok := unionType[t.FieldName]
 		if !ok {
-			return nil, mkTypeError(missingField)
+			return nil, mkTypeError(missingConstructor)
 		}
-		return fieldType, nil
+		if alternativeType == nil {
+			return unionType, nil
+		}
+		return PiTerm{
+			Label: t.FieldName,
+			Type:  alternativeType,
+			Body:  unionType,
+		}, nil
 	case Project:
 		recordTypeTerm, err := typeWith(ctx, t.Record)
 		if err != nil {
@@ -583,7 +599,39 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return result, nil
 	case UnionType:
-		return nil, errors.New("UnionType type unimplemented")
+		if len(t) == 0 {
+			return Type, nil
+		}
+		var c Universe
+		first := true
+		for _, typ := range t {
+			if typ == nil {
+				// empty alternative
+				continue
+			}
+			k, err := typeWith(ctx, typ)
+			if err != nil {
+				return nil, err
+			}
+			if first {
+				var ok bool
+				c, ok = k.(Universe)
+				if !ok {
+					return nil, mkTypeError(invalidAlternativeType)
+				}
+			} else {
+				if !judgmentallyEqual(c, k) {
+					return nil, mkTypeError(alternativeAnnotationMismatch)
+				}
+			}
+			if c == Sort {
+				if Eval(typ) != Kind {
+					return nil, mkTypeError(invalidAlternativeType)
+				}
+			}
+			first = false
+		}
+		return c, nil
 	case Merge:
 		return nil, errors.New("Merge type unimplemented")
 	case Assert:
@@ -718,8 +766,12 @@ var (
 	invalidOutputType  = staticTypeMessage{"Invalid function output"}
 	invalidPredicate   = staticTypeMessage{"Invalid predicate for ❰if❱"}
 	invalidSome        = staticTypeMessage{"❰Some❱ argument has the wrong type"}
-	notAFunction       = staticTypeMessage{"Not a function"}
-	untyped            = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
+
+	invalidAlternativeType        = staticTypeMessage{"Invalid alternative type"}
+	alternativeAnnotationMismatch = staticTypeMessage{"Alternative annotation mismatch"}
+
+	notAFunction = staticTypeMessage{"Not a function"}
+	untyped      = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
 
 	invalidToMapRecordKind  = staticTypeMessage{"❰toMap❱ expects a record of kind ❰Type❱"}
 	heterogenousRecordToMap = staticTypeMessage{"❰toMap❱ expects a homogenous record"}
@@ -729,6 +781,7 @@ var (
 	cantProject             = staticTypeMessage{"Not a record"}
 	cantProjectByExpression = staticTypeMessage{"Selector is not a record type"}
 	missingField            = staticTypeMessage{"Missing record field"}
+	missingConstructor      = staticTypeMessage{"Missing constructor"}
 
 	unhandledTypeCase = staticTypeMessage{"Internal error: unhandled case in TypeOf()"}
 )
