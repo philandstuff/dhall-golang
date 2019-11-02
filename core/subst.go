@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"reflect"
 )
 
 func subst(name string, replacement, t Term) Term {
@@ -88,17 +89,34 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 	case Some:
 		return Some{substAtLevel(i, name, replacement, t.Val)}
 	case RecordType:
-		return TextLitTerm{Suffix: "RecordType unimplemented"}
+		result := make(RecordType, len(t))
+		for k, v := range t {
+			result[k] = substAtLevel(i, name, replacement, v)
+		}
+		return result
 	case RecordLit:
-		return TextLitTerm{Suffix: "RecordLit unimplemented"}
+		result := make(RecordLit, len(t))
+		for k, v := range t {
+			result[k] = substAtLevel(i, name, replacement, v)
+		}
+		return result
 	case ToMap:
 		return TextLitTerm{Suffix: "ToMap unimplemented"}
 	case Field:
-		return TextLitTerm{Suffix: "Field unimplemented"}
+		return Field{
+			Record:    substAtLevel(i, name, replacement, t.Record),
+			FieldName: t.FieldName,
+		}
 	case Project:
-		return TextLitTerm{Suffix: "Project unimplemented"}
+		return Project{
+			Record:     substAtLevel(i, name, replacement, t.Record),
+			FieldNames: t.FieldNames,
+		}
 	case ProjectType:
-		return TextLitTerm{Suffix: "ProjectType unimplemented"}
+		return ProjectType{
+			Record:   substAtLevel(i, name, replacement, t.Record),
+			Selector: substAtLevel(i, name, replacement, t.Selector),
+		}
 	case UnionType:
 		return TextLitTerm{Suffix: "UnionType unimplemented"}
 	case Merge:
@@ -108,7 +126,7 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 	case Import:
 		return t
 	default:
-		panic(fmt.Sprintf("unknown term type %v", t))
+		panic(fmt.Sprintf("unknown term type %+v (%v)", t, reflect.ValueOf(t).Type()))
 	}
 }
 
@@ -161,11 +179,83 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 		}
 	case NaturalLit:
 		return t
+	case Let:
+		newLet := Let{}
+		for _, b := range t.Bindings {
+			newBinding := Binding{
+				Variable: b.Variable,
+				Value:    rebindAtLevel(i, local, b.Value),
+			}
+			if b.Annotation != nil {
+				newBinding.Annotation = rebindAtLevel(i, local, b.Annotation)
+			}
+			newLet.Bindings = append(newLet.Bindings, newBinding)
+			if b.Variable == local.Name {
+				i = i + 1
+			}
+		}
+		newLet.Body = rebindAtLevel(i, local, t.Body)
+		return newLet
+	case Annot:
+		return rebindAtLevel(i, local, t.Expr)
+	case DoubleLit:
+		return t
+	case TextLitTerm:
+		return TextLitTerm{Suffix: "TextLit unimplemented but here's the suffix: " + t.Suffix}
+	case BoolLit:
+		return t
+	case IfTerm:
+		return TextLitTerm{Suffix: "If unimplemented"}
+	case IntegerLit:
+		return t
+	case OpTerm:
+		return TextLitTerm{Suffix: "OpTerm unimplemented"}
 	case EmptyList:
 		return EmptyList{
 			Type: rebindAtLevel(i, local, t.Type),
 		}
+	case NonEmptyList:
+		return TextLitTerm{Suffix: "NonEmptyList unimplemented"}
+	case Some:
+		return Some{rebindAtLevel(i, local, t.Val)}
+	case RecordType:
+		result := make(RecordType, len(t))
+		for k, v := range t {
+			result[k] = rebindAtLevel(i, local, v)
+		}
+		return result
+	case RecordLit:
+		result := make(RecordLit, len(t))
+		for k, v := range t {
+			result[k] = rebindAtLevel(i, local, v)
+		}
+		return result
+	case ToMap:
+		return TextLitTerm{Suffix: "ToMap unimplemented"}
+	case Field:
+		return Field{
+			Record:    rebindAtLevel(i, local, t.Record),
+			FieldName: t.FieldName,
+		}
+	case Project:
+		return Project{
+			Record:     rebindAtLevel(i, local, t.Record),
+			FieldNames: t.FieldNames,
+		}
+	case ProjectType:
+		return ProjectType{
+			Record:   rebindAtLevel(i, local, t.Record),
+			Selector: rebindAtLevel(i, local, t.Selector),
+		}
+	case UnionType:
+		return TextLitTerm{Suffix: "UnionType unimplemented"}
+	case Merge:
+		return TextLitTerm{Suffix: "Merge unimplemented"}
+	case Assert:
+		return Assert{Annotation: rebindAtLevel(i, local, t.Annotation)}
+	case Import:
+		return t
 	default:
-		panic(fmt.Sprintf("unknown term type %v", t))
+		panic(fmt.Sprintf("unknown term type %+v (%v)", t, reflect.ValueOf(t).Type()))
 	}
 }

@@ -472,39 +472,67 @@ func typeWith(ctx context, t Term) (Term, error) {
 	case ToMap:
 		return nil, errors.New("ToMap type unimplemented")
 	case Field:
-		recordType, err := typeWith(ctx, t.Record)
+		recordTypeTerm, err := typeWith(ctx, t.Record)
 		if err != nil {
 			return nil, err
 		}
-		recordTypeT, ok := recordType.(RecordType)
+		recordType, ok := recordTypeTerm.(RecordType)
 		if !ok {
 			return nil, mkTypeError(cantAccess)
 		}
-		fieldType, ok := recordTypeT[t.FieldName]
+		fieldType, ok := recordType[t.FieldName]
 		if !ok {
 			return nil, mkTypeError(missingField)
 		}
 		return fieldType, nil
 	case Project:
-		recordType, err := typeWith(ctx, t.Record)
+		recordTypeTerm, err := typeWith(ctx, t.Record)
 		if err != nil {
 			return nil, err
 		}
-		recordTypeT, ok := recordType.(RecordType)
+		recordType, ok := recordTypeTerm.(RecordType)
 		if !ok {
 			return nil, mkTypeError(cantProject)
 		}
 		result := make(RecordType, len(t.FieldNames))
 		for _, name := range t.FieldNames {
 			var ok bool
-			result[name], ok = recordTypeT[name]
+			result[name], ok = recordType[name]
 			if !ok {
 				return nil, mkTypeError(missingField)
 			}
 		}
 		return result, nil
 	case ProjectType:
-		return nil, errors.New("ProjectType type unimplemented")
+		recordTypeTerm, err := typeWith(ctx, t.Record)
+		if err != nil {
+			return nil, err
+		}
+		recordType, ok := recordTypeTerm.(RecordType)
+		if !ok {
+			return nil, mkTypeError(cantProject)
+		}
+		_, err = typeWith(ctx, t.Selector)
+		if err != nil {
+			return nil, err
+		}
+		selectorVal := Eval(t.Selector)
+		selector, ok := selectorVal.(RecordTypeVal)
+		if !ok {
+			return nil, errors.New("FIXME better message")
+		}
+		result := make(RecordType, len(selector))
+		for name, typ := range Quote(selector).(RecordType) {
+			fieldType, ok := recordType[name]
+			if !ok {
+				return nil, mkTypeError(missingField)
+			}
+			if !judgmentallyEqual(fieldType, typ) {
+				return nil, mkTypeError(projectionTypeMismatch(typ, fieldType))
+			}
+			result[name] = typ
+		}
+		return result, nil
 	case UnionType:
 		return nil, errors.New("UnionType type unimplemented")
 	case Merge:
@@ -593,6 +621,16 @@ func mismatchedListElements(firstType, nthType Term) typeMessage {
 			"first element had type %v but there was an element of type %v",
 		expr0: firstType,
 		expr1: nthType,
+	}
+}
+
+func projectionTypeMismatch(firstType, secondType Term) typeMessage {
+	return twoArgTypeMessage{
+		format: "Projection type mismatch\n" +
+			"\n" +
+			"tried to project a %v but the field had type %v",
+		expr0: firstType,
+		expr1: secondType,
 	}
 }
 
