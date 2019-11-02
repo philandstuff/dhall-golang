@@ -472,7 +472,19 @@ func typeWith(ctx context, t Term) (Term, error) {
 	case ToMap:
 		return nil, errors.New("ToMap type unimplemented")
 	case Field:
-		return nil, errors.New("Field type unimplemented")
+		recordType, err := typeWith(ctx, t.Record)
+		if err != nil {
+			return nil, err
+		}
+		recordTypeT, ok := recordType.(RecordType)
+		if !ok {
+			return nil, mkTypeError(cantAccess)
+		}
+		fieldType, ok := recordTypeT[t.FieldName]
+		if !ok {
+			return nil, mkTypeError(missingField)
+		}
+		return fieldType, nil
 	case Project:
 		return nil, errors.New("Project type unimplemented")
 	case ProjectType:
@@ -586,6 +598,9 @@ var (
 	invalidSome        = staticTypeMessage{"❰Some❱ argument has the wrong type"}
 	notAFunction       = staticTypeMessage{"Not a function"}
 	untyped            = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
+
+	cantAccess   = staticTypeMessage{"Not a record or a union"}
+	missingField = staticTypeMessage{"Missing record field"}
 
 	unhandledTypeCase = staticTypeMessage{"Internal error: unhandled case in TypeOf()"}
 )
