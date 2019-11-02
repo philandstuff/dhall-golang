@@ -633,7 +633,77 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return c, nil
 	case Merge:
-		return nil, errors.New("Merge type unimplemented")
+		handlerTypeTerm, err := typeWith(ctx, t.Handler)
+		if err != nil {
+			return nil, err
+		}
+		unionTypeTerm, err := typeWith(ctx, t.Union)
+		if err != nil {
+			return nil, err
+		}
+		handlerType, ok := handlerTypeTerm.(RecordType)
+		if !ok {
+			return nil, mkTypeError(mustMergeARecord)
+		}
+		unionType, ok := unionTypeTerm.(UnionType)
+		if !ok {
+			return nil, mkTypeError(mustMergeUnion)
+		}
+		if len(handlerType) > len(unionType) {
+			return nil, mkTypeError(unusedHandler)
+		}
+
+		if len(handlerType) == 0 {
+			if t.Annotation == nil {
+				return nil, mkTypeError(missingMergeType)
+			}
+			return t.Annotation, nil
+		}
+
+		var result Term
+		for altName, altType := range unionType {
+			fieldType, ok := handlerType[altName]
+			if !ok {
+				return nil, mkTypeError(missingHandler)
+			}
+			if altType == nil {
+				if result == nil {
+					result = fieldType
+				} else {
+					if !judgmentallyEqual(result, fieldType) {
+						return nil, mkTypeError(handlerOutputTypeMismatch(result, fieldType))
+					}
+				}
+			} else {
+				pi, ok := fieldType.(PiTerm)
+				if !ok {
+					return nil, mkTypeError(handlerNotAFunction)
+				}
+				if !judgmentallyEqual(altType, pi.Type) {
+					return nil, mkTypeError(handlerInputTypeMismatch(altType, pi.Type))
+				}
+				outputType := Quote(Eval(pi).(PiValue).Range(NaturalLit(1)))
+				outputType2 := Quote(Eval(pi).(PiValue).Range(NaturalLit(2)))
+				if !judgmentallyEqual(outputType, outputType2) {
+					// hacky way of detecting output type depending on input
+					return nil, mkTypeError(disallowedHandlerType)
+				}
+				if result == nil {
+					result = outputType
+				} else {
+					if !judgmentallyEqual(result, outputType) {
+						return nil, mkTypeError(handlerOutputTypeMismatch(result, outputType))
+					}
+				}
+			}
+		}
+		if t.Annotation != nil {
+			if !judgmentallyEqual(result, t.Annotation) {
+				return nil, mkTypeError(annotMismatch(t.Annotation, result))
+			}
+			return t.Annotation, nil
+		}
+		return result, nil
 	case Assert:
 		return nil, errors.New("Assert type unimplemented")
 	}
@@ -683,13 +753,13 @@ func unboundVariable(e Term) typeMessage {
 	}
 }
 
-func annotMismatch(expectedType, actualType Term) typeMessage {
+func annotMismatch(annotation, actualType Term) typeMessage {
 	return twoArgTypeMessage{
 		format: "Expression doesn't match annotation\n" +
 			"\n" +
-			"expected %v but got %v",
-		expr0: expectedType,
-		expr1: actualType,
+			"Expression of type %v was annotated %v",
+		expr0: actualType,
+		expr1: annotation,
 	}
 }
 
@@ -723,7 +793,7 @@ func mismatchedListElements(firstType, nthType Term) typeMessage {
 
 func mapTypeMismatch(inferred, annotated Term) typeMessage {
 	return twoArgTypeMessage{
-		format: "❰toMap❱ result type doesn't match annotation" +
+		format: "❰toMap❱ result type doesn't match annotation\n" +
 			"\n" +
 			"map had type %v but was annotated %v",
 		expr0: inferred,
@@ -733,10 +803,30 @@ func mapTypeMismatch(inferred, annotated Term) typeMessage {
 
 func invalidToMapType(expr Term) typeMessage {
 	return oneArgTypeMessage{
-		format: "An empty ❰toMap❱ was annotated with an invalid type" +
+		format: "An empty ❰toMap❱ was annotated with an invalid type\n" +
 			"\n" +
 			"%v",
 		expr: expr,
+	}
+}
+
+func handlerOutputTypeMismatch(type1, type2 Term) typeMessage {
+	return twoArgTypeMessage{
+		format: "Handlers should have the same output type\n" +
+			"\n" +
+			"Saw handlers of types %v and %v",
+		expr0: type1,
+		expr1: type2,
+	}
+}
+
+func handlerInputTypeMismatch(altType, inputType Term) typeMessage {
+	return twoArgTypeMessage{
+		format: "Wrong handler input type\n" +
+			"\n" +
+			"Expected input type %v but saw %v",
+		expr0: altType,
+		expr1: inputType,
 	}
 }
 
@@ -776,6 +866,14 @@ var (
 	invalidToMapRecordKind  = staticTypeMessage{"❰toMap❱ expects a record of kind ❰Type❱"}
 	heterogenousRecordToMap = staticTypeMessage{"❰toMap❱ expects a homogenous record"}
 	missingToMapType        = staticTypeMessage{"An empty ❰toMap❱ requires a type annotation"}
+
+	mustMergeARecord      = staticTypeMessage{"❰merge❱ expects a record of handlers"}
+	mustMergeUnion        = staticTypeMessage{"❰merge❱ expects a union"}
+	missingMergeType      = staticTypeMessage{"An empty ❰merge❱ requires a type annotation"}
+	unusedHandler         = staticTypeMessage{"Unused handler"}
+	missingHandler        = staticTypeMessage{"Missing handler"}
+	handlerNotAFunction   = staticTypeMessage{"Handler is not a function"}
+	disallowedHandlerType = staticTypeMessage{"Disallowed handler type"}
 
 	cantAccess              = staticTypeMessage{"Not a record or a union"}
 	cantProject             = staticTypeMessage{"Not a record"}

@@ -333,7 +333,31 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		}
 		return result
 	case Merge:
-		return TextLitVal{Suffix: "Merge unimplemented"}
+		handlerVal := evalWith(t.Handler, e, shouldAlphaNormalize)
+		unionVal := evalWith(t.Union, e, shouldAlphaNormalize)
+		if handlers, ok := handlerVal.(RecordLitVal); ok {
+			// TODO: test tricky Field inputs
+			if union, ok := unionVal.(AppValue); ok {
+				if field, ok := union.Fn.(FieldVal); ok {
+					return applyVal(
+						handlers[field.FieldName],
+						union.Arg,
+					)
+				}
+			}
+			if union, ok := unionVal.(FieldVal); ok {
+				// empty union alternative
+				return handlers[union.FieldName]
+			}
+		}
+		output := MergeVal{
+			Handler: handlerVal,
+			Union:   unionVal,
+		}
+		if t.Annotation != nil {
+			output.Annotation = evalWith(t.Annotation, e, shouldAlphaNormalize)
+		}
+		return output
 	case Assert:
 		return AssertVal{Annotation: evalWith(t.Annotation, e, shouldAlphaNormalize)}
 	default:

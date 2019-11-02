@@ -128,7 +128,14 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		}
 		return result
 	case Merge:
-		return TextLitTerm{Suffix: "Merge unimplemented"}
+		result := Merge{
+			Handler: substAtLevel(i, name, replacement, t.Handler),
+			Union:   substAtLevel(i, name, replacement, t.Union),
+		}
+		if t.Annotation != nil {
+			result.Annotation = substAtLevel(i, name, replacement, t.Annotation)
+		}
+		return result
 	case Assert:
 		return Assert{Annotation: substAtLevel(i, name, replacement, t.Annotation)}
 	case Import:
@@ -266,7 +273,14 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 		}
 		return result
 	case Merge:
-		return TextLitTerm{Suffix: "Merge unimplemented"}
+		result := Merge{
+			Handler: rebindAtLevel(i, local, t.Handler),
+			Union:   rebindAtLevel(i, local, t.Union),
+		}
+		if t.Annotation != nil {
+			result.Annotation = rebindAtLevel(i, local, t.Annotation)
+		}
+		return result
 	case Assert:
 		return Assert{Annotation: rebindAtLevel(i, local, t.Annotation)}
 	case Import:

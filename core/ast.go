@@ -503,7 +503,7 @@ type (
 	MergeVal struct {
 		Handler    Value
 		Union      Value
-		Annotaiton Value // optional
+		Annotation Value // optional
 	}
 
 	Assert    struct{ Annotation Term }

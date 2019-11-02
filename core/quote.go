@@ -240,7 +240,14 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		}
 		return result
 	case MergeVal:
-		return TextLitTerm{Suffix: "MergeVal unimplemented"}
+		result := Merge{
+			Handler: quoteWith(ctx, v.Handler),
+			Union:   quoteWith(ctx, v.Union),
+		}
+		if v.Annotation != nil {
+			result.Annotation = quoteWith(ctx, v.Annotation)
+		}
+		return result
 	case AssertVal:
 		return Assert{Annotation: quoteWith(ctx, v.Annotation)}
 	}
