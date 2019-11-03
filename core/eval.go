@@ -257,6 +257,27 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				return result
 			}
 		case RightBiasedRecordMergeOp:
+			lLit, lOk := l.(RecordLitVal)
+			rLit, rOk := r.(RecordLitVal)
+			if lOk && len(lLit) == 0 {
+				return r
+			}
+			if rOk && len(rLit) == 0 {
+				return l
+			}
+			if lOk && rOk {
+				result := RecordLitVal{}
+				for k, v := range lLit {
+					result[k] = v
+				}
+				for k, v := range rLit {
+					result[k] = v
+				}
+				return result
+			}
+			if judgmentallyEqualVals(l, r) {
+				return l
+			}
 		case ImportAltOp:
 		case EquivOp:
 		}
@@ -316,10 +337,10 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			op, ok := record.(OpValue)
 			if ok && op.OpCode == RecordMergeOp {
 				if l, ok := op.L.(RecordLitVal); ok {
-					if _, ok := l[t.FieldName]; ok {
+					if lField, ok := l[t.FieldName]; ok {
 						return FieldVal{
 							Record: OpValue{
-								L:      RecordLitVal{t.FieldName: l[t.FieldName]},
+								L:      RecordLitVal{t.FieldName: lField},
 								R:      op.R,
 								OpCode: RecordMergeOp,
 							},
@@ -330,15 +351,38 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 					continue
 				}
 				if r, ok := op.R.(RecordLitVal); ok {
-					if _, ok := r[t.FieldName]; ok {
+					if rField, ok := r[t.FieldName]; ok {
 						return FieldVal{
 							Record: OpValue{
 								L:      op.L,
-								R:      RecordLitVal{t.FieldName: r[t.FieldName]},
+								R:      RecordLitVal{t.FieldName: rField},
 								OpCode: RecordMergeOp,
 							},
 							FieldName: t.FieldName,
 						}
+					}
+					record = op.L
+					continue
+				}
+			}
+			if ok && op.OpCode == RightBiasedRecordMergeOp {
+				if l, ok := op.L.(RecordLitVal); ok {
+					if lField, ok := l[t.FieldName]; ok {
+						return FieldVal{
+							Record: OpValue{
+								L:      RecordLitVal{t.FieldName: lField},
+								R:      op.R,
+								OpCode: RightBiasedRecordMergeOp,
+							},
+							FieldName: t.FieldName,
+						}
+					}
+					record = op.R
+					continue
+				}
+				if r, ok := op.R.(RecordLitVal); ok {
+					if rField, ok := r[t.FieldName]; ok {
+						return rField
 					}
 					record = op.L
 					continue

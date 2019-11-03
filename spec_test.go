@@ -58,28 +58,21 @@ var expectedFailures = []string{
 	// reimplementation
 	"TestTypeInference/unit/Assert",
 	"TestTypeInference/unit/Equivalence",
-	"TestTypeInference/unit/RightBiasedRecordMerge",
-	"TestTypechecks/prefer",
 	"TestTypechecks/prelude",
-	"TestTypechecks/simple/RightBiased",
 	"TestTypechecks/simple/complexShadow",
-	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/remoteSystems",
 	"TestNormalization/simple/equal",
 	"TestNormalization/simple/notEqual",
-	"TestNormalization/simple/sort",
 	"TestNormalization/simplifications/and",
 	"TestNormalization/simplifications/eq",
 	"TestNormalization/simplifications/ne",
 	"TestNormalization/simplifications/or",
-	"TestNormalization/simplifications/rightBiased",
 	"TestNormalization/unit/OperatorOr",
 	"TestNormalization/unit/OperatorAnd",
 	"TestNormalization/unit/OperatorEqual",
 	"TestNormalization/unit/OperatorNotEq",
 	"TestNormalization/unit/OperatorListConcat",
 	"TestNormalization/unit/OperatorTextConcat",
-	"TestNormalization/unit/RightBiased",
 }
 
 func pass(t *testing.T) {

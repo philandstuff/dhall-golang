@@ -429,7 +429,30 @@ func typeWith(ctx context, t Term) (Term, error) {
 			}
 			return rKind, nil
 		case RightBiasedRecordMergeOp:
-			fallthrough
+			lType, err := typeWith(ctx, t.L)
+			if err != nil {
+				return nil, err
+			}
+			rType, err := typeWith(ctx, t.R)
+			if err != nil {
+				return nil, err
+			}
+			lRecord, ok := lType.(RecordType)
+			if !ok {
+				return nil, mkTypeError(mustCombineARecord)
+			}
+			rRecord, ok := rType.(RecordType)
+			if !ok {
+				return nil, mkTypeError(mustCombineARecord)
+			}
+			result := RecordType{}
+			for k, v := range lRecord {
+				result[k] = v
+			}
+			for k, v := range rRecord {
+				result[k] = v
+			}
+			return result, nil
 		case ImportAltOp:
 			fallthrough
 		case EquivOp:
@@ -917,6 +940,8 @@ var (
 	missingHandler        = staticTypeMessage{"Missing handler"}
 	handlerNotAFunction   = staticTypeMessage{"Handler is not a function"}
 	disallowedHandlerType = staticTypeMessage{"Disallowed handler type"}
+
+	mustCombineARecord = staticTypeMessage{"You can only combine records"}
 
 	combineTypesRequiresRecordType = staticTypeMessage{"❰⩓❱ requires arguments that are record types"}
 
