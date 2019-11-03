@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -193,9 +194,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		l := evalWith(t.L, e, shouldAlphaNormalize)
 		r := evalWith(t.R, e, shouldAlphaNormalize)
 		switch t.OpCode {
-		case OrOp, AndOp, EqOp, NeOp, TextAppendOp,
-			ListAppendOp, RecordMergeOp, RightBiasedRecordMergeOp,
-			RecordTypeMergeOp, ImportAltOp, EquivOp:
+		case OrOp, AndOp, EqOp, NeOp, TextAppendOp, ListAppendOp:
 			return TextLitVal{Suffix: "OpTerm unimplemented"}
 		case PlusOp:
 			ln, lok := l.(NaturalLit)
@@ -227,7 +226,26 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			if r == NaturalLit(1) {
 				return l
 			}
-			return OpValue{OpCode: t.OpCode, L: l, R: r}
+		case RecordMergeOp, RightBiasedRecordMergeOp:
+		case RecordTypeMergeOp:
+			lRT, lOk := l.(RecordTypeVal)
+			rRT, rOk := r.(RecordTypeVal)
+
+			if lOk && len(lRT) == 0 {
+				return r
+			}
+			if rOk && len(rRT) == 0 {
+				return l
+			}
+			if lOk && rOk {
+				result, err := mergeRecords(lRT, rRT)
+				if err != nil {
+					panic(err) // shouldn't happen for well-typed terms
+				}
+				return result
+			}
+		case ImportAltOp:
+		case EquivOp:
 		}
 		return OpValue{OpCode: t.OpCode, L: l, R: r}
 	case EmptyList:
@@ -377,4 +395,28 @@ func applyVal(fn Value, args ...Value) Value {
 		out = AppValue{Fn: out, Arg: arg}
 	}
 	return out
+}
+
+func mergeRecords(l RecordTypeVal, r RecordTypeVal) (RecordTypeVal, error) {
+	var err error
+	result := make(RecordTypeVal)
+	for k, v := range l {
+		result[k] = v
+	}
+	for k, v := range r {
+		if lField, ok := result[k]; ok {
+			lSubrecord, Lok := lField.(RecordTypeVal)
+			rSubrecord, Rok := v.(RecordTypeVal)
+			if !(Lok && Rok) {
+				return nil, errors.New("Record mismatch")
+			}
+			result[k], err = mergeRecords(lSubrecord, rSubrecord)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			result[k] = v
+		}
+	}
+	return result, nil
 }

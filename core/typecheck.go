@@ -388,6 +388,37 @@ func typeWith(ctx context, t Term) (Term, error) {
 				return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
 			}
 			return lt, nil
+		case RecordMergeOp, RightBiasedRecordMergeOp:
+			return nil, fmt.Errorf("Internal error: unknown opcode %v", t.OpCode)
+		case RecordTypeMergeOp:
+			lKind, err := normalizedTypeWith(ctx, t.L)
+			if err != nil {
+				return nil, err
+			}
+			rKind, err := normalizedTypeWith(ctx, t.R)
+			if err != nil {
+				return nil, err
+			}
+			lt, ok := Eval(t.L).(RecordTypeVal)
+			if !ok {
+				return nil, mkTypeError(combineTypesRequiresRecordType)
+			}
+			rt, ok := Eval(t.R).(RecordTypeVal)
+			if !ok {
+				return nil, mkTypeError(combineTypesRequiresRecordType)
+			}
+			// ensure that the records are safe to merge
+			if _, err := mergeRecords(lt, rt); err != nil {
+				return nil, err
+			}
+			if lKind.(Universe) > rKind.(Universe) {
+				return lKind, nil
+			}
+			return rKind, nil
+		case ImportAltOp:
+			fallthrough
+		case EquivOp:
+			fallthrough
 		default:
 			return nil, fmt.Errorf("Internal error: unknown opcode %v", t.OpCode)
 		}
@@ -871,6 +902,8 @@ var (
 	missingHandler        = staticTypeMessage{"Missing handler"}
 	handlerNotAFunction   = staticTypeMessage{"Handler is not a function"}
 	disallowedHandlerType = staticTypeMessage{"Disallowed handler type"}
+
+	combineTypesRequiresRecordType = staticTypeMessage{"❰⩓❱ requires arguments that are record types"}
 
 	cantAccess              = staticTypeMessage{"Not a record or a union"}
 	cantProject             = staticTypeMessage{"Not a record"}
