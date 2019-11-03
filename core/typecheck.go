@@ -388,8 +388,21 @@ func typeWith(ctx context, t Term) (Term, error) {
 				return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
 			}
 			return lt, nil
-		case RecordMergeOp, RightBiasedRecordMergeOp:
-			return nil, fmt.Errorf("Internal error: unknown opcode %v", t.OpCode)
+		case RecordMergeOp:
+			lType, err := typeWith(ctx, t.L)
+			if err != nil {
+				return nil, err
+			}
+			rType, err := typeWith(ctx, t.R)
+			if err != nil {
+				return nil, err
+			}
+			_, err = typeWith(ctx,
+				OpTerm{L: lType, R: rType, OpCode: RecordTypeMergeOp})
+			if err != nil {
+				return nil, err
+			}
+			return Quote(Eval(OpTerm{L: lType, R: rType, OpCode: RecordTypeMergeOp})), nil
 		case RecordTypeMergeOp:
 			lKind, err := normalizedTypeWith(ctx, t.L)
 			if err != nil {
@@ -408,13 +421,15 @@ func typeWith(ctx context, t Term) (Term, error) {
 				return nil, mkTypeError(combineTypesRequiresRecordType)
 			}
 			// ensure that the records are safe to merge
-			if _, err := mergeRecords(lt, rt); err != nil {
+			if _, err := mergeRecordTypes(lt, rt); err != nil {
 				return nil, err
 			}
 			if lKind.(Universe) > rKind.(Universe) {
 				return lKind, nil
 			}
 			return rKind, nil
+		case RightBiasedRecordMergeOp:
+			fallthrough
 		case ImportAltOp:
 			fallthrough
 		case EquivOp:

@@ -58,15 +58,11 @@ var expectedFailures = []string{
 	// reimplementation
 	"TestTypeInference/unit/Assert",
 	"TestTypeInference/unit/Equivalence",
-	"TestTypeInference/unit/RecursiveRecordMerge",
 	"TestTypeInference/unit/RightBiasedRecordMerge",
 	"TestTypechecks/prefer",
 	"TestTypechecks/prelude",
-	"TestTypechecks/simple/RecursiveRecordMerge",
 	"TestTypechecks/simple/RightBiased",
-	"TestTypechecks/simple/combineMixed",
 	"TestTypechecks/simple/complexShadow",
-	"TestNormalization/haskell-tutorial/combine/",
 	"TestNormalization/haskell-tutorial/prefer",
 	"TestNormalization/remoteSystems",
 	"TestNormalization/simple/equal",
@@ -83,7 +79,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/OperatorNotEq",
 	"TestNormalization/unit/OperatorListConcat",
 	"TestNormalization/unit/OperatorTextConcat",
-	"TestNormalization/unit/RecursiveRecordMerge",
 	"TestNormalization/unit/RightBiased",
 }
 

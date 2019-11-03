@@ -226,7 +226,19 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			if r == NaturalLit(1) {
 				return l
 			}
-		case RecordMergeOp, RightBiasedRecordMergeOp:
+		case RecordMergeOp:
+			lR, lOk := l.(RecordLitVal)
+			rR, rOk := r.(RecordLitVal)
+
+			if lOk && len(lR) == 0 {
+				return r
+			}
+			if rOk && len(rR) == 0 {
+				return l
+			}
+			if lOk && rOk {
+				return mustMergeRecordLitVals(lR, rR)
+			}
 		case RecordTypeMergeOp:
 			lRT, lOk := l.(RecordTypeVal)
 			rRT, rOk := r.(RecordTypeVal)
@@ -238,12 +250,13 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				return l
 			}
 			if lOk && rOk {
-				result, err := mergeRecords(lRT, rRT)
+				result, err := mergeRecordTypes(lRT, rRT)
 				if err != nil {
 					panic(err) // shouldn't happen for well-typed terms
 				}
 				return result
 			}
+		case RightBiasedRecordMergeOp:
 		case ImportAltOp:
 		case EquivOp:
 		}
@@ -293,19 +306,51 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			Type:   evalWith(t.Type, e, shouldAlphaNormalize),
 		}
 	case Field:
-		r := evalWith(t.Record, e, shouldAlphaNormalize)
-		for {
-			proj, ok := r.(ProjectVal)
-			if !ok {
-				break
+		record := evalWith(t.Record, e, shouldAlphaNormalize)
+		for { // simplifications
+			proj, ok := record.(ProjectVal)
+			if ok {
+				record = proj.Record
+				continue
 			}
-			r = proj.Record
+			op, ok := record.(OpValue)
+			if ok && op.OpCode == RecordMergeOp {
+				if l, ok := op.L.(RecordLitVal); ok {
+					if _, ok := l[t.FieldName]; ok {
+						return FieldVal{
+							Record: OpValue{
+								L:      RecordLitVal{t.FieldName: l[t.FieldName]},
+								R:      op.R,
+								OpCode: RecordMergeOp,
+							},
+							FieldName: t.FieldName,
+						}
+					}
+					record = op.R
+					continue
+				}
+				if r, ok := op.R.(RecordLitVal); ok {
+					if _, ok := r[t.FieldName]; ok {
+						return FieldVal{
+							Record: OpValue{
+								L:      op.L,
+								R:      RecordLitVal{t.FieldName: r[t.FieldName]},
+								OpCode: RecordMergeOp,
+							},
+							FieldName: t.FieldName,
+						}
+					}
+					record = op.L
+					continue
+				}
+			}
+			break
 		}
-		if r, ok := r.(RecordLitVal); ok {
-			return r[t.FieldName]
+		if lit, ok := record.(RecordLitVal); ok {
+			return lit[t.FieldName]
 		}
 		return FieldVal{
-			Record:    r,
+			Record:    record,
 			FieldName: t.FieldName,
 		}
 	case Project:
@@ -397,7 +442,7 @@ func applyVal(fn Value, args ...Value) Value {
 	return out
 }
 
-func mergeRecords(l RecordTypeVal, r RecordTypeVal) (RecordTypeVal, error) {
+func mergeRecordTypes(l RecordTypeVal, r RecordTypeVal) (RecordTypeVal, error) {
 	var err error
 	result := make(RecordTypeVal)
 	for k, v := range l {
@@ -410,7 +455,7 @@ func mergeRecords(l RecordTypeVal, r RecordTypeVal) (RecordTypeVal, error) {
 			if !(Lok && Rok) {
 				return nil, errors.New("Record mismatch")
 			}
-			result[k], err = mergeRecords(lSubrecord, rSubrecord)
+			result[k], err = mergeRecordTypes(lSubrecord, rSubrecord)
 			if err != nil {
 				return nil, err
 			}
@@ -419,4 +464,25 @@ func mergeRecords(l RecordTypeVal, r RecordTypeVal) (RecordTypeVal, error) {
 		}
 	}
 	return result, nil
+}
+
+func mustMergeRecordLitVals(l RecordLitVal, r RecordLitVal) RecordLitVal {
+	output := make(RecordLitVal)
+	for k, v := range l {
+		output[k] = v
+	}
+	for k, v := range r {
+		if lField, ok := output[k]; ok {
+			lSubrecord, Lok := lField.(RecordLitVal)
+			rSubrecord, Rok := v.(RecordLitVal)
+			if !(Lok && Rok) {
+				// typecheck ought to have caught this
+				panic("Record mismatch")
+			}
+			output[k] = mustMergeRecordLitVals(lSubrecord, rSubrecord)
+		} else {
+			output[k] = v
+		}
+	}
+	return output
 }
