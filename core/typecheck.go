@@ -396,15 +396,12 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		listType := Eval(t.Type)
-		app, ok := listType.(AppValue)
+		listType := Quote(Eval(t.Type))
+		_, ok := listElementType(listType)
 		if !ok {
 			return nil, mkTypeError(invalidListType)
 		}
-		if app.Fn != List {
-			return nil, mkTypeError(invalidListType)
-		}
-		return Quote(listType), nil
+		return listType, nil
 	case NonEmptyList:
 		T0, err := typeWith(ctx, t[0])
 		if err != nil {
@@ -491,11 +488,11 @@ func typeWith(ctx context, t Term) (Term, error) {
 				return nil, mkTypeError(invalidToMapRecordKind)
 			}
 			tTerm := Quote(Eval(t.Type))
-			t, ok := tTerm.(AppTerm)
-			if !ok || t.Fn != List {
+			t, ok := listElementType(tTerm)
+			if !ok {
 				return nil, mkTypeError(invalidToMapType(tTerm))
 			}
-			rt, ok := t.Arg.(RecordType)
+			rt, ok := t.(RecordType)
 			if !ok || len(rt) != 2 || rt["mapKey"] != Text || rt["mapValue"] == nil {
 				return nil, mkTypeError(invalidToMapType(tTerm))
 			}
