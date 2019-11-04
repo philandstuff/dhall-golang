@@ -56,8 +56,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
 
 	// reimplementation
-	"TestTypeInference/unit/Assert",
-	"TestTypeInference/unit/Equivalence",
 	"TestTypechecks/prelude",
 	"TestTypechecks/simple/complexShadow",
 	"TestNormalization/remoteSystems",

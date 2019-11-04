@@ -456,7 +456,26 @@ func typeWith(ctx context, t Term) (Term, error) {
 		case ImportAltOp:
 			fallthrough
 		case EquivOp:
-			fallthrough
+			lType, err := typeWith(ctx, t.L)
+			if err != nil {
+				return nil, err
+			}
+			rType, err := typeWith(ctx, t.R)
+			if err != nil {
+				return nil, err
+			}
+			err = assertSimpleType(ctx, lType, Type)
+			if err != nil {
+				return nil, mkTypeError(incomparableExpression)
+			}
+			err = assertSimpleType(ctx, lType, Type)
+			if err != nil {
+				return nil, mkTypeError(incomparableExpression)
+			}
+			if !judgmentallyEqual(lType, rType) {
+				return nil, mkTypeError(equivalenceTypeMismatch)
+			}
+			return Type, nil
 		default:
 			return nil, fmt.Errorf("Internal error: unknown opcode %v", t.OpCode)
 		}
@@ -771,7 +790,21 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return result, nil
 	case Assert:
-		return nil, errors.New("Assert type unimplemented")
+		annotType, err := normalizedTypeWith(ctx, t.Annotation)
+		if err != nil {
+			return nil, err
+		}
+		if annotType != Type {
+			return nil, mkTypeError(notAnEquivalence)
+		}
+		op, ok := Eval(t.Annotation).(OpValue)
+		if !ok || op.OpCode != EquivOp {
+			return nil, mkTypeError(notAnEquivalence)
+		}
+		if !judgmentallyEqualVals(op.L, op.R) {
+			return nil, mkTypeError(assertionFailed(Quote(op.L), Quote(op.R)))
+		}
+		return Quote(op), nil
 	}
 	return nil, mkTypeError(unhandledTypeCase)
 }
@@ -906,6 +939,16 @@ func projectionTypeMismatch(firstType, secondType Term) typeMessage {
 	}
 }
 
+func assertionFailed(leftTerm, rightTerm Term) typeMessage {
+	return twoArgTypeMessage{
+		format: "Assertion failed\n" +
+			"\n" +
+			"%v is not equivalent to %v",
+		expr0: leftTerm,
+		expr1: rightTerm,
+	}
+}
+
 func typeCheckBoundVar(boundVar Term) typeMessage {
 	return oneArgTypeMessage{
 		format: "Internal error: shouldn't ever see BoundVar in TypeOf(), but saw %s",
@@ -928,6 +971,9 @@ var (
 
 	notAFunction = staticTypeMessage{"Not a function"}
 	untyped      = staticTypeMessage{"❰Sort❱ has no type, kind, or sort"}
+
+	incomparableExpression  = staticTypeMessage{"Incomparable expression"}
+	equivalenceTypeMismatch = staticTypeMessage{"The two sides of the equivalence have different types"}
 
 	invalidToMapRecordKind  = staticTypeMessage{"❰toMap❱ expects a record of kind ❰Type❱"}
 	heterogenousRecordToMap = staticTypeMessage{"❰toMap❱ expects a homogenous record"}
@@ -952,4 +998,6 @@ var (
 	missingConstructor      = staticTypeMessage{"Missing constructor"}
 
 	unhandledTypeCase = staticTypeMessage{"Internal error: unhandled case in TypeOf()"}
+
+	notAnEquivalence = staticTypeMessage{"Not an equivalence"}
 )
