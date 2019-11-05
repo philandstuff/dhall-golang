@@ -246,33 +246,25 @@ func typeWith(ctx context, t Term) (Term, error) {
 	case NaturalLit:
 		return Natural, nil
 	case Let:
-		body := t.Body
-		binding := t.Bindings[0]
-		rest := t.Bindings[1:]
-		for {
-			value := Quote(Eval(binding.Value))
-			body = subst(binding.Variable, value, body)
-			for i, b := range rest {
-				rest[i].Value = subst(binding.Variable, value, b.Value)
-				if b.Annotation != nil {
-					rest[i].Annotation = subst(binding.Variable, value, b.Annotation)
-				}
-			}
+		let := t
+		for len(let.Bindings) > 0 {
+			binding := let.Bindings[0]
+			let.Bindings = let.Bindings[1:]
+
 			bindingType, err := typeWith(ctx, binding.Value)
 			if err != nil {
 				return nil, err
 			}
+
 			if binding.Annotation != nil && !judgmentallyEqual(bindingType, binding.Annotation) {
 				return nil, mkTypeError(annotMismatch(binding.Annotation, bindingType))
 			}
+
+			value := Quote(Eval(binding.Value))
+			let = subst(binding.Variable, value, let).(Let)
 			ctx = ctx.extend(binding.Variable, bindingType)
-			if len(rest) == 0 {
-				break
-			}
-			binding = rest[0]
-			rest = rest[1:]
 		}
-		return typeWith(ctx, body)
+		return typeWith(ctx, let.Body)
 	case Annot:
 		if t.Annotation != Sort {
 			// Γ ⊢ T₀ : i

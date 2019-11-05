@@ -73,15 +73,35 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 	case DoubleLit:
 		return t
 	case TextLitTerm:
-		return TextLitTerm{Suffix: "TextLit unimplemented but here's the suffix: " + t.Suffix}
+		result := TextLitTerm{Suffix: t.Suffix}
+		if t.Chunks == nil {
+			return result
+		}
+		result.Chunks = Chunks{}
+		for _, chunk := range t.Chunks {
+			result.Chunks = append(result.Chunks,
+				Chunk{
+					Prefix: chunk.Prefix,
+					Expr:   substAtLevel(i, name, replacement, chunk.Expr),
+				})
+		}
+		return result
 	case BoolLit:
 		return t
 	case IfTerm:
-		return TextLitTerm{Suffix: "If unimplemented"}
+		return IfTerm{
+			Cond: substAtLevel(i, name, replacement, t.Cond),
+			T:    substAtLevel(i, name, replacement, t.T),
+			F:    substAtLevel(i, name, replacement, t.F),
+		}
 	case IntegerLit:
 		return t
 	case OpTerm:
-		return TextLitTerm{Suffix: "OpTerm unimplemented"}
+		return OpTerm{
+			OpCode: t.OpCode,
+			L:      substAtLevel(i, name, replacement, t.L),
+			R:      substAtLevel(i, name, replacement, t.R),
+		}
 	case EmptyList:
 		return EmptyList{Type: substAtLevel(i, name, replacement, t.Type)}
 	case NonEmptyList:

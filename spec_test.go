@@ -57,7 +57,6 @@ var expectedFailures = []string{
 
 	// reimplementation
 	"TestTypechecks/prelude",
-	"TestTypechecks/simple/complexShadow",
 	"TestNormalization/remoteSystems",
 	"TestNormalization/simple/equal",
 	"TestNormalization/simple/notEqual",
