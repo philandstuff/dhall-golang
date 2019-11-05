@@ -218,7 +218,11 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		}
 		return rt
 	case ToMapVal:
-		return TextLitTerm{Suffix: "quote ToMapVal unimplemented"}
+		result := ToMap{Record: quoteWith(ctx, v.Record)}
+		if v.Type != nil {
+			result.Type = quoteWith(ctx, v.Type)
+		}
+		return result
 	case FieldVal:
 		return Field{
 			Record:    quoteWith(ctx, v.Record),

@@ -105,7 +105,11 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 	case EmptyList:
 		return EmptyList{Type: substAtLevel(i, name, replacement, t.Type)}
 	case NonEmptyList:
-		return TextLitTerm{Suffix: "NonEmptyList unimplemented"}
+		result := make(NonEmptyList, len(t))
+		for i, e := range t {
+			result[i] = substAtLevel(i, name, replacement, e)
+		}
+		return result
 	case Some:
 		return Some{substAtLevel(i, name, replacement, t.Val)}
 	case RecordType:
@@ -121,7 +125,11 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		}
 		return result
 	case ToMap:
-		return TextLitTerm{Suffix: "ToMap unimplemented"}
+		result := ToMap{Record: substAtLevel(i, name, replacement, t.Record)}
+		if t.Type != nil {
+			result.Type = substAtLevel(i, name, replacement, t.Type)
+		}
+		return result
 	case Field:
 		return Field{
 			Record:    substAtLevel(i, name, replacement, t.Record),
@@ -236,21 +244,45 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 	case DoubleLit:
 		return t
 	case TextLitTerm:
-		return TextLitTerm{Suffix: "TextLit unimplemented but here's the suffix: " + t.Suffix}
+		result := TextLitTerm{Suffix: t.Suffix}
+		if t.Chunks == nil {
+			return result
+		}
+		result.Chunks = Chunks{}
+		for _, chunk := range t.Chunks {
+			result.Chunks = append(result.Chunks,
+				Chunk{
+					Prefix: chunk.Prefix,
+					Expr:   rebindAtLevel(i, local, chunk.Expr),
+				})
+		}
+		return result
 	case BoolLit:
 		return t
 	case IfTerm:
-		return TextLitTerm{Suffix: "If unimplemented"}
+		return IfTerm{
+			Cond: rebindAtLevel(i, local, t.Cond),
+			T:    rebindAtLevel(i, local, t.T),
+			F:    rebindAtLevel(i, local, t.F),
+		}
 	case IntegerLit:
 		return t
 	case OpTerm:
-		return TextLitTerm{Suffix: "OpTerm unimplemented"}
+		return OpTerm{
+			OpCode: t.OpCode,
+			L:      rebindAtLevel(i, local, t.L),
+			R:      rebindAtLevel(i, local, t.R),
+		}
 	case EmptyList:
 		return EmptyList{
 			Type: rebindAtLevel(i, local, t.Type),
 		}
 	case NonEmptyList:
-		return TextLitTerm{Suffix: "NonEmptyList unimplemented"}
+		result := make(NonEmptyList, len(t))
+		for i, e := range t {
+			result[i] = rebindAtLevel(i, local, e)
+		}
+		return result
 	case Some:
 		return Some{rebindAtLevel(i, local, t.Val)}
 	case RecordType:
@@ -266,7 +298,11 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 		}
 		return result
 	case ToMap:
-		return TextLitTerm{Suffix: "ToMap unimplemented"}
+		result := ToMap{Record: rebindAtLevel(i, local, t.Record)}
+		if t.Type != nil {
+			result.Type = rebindAtLevel(i, local, t.Type)
+		}
+		return result
 	case Field:
 		return Field{
 			Record:    rebindAtLevel(i, local, t.Record),
