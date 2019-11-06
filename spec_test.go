@@ -54,9 +54,6 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/RecordLitDuplicateFields.dhall",
 	"TestTypecheckFails/unit/UnionTypeDuplicateVariants",
 	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
-
-	// reimplementation
-	"TestTypechecks/preludeA",
 }
 
 func pass(t *testing.T) {

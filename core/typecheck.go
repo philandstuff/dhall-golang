@@ -598,7 +598,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return t.Type, nil
 	case Field:
-		recordTypeTerm, err := typeWith(ctx, t.Record)
+		recordTypeTerm, err := normalizedTypeWith(ctx, t.Record)
 		if err != nil {
 			return nil, err
 		}
