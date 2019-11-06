@@ -56,20 +56,7 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
 
 	// reimplementation
-	"TestTypechecks/prelude",
-	"TestNormalization/remoteSystems",
-	"TestNormalization/simple/equal",
-	"TestNormalization/simple/notEqual",
-	"TestNormalization/simplifications/and",
-	"TestNormalization/simplifications/eq",
-	"TestNormalization/simplifications/ne",
-	"TestNormalization/simplifications/or",
-	"TestNormalization/unit/OperatorOr",
-	"TestNormalization/unit/OperatorAnd",
-	"TestNormalization/unit/OperatorEqual",
-	"TestNormalization/unit/OperatorNotEq",
-	"TestNormalization/unit/OperatorListConcat",
-	"TestNormalization/unit/OperatorTextConcat",
+	"TestTypechecks/preludeA",
 }
 
 func pass(t *testing.T) {

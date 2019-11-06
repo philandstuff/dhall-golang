@@ -106,8 +106,8 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		return EmptyList{Type: substAtLevel(i, name, replacement, t.Type)}
 	case NonEmptyList:
 		result := make(NonEmptyList, len(t))
-		for i, e := range t {
-			result[i] = substAtLevel(i, name, replacement, e)
+		for j, e := range t {
+			result[j] = substAtLevel(i, name, replacement, e)
 		}
 		return result
 	case Some:

@@ -194,8 +194,79 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		l := evalWith(t.L, e, shouldAlphaNormalize)
 		r := evalWith(t.R, e, shouldAlphaNormalize)
 		switch t.OpCode {
-		case OrOp, AndOp, EqOp, NeOp, TextAppendOp, ListAppendOp:
-			return TextLitVal{Suffix: "OpTerm unimplemented"}
+		case OrOp, AndOp, EqOp, NeOp:
+			lb, lok := l.(BoolLit)
+			rb, rok := r.(BoolLit)
+			switch t.OpCode {
+			case OrOp:
+				if lok {
+					if lb {
+						return True
+					}
+					return r
+				}
+				if rok {
+					if rb {
+						return True
+					}
+					return l
+				}
+				if judgmentallyEqualVals(l, r) {
+					return l
+				}
+			case AndOp:
+				if lok {
+					if lb {
+						return r
+					}
+					return False
+				}
+				if rok {
+					if rb {
+						return l
+					}
+					return False
+				}
+				if judgmentallyEqualVals(l, r) {
+					return l
+				}
+			case EqOp:
+				if lok && bool(lb) {
+					return r
+				}
+				if rok && bool(rb) {
+					return l
+				}
+				if judgmentallyEqualVals(l, r) {
+					return True
+				}
+			case NeOp:
+				if lok && !bool(lb) {
+					return r
+				}
+				if rok && !bool(rb) {
+					return l
+				}
+				if judgmentallyEqualVals(l, r) {
+					return False
+				}
+			}
+		case TextAppendOp:
+			return evalWith(
+				TextLitTerm{Chunks: Chunks{{Expr: t.L}, {Expr: t.R}}},
+				e, shouldAlphaNormalize)
+		case ListAppendOp:
+			if _, ok := l.(EmptyListVal); ok {
+				return r
+			}
+			if _, ok := r.(EmptyListVal); ok {
+				return l
+			}
+			ll, lok := l.(NonEmptyListVal)
+			rl, rok := r.(NonEmptyListVal)
+			if lok && rok {
+				return append(ll, rl...)
+			}
 		case PlusOp:
 			ln, lok := l.(NaturalLit)
 			rn, rok := r.(NaturalLit)
