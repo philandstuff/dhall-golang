@@ -227,6 +227,12 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 			}
 		}
 		return newList, nil
+	case Some:
+		val, err := Load(e.Val, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		return Some{val}, nil
 	case RecordType:
 		newRecord := make(RecordType, len(e))
 		for k, v := range e {
@@ -247,13 +253,68 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 			}
 		}
 		return newRecord, nil
+	case ToMap:
+		record, err := Load(e.Record, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		typ, err := Load(e.Type, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		return ToMap{Record: record, Type: typ}, nil
 	case Field:
 		newRecord, err := Load(e.Record, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return Field{Record: newRecord, FieldName: e.FieldName}, nil
-		// TODO: other new terms (Project, ProjectType etc)
+	case Project:
+		newRecord, err := Load(e.Record, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		return Project{Record: newRecord, FieldNames: e.FieldNames}, nil
+	case ProjectType:
+		record, err := Load(e.Record, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		typ, err := Load(e.Selector, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		return ProjectType{Record: record, Selector: typ}, nil
+	case UnionType:
+		result := make(UnionType, len(e))
+		for k, v := range e {
+			var err error
+			if v == nil {
+				result[k] = nil
+				continue
+			}
+			result[k], err = Load(v, ancestors...)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return result, nil
+	case Merge:
+		handler, err := Load(e.Handler, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		union, err := Load(e.Union, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		return Merge{Handler: handler, Union: union}, nil
+	case Assert:
+		annot, err := Load(e.Annotation, ancestors...)
+		if err != nil {
+			return nil, err
+		}
+		return Assert{Annotation: annot}, nil
 	default:
 		// Const, NaturalLit, etc
 		return e, nil
