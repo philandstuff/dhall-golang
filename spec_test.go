@@ -394,7 +394,6 @@ func TestImport(t *testing.T) {
 }
 
 func TestSemanticHash(t *testing.T) {
-	t.Skip("Skipping SemanticHash for now")
 	t.Parallel()
 	sha256re := regexp.MustCompile("^sha256:([0-9a-fA-F]{64})\n$")
 	runTestOnFilePairs(t, "dhall-lang/tests/semantic-hash/success/",
