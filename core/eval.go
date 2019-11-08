@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 )
@@ -72,7 +73,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		}
 	case BoundVar:
 		if t.Index >= len(e[t.Name]) {
-			panic(fmt.Sprintf("Eval: unbound variable %s", t))
+			log.Printf("Eval: unbound variable %s", t)
+			return FreeVar{Name: t.Name, Index: t.Index}
 		}
 		return e[t.Name][t.Index]
 	case LocalVar:

@@ -54,6 +54,10 @@ var expectedFailures = []string{
 	"TestTypecheckFails/unit/RecordLitDuplicateFields.dhall",
 	"TestTypecheckFails/unit/UnionTypeDuplicateVariants",
 	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
+
+	// since NbE, we don't deal with unbound variables in the
+	// "standard" way, because we don't have a shift() function
+	"TestAlphaNormalization/unit/FunctionNestedBindingXXFree",
 }
 
 func pass(t *testing.T) {
@@ -314,21 +318,20 @@ func TestTypeInference(t *testing.T) {
 }
 
 func TestAlphaNormalization(t *testing.T) {
-	t.Skip("Alpha normalization unimplemented")
 	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/alpha-normalization/success/",
 		"A.dhall", "B.dhall",
 		func(t *testing.T, aPath, bPath string) {
-			// parsedA, err := parser.ParseFile(aPath)
-			// expectNoError(t, err)
+			parsedA, err := parser.ParseFile(aPath)
+			expectNoError(t, err)
 
-			// parsedB, err := parser.ParseFile(bPath)
-			// expectNoError(t, err)
+			parsedB, err := parser.ParseFile(bPath)
+			expectNoError(t, err)
 
-			// normA := parsedA.(core.Term).AlphaNormalize()
-			// normB := parsedB.(core.Term).AlphaNormalize()
+			normA := core.Quote(core.AlphaBetaEval(parsedA.(core.Term)))
+			normB := core.Quote(core.AlphaBetaEval(parsedB.(core.Term)))
 
-			// expectEqualTerms(t, normB, normA)
+			expectEqualTerms(t, normB, normA)
 		})
 }
 
