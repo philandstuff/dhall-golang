@@ -255,6 +255,11 @@ func BenchmarkParserLargeExpression(b *testing.B) {
 	}
 }
 
+func isSimpleTest(testName string) bool {
+	return strings.Contains(testName, "/unit/") ||
+		strings.Contains(testName, "/simple/")
+}
+
 func TestTypecheckFails(t *testing.T) {
 	t.Parallel()
 	runTestOnEachFile(t, "dhall-lang/tests/typecheck/failure/", func(t *testing.T, testPath string) {
@@ -284,15 +289,22 @@ func TestTypechecks(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA.(core.Term), core.Local(aPath))
-			expectNoError(t, err)
+			var resolvedA, resolvedB core.Term
+			if isSimpleTest(t.Name()) {
+				resolvedA = parsedA.(core.Term)
+				resolvedB = parsedB.(core.Term)
+			} else {
 
-			resolvedB, err := imports.Load(parsedB.(core.Term), core.Local(bPath))
-			expectNoError(t, err)
+				resolvedA, err = imports.Load(parsedA.(core.Term), core.Local(aPath))
+				expectNoError(t, err)
+
+				resolvedB, err = imports.Load(parsedB.(core.Term), core.Local(bPath))
+				expectNoError(t, err)
+			}
 
 			annot := core.Annot{
-				Expr:       resolvedA.(core.Term),
-				Annotation: resolvedB.(core.Term),
+				Expr:       resolvedA,
+				Annotation: resolvedB,
 			}
 			_, err = core.TypeOf(annot)
 			expectNoError(t, err)
@@ -310,7 +322,16 @@ func TestTypeInference(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			inferredType, err := core.TypeOf(parsedA.(core.Term))
+			var resolvedA core.Term
+			if isSimpleTest(t.Name()) {
+				resolvedA = parsedA.(core.Term)
+			} else {
+				// FIXME: should disable cache here
+				resolvedA, err = imports.Load(parsedA.(core.Term), core.Local(aPath))
+				expectNoError(t, err)
+			}
+
+			inferredType, err := core.TypeOf(resolvedA)
 			expectNoError(t, err)
 
 			expectEqualTerms(t, parsedB.(core.Term), inferredType)
@@ -346,13 +367,20 @@ func TestNormalization(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA.(core.Term), core.Local(aPath))
-			expectNoError(t, err)
+			var resolvedA, resolvedB core.Term
+			if isSimpleTest(t.Name()) {
+				resolvedA = parsedA.(core.Term)
+				resolvedB = parsedB.(core.Term)
+			} else {
 
-			resolvedB, err := imports.Load(parsedB.(core.Term), core.Local(bPath))
-			expectNoError(t, err)
+				resolvedA, err = imports.Load(parsedA.(core.Term), core.Local(aPath))
+				expectNoError(t, err)
 
-			normA := core.Eval(resolvedA.(core.Term))
+				resolvedB, err = imports.Load(parsedB.(core.Term), core.Local(bPath))
+				expectNoError(t, err)
+			}
+
+			normA := core.Eval(resolvedA)
 
 			expectEqualTerms(t, resolvedB, core.Quote(normA))
 		})
@@ -401,8 +429,14 @@ func TestSemanticHash(t *testing.T) {
 		func(t *testing.T, aPath, bPath string) {
 			parsedA, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
-			resolvedA, err := imports.Load(parsedA.(core.Term), core.Local(aPath))
-			expectNoError(t, err)
+
+			var resolvedA core.Term
+			if isSimpleTest(t.Name()) {
+				resolvedA = parsedA.(core.Term)
+			} else {
+				resolvedA, err = imports.Load(parsedA.(core.Term), core.Local(aPath))
+				expectNoError(t, err)
+			}
 
 			actualHash, err := binary.SemanticHash(resolvedA)
 			expectNoError(t, err)
