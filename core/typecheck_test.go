@@ -48,6 +48,10 @@ var _ = Describe("TypeOf", func() {
 			Mkλ("a", Type,
 				EmptyList{Apply(List, Bound("a"))}),
 			MkΠ("a", Type, Apply(List, Bound("a")))),
+		Entry("λ(a : Natural) → assert : a ≡ a -- check presence of variables in resulting type",
+			Mkλ("a", Natural,
+				Assert{OpTerm{EquivOp, Bound("a"), Bound("a")}}),
+			MkΠ("a", Natural, OpTerm{EquivOp, Bound("a"), Bound("a")})),
 	)
 	DescribeTable("Pi",
 		typecheckTest,
@@ -56,6 +60,12 @@ var _ = Describe("TypeOf", func() {
 	DescribeTable("Application",
 		typecheckTest,
 		Entry(`List Natural : Type`, Apply(List, Natural), Type),
+		Entry("(λ(a : Natural) → assert : a ≡ a) 3 -- check presence of variables in resulting type",
+			Apply(
+				Mkλ("a", Natural,
+					Assert{OpTerm{EquivOp, Bound("a"), Bound("a")}}),
+				NaturalLit(3)),
+			OpTerm{EquivOp, NaturalLit(3), NaturalLit(3)}),
 	)
 	DescribeTable("Others",
 		typecheckTest,

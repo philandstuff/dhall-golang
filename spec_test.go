@@ -21,7 +21,7 @@ import (
 
 var slowTests = []string{
 	"TestParserAccepts/largeExpressionA",
-	"TestTypechecks/preludeA",
+	"TestTypeInference/preludeA",
 }
 
 var expectedFailures = []string{
@@ -29,10 +29,11 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/Headers",
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
-	"TestTypecheckFails/customHeadersUsingBoundVariable",
+	"TestTypeInferenceFails/customHeadersUsingBoundVariable",
 	"TestImport/customHeadersA.dhall",
 	"TestImport/headerForwardingA.dhall",
 	"TestImport/noHeaderForwardingA.dhall",
+	"TestImportFails/customHeadersUsingBoundVariable",
 
 	// needs bigint support
 	"TestNormalization/simple/integerToDoubleA.dhall",
@@ -50,14 +51,19 @@ var expectedFailures = []string{
 
 	// in dhall-golang, duplicate fields & alternatives are a parse error, not a
 	// type error
-	"TestTypecheckFails/unit/RecordTypeDuplicateFields.dhall",
-	"TestTypecheckFails/unit/RecordLitDuplicateFields.dhall",
-	"TestTypecheckFails/unit/UnionTypeDuplicateVariants",
-	"TestTypecheckFails/unit/README", // FIXME, shouldn't need excluding
+	"TestTypeInferenceFails/unit/RecordTypeDuplicateFields.dhall",
+	"TestTypeInferenceFails/unit/RecordLitDuplicateFields.dhall",
+	"TestTypeInferenceFails/unit/RecordProjectionDuplicateFields.dhall",
+	"TestTypeInferenceFails/unit/UnionTypeDuplicateVariants",
+	"TestTypeInferenceFails/unit/README", // FIXME, shouldn't need excluding
 
 	// since NbE, we don't deal with unbound variables in the
 	// "standard" way, because we don't have a shift() function
 	"TestAlphaNormalization/unit/FunctionNestedBindingXXFree",
+
+	// this passes with an empty cache. the tests should disable the
+	// cache for TestTypeInference but don't yet.
+	"TestTypeInference/preludeA",
 }
 
 func pass(t *testing.T) {
@@ -260,57 +266,6 @@ func isSimpleTest(testName string) bool {
 		strings.Contains(testName, "/simple/")
 }
 
-func TestTypecheckFails(t *testing.T) {
-	t.Parallel()
-	runTestOnEachFile(t, "dhall-lang/tests/typecheck/failure/", func(t *testing.T, testPath string) {
-		parsed, err := parser.ParseFile(testPath)
-
-		expectNoError(t, err)
-
-		expr, ok := parsed.(core.Term)
-		if !ok {
-			failf(t, "Expected core.Term, got %+v\n", parsed)
-		}
-
-		_, err = core.TypeOf(expr)
-
-		expectError(t, err)
-	})
-}
-
-func TestTypechecks(t *testing.T) {
-	t.Parallel()
-	runTestOnFilePairs(t, "dhall-lang/tests/typecheck/success/",
-		"A.dhall", "B.dhall",
-		func(t *testing.T, aPath, bPath string) {
-			parsedA, err := parser.ParseFile(aPath)
-			expectNoError(t, err)
-
-			parsedB, err := parser.ParseFile(bPath)
-			expectNoError(t, err)
-
-			var resolvedA, resolvedB core.Term
-			if isSimpleTest(t.Name()) {
-				resolvedA = parsedA.(core.Term)
-				resolvedB = parsedB.(core.Term)
-			} else {
-
-				resolvedA, err = imports.Load(parsedA.(core.Term), core.Local(aPath))
-				expectNoError(t, err)
-
-				resolvedB, err = imports.Load(parsedB.(core.Term), core.Local(bPath))
-				expectNoError(t, err)
-			}
-
-			annot := core.Annot{
-				Expr:       resolvedA,
-				Annotation: resolvedB,
-			}
-			_, err = core.TypeOf(annot)
-			expectNoError(t, err)
-		})
-}
-
 func TestTypeInference(t *testing.T) {
 	t.Parallel()
 	runTestOnFilePairs(t, "dhall-lang/tests/type-inference/success/",
@@ -336,6 +291,24 @@ func TestTypeInference(t *testing.T) {
 
 			expectEqualTerms(t, parsedB.(core.Term), inferredType)
 		})
+}
+
+func TestTypeInferenceFails(t *testing.T) {
+	t.Parallel()
+	runTestOnEachFile(t, "dhall-lang/tests/type-inference/failure/", func(t *testing.T, testPath string) {
+		parsed, err := parser.ParseFile(testPath)
+
+		expectNoError(t, err)
+
+		expr, ok := parsed.(core.Term)
+		if !ok {
+			failf(t, "Expected core.Term, got %+v\n", parsed)
+		}
+
+		_, err = core.TypeOf(expr)
+
+		expectError(t, err)
+	})
 }
 
 func TestAlphaNormalization(t *testing.T) {

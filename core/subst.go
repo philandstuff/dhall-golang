@@ -15,12 +15,10 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		return t
 	case Builtin:
 		return t
-	case BoundVar:
+	case Var:
 		if t.Name == name && t.Index == i {
 			return replacement
 		}
-		return t
-	case FreeVar:
 		return t
 	case LocalVar:
 		return t
@@ -183,17 +181,15 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 		return t
 	case Builtin:
 		return t
-	case BoundVar:
+	case Var:
 		return t
 	case LocalVar:
 		if t == local {
-			return BoundVar{
+			return Var{
 				Name:  t.Name,
 				Index: i,
 			}
 		}
-		return t
-	case FreeVar:
 		return t
 	case LambdaTerm:
 		j := i

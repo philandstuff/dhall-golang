@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 )
@@ -71,15 +70,12 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		default:
 			return t
 		}
-	case BoundVar:
+	case Var:
 		if t.Index >= len(e[t.Name]) {
-			log.Printf("Eval: unbound variable %s", t)
-			return FreeVar{Name: t.Name, Index: t.Index}
+			return t
 		}
 		return e[t.Name][t.Index]
 	case LocalVar:
-		return t
-	case FreeVar:
 		return t
 	case LambdaTerm:
 		v := LambdaValue{
@@ -352,7 +348,20 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				return l
 			}
 		case ImportAltOp:
+			// nothing special
 		case EquivOp:
+			// nothing special
+		case CompleteOp:
+			return evalWith(
+				Annot{
+					Expr: OpTerm{
+						OpCode: RightBiasedRecordMergeOp,
+						L:      Field{t.L, "default"},
+						R:      t.R,
+					},
+					Annotation: Field{t.L, "Type"},
+				},
+				e, shouldAlphaNormalize)
 		}
 		return OpValue{OpCode: t.OpCode, L: l, R: r}
 	case EmptyList:
@@ -402,8 +411,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case Field:
 		record := evalWith(t.Record, e, shouldAlphaNormalize)
 		for { // simplifications
-			proj, ok := record.(ProjectVal)
-			if ok {
+			if proj, ok := record.(ProjectVal); ok {
 				record = proj.Record
 				continue
 			}
@@ -471,13 +479,47 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			FieldName: t.FieldName,
 		}
 	case Project:
-		r := evalWith(t.Record, e, shouldAlphaNormalize)
+		record := evalWith(t.Record, e, shouldAlphaNormalize)
 		fieldNames := t.FieldNames
 		sort.Strings(fieldNames)
-		if r, ok := r.(RecordLitVal); ok {
+		// simplifications
+		for {
+			if proj, ok := record.(ProjectVal); ok {
+				record = proj.Record
+				continue
+			}
+			op, ok := record.(OpValue)
+			if ok && op.OpCode == RightBiasedRecordMergeOp {
+				if r, ok := op.R.(RecordLitVal); ok {
+					notOverridden := []string{}
+					overrides := RecordLitVal{}
+					for _, fieldName := range fieldNames {
+						if override, ok := r[fieldName]; ok {
+							overrides[fieldName] = override
+						} else {
+							notOverridden = append(notOverridden, fieldName)
+						}
+					}
+					if len(notOverridden) == 0 {
+						return overrides
+					}
+					return OpValue{
+						OpCode: RightBiasedRecordMergeOp,
+						L: ProjectVal{
+							Record:     op.L,
+							FieldNames: notOverridden,
+						},
+						R: overrides,
+					}
+				}
+			}
+
+			break
+		}
+		if lit, ok := record.(RecordLitVal); ok {
 			result := make(RecordLitVal)
 			for _, k := range fieldNames {
-				result[k] = r[k]
+				result[k] = lit[k]
 			}
 			return result
 		}
@@ -485,7 +527,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return RecordLitVal{}
 		}
 		return ProjectVal{
-			Record:     r,
+			Record:     record,
 			FieldNames: fieldNames,
 		}
 	case ProjectType:

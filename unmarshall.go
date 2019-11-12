@@ -56,7 +56,7 @@ func argNType(fn core.LambdaValue, n int) core.Value {
 	if n == 0 {
 		return fn.Domain
 	}
-	return argNType(fn.Call(core.FreeVar{}).(core.LambdaValue), n-1)
+	return argNType(fn.Call(core.Var{}).(core.LambdaValue), n-1)
 }
 
 func dhallShim(out reflect.Type, dhallFunc core.LambdaValue) func([]reflect.Value) []reflect.Value {

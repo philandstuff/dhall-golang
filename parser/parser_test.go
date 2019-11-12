@@ -119,9 +119,9 @@ baz
 	)
 	DescribeTable("simple expressions", ParseAndCompare,
 		Entry("Identifier", `x`, Bound("x")),
-		Entry("Identifier with index", `x@1`, BoundVar{"x", 1}),
+		Entry("Identifier with index", `x@1`, Var{"x", 1}),
 		Entry("Identifier with reserved prefix", `Listicle`, Bound("Listicle")),
-		Entry("Identifier with reserved prefix and index", `Listicle@3`, BoundVar{"Listicle", 3}),
+		Entry("Identifier with reserved prefix and index", `Listicle@3`, Var{"Listicle", 3}),
 	)
 	DescribeTable("lists", ParseAndCompare,
 		Entry("List Natural", `List Natural`, Apply(List, Natural)),

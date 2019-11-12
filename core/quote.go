@@ -1,8 +1,6 @@
 package core
 
-// Quote takes the Value v and turns it back into a Term.  The `i` is the
-// first fresh variable index named `quote`.  Normally this will be 0 if there
-// are no variables called `quote` in the context.
+// Quote takes the Value v and turns it back into a Term.
 func Quote(v Value) Term {
 	return quoteWith(quoteContext{}, v)
 }
@@ -135,12 +133,12 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			return AppTerm{ListReverse, quoteWith(ctx, v.typ)}
 		}
 		return ListReverse
-	case FreeVar:
+	case Var:
 		return v
 	case LocalVar:
 		return v
 	case QuoteVar:
-		return BoundVar{
+		return Var{
 			Name:  v.Name,
 			Index: ctx[v.Name] - v.Index - 1,
 		}

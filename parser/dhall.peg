@@ -277,6 +277,7 @@ Keyword ←
   / True / False
   / Infinity / NaN
   / Merge / Some / toMap
+  / assert
 
 Optional ← "Optional"
 Text ← "Text"
@@ -290,6 +291,7 @@ Prefer ← "//" / '⫽'
 Lambda ← '\\' / 'λ'
 Forall ← "forall" / '∀'
 Arrow ← "->" / '→'
+Complete ← "::"
 
 Exponent ← "e"i [+-]? Digit+
 
@@ -323,9 +325,9 @@ DeBruijn ← _ '@' _ index:NaturalLiteral { return int(index.(NaturalLit)), nil 
 
 Variable ← name:NonreservedLabel index:DeBruijn? {
     if index != nil {
-        return BoundVar{Name:name.(string), Index:index.(int)}, nil
+        return Var{Name:name.(string), Index:index.(int)}, nil
     } else {
-        return BoundVar{Name:name.(string)}, nil
+        return Var{Name:name.(string)}, nil
     }
 }
 
@@ -524,7 +526,7 @@ e:OperatorExpression a:(_ Annotation)? {
         return Annot{e.(Term), a.([]interface{})[1].(Term)}, nil
     }
 
-EmptyList ← '[' _ ']' _ ':' _1 a:ApplicationExpression {
+EmptyList ← '[' _ (',' _)? ']' _ ':' _1 a:ApplicationExpression {
           return EmptyList{a.(Term)},nil
 }
 
@@ -574,7 +576,14 @@ FirstApplicationExpression ←
      / toMap _1 e:ImportExpression { return ToMap{Record: e.(Term)}, nil }
      / ImportExpression
 
-ImportExpression ← Import / SelectorExpression
+ImportExpression ← Import / CompletionExpression
+
+CompletionExpression ← a:SelectorExpression b:(Complete SelectorExpression)? {
+    if b == nil {
+        return a, nil
+    }
+    return OpTerm{OpCode:CompleteOp ,L:a.(Term),R:b.([]interface{})[1].(Term)},nil
+}
 
 SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {
     expr := e.(Term)
@@ -614,11 +623,11 @@ PrimitiveExpression ←
     / NaturalLiteral
     / IntegerLiteral
     / TextLiteral
-    / '{' _ r:RecordTypeOrLiteral _ '}' { return r, nil }
-    / '<' _ u:UnionType _ '>' { return u, nil }
+    / '{' _ (',' _)? r:RecordTypeOrLiteral _ '}' { return r, nil }
+    / '<' _ ('|' _)? u:UnionType _ '>' { return u, nil }
     / NonEmptyListLiteral
     / Identifier
-    / '(' _  e:Expression _ ')' { return e, nil }
+    / '(' _ ('|' _)? e:Expression _ ')' { return e, nil }
 
 RecordTypeOrLiteral ←
       '=' { return RecordLit{}, nil }
@@ -698,7 +707,7 @@ UnionVariant ← AnyLabel (_ ':' _1 Expression)?
 MoreList ← ',' _ e:Expression _ {return e, nil}
 
 NonEmptyListLiteral ←
-      '[' _ first:Expression _ rest:MoreList* ']' {
+      '[' _ (',' _)? first:Expression _ rest:MoreList* ']' {
           exprs := rest.([]interface{})
           content := make(NonEmptyList, len(exprs)+1)
           content[0] = first.(Term)

@@ -17,7 +17,7 @@ var _ = DescribeTable("Quote",
 		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
 			return x
 		}},
-		LambdaTerm{Label: "x", Type: Natural, Body: BoundVar{"x", 0}},
+		LambdaTerm{Label: "x", Type: Natural, Body: Var{"x", 0}},
 	),
 	Entry(`λ(x : Natural) → λ(x : Natural) → x`,
 		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
@@ -29,7 +29,7 @@ var _ = DescribeTable("Quote",
 		}},
 		LambdaTerm{Label: "x", Type: Natural, Body: LambdaTerm{
 			Label: "x", Type: Natural,
-			Body: BoundVar{"x", 0}}},
+			Body: Var{"x", 0}}},
 	),
 	Entry(`λ(x : Natural) → λ(x : Natural) → x@1`,
 		LambdaValue{Label: "x", Domain: Natural, Fn: func(x1 Value) Value {
@@ -41,7 +41,7 @@ var _ = DescribeTable("Quote",
 		}},
 		LambdaTerm{Label: "x", Type: Natural, Body: LambdaTerm{
 			Label: "x", Type: Natural,
-			Body: BoundVar{"x", 1}}},
+			Body: Var{"x", 1}}},
 	),
 	Entry(`λ(x : Natural) → λ(y : Natural) → x`,
 		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
@@ -53,7 +53,7 @@ var _ = DescribeTable("Quote",
 		}},
 		LambdaTerm{Label: "x", Type: Natural, Body: LambdaTerm{
 			Label: "y", Type: Natural,
-			Body: BoundVar{"x", 0}}},
+			Body: Var{"x", 0}}},
 	),
 	Entry(`Natural → Natural`,
 		PiValue{Label: "_", Domain: Natural, Range: func(x Value) Value {
@@ -65,7 +65,7 @@ var _ = DescribeTable("Quote",
 		PiValue{Label: "a", Domain: Type, Range: func(x Value) Value {
 			return AppValue{List, x}
 		}},
-		PiTerm{Label: "a", Type: Type, Body: AppTerm{List, BoundVar{"a", 0}}},
+		PiTerm{Label: "a", Type: Type, Body: AppTerm{List, Var{"a", 0}}},
 	),
 	Entry(`[] : List Natural`,
 		EmptyListVal{Type: AppValue{Fn: List, Arg: Natural}},

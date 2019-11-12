@@ -106,7 +106,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 	switch val := decodedCbor.(type) {
 	case uint64:
 		// _@n
-		return BoundVar{Name: "_", Index: int(val)}, nil
+		return Var{Name: "_", Index: int(val)}, nil
 	case string:
 		// Type, Double, Optional/fold
 		if builtin, ok := nameToBuiltin[val]; ok {
@@ -129,7 +129,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 				if err != nil {
 					return nil, err
 				}
-				return BoundVar{Name: label, Index: int(index)}, nil
+				return Var{Name: label, Index: int(index)}, nil
 			}
 		case uint64:
 			switch label {
@@ -203,7 +203,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 				if err != nil {
 					return nil, err
 				}
-				if opcode > 12 {
+				if opcode > 13 {
 					return nil, fmt.Errorf("CBOR decode error: unknown operator code %d", opcode)
 				}
 				return OpTerm{OpCode: int(opcode), L: l, R: r}, nil
@@ -509,7 +509,7 @@ func box(expr Term) *cborBox { return &cborBox{content: expr} }
 
 func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 	switch val := b.content.(type) {
-	case BoundVar:
+	case Var:
 		if val.Name == "_" {
 			e.Encode(val.Index)
 		} else {
@@ -637,7 +637,11 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 	case DoubleLit:
 		// special-case values to encode as float16
 		if float64(val) == 0.0 { // 0.0
-			e.Encode(codec.Raw([]byte{0xf9, 0x00, 0x00}))
+			if math.Signbit(float64(val)) {
+				e.Encode(codec.Raw([]byte{0xf9, 0x80, 0x00}))
+			} else {
+				e.Encode(codec.Raw([]byte{0xf9, 0x00, 0x00}))
+			}
 		} else if math.IsNaN(float64(val)) { // NaN
 			e.Encode(codec.Raw([]byte{0xf9, 0x7e, 0x00}))
 		} else if math.IsInf(float64(val), 1) { // Infinity

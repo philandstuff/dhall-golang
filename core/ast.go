@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net/url"
+	"strings"
 )
 
 // Terms in the dhall internal language
@@ -147,12 +148,7 @@ func (listIndexedVal) isValue() {}
 func (listReverseVal) isValue() {}
 
 type (
-	BoundVar struct {
-		Name  string
-		Index int
-	}
-
-	FreeVar struct {
+	Var struct {
 		Name  string
 		Index int
 	}
@@ -180,18 +176,16 @@ func (Universe) isValue() {}
 func (Builtin) isTerm()  {}
 func (Builtin) isValue() {}
 
-func (BoundVar) isTerm() {}
-
-func (FreeVar) isTerm()  {}
-func (FreeVar) isValue() {}
+func (Var) isTerm()  {}
+func (Var) isValue() {}
 
 func (LocalVar) isTerm()  {}
 func (LocalVar) isValue() {}
 
 func (QuoteVar) isValue() {}
 
-func Bound(name string) BoundVar {
-	return BoundVar{Name: name}
+func Bound(name string) Var {
+	return Var{Name: name}
 }
 
 type (
@@ -281,6 +275,7 @@ const (
 	RecordTypeMergeOp
 	ImportAltOp
 	EquivOp
+	CompleteOp
 )
 
 func NaturalPlus(l, r Term) Term {
@@ -627,7 +622,7 @@ func (c Universe) String() string {
 	}
 }
 
-func (v BoundVar) String() string {
+func (v Var) String() string {
 	if v.Index == 0 {
 		return v.Name
 	}
@@ -661,4 +656,118 @@ func (app AppTerm) stringNoParens() string {
 		return fmt.Sprintf("%v %v", subApp.stringNoParens(), app.Arg)
 	}
 	return fmt.Sprintf("%v %v", app.Fn, app.Arg)
+}
+
+// higher precedence binds tighter
+func (op OpTerm) precedence() int {
+	switch op.OpCode {
+	case ImportAltOp:
+		return 1
+	case OrOp:
+		return 2
+	case PlusOp:
+		return 3
+	case TextAppendOp:
+		return 4
+	case ListAppendOp:
+		return 5
+	case AndOp:
+		return 6
+	case RecordMergeOp:
+		return 7
+	case RightBiasedRecordMergeOp:
+		return 8
+	case RecordTypeMergeOp:
+		return 9
+	case TimesOp:
+		return 10
+	case EqOp:
+		return 11
+	case NeOp:
+		return 12
+	case EquivOp:
+		return 13
+	case CompleteOp:
+		return 14
+	default:
+		panic("unknown opcode")
+	}
+}
+
+func (op OpTerm) operatorStr() string {
+	switch op.OpCode {
+	case ImportAltOp:
+		return " ? "
+	case OrOp:
+		return " || "
+	case PlusOp:
+		return " + "
+	case TextAppendOp:
+		return " ++ "
+	case ListAppendOp:
+		return " # "
+	case AndOp:
+		return " && "
+	case RecordMergeOp:
+		return " ∧ "
+	case RightBiasedRecordMergeOp:
+		return " ⫽ "
+	case RecordTypeMergeOp:
+		return " ⩓ "
+	case TimesOp:
+		return " * "
+	case EqOp:
+		return " == "
+	case NeOp:
+		return " != "
+	case EquivOp:
+		return " ≡ "
+	case CompleteOp:
+		return "::"
+	default:
+		panic("unknown opcode")
+	}
+}
+
+func (op OpTerm) String() string {
+	prec := op.precedence()
+	l := fmt.Sprint(op.L)
+	r := fmt.Sprint(op.R)
+
+	var buf strings.Builder
+
+	if lop, ok := op.L.(OpTerm); ok {
+		if prec > lop.precedence() {
+			buf.WriteRune('(')
+		}
+		buf.WriteString(l)
+		if prec > lop.precedence() {
+			buf.WriteRune(')')
+		}
+	} else if _, ok := op.L.(AppTerm); ok {
+		buf.WriteString(l)
+
+	} else {
+		buf.WriteRune('(')
+		buf.WriteString(l)
+		buf.WriteRune(')')
+	}
+	buf.WriteString(op.operatorStr())
+	if rop, ok := op.R.(OpTerm); ok {
+		if prec > rop.precedence() {
+			buf.WriteRune('(')
+		}
+		buf.WriteString(r)
+		if prec > rop.precedence() {
+			buf.WriteRune(')')
+		}
+	} else if _, ok := op.R.(AppTerm); ok {
+		buf.WriteString(r)
+
+	} else {
+		buf.WriteRune('(')
+		buf.WriteString(r)
+		buf.WriteRune(')')
+	}
+	return buf.String()
 }

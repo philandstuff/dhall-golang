@@ -1,5 +1,7 @@
 package core
 
+import "math"
+
 func judgmentallyEqual(t1 Term, t2 Term) bool {
 	v1 := Eval(t1)
 	v2 := Eval(t2)
@@ -20,9 +22,12 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		optionalFoldVal, textShowVal, listBuildVal, listFoldVal,
 		listHeadVal, listIndexedVal, listLengthVal, listLastVal,
 		listReverseVal,
-		FreeVar, LocalVar, QuoteVar,
-		NaturalLit, DoubleLit, IntegerLit, BoolLit:
+		Var, LocalVar, QuoteVar,
+		NaturalLit, IntegerLit, BoolLit:
 		return v1 == v2
+	case DoubleLit:
+		v2, ok := v2.(DoubleLit)
+		return ok && v1 == v2 && math.Signbit(float64(v1)) == math.Signbit(float64(v2))
 	case LambdaValue:
 		v2, ok := v2.(LambdaValue)
 		if !ok {

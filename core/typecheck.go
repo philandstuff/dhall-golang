@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-type context map[string][]Term
+type context map[string][]Value
 
-func (ctx context) extend(name string, t Term) context {
+func (ctx context) extend(name string, t Value) context {
 	newctx := context{}
 	for k, v := range ctx {
 		newctx[k] = v
@@ -22,27 +22,20 @@ func (ctx context) freshLocal(name string) LocalVar {
 
 // assert that a type is exactly expectedType (no judgmentallyEqual
 // here)
-func assertSimpleType(ctx context, expr, expectedType Term) error {
-	actualType, err := normalizedTypeWith(ctx, expr)
+// TODO: expectedType should be Value?
+func assertSimpleType(ctx context, expr Term, expectedType Value) error {
+	actualType, err := typeWith(ctx, expr)
 	if err != nil {
 		return err
 	}
 	if actualType != expectedType {
-		return mkTypeError(wrongOperandType(expectedType, actualType))
+		return mkTypeError(wrongOperandType(Quote(expectedType), Quote(actualType)))
 	}
 	return nil
 }
 
-func normalizedTypeWith(ctx context, t Term) (Term, error) {
-	typ, err := typeWith(ctx, t)
-	if err != nil {
-		return nil, err
-	}
-	return Quote(Eval(typ)), nil
-}
-
-func assertNormalizedTypeIs(ctx context, expr Term, expectedType Term, msg error) error {
-	t, err := normalizedTypeWith(ctx, expr)
+func assertTypeIs(ctx context, expr Term, expectedType Value, msg error) error {
+	t, err := typeWith(ctx, expr)
 	if err != nil {
 		return err
 	}
@@ -53,10 +46,10 @@ func assertNormalizedTypeIs(ctx context, expr Term, expectedType Term, msg error
 }
 
 // This returns
-//  Term: the element type of a list type
+//  Value: the element type of a list type
 //  Bool: whether it succeeded
-func listElementType(e Term) (Term, bool) {
-	app, ok := e.(AppTerm)
+func listElementType(e Value) (Value, bool) {
+	app, ok := e.(AppValue)
 	if !ok || app.Fn != List {
 		return nil, false
 	}
@@ -75,10 +68,14 @@ func functionCheck(input Universe, output Universe) Universe {
 }
 
 func TypeOf(t Term) (Term, error) {
-	return typeWith(context{}, t)
+	v, err := typeWith(context{}, t)
+	if err != nil {
+		return nil, err
+	}
+	return Quote(v), nil
 }
 
-func typeWith(ctx context, t Term) (Term, error) {
+func typeWith(ctx context, t Term) (Value, error) {
 	switch t := t.(type) {
 	case Universe:
 		switch t {
@@ -96,86 +93,109 @@ func typeWith(ctx context, t Term) (Term, error) {
 		case Bool, Double, Integer, Natural, Text:
 			return Type, nil
 		case DoubleShow:
-			return FnType(Double, Text), nil
+			return FnTypeVal(Double, Text), nil
 		case IntegerShow:
-			return FnType(Integer, Text), nil
+			return FnTypeVal(Integer, Text), nil
 		case IntegerToDouble:
-			return FnType(Integer, Double), nil
+			return FnTypeVal(Integer, Double), nil
 		case List, Optional:
-			return FnType(Type, Type), nil
+			return FnTypeVal(Type, Type), nil
 		case ListBuild:
-			return MkΠ("a", Type,
-				FnType(MkΠ("list", Type,
-					MkΠ("cons", FnType(Bound("a"), FnType(Bound("list"), Bound("list"))),
-						MkΠ("nil", Bound("list"),
-							Bound("list")))),
-					Apply(List, Bound("a")))), nil
+			return MkΠval("a", Type,
+				func(a Value) Value {
+					return FnTypeVal(
+						MkΠval("list", Type, func(list Value) Value {
+							return MkΠval("cons", FnTypeVal(a, FnTypeVal(list, list)), func(cons Value) Value {
+								return MkΠval("nil", list, func(nil Value) Value {
+									return list
+								})
+							})
+						}),
+						AppValue{List, a})
+				}), nil
 		case ListFold:
-			return MkΠ("a", Type,
-				FnType(Apply(List, Bound("a")),
-					MkΠ("list", Type,
-						MkΠ("cons", FnType(Bound("a"), FnType(Bound("list"), Bound("list"))),
-							MkΠ("nil", Bound("list"),
-								Bound("list")))))), nil
+			return MkΠval("a", Type, func(a Value) Value {
+				return FnTypeVal(AppValue{List, a},
+					MkΠval("list", Type, func(list Value) Value {
+						return MkΠval("cons", FnTypeVal(a, FnTypeVal(list, list)), func(cons Value) Value {
+							return MkΠval("nil", list, func(nil Value) Value {
+								return list
+							})
+						})
+					}))
+			}), nil
 		case ListLength:
-			return MkΠ("a", Type,
-				FnType(Apply(List, Bound("a")),
-					Natural)), nil
+			return MkΠval("a", Type, func(a Value) Value {
+				return FnTypeVal(AppValue{List, a}, Natural)
+			}), nil
 		case ListHead, ListLast:
-			return MkΠ("a", Type,
-				FnType(Apply(List, Bound("a")),
-					Apply(Optional, Bound("a")))), nil
+			return MkΠval("a", Type, func(a Value) Value {
+				return FnTypeVal(AppValue{List, a},
+					AppValue{Optional, a})
+			}), nil
 		case ListReverse:
-			return MkΠ("a", Type,
-				FnType(Apply(List, Bound("a")),
-					Apply(List, Bound("a")))), nil
+			return MkΠval("a", Type, func(a Value) Value {
+				return FnTypeVal(AppValue{List, a},
+					AppValue{List, a})
+			}), nil
 		case ListIndexed:
-			return MkΠ("a", Type,
-				FnType(Apply(List, Bound("a")),
-					Apply(List, RecordType{"index": Natural, "value": Bound("a")}))), nil
+			return MkΠval("a", Type, func(a Value) Value {
+				return FnTypeVal(AppValue{List, a},
+					AppValue{List, RecordTypeVal{"index": Natural, "value": a}})
+			}), nil
 		case NaturalBuild:
-			return FnType(MkΠ("natural", Type,
-				MkΠ("succ", FnType(Bound("natural"), Bound("natural")),
-					MkΠ("zero", Bound("natural"),
-						Bound("natural")))),
+			return FnTypeVal(MkΠval("natural", Type, func(natural Value) Value {
+				return MkΠval("succ", FnTypeVal(natural, natural), func(succ Value) Value {
+					return MkΠval("zero", natural, func(Value) Value { return natural })
+				})
+			}),
 				Natural), nil
 		case NaturalFold:
-			return FnType(
+			return FnTypeVal(
 				Natural,
-				MkΠ("natural", Type,
-					MkΠ("succ", FnType(Bound("natural"), Bound("natural")),
-						MkΠ("zero", Bound("natural"),
-							Bound("natural"))))), nil
+				MkΠval("natural", Type, func(natural Value) Value {
+					return MkΠval("succ", FnTypeVal(natural, natural), func(Value) Value {
+						return MkΠval("zero", natural, func(Value) Value { return natural })
+					})
+				})), nil
 		case NaturalIsZero, NaturalOdd, NaturalEven:
-			return FnType(Natural, Bool), nil
+			return FnTypeVal(Natural, Bool), nil
 		case NaturalShow:
-			return FnType(Natural, Text), nil
+			return FnTypeVal(Natural, Text), nil
 		case NaturalToInteger:
-			return FnType(Natural, Integer), nil
+			return FnTypeVal(Natural, Integer), nil
 		case NaturalSubtract:
-			return FnType(Natural, FnType(Natural, Natural)), nil
+			return FnTypeVal(Natural, FnTypeVal(Natural, Natural)), nil
 		case None:
-			return MkΠ("A", Type, Apply(Optional, Bound("A"))), nil
+			return MkΠval("A", Type, func(A Value) Value { return AppValue{Optional, A} }), nil
 		case OptionalBuild:
-			return MkΠ("a", Type,
-				FnType(MkΠ("optional", Type,
-					MkΠ("just", FnType(Bound("a"), Bound("optional")),
-						MkΠ("nothing", Bound("optional"),
-							Bound("optional")))),
-					Apply(Optional, Bound("a")))), nil
+			return MkΠval("a", Type, func(a Value) Value {
+				return FnTypeVal(MkΠval("optional", Type, func(optional Value) Value {
+					return MkΠval("just", FnTypeVal(a, optional), func(just Value) Value {
+						return MkΠval("nothing", optional, func(nothing Value) Value {
+							return optional
+						})
+					})
+				}),
+					AppValue{Optional, a})
+			}), nil
 		case OptionalFold:
-			return MkΠ("a", Type,
-				FnType(Apply(Optional, Bound("a")),
-					MkΠ("optional", Type,
-						MkΠ("just", FnType(Bound("a"), Bound("optional")),
-							MkΠ("nothing", Bound("optional"),
-								Bound("optional")))))), nil
+			return MkΠval("a", Type, func(a Value) Value {
+				return FnTypeVal(AppValue{Optional, a},
+					MkΠval("optional", Type, func(optional Value) Value {
+						return MkΠval("just", FnTypeVal(a, optional), func(just Value) Value {
+							return MkΠval("nothing", optional, func(nothing Value) Value {
+								return optional
+							})
+						})
+					}))
+			}), nil
 		case TextShow:
-			return FnType(Text, Text), nil
+			return FnTypeVal(Text, Text), nil
 		default:
 			return nil, mkTypeError(unhandledTypeCase)
 		}
-	case BoundVar:
+	case Var:
 		return nil, mkTypeError(typeCheckBoundVar(t))
 	case LocalVar:
 		if vals, ok := ctx[t.Name]; ok {
@@ -185,8 +205,6 @@ func typeWith(ctx context, t Term) (Term, error) {
 			return nil, mkTypeError(unboundVariable(t))
 		}
 		return nil, fmt.Errorf("Unknown variable %s", t.Name)
-	case FreeVar:
-		return nil, errors.New("typecheck freevar unimp")
 	case AppTerm:
 		fnType, err := typeWith(ctx, t.Fn)
 		if err != nil {
@@ -196,28 +214,38 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		piType, ok := fnType.(PiTerm)
+		piType, ok := fnType.(PiValue)
 		if !ok {
 			return nil, mkTypeError(notAFunction)
 		}
-		expectedType := piType.Type
+		expectedType := piType.Domain
 		actualType := argType
-		if !judgmentallyEqual(expectedType, actualType) {
-			return nil, mkTypeError(typeMismatch(expectedType, actualType))
+		if !judgmentallyEqualVals(expectedType, actualType) {
+			return nil, mkTypeError(typeMismatch(Quote(expectedType), Quote(actualType)))
 		}
-		bodyTypeVal := Eval(piType).(PiValue).Range(Eval(t.Arg))
-		return Quote(bodyTypeVal), nil
+		bodyTypeVal := piType.Range(Eval(t.Arg))
+		return bodyTypeVal, nil
 	case LambdaTerm:
-		pi := PiTerm{Label: t.Label, Type: t.Type}
+		_, err := typeWith(ctx, t.Type)
+		if err != nil {
+			return nil, err
+		}
+		argType := Eval(t.Type)
+		pi := PiValue{Label: t.Label, Domain: argType}
 		freshLocal := ctx.freshLocal(t.Label)
 		bt, err := typeWith(
-			ctx.extend(t.Label, t.Type),
+			ctx.extend(t.Label, argType),
 			subst(t.Label, freshLocal, t.Body))
 		if err != nil {
 			return nil, err
 		}
-		pi.Body = rebindLocal(freshLocal, bt)
-		_, err = typeWith(ctx, pi)
+		pi.Range = func(x Value) Value {
+			rebound := rebindLocal(freshLocal, Quote(bt))
+			return evalWith(rebound, Env{
+				t.Label: []Value{x},
+			}, false)
+		}
+		_, err = typeWith(ctx, Quote(pi))
 		if err != nil {
 			return nil, err
 		}
@@ -233,7 +261,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		freshLocal := ctx.freshLocal(t.Label)
 		outUniv, err := typeWith(
-			ctx.extend(t.Label, t.Type),
+			ctx.extend(t.Label, Eval(t.Type)),
 			subst(t.Label, freshLocal, t.Body))
 		if err != nil {
 			return nil, err
@@ -256,8 +284,14 @@ func typeWith(ctx context, t Term) (Term, error) {
 				return nil, err
 			}
 
-			if binding.Annotation != nil && !judgmentallyEqual(bindingType, binding.Annotation) {
-				return nil, mkTypeError(annotMismatch(binding.Annotation, bindingType))
+			if binding.Annotation != nil {
+				_, err := typeWith(ctx, binding.Value)
+				if err != nil {
+					return nil, err
+				}
+				if !judgmentallyEqualVals(bindingType, Eval(binding.Annotation)) {
+					return nil, mkTypeError(annotMismatch(binding.Annotation, Quote(bindingType)))
+				}
 			}
 
 			value := Quote(Eval(binding.Value))
@@ -278,17 +312,17 @@ func typeWith(ctx context, t Term) (Term, error) {
 			return nil, err
 		}
 		// T₀ ≡ T₁
-		if !judgmentallyEqual(t.Annotation, actualType) {
-			return nil, mkTypeError(annotMismatch(t.Annotation, actualType))
+		if !judgmentallyEqualVals(Eval(t.Annotation), actualType) {
+			return nil, mkTypeError(annotMismatch(t.Annotation, Quote(actualType)))
 		}
 		// ─────────────────
 		// Γ ⊢ (t : T₀) : T₀
-		return t.Annotation, nil
+		return actualType, nil
 	case DoubleLit:
 		return Double, nil
 	case TextLitTerm:
 		for _, chunk := range t.Chunks {
-			err := assertNormalizedTypeIs(ctx, chunk.Expr, Text,
+			err := assertTypeIs(ctx, chunk.Expr, Text,
 				errors.New("Interpolated expression is not Text"))
 			if err != nil {
 				return nil, err
@@ -310,17 +344,17 @@ func typeWith(ctx context, t Term) (Term, error) {
 			return nil, err
 		}
 		// no need to check for err here
-		if t, _ := typeWith(ctx, L); t != Type {
+		if t, _ := typeWith(ctx, Quote(L)); t != Type {
 			return nil, mkTypeError(ifBranchMustBeTerm)
 		}
 		R, err := typeWith(ctx, t.F)
 		if err != nil {
 			return nil, err
 		}
-		if t, _ := typeWith(ctx, R); t != Type {
+		if t, _ := typeWith(ctx, Quote(R)); t != Type {
 			return nil, mkTypeError(ifBranchMustBeTerm)
 		}
-		if !judgmentallyEqual(L, R) {
+		if !judgmentallyEqualVals(L, R) {
 			return nil, mkTypeError(ifBranchMismatch)
 		}
 		return L, nil
@@ -359,11 +393,11 @@ func typeWith(ctx context, t Term) (Term, error) {
 			}
 			return Text, nil
 		case ListAppendOp:
-			lt, err := normalizedTypeWith(ctx, t.L)
+			lt, err := typeWith(ctx, t.L)
 			if err != nil {
 				return nil, err
 			}
-			rt, err := normalizedTypeWith(ctx, t.R)
+			rt, err := typeWith(ctx, t.R)
 			if err != nil {
 				return nil, err
 			}
@@ -376,7 +410,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 			if !ok {
 				return nil, fmt.Errorf("Can't use list concatenate operator on a %s", rt)
 			}
-			if !judgmentallyEqual(lElemT, rElemT) {
+			if !judgmentallyEqualVals(lElemT, rElemT) {
 				return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
 			}
 			return lt, nil
@@ -389,18 +423,17 @@ func typeWith(ctx context, t Term) (Term, error) {
 			if err != nil {
 				return nil, err
 			}
-			_, err = typeWith(ctx,
-				OpTerm{L: lType, R: rType, OpCode: RecordTypeMergeOp})
-			if err != nil {
+			recordType := OpTerm{L: Quote(lType), R: Quote(rType), OpCode: RecordTypeMergeOp}
+			if _, err = typeWith(ctx, recordType); err != nil {
 				return nil, err
 			}
-			return Quote(Eval(OpTerm{L: lType, R: rType, OpCode: RecordTypeMergeOp})), nil
+			return Eval(recordType), nil
 		case RecordTypeMergeOp:
-			lKind, err := normalizedTypeWith(ctx, t.L)
+			lKind, err := typeWith(ctx, t.L)
 			if err != nil {
 				return nil, err
 			}
-			rKind, err := normalizedTypeWith(ctx, t.R)
+			rKind, err := typeWith(ctx, t.R)
 			if err != nil {
 				return nil, err
 			}
@@ -429,15 +462,15 @@ func typeWith(ctx context, t Term) (Term, error) {
 			if err != nil {
 				return nil, err
 			}
-			lRecord, ok := lType.(RecordType)
+			lRecord, ok := lType.(RecordTypeVal)
 			if !ok {
 				return nil, mkTypeError(mustCombineARecord)
 			}
-			rRecord, ok := rType.(RecordType)
+			rRecord, ok := rType.(RecordTypeVal)
 			if !ok {
 				return nil, mkTypeError(mustCombineARecord)
 			}
-			result := RecordType{}
+			result := RecordTypeVal{}
 			for k, v := range lRecord {
 				result[k] = v
 			}
@@ -456,18 +489,28 @@ func typeWith(ctx context, t Term) (Term, error) {
 			if err != nil {
 				return nil, err
 			}
-			err = assertSimpleType(ctx, lType, Type)
+			err = assertSimpleType(ctx, Quote(lType), Type)
 			if err != nil {
 				return nil, mkTypeError(incomparableExpression)
 			}
-			err = assertSimpleType(ctx, lType, Type)
+			err = assertSimpleType(ctx, Quote(lType), Type)
 			if err != nil {
 				return nil, mkTypeError(incomparableExpression)
 			}
-			if !judgmentallyEqual(lType, rType) {
+			if !judgmentallyEqualVals(lType, rType) {
 				return nil, mkTypeError(equivalenceTypeMismatch)
 			}
 			return Type, nil
+		case CompleteOp:
+			return typeWith(ctx,
+				Annot{
+					Expr: OpTerm{OpCode: RightBiasedRecordMergeOp,
+						L: Field{Record: t.L, FieldName: "default"},
+						R: t.R,
+					},
+					Annotation: Field{Record: t.L, FieldName: "Type"},
+				},
+			)
 		default:
 			return nil, fmt.Errorf("Internal error: unknown opcode %v", t.OpCode)
 		}
@@ -476,7 +519,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		listType := Quote(Eval(t.Type))
+		listType := Eval(t.Type)
 		_, ok := listElementType(listType)
 		if !ok {
 			return nil, mkTypeError(invalidListType)
@@ -487,7 +530,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		T0type, err := typeWith(ctx, T0)
+		T0type, err := typeWith(ctx, Quote(T0))
 		if err != nil {
 			return nil, err
 		}
@@ -499,28 +542,28 @@ func typeWith(ctx context, t Term) (Term, error) {
 			if err != nil {
 				return nil, err
 			}
-			if !judgmentallyEqual(T0, T1) {
-				return nil, mkTypeError(mismatchedListElements(T0, T1))
+			if !judgmentallyEqualVals(T0, T1) {
+				return nil, mkTypeError(mismatchedListElements(Quote(T0), Quote(T1)))
 			}
 		}
-		return Apply(List, T0), nil
+		return AppValue{List, T0}, nil
 	case Some:
 		A, err := typeWith(ctx, t.Val)
 		if err != nil {
 			return nil, err
 		}
-		Atype, err := typeWith(ctx, A)
+		Atype, err := typeWith(ctx, Quote(A))
 		if err != nil {
 			return nil, err
 		}
 		if Atype != Type {
 			return nil, mkTypeError(invalidSome)
 		}
-		return Apply(Optional, A), nil
+		return AppValue{Optional, A}, nil
 	case RecordType:
 		recordUniverse := Type
 		for _, v := range t {
-			fieldUniverse, err := normalizedTypeWith(ctx, v)
+			fieldUniverse, err := typeWith(ctx, v)
 			if err != nil {
 				return nil, err
 			}
@@ -534,24 +577,24 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return recordUniverse, nil
 	case RecordLit:
-		recordType := RecordType{}
+		recordType := RecordTypeVal{}
 		for k, v := range t {
-			fieldType, err := normalizedTypeWith(ctx, v)
+			fieldType, err := typeWith(ctx, v)
 			if err != nil {
 				return nil, err
 			}
 			recordType[k] = fieldType
 		}
-		if _, err := typeWith(ctx, recordType); err != nil {
+		if _, err := typeWith(ctx, Quote(recordType)); err != nil {
 			return nil, err
 		}
 		return recordType, nil
 	case ToMap:
-		recordTypeTerm, err := typeWith(ctx, t.Record)
+		recordTypeVal, err := typeWith(ctx, t.Record)
 		if err != nil {
 			return nil, err
 		}
-		recordType, ok := recordTypeTerm.(RecordType)
+		recordType, ok := recordTypeVal.(RecordTypeVal)
 		if !ok {
 			return nil, mkTypeError(cantAccess)
 		}
@@ -567,42 +610,49 @@ func typeWith(ctx context, t Term) (Term, error) {
 			if tt != Type {
 				return nil, mkTypeError(invalidToMapRecordKind)
 			}
-			tTerm := Quote(Eval(t.Type))
-			t, ok := listElementType(tTerm)
+			tVal := Eval(t.Type)
+			t, ok := listElementType(tVal)
 			if !ok {
-				return nil, mkTypeError(invalidToMapType(tTerm))
+				return nil, mkTypeError(invalidToMapType(Quote(tVal)))
 			}
-			rt, ok := t.(RecordType)
+			rt, ok := t.(RecordTypeVal)
 			if !ok || len(rt) != 2 || rt["mapKey"] != Text || rt["mapValue"] == nil {
-				return nil, mkTypeError(invalidToMapType(tTerm))
+				return nil, mkTypeError(invalidToMapType(Quote(tVal)))
 			}
-			return t, nil
+			return tVal, nil
 		}
 
-		var elemType Term
+		var elemType Value
 		for _, v := range recordType {
 			if elemType == nil {
 				elemType = v
 			} else {
-				if !judgmentallyEqual(elemType, v) {
+				if !judgmentallyEqualVals(elemType, v) {
 					return nil, mkTypeError(heterogenousRecordToMap)
 				}
 			}
 		}
-		inferred := AppTerm{List, RecordType{"mapKey": Text, "mapValue": elemType}}
+		if k, _ := typeWith(ctx, Quote(elemType)); k != Type {
+			return nil, mkTypeError(invalidToMapRecordKind)
+		}
+		inferred := AppValue{List, RecordTypeVal{"mapKey": Text, "mapValue": elemType}}
 		if t.Type == nil {
 			return inferred, nil
 		}
-		if !judgmentallyEqual(inferred, t.Type) {
-			return nil, mkTypeError(mapTypeMismatch(inferred, t.Type))
+		if _, err = typeWith(ctx, t.Type); err != nil {
+			return nil, err
 		}
-		return t.Type, nil
+		annot := Eval(t.Type)
+		if !judgmentallyEqualVals(inferred, annot) {
+			return nil, mkTypeError(mapTypeMismatch(Quote(inferred), t.Type))
+		}
+		return inferred, nil
 	case Field:
-		recordTypeTerm, err := normalizedTypeWith(ctx, t.Record)
+		recordTypeVal, err := typeWith(ctx, t.Record)
 		if err != nil {
 			return nil, err
 		}
-		recordType, ok := recordTypeTerm.(RecordType)
+		recordType, ok := recordTypeVal.(RecordTypeVal)
 		if ok {
 			fieldType, ok := recordType[t.FieldName]
 			if !ok {
@@ -610,8 +660,8 @@ func typeWith(ctx context, t Term) (Term, error) {
 			}
 			return fieldType, nil
 		}
-		unionTypeVal := Quote(Eval(t.Record))
-		unionType, ok := unionTypeVal.(UnionType)
+		unionTypeVal := Eval(t.Record)
+		unionType, ok := unionTypeVal.(UnionTypeVal)
 		if !ok {
 			return nil, mkTypeError(cantAccess)
 		}
@@ -622,21 +672,21 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if alternativeType == nil {
 			return unionType, nil
 		}
-		return PiTerm{
-			Label: t.FieldName,
-			Type:  alternativeType,
-			Body:  unionType,
+		return PiValue{
+			Label:  t.FieldName,
+			Domain: alternativeType,
+			Range:  func(Value) Value { return unionType },
 		}, nil
 	case Project:
-		recordTypeTerm, err := typeWith(ctx, t.Record)
+		recordTypeVal, err := typeWith(ctx, t.Record)
 		if err != nil {
 			return nil, err
 		}
-		recordType, ok := recordTypeTerm.(RecordType)
+		recordType, ok := recordTypeVal.(RecordTypeVal)
 		if !ok {
 			return nil, mkTypeError(cantProject)
 		}
-		result := make(RecordType, len(t.FieldNames))
+		result := make(RecordTypeVal, len(t.FieldNames))
 		for _, name := range t.FieldNames {
 			var ok bool
 			result[name], ok = recordType[name]
@@ -646,11 +696,11 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return result, nil
 	case ProjectType:
-		recordTypeTerm, err := typeWith(ctx, t.Record)
+		recordTypeVal, err := typeWith(ctx, t.Record)
 		if err != nil {
 			return nil, err
 		}
-		recordType, ok := recordTypeTerm.(RecordType)
+		recordType, ok := recordTypeVal.(RecordTypeVal)
 		if !ok {
 			return nil, mkTypeError(cantProject)
 		}
@@ -663,14 +713,14 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if !ok {
 			return nil, mkTypeError(cantProjectByExpression)
 		}
-		result := make(RecordType, len(selector))
-		for name, typ := range Quote(selector).(RecordType) {
+		result := make(RecordTypeVal, len(selector))
+		for name, typ := range selector {
 			fieldType, ok := recordType[name]
 			if !ok {
 				return nil, mkTypeError(missingField)
 			}
-			if !judgmentallyEqual(fieldType, typ) {
-				return nil, mkTypeError(projectionTypeMismatch(typ, fieldType))
+			if !judgmentallyEqualVals(fieldType, typ) {
+				return nil, mkTypeError(projectionTypeMismatch(Quote(typ), Quote(fieldType)))
 			}
 			result[name] = typ
 		}
@@ -697,7 +747,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 					return nil, mkTypeError(invalidAlternativeType)
 				}
 			} else {
-				if !judgmentallyEqual(c, k) {
+				if !judgmentallyEqualVals(c, k) {
 					return nil, mkTypeError(alternativeAnnotationMismatch)
 				}
 			}
@@ -710,19 +760,19 @@ func typeWith(ctx context, t Term) (Term, error) {
 		}
 		return c, nil
 	case Merge:
-		handlerTypeTerm, err := typeWith(ctx, t.Handler)
+		handlerTypeVal, err := typeWith(ctx, t.Handler)
 		if err != nil {
 			return nil, err
 		}
-		unionTypeTerm, err := typeWith(ctx, t.Union)
+		unionTypeVal, err := typeWith(ctx, t.Union)
 		if err != nil {
 			return nil, err
 		}
-		handlerType, ok := handlerTypeTerm.(RecordType)
+		handlerType, ok := handlerTypeVal.(RecordTypeVal)
 		if !ok {
 			return nil, mkTypeError(mustMergeARecord)
 		}
-		unionType, ok := unionTypeTerm.(UnionType)
+		unionType, ok := unionTypeVal.(UnionTypeVal)
 		if !ok {
 			return nil, mkTypeError(mustMergeUnion)
 		}
@@ -734,10 +784,13 @@ func typeWith(ctx context, t Term) (Term, error) {
 			if t.Annotation == nil {
 				return nil, mkTypeError(missingMergeType)
 			}
-			return t.Annotation, nil
+			if _, err := typeWith(ctx, t.Annotation); err != nil {
+				return nil, err
+			}
+			return Eval(t.Annotation), nil
 		}
 
-		var result Term
+		var result Value
 		for altName, altType := range unionType {
 			fieldType, ok := handlerType[altName]
 			if !ok {
@@ -747,42 +800,44 @@ func typeWith(ctx context, t Term) (Term, error) {
 				if result == nil {
 					result = fieldType
 				} else {
-					if !judgmentallyEqual(result, fieldType) {
-						return nil, mkTypeError(handlerOutputTypeMismatch(result, fieldType))
+					if !judgmentallyEqualVals(result, fieldType) {
+						return nil, mkTypeError(handlerOutputTypeMismatch(Quote(result), Quote(fieldType)))
 					}
 				}
 			} else {
-				pi, ok := fieldType.(PiTerm)
+				pi, ok := fieldType.(PiValue)
 				if !ok {
 					return nil, mkTypeError(handlerNotAFunction)
 				}
-				if !judgmentallyEqual(altType, pi.Type) {
-					return nil, mkTypeError(handlerInputTypeMismatch(altType, pi.Type))
+				if !judgmentallyEqualVals(altType, pi.Domain) {
+					return nil, mkTypeError(handlerInputTypeMismatch(Quote(altType), Quote(pi.Domain)))
 				}
-				outputType := Quote(Eval(pi).(PiValue).Range(NaturalLit(1)))
-				outputType2 := Quote(Eval(pi).(PiValue).Range(NaturalLit(2)))
-				if !judgmentallyEqual(outputType, outputType2) {
+				outputType := pi.Range(NaturalLit(1))
+				outputType2 := pi.Range(NaturalLit(2))
+				if !judgmentallyEqualVals(outputType, outputType2) {
 					// hacky way of detecting output type depending on input
 					return nil, mkTypeError(disallowedHandlerType)
 				}
 				if result == nil {
 					result = outputType
 				} else {
-					if !judgmentallyEqual(result, outputType) {
-						return nil, mkTypeError(handlerOutputTypeMismatch(result, outputType))
+					if !judgmentallyEqualVals(result, outputType) {
+						return nil, mkTypeError(handlerOutputTypeMismatch(Quote(result), Quote(outputType)))
 					}
 				}
 			}
 		}
 		if t.Annotation != nil {
-			if !judgmentallyEqual(result, t.Annotation) {
-				return nil, mkTypeError(annotMismatch(t.Annotation, result))
+			if _, err := typeWith(ctx, t.Annotation); err != nil {
+				return nil, err
 			}
-			return t.Annotation, nil
+			if !judgmentallyEqualVals(result, Eval(t.Annotation)) {
+				return nil, mkTypeError(annotMismatch(t.Annotation, Quote(result)))
+			}
 		}
 		return result, nil
 	case Assert:
-		annotType, err := normalizedTypeWith(ctx, t.Annotation)
+		annotType, err := typeWith(ctx, t.Annotation)
 		if err != nil {
 			return nil, err
 		}
@@ -796,7 +851,7 @@ func typeWith(ctx context, t Term) (Term, error) {
 		if !judgmentallyEqualVals(op.L, op.R) {
 			return nil, mkTypeError(assertionFailed(Quote(op.L), Quote(op.R)))
 		}
-		return Quote(op), nil
+		return op, nil
 	}
 	return nil, mkTypeError(unhandledTypeCase)
 }
