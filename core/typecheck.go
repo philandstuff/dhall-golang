@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -20,27 +19,13 @@ func (ctx context) freshLocal(name string) LocalVar {
 	return LocalVar{Name: name, Index: len(ctx[name])}
 }
 
-// assert that a type is exactly expectedType (no judgmentallyEqual
-// here)
-// TODO: expectedType should be Value?
-func assertSimpleType(ctx context, expr Term, expectedType Value) error {
+func assertTypeIs(ctx context, expr Term, expectedType Value, msg typeMessage) error {
 	actualType, err := typeWith(ctx, expr)
 	if err != nil {
 		return err
 	}
-	if actualType != expectedType {
-		return mkTypeError(wrongOperandType(Quote(expectedType), Quote(actualType)))
-	}
-	return nil
-}
-
-func assertTypeIs(ctx context, expr Term, expectedType Value, msg error) error {
-	t, err := typeWith(ctx, expr)
-	if err != nil {
-		return err
-	}
-	if t != expectedType {
-		return msg
+	if !judgmentallyEqualVals(expectedType, actualType) {
+		return mkTypeError(msg)
 	}
 	return nil
 }
@@ -323,7 +308,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 	case TextLitTerm:
 		for _, chunk := range t.Chunks {
 			err := assertTypeIs(ctx, chunk.Expr, Text,
-				errors.New("Interpolated expression is not Text"))
+				cantInterpolate)
 			if err != nil {
 				return nil, err
 			}
@@ -363,31 +348,31 @@ func typeWith(ctx context, t Term) (Value, error) {
 	case OpTerm:
 		switch t.OpCode {
 		case OrOp, AndOp, EqOp, NeOp:
-			err := assertSimpleType(ctx, t.L, Bool)
+			err := assertTypeIs(ctx, t.L, Bool, cantBoolOp(t.OpCode))
 			if err != nil {
 				return nil, err
 			}
-			err = assertSimpleType(ctx, t.R, Bool)
+			err = assertTypeIs(ctx, t.R, Bool, cantBoolOp(t.OpCode))
 			if err != nil {
 				return nil, err
 			}
 			return Bool, nil
 		case PlusOp, TimesOp:
-			err := assertSimpleType(ctx, t.L, Natural)
+			err := assertTypeIs(ctx, t.L, Natural, cantNaturalOp(t.OpCode))
 			if err != nil {
 				return nil, err
 			}
-			err = assertSimpleType(ctx, t.R, Natural)
+			err = assertTypeIs(ctx, t.R, Natural, cantNaturalOp(t.OpCode))
 			if err != nil {
 				return nil, err
 			}
 			return Natural, nil
 		case TextAppendOp:
-			err := assertSimpleType(ctx, t.L, Text)
+			err := assertTypeIs(ctx, t.L, Text, cantTextAppend)
 			if err != nil {
 				return nil, err
 			}
-			err = assertSimpleType(ctx, t.R, Text)
+			err = assertTypeIs(ctx, t.R, Text, cantTextAppend)
 			if err != nil {
 				return nil, err
 			}
@@ -404,14 +389,14 @@ func typeWith(ctx context, t Term) (Value, error) {
 
 			lElemT, ok := listElementType(lt)
 			if !ok {
-				return nil, fmt.Errorf("Can't use list concatenate operator on a %s", lt)
+				return nil, mkTypeError(cantListAppend)
 			}
 			rElemT, ok := listElementType(rt)
 			if !ok {
-				return nil, fmt.Errorf("Can't use list concatenate operator on a %s", rt)
+				return nil, mkTypeError(cantListAppend)
 			}
 			if !judgmentallyEqualVals(lElemT, rElemT) {
-				return nil, fmt.Errorf("Can't append a %s to a %s", lt, rt)
+				return nil, mkTypeError(listAppendMismatch)
 			}
 			return lt, nil
 		case RecordMergeOp:
@@ -479,7 +464,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			}
 			return result, nil
 		case ImportAltOp:
-			fallthrough
+			return typeWith(ctx, t.L)
 		case EquivOp:
 			lType, err := typeWith(ctx, t.L)
 			if err != nil {
@@ -489,13 +474,13 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			err = assertSimpleType(ctx, Quote(lType), Type)
+			err = assertTypeIs(ctx, Quote(lType), Type, incomparableExpression)
 			if err != nil {
-				return nil, mkTypeError(incomparableExpression)
+				return nil, err
 			}
-			err = assertSimpleType(ctx, Quote(lType), Type)
+			err = assertTypeIs(ctx, Quote(lType), Type, incomparableExpression)
 			if err != nil {
-				return nil, mkTypeError(incomparableExpression)
+				return nil, err
 			}
 			if !judgmentallyEqualVals(lType, rType) {
 				return nil, mkTypeError(equivalenceTypeMismatch)
@@ -530,12 +515,9 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		T0type, err := typeWith(ctx, Quote(T0))
+		err = assertTypeIs(ctx, Quote(T0), Type, invalidListType)
 		if err != nil {
 			return nil, err
-		}
-		if T0type != Type {
-			return nil, mkTypeError(invalidListType)
 		}
 		for _, e := range t[1:] {
 			T1, err := typeWith(ctx, e)
@@ -552,12 +534,8 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		Atype, err := typeWith(ctx, Quote(A))
-		if err != nil {
+		if err = assertTypeIs(ctx, Quote(A), Type, invalidSome); err != nil {
 			return nil, err
-		}
-		if Atype != Type {
-			return nil, mkTypeError(invalidSome)
 		}
 		return AppValue{Optional, A}, nil
 	case RecordType:
@@ -567,12 +545,12 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			if u, ok := fieldUniverse.(Universe); ok {
-				if recordUniverse < u {
-					recordUniverse = u
-				}
-			} else {
+			u, ok := fieldUniverse.(Universe)
+			if !ok {
 				return nil, mkTypeError(invalidFieldType)
+			}
+			if recordUniverse < u {
+				recordUniverse = u
 			}
 		}
 		return recordUniverse, nil
@@ -603,12 +581,9 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if t.Type == nil {
 				return nil, mkTypeError(missingToMapType)
 			}
-			tt, err := typeWith(ctx, t.Type)
+			err = assertTypeIs(ctx, t.Type, Type, invalidToMapRecordKind)
 			if err != nil {
 				return nil, err
-			}
-			if tt != Type {
-				return nil, mkTypeError(invalidToMapRecordKind)
 			}
 			tVal := Eval(t.Type)
 			t, ok := listElementType(tVal)
@@ -837,12 +812,9 @@ func typeWith(ctx context, t Term) (Value, error) {
 		}
 		return result, nil
 	case Assert:
-		annotType, err := typeWith(ctx, t.Annotation)
+		err := assertTypeIs(ctx, t.Annotation, Type, notAnEquivalence)
 		if err != nil {
 			return nil, err
-		}
-		if annotType != Type {
-			return nil, mkTypeError(notAnEquivalence)
 		}
 		op, ok := Eval(t.Annotation).(OpValue)
 		if !ok || op.OpCode != EquivOp {
@@ -1003,6 +975,36 @@ func typeCheckBoundVar(boundVar Term) typeMessage {
 	}
 }
 
+func cantBoolOp(opCode int) typeMessage {
+	var opStr string
+	switch opCode {
+	case OrOp:
+		opStr = "||"
+	case AndOp:
+		opStr = "&&"
+	case EqOp:
+		opStr = "=="
+	case NeOp:
+		opStr = "!="
+	default:
+		panic(fmt.Sprintf("unknown boolean opcode %d", opCode))
+	}
+	return staticTypeMessage{fmt.Sprintf("❰%s❱ only works on ❰Bool❱s", opStr)}
+}
+
+func cantNaturalOp(opCode int) typeMessage {
+	var opStr string
+	switch opCode {
+	case PlusOp:
+		opStr = "+"
+	case TimesOp:
+		opStr = "*"
+	default:
+		panic(fmt.Sprintf("unknown natural opcode %d", opCode))
+	}
+	return staticTypeMessage{fmt.Sprintf("❰%s❱ only works on ❰Natural❱s", opStr)}
+}
+
 var (
 	ifBranchMismatch   = staticTypeMessage{"❰if❱ branches must have matching types"}
 	ifBranchMustBeTerm = staticTypeMessage{"❰if❱ branch is not a term"}
@@ -1033,6 +1035,12 @@ var (
 	missingHandler        = staticTypeMessage{"Missing handler"}
 	handlerNotAFunction   = staticTypeMessage{"Handler is not a function"}
 	disallowedHandlerType = staticTypeMessage{"Disallowed handler type"}
+
+	cantInterpolate = staticTypeMessage{"You can only interpolate ❰Text❱"}
+
+	cantTextAppend     = staticTypeMessage{"❰++❱ only works on ❰Text❱"}
+	cantListAppend     = staticTypeMessage{"❰#❱ only works on ❰List❱s"}
+	listAppendMismatch = staticTypeMessage{"You can only append ❰List❱s with matching element types"}
 
 	mustCombineARecord = staticTypeMessage{"You can only combine records"}
 
