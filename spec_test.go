@@ -289,7 +289,7 @@ func TestTypeInference(t *testing.T) {
 			inferredType, err := core.TypeOf(resolvedA)
 			expectNoError(t, err)
 
-			expectEqualTerms(t, parsedB.(core.Term), inferredType)
+			expectEqualTerms(t, parsedB.(core.Term), core.Quote(inferredType))
 		})
 }
 

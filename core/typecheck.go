@@ -52,12 +52,12 @@ func functionCheck(input Universe, output Universe) Universe {
 	}
 }
 
-func TypeOf(t Term) (Term, error) {
+func TypeOf(t Term) (Value, error) {
 	v, err := typeWith(context{}, t)
 	if err != nil {
 		return nil, err
 	}
-	return Quote(v), nil
+	return v, nil
 }
 
 func typeWith(ctx context, t Term) (Value, error) {

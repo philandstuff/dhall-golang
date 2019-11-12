@@ -21,11 +21,11 @@ var _ = DescribeTable("functionCheck",
 	Entry(`Sort ↝ Sort : Sort`, Sort, Sort, Sort),
 )
 
-func typecheckTest(t Term, expectedType Term) {
+func typecheckTest(t Term, expectedType Value) {
 	actualType, err := TypeOf(t)
 	Ω(err).ShouldNot(HaveOccurred())
-	Ω(actualType).Should(
-		Equal(expectedType))
+	Ω(judgmentallyEqualVals(actualType, expectedType)).Should(
+		BeTrue())
 }
 
 var _ = Describe("TypeOf", func() {
@@ -37,21 +37,25 @@ var _ = Describe("TypeOf", func() {
 	DescribeTable("Builtin",
 		typecheckTest,
 		Entry(`Natural : Type`, Natural, Type),
-		Entry(`List : Type -> Type`, List, FnType(Type, Type)),
+		Entry(`List : Type -> Type`, List, FnTypeVal(Type, Type)),
 	)
 	DescribeTable("Lambda",
 		typecheckTest,
 		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
 			Mkλ("x", Natural, Bound("x")),
-			MkΠ("x", Natural, Natural)),
+			MkΠval("x", Natural, func(Value) Value { return Natural })),
 		Entry("λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
 			Mkλ("a", Type,
-				EmptyList{Apply(List, Bound("a"))}),
-			MkΠ("a", Type, Apply(List, Bound("a")))),
+				EmptyList{AppTerm{List, Bound("a")}}),
+			MkΠval("a", Type, func(a Value) Value {
+				return AppValue{List, a}
+			})),
 		Entry("λ(a : Natural) → assert : a ≡ a -- check presence of variables in resulting type",
 			Mkλ("a", Natural,
 				Assert{OpTerm{EquivOp, Bound("a"), Bound("a")}}),
-			MkΠ("a", Natural, OpTerm{EquivOp, Bound("a"), Bound("a")})),
+			MkΠval("a", Natural, func(a Value) Value {
+				return OpValue{EquivOp, a, a}
+			})),
 	)
 	DescribeTable("Pi",
 		typecheckTest,
@@ -59,19 +63,19 @@ var _ = Describe("TypeOf", func() {
 	)
 	DescribeTable("Application",
 		typecheckTest,
-		Entry(`List Natural : Type`, Apply(List, Natural), Type),
+		Entry(`List Natural : Type`, AppTerm{List, Natural}, Type),
 		Entry("(λ(a : Natural) → assert : a ≡ a) 3 -- check presence of variables in resulting type",
 			Apply(
 				Mkλ("a", Natural,
 					Assert{OpTerm{EquivOp, Bound("a"), Bound("a")}}),
 				NaturalLit(3)),
-			OpTerm{EquivOp, NaturalLit(3), NaturalLit(3)}),
+			OpValue{EquivOp, NaturalLit(3), NaturalLit(3)}),
 	)
 	DescribeTable("Others",
 		typecheckTest,
 		Entry(`3 : Natural`, NaturalLit(3), Natural),
 		Entry(`[] : List Natural : List Natural`,
-			EmptyList{Apply(List, Natural)}, Apply(List, Natural)),
+			EmptyList{Apply(List, Natural)}, AppValue{List, Natural}),
 	)
 	DescribeTable("Expected failures",
 		func(t Term) {
