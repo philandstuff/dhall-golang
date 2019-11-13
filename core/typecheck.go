@@ -78,105 +78,100 @@ func typeWith(ctx context, t Term) (Value, error) {
 		case Bool, Double, Integer, Natural, Text:
 			return Type, nil
 		case DoubleShow:
-			return FnTypeVal(Double, Text), nil
+			return FnTypeVal("_", Double, Text), nil
 		case IntegerShow:
-			return FnTypeVal(Integer, Text), nil
+			return FnTypeVal("_", Integer, Text), nil
 		case IntegerToDouble:
-			return FnTypeVal(Integer, Double), nil
+			return FnTypeVal("_", Integer, Double), nil
 		case List, Optional:
-			return FnTypeVal(Type, Type), nil
+			return FnTypeVal("_", Type, Type), nil
 		case ListBuild:
-			return MkΠval("a", Type,
-				func(a Value) Value {
-					return FnTypeVal(
-						MkΠval("list", Type, func(list Value) Value {
-							return MkΠval("cons", FnTypeVal(a, FnTypeVal(list, list)), func(cons Value) Value {
-								return MkΠval("nil", list, func(nil Value) Value {
-									return list
-								})
-							})
-						}),
-						AppValue{List, a})
-				}), nil
+			return MkPiVal("a", Type, func(a Value) Value {
+				return FnTypeVal("_",
+					MkPiVal("list", Type, func(list Value) Value {
+						return FnTypeVal("cons",
+							FnTypeVal("_", a, FnTypeVal("_", list, list)),
+							FnTypeVal("nil", list, list))
+					}),
+					AppValue{List, a})
+			}), nil
 		case ListFold:
-			return MkΠval("a", Type, func(a Value) Value {
-				return FnTypeVal(AppValue{List, a},
-					MkΠval("list", Type, func(list Value) Value {
-						return MkΠval("cons", FnTypeVal(a, FnTypeVal(list, list)), func(cons Value) Value {
-							return MkΠval("nil", list, func(nil Value) Value {
-								return list
-							})
-						})
+			return MkPiVal("a", Type, func(a Value) Value {
+				return FnTypeVal("_",
+					AppValue{List, a},
+					MkPiVal("list", Type, func(list Value) Value {
+						return FnTypeVal("cons",
+							FnTypeVal("_", a, FnTypeVal("_", list, list)),
+							FnTypeVal("nil", list, list))
 					}))
 			}), nil
 		case ListLength:
-			return MkΠval("a", Type, func(a Value) Value {
-				return FnTypeVal(AppValue{List, a}, Natural)
+			return MkPiVal("a", Type, func(a Value) Value {
+				return FnTypeVal("_", AppValue{List, a}, Natural)
 			}), nil
 		case ListHead, ListLast:
-			return MkΠval("a", Type, func(a Value) Value {
-				return FnTypeVal(AppValue{List, a},
+			return MkPiVal("a", Type, func(a Value) Value {
+				return FnTypeVal("_", AppValue{List, a},
 					AppValue{Optional, a})
 			}), nil
 		case ListReverse:
-			return MkΠval("a", Type, func(a Value) Value {
-				return FnTypeVal(AppValue{List, a},
+			return MkPiVal("a", Type, func(a Value) Value {
+				return FnTypeVal("_", AppValue{List, a},
 					AppValue{List, a})
 			}), nil
 		case ListIndexed:
-			return MkΠval("a", Type, func(a Value) Value {
-				return FnTypeVal(AppValue{List, a},
+			return MkPiVal("a", Type, func(a Value) Value {
+				return FnTypeVal("_", AppValue{List, a},
 					AppValue{List, RecordTypeVal{"index": Natural, "value": a}})
 			}), nil
 		case NaturalBuild:
-			return FnTypeVal(MkΠval("natural", Type, func(natural Value) Value {
-				return MkΠval("succ", FnTypeVal(natural, natural), func(succ Value) Value {
-					return MkΠval("zero", natural, func(Value) Value { return natural })
-				})
-			}),
+			return FnTypeVal("_",
+				MkPiVal("natural", Type, func(natural Value) Value {
+					return FnTypeVal("succ",
+						FnTypeVal("_", natural, natural),
+						FnTypeVal("zero", natural, natural))
+				}),
 				Natural), nil
 		case NaturalFold:
-			return FnTypeVal(
+			return FnTypeVal("_",
 				Natural,
-				MkΠval("natural", Type, func(natural Value) Value {
-					return MkΠval("succ", FnTypeVal(natural, natural), func(Value) Value {
-						return MkΠval("zero", natural, func(Value) Value { return natural })
-					})
+				MkPiVal("natural", Type, func(natural Value) Value {
+					return FnTypeVal("succ",
+						FnTypeVal("_", natural, natural),
+						FnTypeVal("zero", natural, natural))
 				})), nil
 		case NaturalIsZero, NaturalOdd, NaturalEven:
-			return FnTypeVal(Natural, Bool), nil
+			return FnTypeVal("_", Natural, Bool), nil
 		case NaturalShow:
-			return FnTypeVal(Natural, Text), nil
+			return FnTypeVal("_", Natural, Text), nil
 		case NaturalToInteger:
-			return FnTypeVal(Natural, Integer), nil
+			return FnTypeVal("_", Natural, Integer), nil
 		case NaturalSubtract:
-			return FnTypeVal(Natural, FnTypeVal(Natural, Natural)), nil
+			return FnTypeVal("_", Natural, FnTypeVal("_", Natural, Natural)), nil
 		case None:
-			return MkΠval("A", Type, func(A Value) Value { return AppValue{Optional, A} }), nil
+			return MkPiVal("A", Type, func(A Value) Value { return AppValue{Optional, A} }), nil
 		case OptionalBuild:
-			return MkΠval("a", Type, func(a Value) Value {
-				return FnTypeVal(MkΠval("optional", Type, func(optional Value) Value {
-					return MkΠval("just", FnTypeVal(a, optional), func(just Value) Value {
-						return MkΠval("nothing", optional, func(nothing Value) Value {
-							return optional
-						})
-					})
-				}),
+			return MkPiVal("a", Type, func(a Value) Value {
+				return FnTypeVal("_",
+					MkPiVal("optional", Type, func(optional Value) Value {
+						return FnTypeVal("just",
+							FnTypeVal("_", a, optional),
+							FnTypeVal("nothing", optional, optional))
+					}),
 					AppValue{Optional, a})
 			}), nil
 		case OptionalFold:
-			return MkΠval("a", Type, func(a Value) Value {
-				return FnTypeVal(AppValue{Optional, a},
-					MkΠval("optional", Type, func(optional Value) Value {
-						return MkΠval("just", FnTypeVal(a, optional), func(just Value) Value {
-							return MkΠval("nothing", optional, func(nothing Value) Value {
-								return optional
-							})
-						})
+			return MkPiVal("a", Type, func(a Value) Value {
+				return FnTypeVal("_",
+					AppValue{Optional, a},
+					MkPiVal("optional", Type, func(optional Value) Value {
+						return FnTypeVal("just",
+							FnTypeVal("_", a, optional),
+							FnTypeVal("nothing", optional, optional))
 					}))
 			}), nil
 		case TextShow:
-			return FnTypeVal(Text, Text), nil
+			return FnTypeVal("_", Text, Text), nil
 		default:
 			return nil, mkTypeError(unhandledTypeCase)
 		}

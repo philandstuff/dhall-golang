@@ -37,23 +37,23 @@ var _ = Describe("TypeOf", func() {
 	DescribeTable("Builtin",
 		typecheckTest,
 		Entry(`Natural : Type`, Natural, Type),
-		Entry(`List : Type -> Type`, List, FnTypeVal(Type, Type)),
+		Entry(`List : Type -> Type`, List, FnTypeVal("_", Type, Type)),
 	)
 	DescribeTable("Lambda",
 		typecheckTest,
 		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
-			Mkλ("x", Natural, Bound("x")),
-			MkΠval("x", Natural, func(Value) Value { return Natural })),
+			MkLambdaTerm("x", Natural, Bound("x")),
+			MkPiVal("x", Natural, func(Value) Value { return Natural })),
 		Entry("λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
-			Mkλ("a", Type,
+			MkLambdaTerm("a", Type,
 				EmptyList{AppTerm{List, Bound("a")}}),
-			MkΠval("a", Type, func(a Value) Value {
+			MkPiVal("a", Type, func(a Value) Value {
 				return AppValue{List, a}
 			})),
 		Entry("λ(a : Natural) → assert : a ≡ a -- check presence of variables in resulting type",
-			Mkλ("a", Natural,
+			MkLambdaTerm("a", Natural,
 				Assert{OpTerm{EquivOp, Bound("a"), Bound("a")}}),
-			MkΠval("a", Natural, func(a Value) Value {
+			MkPiVal("a", Natural, func(a Value) Value {
 				return OpValue{EquivOp, a, a}
 			})),
 	)
@@ -66,7 +66,7 @@ var _ = Describe("TypeOf", func() {
 		Entry(`List Natural : Type`, AppTerm{List, Natural}, Type),
 		Entry("(λ(a : Natural) → assert : a ≡ a) 3 -- check presence of variables in resulting type",
 			Apply(
-				Mkλ("a", Natural,
+				MkLambdaTerm("a", Natural,
 					Assert{OpTerm{EquivOp, Bound("a"), Bound("a")}}),
 				NaturalLit(3)),
 			OpValue{EquivOp, NaturalLit(3), NaturalLit(3)}),

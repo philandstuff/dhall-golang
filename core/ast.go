@@ -226,7 +226,7 @@ func Lambda(label string, t Term, body Term) LambdaTerm {
 	}
 }
 
-func Mkλ(label string, t Term, body Term) LambdaTerm {
+func MkLambdaTerm(label string, t Term, body Term) LambdaTerm {
 	return LambdaTerm{
 		Label: label,
 		Type:  t,
@@ -234,7 +234,7 @@ func Mkλ(label string, t Term, body Term) LambdaTerm {
 	}
 }
 
-func MkΠ(label string, t Term, body Term) PiTerm {
+func MkPiTerm(label string, t Term, body Term) PiTerm {
 	return PiTerm{
 		Label: label,
 		Type:  t,
@@ -355,7 +355,7 @@ func (AppValue) isValue() {}
 
 func (OpValue) isValue() {}
 
-func MkΠval(label string, d Value, r func(Value) Value) PiValue {
+func MkPiVal(label string, d Value, r func(Value) Value) PiValue {
 	return PiValue{
 		Label:  label,
 		Domain: d,
@@ -364,9 +364,9 @@ func MkΠval(label string, d Value, r func(Value) Value) PiValue {
 }
 
 // FnTypeVal returns a non-dependent function type Value
-func FnTypeVal(d Value, r Value) PiValue {
+func FnTypeVal(l string, d Value, r Value) PiValue {
 	return PiValue{
-		Label:  "_",
+		Label:  l,
 		Domain: d,
 		Range:  func(Value) Value { return r },
 	}
