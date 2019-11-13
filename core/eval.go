@@ -189,6 +189,24 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case IntegerLit:
 		return t
 	case OpTerm:
+		// these are cases where we *don't* evaluate t.L and t.R up front
+		switch t.OpCode {
+		case TextAppendOp:
+			return evalWith(
+				TextLitTerm{Chunks: Chunks{{Expr: t.L}, {Expr: t.R}}},
+				e, shouldAlphaNormalize)
+		case CompleteOp:
+			return evalWith(
+				Annot{
+					Expr: OpTerm{
+						OpCode: RightBiasedRecordMergeOp,
+						L:      Field{t.L, "default"},
+						R:      t.R,
+					},
+					Annotation: Field{t.L, "Type"},
+				},
+				e, shouldAlphaNormalize)
+		}
 		l := evalWith(t.L, e, shouldAlphaNormalize)
 		r := evalWith(t.R, e, shouldAlphaNormalize)
 		switch t.OpCode {
@@ -249,10 +267,6 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 					return False
 				}
 			}
-		case TextAppendOp:
-			return evalWith(
-				TextLitTerm{Chunks: Chunks{{Expr: t.L}, {Expr: t.R}}},
-				e, shouldAlphaNormalize)
 		case ListAppendOp:
 			if _, ok := l.(EmptyListVal); ok {
 				return r
@@ -351,17 +365,6 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			// nothing special
 		case EquivOp:
 			// nothing special
-		case CompleteOp:
-			return evalWith(
-				Annot{
-					Expr: OpTerm{
-						OpCode: RightBiasedRecordMergeOp,
-						L:      Field{t.L, "default"},
-						R:      t.R,
-					},
-					Annotation: Field{t.L, "Type"},
-				},
-				e, shouldAlphaNormalize)
 		}
 		return OpValue{OpCode: t.OpCode, L: l, R: r}
 	case EmptyList:
