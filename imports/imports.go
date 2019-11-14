@@ -10,7 +10,7 @@ import (
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
-func ResolveStringAsExpr(name, content string) (Term, error) {
+func resolveStringAsExpr(name, content string) (Term, error) {
 	expr, err := parser.Parse(name, []byte(content))
 	if err != nil {
 		return nil, err
@@ -18,7 +18,14 @@ func ResolveStringAsExpr(name, content string) (Term, error) {
 	return expr.(Term), nil
 }
 
+// Load takes a Term and resolves all imports
 func Load(e Term, ancestors ...Fetchable) (Term, error) {
+	return LoadWith(StandardCache{}, e, ancestors...)
+}
+
+// LoadWith takes a Term and resolves all imports, using cache for
+// saving and fetching imports
+func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 	switch e := e.(type) {
 	case Import:
 		here := e.Fetchable
@@ -43,7 +50,7 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 		}
 		if e.Hash != nil {
 			// fetch from cache if available
-			if expr := fetchFromCache(e.Hash); expr != nil {
+			if expr := cache.Fetch(e.Hash); expr != nil {
 				return expr, nil
 			}
 		}
@@ -57,13 +64,13 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 			expr = TextLitTerm{Suffix: content}
 		} else {
 			// dynamicExpr may contain more imports
-			dynamicExpr, err := ResolveStringAsExpr(here.Name(), content)
+			dynamicExpr, err := resolveStringAsExpr(here.Name(), content)
 			if err != nil {
 				return nil, err
 			}
 
 			// recursively load any more imports
-			expr, err = Load(dynamicExpr, imports...)
+			expr, err = LoadWith(cache, dynamicExpr, imports...)
 			if err != nil {
 				return nil, err
 			}
@@ -84,15 +91,15 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 				return nil, fmt.Errorf("Failed integrity check: expected %x but saw %x", e.Hash, actualHash)
 			}
 			// store in cache
-			saveToCache(actualHash, expr)
+			cache.Save(actualHash, expr)
 		}
 		return expr, nil
 	case LambdaTerm:
-		resolvedType, err := Load(e.Type, ancestors...)
+		resolvedType, err := LoadWith(cache, e.Type, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedBody, err := Load(e.Body, ancestors...)
+		resolvedBody, err := LoadWith(cache, e.Body, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -102,11 +109,11 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 			Body:  resolvedBody,
 		}, nil
 	case PiTerm:
-		resolvedType, err := Load(e.Type, ancestors...)
+		resolvedType, err := LoadWith(cache, e.Type, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedBody, err := Load(e.Body, ancestors...)
+		resolvedBody, err := LoadWith(cache, e.Body, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -116,11 +123,11 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 			Body:  resolvedBody,
 		}, nil
 	case AppTerm:
-		resolvedFn, err := Load(e.Fn, ancestors...)
+		resolvedFn, err := LoadWith(cache, e.Fn, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedArg, err := Load(e.Arg, ancestors...)
+		resolvedArg, err := LoadWith(cache, e.Arg, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -134,27 +141,27 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 			var err error
 			newBindings[i].Variable = binding.Variable
 			if binding.Annotation != nil {
-				newBindings[i].Annotation, err = Load(binding.Annotation, ancestors...)
+				newBindings[i].Annotation, err = LoadWith(cache, binding.Annotation, ancestors...)
 				if err != nil {
 					return nil, err
 				}
 			}
-			newBindings[i].Value, err = Load(binding.Value, ancestors...)
+			newBindings[i].Value, err = LoadWith(cache, binding.Value, ancestors...)
 			if err != nil {
 				return nil, err
 			}
 		}
-		resolvedBody, err := Load(e.Body, ancestors...)
+		resolvedBody, err := LoadWith(cache, e.Body, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return Let{Bindings: newBindings, Body: resolvedBody}, nil
 	case Annot:
-		resolvedExpr, err := Load(e.Expr, ancestors...)
+		resolvedExpr, err := LoadWith(cache, e.Expr, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedAnnotation, err := Load(e.Annotation, ancestors...)
+		resolvedAnnotation, err := LoadWith(cache, e.Annotation, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +169,7 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 	case TextLitTerm:
 		var newChunks Chunks
 		for _, chunk := range e.Chunks {
-			resolvedExpr, err := Load(chunk.Expr, ancestors...)
+			resolvedExpr, err := LoadWith(cache, chunk.Expr, ancestors...)
 			if err != nil {
 				return nil, err
 			}
@@ -173,15 +180,15 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 		}
 		return TextLitTerm{newChunks, e.Suffix}, nil
 	case IfTerm:
-		resolvedCond, err := Load(e.Cond, ancestors...)
+		resolvedCond, err := LoadWith(cache, e.Cond, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedT, err := Load(e.T, ancestors...)
+		resolvedT, err := LoadWith(cache, e.T, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedF, err := Load(e.F, ancestors...)
+		resolvedF, err := LoadWith(cache, e.F, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -192,27 +199,27 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 		}, nil
 	case OpTerm:
 		if e.OpCode == ImportAltOp {
-			resolvedL, err := Load(e.L, ancestors...)
+			resolvedL, err := LoadWith(cache, e.L, ancestors...)
 			if err == nil {
 				return resolvedL, nil
 			}
-			resolvedR, err := Load(e.R, ancestors...)
+			resolvedR, err := LoadWith(cache, e.R, ancestors...)
 			if err != nil {
 				return nil, err
 			}
 			return resolvedR, nil
 		}
-		resolvedL, err := Load(e.L, ancestors...)
+		resolvedL, err := LoadWith(cache, e.L, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		resolvedR, err := Load(e.R, ancestors...)
+		resolvedR, err := LoadWith(cache, e.R, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return OpTerm{OpCode: e.OpCode, L: resolvedL, R: resolvedR}, nil
 	case EmptyList:
-		resolvedType, err := Load(e.Type, ancestors...)
+		resolvedType, err := LoadWith(cache, e.Type, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -221,14 +228,14 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 		newList := make(NonEmptyList, len(e))
 		for i, item := range e {
 			var err error
-			newList[i], err = Load(item, ancestors...)
+			newList[i], err = LoadWith(cache, item, ancestors...)
 			if err != nil {
 				return nil, err
 			}
 		}
 		return newList, nil
 	case Some:
-		val, err := Load(e.Val, ancestors...)
+		val, err := LoadWith(cache, e.Val, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -237,7 +244,7 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 		newRecord := make(RecordType, len(e))
 		for k, v := range e {
 			var err error
-			newRecord[k], err = Load(v, ancestors...)
+			newRecord[k], err = LoadWith(cache, v, ancestors...)
 			if err != nil {
 				return nil, err
 			}
@@ -247,40 +254,40 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 		newRecord := make(RecordLit, len(e))
 		for k, v := range e {
 			var err error
-			newRecord[k], err = Load(v, ancestors...)
+			newRecord[k], err = LoadWith(cache, v, ancestors...)
 			if err != nil {
 				return nil, err
 			}
 		}
 		return newRecord, nil
 	case ToMap:
-		record, err := Load(e.Record, ancestors...)
+		record, err := LoadWith(cache, e.Record, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		typ, err := Load(e.Type, ancestors...)
+		typ, err := LoadWith(cache, e.Type, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return ToMap{Record: record, Type: typ}, nil
 	case Field:
-		newRecord, err := Load(e.Record, ancestors...)
+		newRecord, err := LoadWith(cache, e.Record, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return Field{Record: newRecord, FieldName: e.FieldName}, nil
 	case Project:
-		newRecord, err := Load(e.Record, ancestors...)
+		newRecord, err := LoadWith(cache, e.Record, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return Project{Record: newRecord, FieldNames: e.FieldNames}, nil
 	case ProjectType:
-		record, err := Load(e.Record, ancestors...)
+		record, err := LoadWith(cache, e.Record, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		typ, err := Load(e.Selector, ancestors...)
+		typ, err := LoadWith(cache, e.Selector, ancestors...)
 		if err != nil {
 			return nil, err
 		}
@@ -293,24 +300,24 @@ func Load(e Term, ancestors ...Fetchable) (Term, error) {
 				result[k] = nil
 				continue
 			}
-			result[k], err = Load(v, ancestors...)
+			result[k], err = LoadWith(cache, v, ancestors...)
 			if err != nil {
 				return nil, err
 			}
 		}
 		return result, nil
 	case Merge:
-		handler, err := Load(e.Handler, ancestors...)
+		handler, err := LoadWith(cache, e.Handler, ancestors...)
 		if err != nil {
 			return nil, err
 		}
-		union, err := Load(e.Union, ancestors...)
+		union, err := LoadWith(cache, e.Union, ancestors...)
 		if err != nil {
 			return nil, err
 		}
 		return Merge{Handler: handler, Union: union}, nil
 	case Assert:
-		annot, err := Load(e.Annotation, ancestors...)
+		annot, err := LoadWith(cache, e.Annotation, ancestors...)
 		if err != nil {
 			return nil, err
 		}

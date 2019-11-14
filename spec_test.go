@@ -60,10 +60,6 @@ var expectedFailures = []string{
 	// since NbE, we don't deal with unbound variables in the
 	// "standard" way, because we don't have a shift() function
 	"TestAlphaNormalization/unit/FunctionNestedBindingXXFree",
-
-	// this passes with an empty cache. the tests should disable the
-	// cache for TestTypeInference but don't yet.
-	"TestTypeInference/preludeA",
 }
 
 func pass(t *testing.T) {
@@ -281,8 +277,7 @@ func TestTypeInference(t *testing.T) {
 			if isSimpleTest(t.Name()) {
 				resolvedA = parsedA.(core.Term)
 			} else {
-				// FIXME: should disable cache here
-				resolvedA, err = imports.Load(parsedA.(core.Term), core.Local(aPath))
+				resolvedA, err = imports.LoadWith(imports.NoCache{}, parsedA.(core.Term), core.Local(aPath))
 				expectNoError(t, err)
 			}
 
