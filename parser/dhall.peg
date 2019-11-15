@@ -409,7 +409,12 @@ Unreserved ← [A-Za-z0-9._~-]
 
 SubDelims ← "!" / "$" / "&" / "'" / "*" / "+" / ";" / "="
 
-Http ← u:HttpRaw { return MakeRemote(u.(*url.URL)), nil }
+Http ← u:HttpRaw usingClause:( _ Using _1 ImportExpression)? {
+  if usingClause != nil {
+    return MakeRemote(u.(*url.URL)), errors.New("dhall-golang does not support ❰using❱ clauses")
+  }
+  return MakeRemote(u.(*url.URL)), nil
+}
 
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
 
