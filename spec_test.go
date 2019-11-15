@@ -56,10 +56,6 @@ var expectedFailures = []string{
 	"TestTypeInferenceFails/unit/RecordProjectionDuplicateFields.dhall",
 	"TestTypeInferenceFails/unit/UnionTypeDuplicateVariants",
 	"TestTypeInferenceFails/unit/README", // FIXME, shouldn't need excluding
-
-	// since NbE, we don't deal with unbound variables in the
-	// "standard" way, because we don't have a shift() function
-	"TestAlphaNormalization/unit/FunctionNestedBindingXXFree",
 }
 
 func pass(t *testing.T) {

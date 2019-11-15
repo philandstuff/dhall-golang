@@ -72,7 +72,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		}
 	case Var:
 		if t.Index >= len(e[t.Name]) {
-			return t
+			return Var{t.Name, t.Index - len(e[t.Name])}
 		}
 		return e[t.Name][t.Index]
 	case LocalVar:
