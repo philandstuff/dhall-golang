@@ -212,41 +212,40 @@ var _ = Describe("Decode", func() {
 			Expect(fn).ToNot(BeNil())
 			Expect(fn("foo")).To(Equal("foo"))
 		})
-		// FIXME needs OpVal type, not yet implemented
-		// It("Decodes the int successor function", func() {
-		// 	var fn func(int) int
-		// 	dhallFn := core.LambdaValue{
-		// 		Label:  "x",
-		// 		Domain: core.Natural,
-		// 		Fn: func(x core.Value) core.Value {
-		// 			return core.NaturalPlus(
-		// 				x,
-		// 				core.NaturalLit(1),
-		// 			)
-		// 		},
-		// 	}
-		// 	Decode(dhallFn, &fn)
-		// 	Expect(fn).ToNot(BeNil())
-		// 	Expect(fn(3)).To(Equal(4))
-		// })
-		// It("Decodes the natural sum function", func() {
-		// 	var fn func(int, int) int
-		// 	dhallFn := core.LambdaValue{
-		// 		Label:  "x",
-		// 		Domain: core.Natural,
-		// 		Fn: func(x core.Value) core.Value {
-		// 			return core.LambdaValue{
-		// 				Label:  "y",
-		// 				Domain: core.Natural,
-		// 				Fn: func(y core.Value) core.Value {
-		// 					return core.NaturalPlus(x, y)
-		// 				},
-		// 			}
-		// 		},
-		// 	}
-		// 	Decode(dhallFn, &fn)
-		// 	Expect(fn).ToNot(BeNil())
-		// 	Expect(fn(3, 4)).To(Equal(7))
-		// })
+		It("Decodes the int successor function", func() {
+			var fn func(int) int
+			dhallFn := core.LambdaValue{
+				Label:  "x",
+				Domain: core.Natural,
+				Fn: func(x core.Value) core.Value {
+					return core.Eval(core.NaturalPlus(
+						core.Quote(x),
+						core.NaturalLit(1),
+					))
+				},
+			}
+			Decode(dhallFn, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn(3)).To(Equal(4))
+		})
+		It("Decodes the natural sum function", func() {
+			var fn func(int, int) int
+			dhallFn := core.LambdaValue{
+				Label:  "x",
+				Domain: core.Natural,
+				Fn: func(x core.Value) core.Value {
+					return core.LambdaValue{
+						Label:  "y",
+						Domain: core.Natural,
+						Fn: func(y core.Value) core.Value {
+							return core.Eval(core.NaturalPlus(core.Quote(x), core.Quote(y)))
+						},
+					}
+				},
+			}
+			Decode(dhallFn, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn(3, 4)).To(Equal(7))
+		})
 	})
 })
