@@ -11,8 +11,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func UnmarshalAndCompare(input core.Value, ptr interface{}, expected interface{}) {
-	Unmarshal(input, ptr)
+func DecodeAndCompare(input core.Value, ptr interface{}, expected interface{}) {
+	Decode(input, ptr)
 	// use reflect to dereference a pointer of unknown type
 	Expect(reflect.ValueOf(ptr).Elem().Interface()).
 		To(Equal(expected))
@@ -23,8 +23,8 @@ type testStruct struct {
 	Bar string
 }
 
-var _ = Describe("Unmarshal", func() {
-	DescribeTable("Simple types", UnmarshalAndCompare,
+var _ = Describe("Decode", func() {
+	DescribeTable("Simple types", DecodeAndCompare,
 		Entry("unmarshals DoubleLit into float32",
 			core.DoubleLit(3.5), new(float32), float32(3.5)),
 		Entry("unmarshals DoubleLit into float64",
@@ -42,7 +42,7 @@ var _ = Describe("Unmarshal", func() {
 		Entry("unmarshals TextLit into string",
 			core.TextLitVal{Suffix: "lalala"}, new(string), "lalala"),
 	)
-	DescribeTable("Simple types into interface{}", UnmarshalAndCompare,
+	DescribeTable("Simple types into interface{}", DecodeAndCompare,
 		Entry("unmarshals DoubleLit into interface{}",
 			core.DoubleLit(3.5), new(interface{}), float64(3.5)),
 		Entry("unmarshals True into interface{}",
@@ -54,7 +54,7 @@ var _ = Describe("Unmarshal", func() {
 		Entry("unmarshals TextLit into interface{}",
 			core.TextLitVal{Suffix: "lalala"}, new(interface{}), "lalala"),
 	)
-	DescribeTable("Compound types", UnmarshalAndCompare,
+	DescribeTable("Compound types", DecodeAndCompare,
 		Entry("unmarshals Some 5 into int",
 			core.SomeVal{core.NaturalLit(5)},
 			new(int),
@@ -112,7 +112,7 @@ var _ = Describe("Unmarshal", func() {
 	)
 	// EmptyListVal into interface{} deserves its own tests
 	// because we have to convert the list type to a reflect.Type
-	DescribeTable("Empty list into interface{}", UnmarshalAndCompare,
+	DescribeTable("Empty list into interface{}", DecodeAndCompare,
 		Entry("unmarshals empty List Bool into interface{}",
 			core.EmptyListVal{core.Bool},
 			new(interface{}),
@@ -151,7 +151,7 @@ var _ = Describe("Unmarshal", func() {
 			core.EmptyListVal{core.RecordTypeVal{"mapKey": core.Integer, "mapValue": core.Text}},
 			new(interface{}),
 			map[int]string{}))
-	DescribeTable("Compound types into interface{}", UnmarshalAndCompare,
+	DescribeTable("Compound types into interface{}", DecodeAndCompare,
 		XEntry("unmarshals List Integer into interface{}",
 			core.NonEmptyListVal{core.IntegerLit(5)},
 			new(interface{}),
@@ -179,41 +179,41 @@ var _ = Describe("Unmarshal", func() {
 			map[uint]string{}),
 	)
 	Describe("Function types", func() {
-		It("Unmarshals the identity int function", func() {
+		It("Decodes the identity int function", func() {
 			var fn func(int) int
 			dhallFn := core.Eval(core.LambdaTerm{
 				Label: "x",
 				Type:  core.Natural,
 				Body:  core.Bound("x"),
 			})
-			Unmarshal(dhallFn, &fn)
+			Decode(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(3)).To(Equal(3))
 		})
-		It("Unmarshals the identity int64 function", func() {
+		It("Decodes the identity int64 function", func() {
 			var fn func(int64) int64
 			dhallFn := core.Eval(core.LambdaTerm{
 				Label: "x",
 				Type:  core.Natural,
 				Body:  core.Bound("x"),
 			})
-			Unmarshal(dhallFn, &fn)
+			Decode(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(int64(3))).To(Equal(int64(3)))
 		})
-		It("Unmarshals the identity string function", func() {
+		It("Decodes the identity string function", func() {
 			var fn func(string) string
 			dhallFn := core.Eval(core.LambdaTerm{
 				Label: "x",
 				Type:  core.Text,
 				Body:  core.Bound("x"),
 			})
-			Unmarshal(dhallFn, &fn)
+			Decode(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn("foo")).To(Equal("foo"))
 		})
 		// FIXME needs OpVal type, not yet implemented
-		// It("Unmarshals the int successor function", func() {
+		// It("Decodes the int successor function", func() {
 		// 	var fn func(int) int
 		// 	dhallFn := core.LambdaValue{
 		// 		Label:  "x",
@@ -225,11 +225,11 @@ var _ = Describe("Unmarshal", func() {
 		// 			)
 		// 		},
 		// 	}
-		// 	Unmarshal(dhallFn, &fn)
+		// 	Decode(dhallFn, &fn)
 		// 	Expect(fn).ToNot(BeNil())
 		// 	Expect(fn(3)).To(Equal(4))
 		// })
-		// It("Unmarshals the natural sum function", func() {
+		// It("Decodes the natural sum function", func() {
 		// 	var fn func(int, int) int
 		// 	dhallFn := core.LambdaValue{
 		// 		Label:  "x",
@@ -244,7 +244,7 @@ var _ = Describe("Unmarshal", func() {
 		// 			}
 		// 		},
 		// 	}
-		// 	Unmarshal(dhallFn, &fn)
+		// 	Decode(dhallFn, &fn)
 		// 	Expect(fn).ToNot(BeNil())
 		// 	Expect(fn(3, 4)).To(Equal(7))
 		// })

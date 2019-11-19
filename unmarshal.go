@@ -1,16 +1,32 @@
 package dhall
 
 import (
+	"errors"
 	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/parser"
 )
 
-func Unmarshal(e core.Value, out interface{}) {
+func Unmarshal(b []byte, out interface{}) error {
+	parsed, err := parser.Parse("-", b)
+	if err != nil {
+		return err
+	}
+	term, ok := parsed.(core.Term)
+	if !ok {
+		// shouldn't happen
+		return errors.New("Internal error: parsed non-term")
+	}
+	Decode(core.Eval(term), out)
+	return nil
+}
+
+func Decode(e core.Value, out interface{}) {
 	v := reflect.ValueOf(out)
-	unmarshal(e, v.Elem())
+	decode(e, v.Elem())
 }
 
 func reflectValToDhallVal(val reflect.Value, typ core.Value) core.Value {
@@ -67,7 +83,7 @@ func dhallShim(out reflect.Type, dhallFunc core.LambdaValue) func([]reflect.Valu
 			expr = expr.(core.Callable).Call(dhallArg)
 		}
 		ptr := reflect.New(out)
-		unmarshal(expr, ptr.Elem())
+		decode(expr, ptr.Elem())
 		return []reflect.Value{ptr.Elem()}
 	}
 }
@@ -135,7 +151,7 @@ func dhallTypeToReflectType(e core.Value) reflect.Type {
 	panic("unknown type")
 }
 
-func unmarshal(e core.Value, v reflect.Value) {
+func decode(e core.Value, v reflect.Value) {
 	e = flattenOptional(e)
 	if e == nil {
 		return
@@ -178,7 +194,7 @@ func unmarshal(e core.Value, v reflect.Value) {
 		case core.NonEmptyListVal:
 			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 			for i, expr := range e {
-				unmarshal(expr, slice.Index(i))
+				decode(expr, slice.Index(i))
 			}
 			v.Set(slice)
 		}
@@ -197,8 +213,8 @@ func unmarshal(e core.Value, v reflect.Value) {
 			entry := r.(core.RecordLitVal)
 			key := reflect.New(v.Type().Key()).Elem()
 			val := reflect.New(v.Type().Elem()).Elem()
-			unmarshal(entry["mapKey"], key)
-			unmarshal(entry["mapValue"], val)
+			decode(entry["mapKey"], key)
+			decode(entry["mapValue"], val)
 			v.SetMapIndex(key, val)
 		}
 	case reflect.Struct:
@@ -206,7 +222,7 @@ func unmarshal(e core.Value, v reflect.Value) {
 		structType := v.Type()
 		for i := 0; i < structType.NumField(); i++ {
 			// FIXME ignores fields in RecordLit not in Struct
-			unmarshal(e[structType.Field(i).Name], v.Field(i))
+			decode(e[structType.Field(i).Name], v.Field(i))
 		}
 	case reflect.Func:
 		e := e.(core.LambdaValue)
@@ -222,7 +238,7 @@ func unmarshal(e core.Value, v reflect.Value) {
 		e := e.(core.NonEmptyListVal)
 		slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 		for i, expr := range e {
-			unmarshal(expr, slice.Index(i))
+			decode(expr, slice.Index(i))
 		}
 		v.Set(slice)
 	default:
