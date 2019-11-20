@@ -10,6 +10,15 @@ import (
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
+func isMapEntryType(recordType core.RecordTypeVal) bool {
+	if _, ok := recordType["mapKey"]; ok {
+		if _, ok := recordType["mapValue"]; ok {
+			return len(recordType) == 2
+		}
+	}
+	return false
+}
+
 func Unmarshal(b []byte, out interface{}) error {
 	parsed, err := parser.Parse("-", b)
 	if err != nil {
@@ -173,14 +182,7 @@ func decode(e core.Value, v reflect.Value) {
 		case core.EmptyListVal:
 			// check if it's a list of map entries
 			if r, ok := e.Type.(core.RecordTypeVal); ok {
-				if len(r) == 2 {
-					for k := range r {
-						if k != "mapKey" && k != "mapValue" {
-							goto notmap
-						}
-					}
-					// it's a map; the record has exactly 2 keys and they are
-					// "mapKey" and "mapValue"
+				if isMapEntryType(r) {
 					v.Set(reflect.MakeMap(reflect.MapOf(
 						dhallTypeToReflectType(r["mapKey"]),
 						dhallTypeToReflectType(r["mapValue"]),
@@ -188,7 +190,6 @@ func decode(e core.Value, v reflect.Value) {
 					return
 				}
 			}
-		notmap:
 			sliceType := reflect.SliceOf(dhallTypeToReflectType(e.Type))
 			v.Set(reflect.MakeSlice(sliceType, 0, 0))
 		case core.NonEmptyListVal:
