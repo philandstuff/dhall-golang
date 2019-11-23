@@ -13,11 +13,14 @@ type Message struct {
 	Time int64
 }
 
+// dhallMessage is the Dhall source we want to unmarshal
+const dhallMessage = `
+{ Name = "Alice", Body = "Hello", Time = 1294706395881547000 }
+`
+
 func Example() {
 	var m Message
-	err := dhall.Unmarshal([]byte(
-		`{Name = "Alice",Body = "Hello", Time = 1294706395881547000}`,
-	), &m)
+	err := dhall.Unmarshal([]byte(dhallMessage), &m)
 	if err != nil {
 		panic(err)
 	}
