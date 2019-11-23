@@ -19,6 +19,8 @@ func isMapEntryType(recordType core.RecordTypeVal) bool {
 	return false
 }
 
+// Unmarshal takes dhall input as a byte array and parses it,
+// evaluates it, and unmarshals it into the given variable.
 func Unmarshal(b []byte, out interface{}) error {
 	parsed, err := parser.Parse("-", b)
 	if err != nil {
@@ -33,6 +35,8 @@ func Unmarshal(b []byte, out interface{}) error {
 	return nil
 }
 
+// Decode takes a core.Value and unmarshals it into the given
+// variable.
 func Decode(e core.Value, out interface{}) {
 	v := reflect.ValueOf(out)
 	decode(e, v.Elem())
