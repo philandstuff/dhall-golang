@@ -1,17 +1,16 @@
-package parser_test
+package parser
 
 import (
 	. "github.com/philandstuff/dhall-golang/core"
-	"github.com/philandstuff/dhall-golang/parser"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("RemoveLeadingCommonIndent removes leading common indent", func() {
+var _ = Describe("removeLeadingCommonIndent removes leading common indent", func() {
 	DescribeTable("when the TextLitTerm has no interpolations", func(input, expected string) {
-		actual := parser.RemoveLeadingCommonIndent(TextLitTerm{Suffix: input})
+		actual := removeLeadingCommonIndent(TextLitTerm{Suffix: input})
 		Expect(actual).To(Equal(TextLitTerm{Suffix: expected}))
 	},
 		Entry("when every line has a 3-space prefix",
@@ -36,7 +35,7 @@ var _ = Describe("RemoveLeadingCommonIndent removes leading common indent", func
    bar`, "foo\n\nbar"),
 	)
 	DescribeTable("when the TextLitTerm has interpolations", func(input, expected TextLitTerm) {
-		actual := parser.RemoveLeadingCommonIndent(input)
+		actual := removeLeadingCommonIndent(input)
 		Expect(actual).To(Equal(expected))
 	},
 		Entry("when every line has a 3-space prefix",

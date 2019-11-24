@@ -6,9 +6,9 @@ import (
 	"github.com/philandstuff/dhall-golang/core"
 )
 
-//RemoveLeadingCommonIndent
+//removeLeadingCommonIndent
 // removes the common leading indent from a TextLitTerm, as defined in standard/multiline.md
-func RemoveLeadingCommonIndent(text core.TextLitTerm) core.TextLitTerm {
+func removeLeadingCommonIndent(text core.TextLitTerm) core.TextLitTerm {
 	prefix := longestCommonIndentPrefix(text)
 	trimmedText := core.TextLitTerm{Suffix: strings.ReplaceAll(text.Suffix, "\n"+prefix, "\n")}
 	for _, chunk := range text.Chunks {

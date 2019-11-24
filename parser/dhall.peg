@@ -23,7 +23,7 @@ import . "github.com/philandstuff/dhall-golang/core"
 
 // Helper function for parsing all the operator parsing blocks
 // see OrExpression for an example of how this is used
-func ParseOperator(opcode int, first, rest interface{}) Term {
+func parseOperator(opcode int, first, rest interface{}) Term {
     out := first.(Term)
     if rest == nil { return out }
     for _, b := range rest.([]interface{}) {
@@ -33,20 +33,20 @@ func ParseOperator(opcode int, first, rest interface{}) Term {
     return out
 }
 
-func IsNonCharacter(r rune) bool {
+func isNonCharacter(r rune) bool {
      return r & 0xfffe == 0xfffe
 }
 
-func ValidCodepoint(r rune) bool {
-     return utf8.ValidRune(r) && !IsNonCharacter(r)
+func validCodepoint(r rune) bool {
+     return utf8.ValidRune(r) && !isNonCharacter(r)
 }
 
 // Helper for parsing unicode code points
-func ParseCodepoint(codepointText string) ([]byte, error) {
+func parseCodepoint(codepointText string) ([]byte, error) {
     i, err := strconv.ParseInt(codepointText, 16, 32)
     if err != nil { return nil, err }
     r := rune(i)
-    if !ValidCodepoint(r) {
+    if !validCodepoint(r) {
         return nil, fmt.Errorf("%s is not a valid unicode code point", codepointText)
     }
     return []byte(string([]rune{r})), nil
@@ -146,10 +146,10 @@ DoubleQuoteEscaped ←
 
 UnicodeEscape ←
         HexDig HexDig HexDig HexDig {
-            return ParseCodepoint(string(c.text))
+            return parseCodepoint(string(c.text))
         }
       / '{' HexDig+ '}' {
-            return ParseCodepoint(string(c.text[1:len(c.text)-1]))
+            return parseCodepoint(string(c.text[1:len(c.text)-1]))
         }
 
 DoubleQuoteChar ←
@@ -209,7 +209,7 @@ SingleQuoteLiteral ← "''" EOL content:SingleQuoteContinue {
             return nil, errors.New("unimplemented")
         }
     }
-    return RemoveLeadingCommonIndent(TextLitTerm{Chunks: outChunks, Suffix: str.String()}), nil
+    return removeLeadingCommonIndent(TextLitTerm{Chunks: outChunks, Suffix: str.String()}), nil
 }
 
 Interpolation ← "${" e:CompleteExpression "}" { return e, nil }
@@ -538,31 +538,31 @@ EmptyList ← '[' _ (',' _)? ']' _ ':' _1 a:ApplicationExpression {
 OperatorExpression ← ImportAltExpression
 
 ImportAltExpression    ← first:OrExpression           rest:(_ "?" _1 OrExpression)*
-  {return ParseOperator(ImportAltOp, first, rest), nil}
+  {return parseOperator(ImportAltOp, first, rest), nil}
 OrExpression           ← first:PlusExpression         rest:(_ "||" _ PlusExpression)*
-  {return ParseOperator(OrOp, first, rest), nil}
+  {return parseOperator(OrOp, first, rest), nil}
 PlusExpression         ← first:TextAppendExpression   rest:(_ '+' _1 e:TextAppendExpression)*
-  {return ParseOperator(PlusOp, first, rest), nil}
+  {return parseOperator(PlusOp, first, rest), nil}
 TextAppendExpression   ← first:ListAppendExpression   rest:(_ "++" _ e:ListAppendExpression)*
-  {return ParseOperator(TextAppendOp, first, rest), nil}
+  {return parseOperator(TextAppendOp, first, rest), nil}
 ListAppendExpression   ← first:AndExpression          rest:(_ '#' _ e:AndExpression)*
-  {return ParseOperator(ListAppendOp, first, rest), nil}
+  {return parseOperator(ListAppendOp, first, rest), nil}
 AndExpression          ← first:CombineExpression      rest:(_ "&&" _ e:CombineExpression)*
-  {return ParseOperator(AndOp, first, rest), nil}
+  {return parseOperator(AndOp, first, rest), nil}
 CombineExpression      ← first:PreferExpression       rest:(_ Combine _ e:PreferExpression)*
-  {return ParseOperator(RecordMergeOp, first, rest), nil}
+  {return parseOperator(RecordMergeOp, first, rest), nil}
 PreferExpression       ← first:CombineTypesExpression rest:(_ Prefer _ e:CombineTypesExpression)*
-  {return ParseOperator(RightBiasedRecordMergeOp, first, rest), nil}
+  {return parseOperator(RightBiasedRecordMergeOp, first, rest), nil}
 CombineTypesExpression ← first:TimesExpression        rest:(_ CombineTypes _ e:TimesExpression)*
-  {return ParseOperator(RecordTypeMergeOp, first, rest), nil}
+  {return parseOperator(RecordTypeMergeOp, first, rest), nil}
 TimesExpression        ← first:EqualExpression        rest:(_ '*' _ e:EqualExpression)*
-  {return ParseOperator(TimesOp, first, rest), nil}
+  {return parseOperator(TimesOp, first, rest), nil}
 EqualExpression        ← first:NotEqualExpression     rest:(_ "==" _ e:NotEqualExpression)*
-  {return ParseOperator(EqOp, first, rest), nil}
+  {return parseOperator(EqOp, first, rest), nil}
 NotEqualExpression     ← first:EquivalentExpression  rest:(_ "!=" _ e:EquivalentExpression)*
-  {return ParseOperator(NeOp, first, rest), nil}
+  {return parseOperator(NeOp, first, rest), nil}
 EquivalentExpression     ← first:ApplicationExpression  rest:(_ Equivalent _ e:ApplicationExpression)*
-  {return ParseOperator(EquivOp, first, rest), nil}
+  {return parseOperator(EquivOp, first, rest), nil}
 
 ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression)* {
           e := f.(Term)

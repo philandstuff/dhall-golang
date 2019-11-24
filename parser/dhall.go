@@ -26,7 +26,7 @@ import (
 
 // Helper function for parsing all the operator parsing blocks
 // see OrExpression for an example of how this is used
-func ParseOperator(opcode int, first, rest interface{}) Term {
+func parseOperator(opcode int, first, rest interface{}) Term {
 	out := first.(Term)
 	if rest == nil {
 		return out
@@ -38,22 +38,22 @@ func ParseOperator(opcode int, first, rest interface{}) Term {
 	return out
 }
 
-func IsNonCharacter(r rune) bool {
+func isNonCharacter(r rune) bool {
 	return r&0xfffe == 0xfffe
 }
 
-func ValidCodepoint(r rune) bool {
-	return utf8.ValidRune(r) && !IsNonCharacter(r)
+func validCodepoint(r rune) bool {
+	return utf8.ValidRune(r) && !isNonCharacter(r)
 }
 
 // Helper for parsing unicode code points
-func ParseCodepoint(codepointText string) ([]byte, error) {
+func parseCodepoint(codepointText string) ([]byte, error) {
 	i, err := strconv.ParseInt(codepointText, 16, 32)
 	if err != nil {
 		return nil, err
 	}
 	r := rune(i)
-	if !ValidCodepoint(r) {
+	if !validCodepoint(r) {
 		return nil, fmt.Errorf("%s is not a valid unicode code point", codepointText)
 	}
 	return []byte(string([]rune{r})), nil
@@ -13145,7 +13145,7 @@ func (p *parser) callonDoubleQuoteChunk17() (interface{}, error) {
 }
 
 func (c *current) onDoubleQuoteChunk24() (interface{}, error) {
-	return ParseCodepoint(string(c.text))
+	return parseCodepoint(string(c.text))
 
 }
 
@@ -13156,7 +13156,7 @@ func (p *parser) callonDoubleQuoteChunk24() (interface{}, error) {
 }
 
 func (c *current) onDoubleQuoteChunk38() (interface{}, error) {
-	return ParseCodepoint(string(c.text[1 : len(c.text)-1]))
+	return parseCodepoint(string(c.text[1 : len(c.text)-1]))
 
 }
 
@@ -13264,7 +13264,7 @@ func (c *current) onSingleQuoteLiteral1(content interface{}) (interface{}, error
 			return nil, errors.New("unimplemented")
 		}
 	}
-	return RemoveLeadingCommonIndent(TextLitTerm{Chunks: outChunks, Suffix: str.String()}), nil
+	return removeLeadingCommonIndent(TextLitTerm{Chunks: outChunks, Suffix: str.String()}), nil
 }
 
 func (p *parser) callonSingleQuoteLiteral1() (interface{}, error) {
@@ -17724,7 +17724,7 @@ func (p *parser) callonEmptyList1() (interface{}, error) {
 }
 
 func (c *current) onImportAltExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(ImportAltOp, first, rest), nil
+	return parseOperator(ImportAltOp, first, rest), nil
 }
 
 func (p *parser) callonImportAltExpression1() (interface{}, error) {
@@ -17734,7 +17734,7 @@ func (p *parser) callonImportAltExpression1() (interface{}, error) {
 }
 
 func (c *current) onOrExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(OrOp, first, rest), nil
+	return parseOperator(OrOp, first, rest), nil
 }
 
 func (p *parser) callonOrExpression1() (interface{}, error) {
@@ -17744,7 +17744,7 @@ func (p *parser) callonOrExpression1() (interface{}, error) {
 }
 
 func (c *current) onPlusExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(PlusOp, first, rest), nil
+	return parseOperator(PlusOp, first, rest), nil
 }
 
 func (p *parser) callonPlusExpression1() (interface{}, error) {
@@ -17754,7 +17754,7 @@ func (p *parser) callonPlusExpression1() (interface{}, error) {
 }
 
 func (c *current) onTextAppendExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(TextAppendOp, first, rest), nil
+	return parseOperator(TextAppendOp, first, rest), nil
 }
 
 func (p *parser) callonTextAppendExpression1() (interface{}, error) {
@@ -17764,7 +17764,7 @@ func (p *parser) callonTextAppendExpression1() (interface{}, error) {
 }
 
 func (c *current) onListAppendExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(ListAppendOp, first, rest), nil
+	return parseOperator(ListAppendOp, first, rest), nil
 }
 
 func (p *parser) callonListAppendExpression1() (interface{}, error) {
@@ -17774,7 +17774,7 @@ func (p *parser) callonListAppendExpression1() (interface{}, error) {
 }
 
 func (c *current) onAndExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(AndOp, first, rest), nil
+	return parseOperator(AndOp, first, rest), nil
 }
 
 func (p *parser) callonAndExpression1() (interface{}, error) {
@@ -17784,7 +17784,7 @@ func (p *parser) callonAndExpression1() (interface{}, error) {
 }
 
 func (c *current) onCombineExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(RecordMergeOp, first, rest), nil
+	return parseOperator(RecordMergeOp, first, rest), nil
 }
 
 func (p *parser) callonCombineExpression1() (interface{}, error) {
@@ -17794,7 +17794,7 @@ func (p *parser) callonCombineExpression1() (interface{}, error) {
 }
 
 func (c *current) onPreferExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(RightBiasedRecordMergeOp, first, rest), nil
+	return parseOperator(RightBiasedRecordMergeOp, first, rest), nil
 }
 
 func (p *parser) callonPreferExpression1() (interface{}, error) {
@@ -17804,7 +17804,7 @@ func (p *parser) callonPreferExpression1() (interface{}, error) {
 }
 
 func (c *current) onCombineTypesExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(RecordTypeMergeOp, first, rest), nil
+	return parseOperator(RecordTypeMergeOp, first, rest), nil
 }
 
 func (p *parser) callonCombineTypesExpression1() (interface{}, error) {
@@ -17814,7 +17814,7 @@ func (p *parser) callonCombineTypesExpression1() (interface{}, error) {
 }
 
 func (c *current) onTimesExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(TimesOp, first, rest), nil
+	return parseOperator(TimesOp, first, rest), nil
 }
 
 func (p *parser) callonTimesExpression1() (interface{}, error) {
@@ -17824,7 +17824,7 @@ func (p *parser) callonTimesExpression1() (interface{}, error) {
 }
 
 func (c *current) onEqualExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(EqOp, first, rest), nil
+	return parseOperator(EqOp, first, rest), nil
 }
 
 func (p *parser) callonEqualExpression1() (interface{}, error) {
@@ -17834,7 +17834,7 @@ func (p *parser) callonEqualExpression1() (interface{}, error) {
 }
 
 func (c *current) onNotEqualExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(NeOp, first, rest), nil
+	return parseOperator(NeOp, first, rest), nil
 }
 
 func (p *parser) callonNotEqualExpression1() (interface{}, error) {
@@ -17844,7 +17844,7 @@ func (p *parser) callonNotEqualExpression1() (interface{}, error) {
 }
 
 func (c *current) onEquivalentExpression1(first, rest interface{}) (interface{}, error) {
-	return ParseOperator(EquivOp, first, rest), nil
+	return parseOperator(EquivOp, first, rest), nil
 }
 
 func (p *parser) callonEquivalentExpression1() (interface{}, error) {
