@@ -7,6 +7,7 @@ import (
 	"os"
 
 	. "github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/internal"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -16,7 +17,7 @@ import (
 
 func makeRemote(u string) Remote {
 	parsed, _ := url.ParseRequestURI(u)
-	remote := MakeRemote(parsed)
+	remote := NewRemote(parsed)
 	return remote
 }
 
@@ -109,31 +110,31 @@ var _ = Describe("Fetch", func() {
 			)
 		})
 		It("is allowed from local", func() {
-			actual, err := MakeRemoteImport(server.URL()+"/no-cors.dhall", Code).Fetch(NullOrigin)
+			actual, err := internal.NewRemoteImport(server.URL()+"/no-cors.dhall", Code).Fetch(NullOrigin)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal("this content only allows the same origin"))
 		})
 		It("is allowed from same origin, even if CORS fails", func() {
-			actual, err := MakeRemoteImport(server.URL()+"/no-cors.dhall", Code).Fetch(server.URL())
+			actual, err := internal.NewRemoteImport(server.URL()+"/no-cors.dhall", Code).Fetch(server.URL())
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal("this content only allows the same origin"))
 		})
 		Context("when fetching from different origin", func() {
 			It("returns error if CORS fails", func() {
-				_, err := MakeRemoteImport(server.URL()+"/no-cors.dhall", Code).Fetch("http://example.com")
+				_, err := internal.NewRemoteImport(server.URL()+"/no-cors.dhall", Code).Fetch("http://example.com")
 
 				Expect(err).To(HaveOccurred())
 			})
 			It("is allowed if Access-Control-Allow-Origin is '*'", func() {
-				actual, err := MakeRemoteImport(server.URL()+"/cors-ok-with-star.dhall", Code).Fetch("http://example.com")
+				actual, err := internal.NewRemoteImport(server.URL()+"/cors-ok-with-star.dhall", Code).Fetch("http://example.com")
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(actual).To(Equal("this content allows origin *"))
 			})
 			It("is allowed if Access-Control-Allow-Origin matches the Origin header", func() {
-				actual, err := MakeRemoteImport(server.URL()+"/cors-ok-with-origin.dhall", Code).Fetch("http://example.com")
+				actual, err := internal.NewRemoteImport(server.URL()+"/cors-ok-with-origin.dhall", Code).Fetch("http://example.com")
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(actual).To(Equal("this content allows origin http://example.com"))

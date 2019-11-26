@@ -13,7 +13,7 @@ func (naturalBuildVal) Call(x Value) Value {
 			if n, ok := x.(NaturalLit); ok {
 				return NaturalLit(n + 1)
 			}
-			return OpValue{OpCode: PlusOp, L: x, R: NaturalLit(1)}
+			return opValue{OpCode: PlusOp, L: x, R: NaturalLit(1)}
 		},
 	}
 	if fold, ok := x.(naturalFoldVal); ok {
@@ -242,7 +242,7 @@ func (l listBuildVal) Call(x Value) Value {
 					if as, ok := as.(NonEmptyListVal); ok {
 						return append(NonEmptyListVal{a}, as...)
 					}
-					return OpValue{OpCode: ListAppendOp, L: NonEmptyListVal{a}, R: as}
+					return opValue{OpCode: ListAppendOp, L: NonEmptyListVal{a}, R: as}
 				},
 			}
 		},

@@ -404,7 +404,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 					if err != nil {
 						return nil, err
 					}
-					f = MakeRemote(u)
+					f = NewRemote(u)
 				case 2, 3, 4, 5:
 					var file string
 					if importLabel == 2 {
@@ -463,7 +463,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 					}
 					bindings = append(bindings, Binding{name, annotation, value})
 				}
-				return MakeLet(body, bindings...), nil
+				return NewLet(body, bindings...), nil
 			case 26: // annotated expression
 				expr, err := decode(val[1])
 				if err != nil {

@@ -4,6 +4,7 @@ import (
 	"math"
 
 	. "github.com/philandstuff/dhall-golang/core"
+	. "github.com/philandstuff/dhall-golang/internal"
 	"github.com/philandstuff/dhall-golang/parser"
 
 	. "github.com/onsi/ginkgo"
@@ -44,7 +45,7 @@ var _ = Describe("Expression", func() {
 		Entry("Bool", `Bool`, Bool),
 		Entry("True", `True`, BoolLit(true)),
 		Entry("False", `False`, BoolLit(false)),
-		Entry("if True then x else y", `if True then x else y`, IfTerm{True, Bound("x"), Bound("y")}),
+		Entry("if True then x else y", `if True then x else y`, IfTerm{True, NewVar("x"), NewVar("y")}),
 	)
 	DescribeTable("naturals", ParseAndCompare,
 		Entry("Natural", `Natural`, Natural),
@@ -118,18 +119,18 @@ baz
 		),
 	)
 	DescribeTable("simple expressions", ParseAndCompare,
-		Entry("Identifier", `x`, Bound("x")),
+		Entry("Identifier", `x`, NewVar("x")),
 		Entry("Identifier with index", `x@1`, Var{"x", 1}),
-		Entry("Identifier with reserved prefix", `Listicle`, Bound("Listicle")),
+		Entry("Identifier with reserved prefix", `Listicle`, NewVar("Listicle")),
 		Entry("Identifier with reserved prefix and index", `Listicle@3`, Var{"Listicle", 3}),
 	)
 	DescribeTable("lists", ParseAndCompare,
 		Entry("List Natural", `List Natural`, Apply(List, Natural)),
-		Entry("[3]", `[3]`, MakeList(NaturalLit(3))),
-		Entry("[3,4]", `[3,4]`, MakeList(NaturalLit(3), NaturalLit(4))),
+		Entry("[3]", `[3]`, NewList(NaturalLit(3))),
+		Entry("[3,4]", `[3,4]`, NewList(NaturalLit(3), NaturalLit(4))),
 		Entry("[] : List Natural", `[] : List Natural`, EmptyList{Apply(List, Natural)}),
-		Entry("[3] : List Natural", `[3] : List Natural`, Annot{MakeList(NaturalLit(3)), Apply(List, Natural)}),
-		Entry("a # b", `a # b`, ListAppend(Bound("a"), Bound("b"))),
+		Entry("[3] : List Natural", `[3] : List Natural`, Annot{NewList(NaturalLit(3)), Apply(List, Natural)}),
+		Entry("a # b", `a # b`, ListAppend(NewVar("a"), NewVar("b"))),
 	)
 	DescribeTable("optionals", ParseAndCompare,
 		Entry("Optional Natural", `Optional Natural`, Apply(Optional, Natural)),
@@ -143,28 +144,28 @@ baz
 		Entry("{foo = 3}", `{foo = 3}`, RecordLit{"foo": NaturalLit(3)}),
 		Entry("{foo : Natural, bar : Integer}", `{foo : Natural, bar: Integer}`, RecordType{"foo": Natural, "bar": Integer}),
 		Entry("{foo = 3 , bar = +3}", `{foo = 3 , bar = +3}`, RecordLit{"foo": NaturalLit(3), "bar": IntegerLit(3)}),
-		Entry("t.x", `t.x`, Field{Bound("t"), "x"}),
-		Entry("t.x.y", `t.x.y`, Field{Field{Bound("t"), "x"}, "y"}),
+		Entry("t.x", `t.x`, Field{NewVar("t"), "x"}),
+		Entry("t.x.y", `t.x.y`, Field{Field{NewVar("t"), "x"}, "y"}),
 	)
 	DescribeTable("imports", ParseAndCompare,
-		Entry("bash envvar text import", `env:FOO as Text`, MakeEnvVarImport("FOO", RawText)),
-		Entry("posix envvar text import", `env:"FOO" as Text`, MakeEnvVarImport("FOO", RawText)),
-		Entry("posix envvar text import", `env:"foo\nbar\a!" as Text`, MakeEnvVarImport("foo\nbar\a!", RawText)),
-		Entry("bash envvar code import", `env:FOO`, MakeEnvVarImport("FOO", Code)),
-		Entry("posix envvar code import", `env:"FOO"`, MakeEnvVarImport("FOO", Code)),
-		Entry("posix envvar code import", `env:"foo\nbar\a!"`, MakeEnvVarImport("foo\nbar\a!", Code)),
-		Entry("missing", `missing`, MakeImport(Missing(struct{}{}), Code)),
-		Entry("local here-path import", `./local`, MakeLocalImport("local", Code)),
-		Entry("local parent-path import", `../local`, MakeLocalImport("../local", Code)),
-		Entry("local home import", `~/in/home`, MakeLocalImport("~/in/home", Code)),
-		Entry("local absolute import", `/local`, MakeLocalImport("/local", Code)),
-		Entry("simple remote", `https://example.com/foo`, MakeRemoteImport("https://example.com/foo", Code)),
-		Entry("http remote", `http://example.com/foo`, MakeRemoteImport("http://example.com/foo", Code)),
-		Entry("remote with query string", `https://example.com/foo?bar=baz&fred=jim`, MakeRemoteImport("https://example.com/foo?bar=baz&fred=jim", Code)),
-		Entry("remote with port", `https://example.com:8080/foo`, MakeRemoteImport("https://example.com:8080/foo", Code)),
-		Entry("remote with userinfo", `https://foo:bar@example.com/foo`, MakeRemoteImport("https://foo:bar@example.com/foo", Code)),
-		Entry("remote with IPv4 address", `https://127.0.0.1/foo`, MakeRemoteImport("https://127.0.0.1/foo", Code)),
-		Entry("remote with IPv6 address", `https://[cafe:d00d::1234]/foo`, MakeRemoteImport("https://[cafe:d00d::1234]/foo", Code)),
+		Entry("bash envvar text import", `env:FOO as Text`, NewEnvVarImport("FOO", RawText)),
+		Entry("posix envvar text import", `env:"FOO" as Text`, NewEnvVarImport("FOO", RawText)),
+		Entry("posix envvar text import", `env:"foo\nbar\a!" as Text`, NewEnvVarImport("foo\nbar\a!", RawText)),
+		Entry("bash envvar code import", `env:FOO`, NewEnvVarImport("FOO", Code)),
+		Entry("posix envvar code import", `env:"FOO"`, NewEnvVarImport("FOO", Code)),
+		Entry("posix envvar code import", `env:"foo\nbar\a!"`, NewEnvVarImport("foo\nbar\a!", Code)),
+		Entry("missing", `missing`, NewImport(Missing(struct{}{}), Code)),
+		Entry("local here-path import", `./local`, NewLocalImport("local", Code)),
+		Entry("local parent-path import", `../local`, NewLocalImport("../local", Code)),
+		Entry("local home import", `~/in/home`, NewLocalImport("~/in/home", Code)),
+		Entry("local absolute import", `/local`, NewLocalImport("/local", Code)),
+		Entry("simple remote", `https://example.com/foo`, NewRemoteImport("https://example.com/foo", Code)),
+		Entry("http remote", `http://example.com/foo`, NewRemoteImport("http://example.com/foo", Code)),
+		Entry("remote with query string", `https://example.com/foo?bar=baz&fred=jim`, NewRemoteImport("https://example.com/foo?bar=baz&fred=jim", Code)),
+		Entry("remote with port", `https://example.com:8080/foo`, NewRemoteImport("https://example.com:8080/foo", Code)),
+		Entry("remote with userinfo", `https://foo:bar@example.com/foo`, NewRemoteImport("https://foo:bar@example.com/foo", Code)),
+		Entry("remote with IPv4 address", `https://127.0.0.1/foo`, NewRemoteImport("https://127.0.0.1/foo", Code)),
+		Entry("remote with IPv6 address", `https://[cafe:d00d::1234]/foo`, NewRemoteImport("https://[cafe:d00d::1234]/foo", Code)),
 		// unimplemented yet. don't care too much about these features
 		PEntry("remote with headers", ``, nil),
 	)
@@ -179,58 +180,58 @@ baz
 		Entry("simple λ",
 			`λ(foo : bar) → baz`,
 			LambdaTerm{
-				"foo", Bound("bar"), Bound("baz")}),
+				"foo", NewVar("bar"), NewVar("baz")}),
 		Entry(`simple \`,
 			`\(foo : bar) → baz`,
 			LambdaTerm{
-				"foo", Bound("bar"), Bound("baz")}),
+				"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("with line comment",
 			"λ(foo : bar) --asdf\n → baz",
 			LambdaTerm{
-				"foo", Bound("bar"), Bound("baz")}),
+				"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("with block comment",
 			"λ(foo : bar) {-asdf\n-} → baz",
 			LambdaTerm{
-				"foo", Bound("bar"), Bound("baz")}),
+				"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("simple ∀",
 			`∀(foo : bar) → baz`,
-			PiTerm{"foo", Bound("bar"), Bound("baz")}),
+			PiTerm{"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("arrow type has implicit _ var",
 			`foo → bar`,
-			FnType(Bound("foo"), Bound("bar"))),
+			NewAnonPi(NewVar("foo"), NewVar("bar"))),
 		Entry(`simple forall`,
 			`forall(foo : bar) → baz`,
-			PiTerm{"foo", Bound("bar"), Bound("baz")}),
+			PiTerm{"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("with line comment",
 			"∀(foo : bar) --asdf\n → baz",
-			PiTerm{"foo", Bound("bar"), Bound("baz")}),
+			PiTerm{"foo", NewVar("bar"), NewVar("baz")}),
 	)
 	DescribeTable("applications", ParseAndCompare,
 		Entry("identifier application",
 			`foo bar`,
 			Apply(
-				Bound("foo"),
-				Bound("bar"),
+				NewVar("foo"),
+				NewVar("bar"),
 			)),
 		Entry("lambda application",
 			`(λ(foo : bar) → baz) quux`,
 			Apply(
 				LambdaTerm{
-					"foo", Bound("bar"), Bound("baz")},
-				Bound("quux"))),
+					"foo", NewVar("bar"), NewVar("baz")},
+				NewVar("quux"))),
 	)
 	DescribeTable("lets", ParseAndCompare,
 		Entry("simple let",
 			`let x = y in z`,
-			MakeLet(Bound("z"), Binding{
-				Variable: "x", Value: Bound("y"),
+			NewLet(NewVar("z"), Binding{
+				Variable: "x", Value: NewVar("y"),
 			})),
 		Entry("lambda application",
 			`(λ(foo : bar) → baz) quux`,
 			Apply(
 				LambdaTerm{
-					"foo", Bound("bar"), Bound("baz")},
-				Bound("quux"))),
+					"foo", NewVar("bar"), NewVar("baz")},
+				NewVar("quux"))),
 	)
 	Describe("Expected failures", func() {
 		// these keywords should fail to parse unless they're part of

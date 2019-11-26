@@ -22,7 +22,7 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		optionalFoldVal, textShowVal, listBuildVal, listFoldVal,
 		listHeadVal, listIndexedVal, listLengthVal, listLastVal,
 		listReverseVal,
-		Var, LocalVar, QuoteVar,
+		Var, localVar, quoteVar,
 		NaturalLit, IntegerLit, BoolLit:
 		return v1 == v2
 	case DoubleLit:
@@ -38,8 +38,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		return judgmentallyEqualValsWith(level, v1.Domain, v2.Domain) &&
 			judgmentallyEqualValsWith(
 				level+1,
-				v1.Call(QuoteVar{Name: "_", Index: level}),
-				v2.Call(QuoteVar{Name: "_", Index: level}),
+				v1.Call(quoteVar{Name: "_", Index: level}),
+				v2.Call(quoteVar{Name: "_", Index: level}),
 			)
 	case PiValue:
 		v2, ok := v2.(PiValue)
@@ -49,8 +49,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		return judgmentallyEqualValsWith(level, v1.Domain, v2.Domain) &&
 			judgmentallyEqualValsWith(
 				level+1,
-				v1.Range(QuoteVar{Name: "_", Index: level}),
-				v2.Range(QuoteVar{Name: "_", Index: level}),
+				v1.Range(quoteVar{Name: "_", Index: level}),
+				v2.Range(quoteVar{Name: "_", Index: level}),
 			)
 	case AppValue:
 		v2, ok := v2.(AppValue)
@@ -59,8 +59,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		}
 		return judgmentallyEqualValsWith(level, v1.Fn, v2.Fn) &&
 			judgmentallyEqualValsWith(level, v1.Arg, v2.Arg)
-	case OpValue:
-		v2, ok := v2.(OpValue)
+	case opValue:
+		v2, ok := v2.(opValue)
 		if !ok {
 			return false
 		}
@@ -106,8 +106,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 			}
 		}
 		return true
-	case IfVal:
-		v2, ok := v2.(IfVal)
+	case ifVal:
+		v2, ok := v2.(ifVal)
 		if !ok {
 			return false
 		}
@@ -150,22 +150,22 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 			}
 		}
 		return true
-	case ToMapVal:
-		v2, ok := v2.(ToMapVal)
+	case toMapVal:
+		v2, ok := v2.(toMapVal)
 		if !ok {
 			return false
 		}
 		return judgmentallyEqualValsWith(level, v1.Record, v2.Record) &&
 			judgmentallyEqualValsWith(level, v1.Type, v2.Type)
-	case FieldVal:
-		v2, ok := v2.(FieldVal)
+	case fieldVal:
+		v2, ok := v2.(fieldVal)
 		if !ok {
 			return false
 		}
 		return v1.FieldName == v2.FieldName &&
 			judgmentallyEqualValsWith(level, v1.Record, v2.Record)
-	case ProjectVal:
-		v2, ok := v2.(ProjectVal)
+	case projectVal:
+		v2, ok := v2.(projectVal)
 		if !ok {
 			return false
 		}
@@ -178,8 +178,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 			}
 		}
 		return judgmentallyEqualValsWith(level, v1.Record, v2.Record)
-	case UnionTypeVal:
-		v2, ok := v2.(UnionTypeVal)
+	case unionTypeVal:
+		v2, ok := v2.(unionTypeVal)
 		if !ok {
 			return false
 		}
@@ -198,8 +198,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 			}
 		}
 		return true
-	case MergeVal:
-		v2, ok := v2.(MergeVal)
+	case mergeVal:
+		v2, ok := v2.(mergeVal)
 		if !ok {
 			return false
 		}
@@ -213,8 +213,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		}
 		return judgmentallyEqualValsWith(level, v1.Handler, v2.Handler) &&
 			judgmentallyEqualValsWith(level, v1.Union, v2.Union)
-	case AssertVal:
-		v2, ok := v2.(AssertVal)
+	case assertVal:
+		v2, ok := v2.(assertVal)
 		if !ok {
 			return false
 		}

@@ -37,39 +37,39 @@ var _ = Describe("TypeOf", func() {
 	DescribeTable("Builtin",
 		typecheckTest,
 		Entry(`Natural : Type`, Natural, Type),
-		Entry(`List : Type -> Type`, List, FnTypeVal("_", Type, Type)),
+		Entry(`List : Type -> Type`, List, NewFnTypeVal("_", Type, Type)),
 	)
 	DescribeTable("Lambda",
 		typecheckTest,
 		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
-			MkLambdaTerm("x", Natural, Bound("x")),
-			MkPiVal("x", Natural, func(Value) Value { return Natural })),
+			NewLambda("x", Natural, NewVar("x")),
+			NewPiVal("x", Natural, func(Value) Value { return Natural })),
 		Entry("λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
-			MkLambdaTerm("a", Type,
-				EmptyList{AppTerm{List, Bound("a")}}),
-			MkPiVal("a", Type, func(a Value) Value {
+			NewLambda("a", Type,
+				EmptyList{AppTerm{List, NewVar("a")}}),
+			NewPiVal("a", Type, func(a Value) Value {
 				return AppValue{List, a}
 			})),
 		Entry("λ(a : Natural) → assert : a ≡ a -- check presence of variables in resulting type",
-			MkLambdaTerm("a", Natural,
-				Assert{OpTerm{EquivOp, Bound("a"), Bound("a")}}),
-			MkPiVal("a", Natural, func(a Value) Value {
-				return OpValue{EquivOp, a, a}
+			NewLambda("a", Natural,
+				Assert{OpTerm{EquivOp, NewVar("a"), NewVar("a")}}),
+			NewPiVal("a", Natural, func(a Value) Value {
+				return opValue{EquivOp, a, a}
 			})),
 	)
 	DescribeTable("Pi",
 		typecheckTest,
-		Entry(`Natural → Natural : Type`, FnType(Natural, Natural), Type),
+		Entry(`Natural → Natural : Type`, NewAnonPi(Natural, Natural), Type),
 	)
 	DescribeTable("Application",
 		typecheckTest,
 		Entry(`List Natural : Type`, AppTerm{List, Natural}, Type),
 		Entry("(λ(a : Natural) → assert : a ≡ a) 3 -- check presence of variables in resulting type",
 			Apply(
-				MkLambdaTerm("a", Natural,
-					Assert{OpTerm{EquivOp, Bound("a"), Bound("a")}}),
+				NewLambda("a", Natural,
+					Assert{OpTerm{EquivOp, NewVar("a"), NewVar("a")}}),
 				NaturalLit(3)),
-			OpValue{EquivOp, NaturalLit(3), NaturalLit(3)}),
+			opValue{EquivOp, NaturalLit(3), NaturalLit(3)}),
 	)
 	DescribeTable("Others",
 		typecheckTest,

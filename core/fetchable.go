@@ -137,7 +137,7 @@ func (l Local) PathComponents() []string {
 func (l Local) AsLocation() Term {
 	return Apply(Field{LocationType, "Local"}, TextLitTerm{Suffix: l.String()})
 }
-func MakeRemote(u *url.URL) Remote {
+func NewRemote(u *url.URL) Remote {
 	return Remote{url: u}
 }
 

@@ -7,6 +7,7 @@ import (
 
 	. "github.com/philandstuff/dhall-golang/core"
 	. "github.com/philandstuff/dhall-golang/imports"
+	. "github.com/philandstuff/dhall-golang/internal"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -22,7 +23,7 @@ func expectResolves(input, expected Term) {
 	Expect(actual).To(Equal(expected))
 }
 
-var importFooAsText = MakeEnvVarImport("FOO", RawText)
+var importFooAsText = NewEnvVarImport("FOO", RawText)
 var resolvedFooAsText = TextLitTerm{Suffix: "abcd"}
 
 var _ = Describe("Import resolution", func() {
@@ -36,21 +37,21 @@ var _ = Describe("Import resolution", func() {
 		})
 		It("Resolves as code", func() {
 			os.Setenv("FOO", "3 : Natural")
-			actual, err := Load(MakeEnvVarImport("FOO", Code))
+			actual, err := Load(NewEnvVarImport("FOO", Code))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
 		})
 		It("Fails to resolve code with free variables", func() {
 			os.Setenv("FOO", "x")
-			_, err := Load(MakeEnvVarImport("FOO", Code))
+			_, err := Load(NewEnvVarImport("FOO", Code))
 
 			Expect(err).To(HaveOccurred())
 		})
 		XIt("Performs import chaining", func() {
 			os.Setenv("CHAIN1", "env:CHAIN2")
 			os.Setenv("CHAIN2", "2 + 2")
-			actual, err := Load(MakeEnvVarImport("CHAIN1", Code))
+			actual, err := Load(NewEnvVarImport("CHAIN1", Code))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(NaturalPlus(NaturalLit(2), NaturalLit(2))))
@@ -59,7 +60,7 @@ var _ = Describe("Import resolution", func() {
 			result := make(chan error)
 			go func() {
 				os.Setenv("CYCLE", "env:CYCLE")
-				_, err := Load(MakeEnvVarImport("CYCLE", Code))
+				_, err := Load(NewEnvVarImport("CYCLE", Code))
 				if err != nil {
 					result <- err
 				}
@@ -79,7 +80,7 @@ var _ = Describe("Import resolution", func() {
 			server.RouteToHandler("GET", "/foo.dhall",
 				ghttp.RespondWith(http.StatusOK, "abcd"),
 			)
-			actual, err := Load(MakeRemoteImport(server.URL()+"/foo.dhall", RawText))
+			actual, err := Load(NewRemoteImport(server.URL()+"/foo.dhall", RawText))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(TextLitTerm{Suffix: "abcd"}))
@@ -88,7 +89,7 @@ var _ = Describe("Import resolution", func() {
 			server.RouteToHandler("GET", "/foo.dhall",
 				ghttp.RespondWith(http.StatusOK, "3 : Natural"),
 			)
-			actual, err := Load(MakeRemoteImport(server.URL()+"/foo.dhall", Code))
+			actual, err := Load(NewRemoteImport(server.URL()+"/foo.dhall", Code))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
@@ -97,7 +98,7 @@ var _ = Describe("Import resolution", func() {
 			server.RouteToHandler("GET", "/foo.dhall",
 				ghttp.RespondWith(http.StatusOK, "x"),
 			)
-			_, err := Load(MakeRemoteImport(server.URL()+"/foo.dhall", Code))
+			_, err := Load(NewRemoteImport(server.URL()+"/foo.dhall", Code))
 
 			Expect(err).To(HaveOccurred())
 		})
@@ -128,7 +129,7 @@ var _ = Describe("Import resolution", func() {
 						ghttp.RespondWith(http.StatusOK, "./no-cors.dhall"),
 					)
 
-					actual, err := Load(MakeRemoteImport(server.URL()+"/same-origin.dhall", Code))
+					actual, err := Load(NewRemoteImport(server.URL()+"/same-origin.dhall", Code))
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
@@ -141,7 +142,7 @@ var _ = Describe("Import resolution", func() {
 						ghttp.RespondWith(http.StatusOK, server.URL()+"/no-cors.dhall"),
 					)
 
-					_, err := Load(MakeRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code))
+					_, err := Load(NewRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code))
 					Expect(err).To(HaveOccurred())
 				})
 				It("allows if Access-Control-Allow-Origin is '*'", func() {
@@ -150,7 +151,7 @@ var _ = Describe("Import resolution", func() {
 						ghttp.RespondWith(http.StatusOK, server.URL()+"/cors-ok-with-star.dhall"),
 					)
 
-					actual, err := Load(MakeRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code))
+					actual, err := Load(NewRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code))
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
@@ -161,7 +162,7 @@ var _ = Describe("Import resolution", func() {
 						ghttp.RespondWith(http.StatusOK, server.URL()+"/cors-ok-with-origin.dhall"),
 					)
 
-					actual, err := Load(MakeRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code))
+					actual, err := Load(NewRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code))
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
@@ -169,7 +170,7 @@ var _ = Describe("Import resolution", func() {
 			})
 			Context("when local import fetches remote", func() {
 				It("allows the request", func() {
-					actual, err := Load(MakeRemoteImport(server.URL()+"/no-cors.dhall", Code))
+					actual, err := Load(NewRemoteImport(server.URL()+"/no-cors.dhall", Code))
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
@@ -179,24 +180,24 @@ var _ = Describe("Import resolution", func() {
 	})
 	Describe("local imports", func() {
 		It("Resolves as Text", func() {
-			actual, err := Load(MakeLocalImport("./testdata/just_text.txt", RawText))
+			actual, err := Load(NewLocalImport("./testdata/just_text.txt", RawText))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(TextLitTerm{Suffix: "here is some text\n"}))
 		})
 		It("Resolves as code", func() {
-			actual, err := Load(MakeLocalImport("./testdata/natural.dhall", Code))
+			actual, err := Load(NewLocalImport("./testdata/natural.dhall", Code))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
 		})
 		It("Fails to resolve code with free variables", func() {
-			_, err := Load(MakeLocalImport("./testdata/free_variable.dhall", Code))
+			_, err := Load(NewLocalImport("./testdata/free_variable.dhall", Code))
 
 			Expect(err).To(HaveOccurred())
 		})
 		XIt("Performs import chaining", func() {
-			actual, err := Load(MakeLocalImport("./testdata/chain1.dhall", Code))
+			actual, err := Load(NewLocalImport("./testdata/chain1.dhall", Code))
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(NaturalPlus(NaturalLit(2), NaturalLit(2))))
@@ -204,7 +205,7 @@ var _ = Describe("Import resolution", func() {
 		It("Rejects import cycles", func() {
 			result := make(chan error)
 			go func() {
-				_, err := Load(MakeLocalImport("./testdata/cycle1.dhall", Code))
+				_, err := Load(NewLocalImport("./testdata/cycle1.dhall", Code))
 				if err != nil {
 					result <- err
 				}
@@ -240,12 +241,12 @@ var _ = Describe("Import resolution", func() {
 			AppTerm{Arg: resolvedFooAsText},
 		),
 		Entry("Import within let binding value",
-			MakeLet(Natural, Binding{Value: importFooAsText}),
-			MakeLet(Natural, Binding{Value: resolvedFooAsText}),
+			NewLet(Natural, Binding{Value: importFooAsText}),
+			NewLet(Natural, Binding{Value: resolvedFooAsText}),
 		),
 		Entry("Import within let body",
-			MakeLet(importFooAsText, Binding{}),
-			MakeLet(resolvedFooAsText, Binding{}),
+			NewLet(importFooAsText, Binding{}),
+			NewLet(resolvedFooAsText, Binding{}),
 		),
 		Entry("Import within annotated expression",
 			Annot{importFooAsText, Text},
@@ -301,8 +302,8 @@ var _ = Describe("Import resolution", func() {
 			EmptyList{Type: resolvedFooAsText},
 		),
 		Entry("Import within list",
-			MakeList(importFooAsText),
-			MakeList(resolvedFooAsText),
+			NewList(importFooAsText),
+			NewList(resolvedFooAsText),
 		),
 		Entry("Import within record type",
 			RecordType{"foo": importFooAsText},

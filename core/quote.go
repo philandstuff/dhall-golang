@@ -135,22 +135,22 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return ListReverse
 	case Var:
 		return v
-	case LocalVar:
+	case localVar:
 		return v
-	case QuoteVar:
+	case quoteVar:
 		return Var{
 			Name:  v.Name,
 			Index: ctx[v.Name] - v.Index - 1,
 		}
 	case LambdaValue:
-		bodyVal := v.Call(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
+		bodyVal := v.Call(quoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return LambdaTerm{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),
 			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
 		}
 	case PiValue:
-		bodyVal := v.Range(QuoteVar{Name: v.Label, Index: ctx[v.Label]})
+		bodyVal := v.Range(quoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return PiTerm{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),
@@ -161,7 +161,7 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			Fn:  quoteWith(ctx, v.Fn),
 			Arg: quoteWith(ctx, v.Arg),
 		}
-	case OpValue:
+	case opValue:
 		return OpTerm{
 			OpCode: v.OpCode,
 			L:      quoteWith(ctx, v.L),
@@ -195,7 +195,7 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			Chunks: newChunks,
 			Suffix: v.Suffix,
 		}
-	case IfVal:
+	case ifVal:
 		return IfTerm{
 			Cond: quoteWith(ctx, v.Cond),
 			T:    quoteWith(ctx, v.T),
@@ -215,23 +215,23 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			rt[k] = quoteWith(ctx, v)
 		}
 		return rt
-	case ToMapVal:
+	case toMapVal:
 		result := ToMap{Record: quoteWith(ctx, v.Record)}
 		if v.Type != nil {
 			result.Type = quoteWith(ctx, v.Type)
 		}
 		return result
-	case FieldVal:
+	case fieldVal:
 		return Field{
 			Record:    quoteWith(ctx, v.Record),
 			FieldName: v.FieldName,
 		}
-	case ProjectVal:
+	case projectVal:
 		return Project{
 			Record:     quoteWith(ctx, v.Record),
 			FieldNames: v.FieldNames,
 		}
-	case UnionTypeVal:
+	case unionTypeVal:
 		result := UnionType{}
 		for k, v := range v {
 			if v == nil {
@@ -241,7 +241,7 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			result[k] = quoteWith(ctx, v)
 		}
 		return result
-	case MergeVal:
+	case mergeVal:
 		result := Merge{
 			Handler: quoteWith(ctx, v.Handler),
 			Union:   quoteWith(ctx, v.Union),
@@ -250,7 +250,7 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			result.Annotation = quoteWith(ctx, v.Annotation)
 		}
 		return result
-	case AssertVal:
+	case assertVal:
 		return Assert{Annotation: quoteWith(ctx, v.Annotation)}
 	}
 	panic("unknown Value type")

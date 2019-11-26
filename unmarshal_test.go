@@ -184,7 +184,7 @@ var _ = Describe("Decode", func() {
 			dhallFn := core.Eval(core.LambdaTerm{
 				Label: "x",
 				Type:  core.Natural,
-				Body:  core.Bound("x"),
+				Body:  core.NewVar("x"),
 			})
 			Decode(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
@@ -195,7 +195,7 @@ var _ = Describe("Decode", func() {
 			dhallFn := core.Eval(core.LambdaTerm{
 				Label: "x",
 				Type:  core.Natural,
-				Body:  core.Bound("x"),
+				Body:  core.NewVar("x"),
 			})
 			Decode(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
@@ -206,7 +206,7 @@ var _ = Describe("Decode", func() {
 			dhallFn := core.Eval(core.LambdaTerm{
 				Label: "x",
 				Type:  core.Text,
-				Body:  core.Bound("x"),
+				Body:  core.NewVar("x"),
 			})
 			Decode(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())

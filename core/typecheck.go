@@ -15,8 +15,8 @@ func (ctx context) extend(name string, t Value) context {
 	return newctx
 }
 
-func (ctx context) freshLocal(name string) LocalVar {
-	return LocalVar{Name: name, Index: len(ctx[name])}
+func (ctx context) freshLocal(name string) localVar {
+	return localVar{Name: name, Index: len(ctx[name])}
 }
 
 func assertTypeIs(ctx context, expr Term, expectedType Value, msg typeMessage) error {
@@ -78,106 +78,106 @@ func typeWith(ctx context, t Term) (Value, error) {
 		case Bool, Double, Integer, Natural, Text:
 			return Type, nil
 		case DoubleShow:
-			return FnTypeVal("_", Double, Text), nil
+			return NewFnTypeVal("_", Double, Text), nil
 		case IntegerShow:
-			return FnTypeVal("_", Integer, Text), nil
+			return NewFnTypeVal("_", Integer, Text), nil
 		case IntegerToDouble:
-			return FnTypeVal("_", Integer, Double), nil
+			return NewFnTypeVal("_", Integer, Double), nil
 		case List, Optional:
-			return FnTypeVal("_", Type, Type), nil
+			return NewFnTypeVal("_", Type, Type), nil
 		case ListBuild:
-			return MkPiVal("a", Type, func(a Value) Value {
-				return FnTypeVal("_",
-					MkPiVal("list", Type, func(list Value) Value {
-						return FnTypeVal("cons",
-							FnTypeVal("_", a, FnTypeVal("_", list, list)),
-							FnTypeVal("nil", list, list))
+			return NewPiVal("a", Type, func(a Value) Value {
+				return NewFnTypeVal("_",
+					NewPiVal("list", Type, func(list Value) Value {
+						return NewFnTypeVal("cons",
+							NewFnTypeVal("_", a, NewFnTypeVal("_", list, list)),
+							NewFnTypeVal("nil", list, list))
 					}),
 					AppValue{List, a})
 			}), nil
 		case ListFold:
-			return MkPiVal("a", Type, func(a Value) Value {
-				return FnTypeVal("_",
+			return NewPiVal("a", Type, func(a Value) Value {
+				return NewFnTypeVal("_",
 					AppValue{List, a},
-					MkPiVal("list", Type, func(list Value) Value {
-						return FnTypeVal("cons",
-							FnTypeVal("_", a, FnTypeVal("_", list, list)),
-							FnTypeVal("nil", list, list))
+					NewPiVal("list", Type, func(list Value) Value {
+						return NewFnTypeVal("cons",
+							NewFnTypeVal("_", a, NewFnTypeVal("_", list, list)),
+							NewFnTypeVal("nil", list, list))
 					}))
 			}), nil
 		case ListLength:
-			return MkPiVal("a", Type, func(a Value) Value {
-				return FnTypeVal("_", AppValue{List, a}, Natural)
+			return NewPiVal("a", Type, func(a Value) Value {
+				return NewFnTypeVal("_", AppValue{List, a}, Natural)
 			}), nil
 		case ListHead, ListLast:
-			return MkPiVal("a", Type, func(a Value) Value {
-				return FnTypeVal("_", AppValue{List, a},
+			return NewPiVal("a", Type, func(a Value) Value {
+				return NewFnTypeVal("_", AppValue{List, a},
 					AppValue{Optional, a})
 			}), nil
 		case ListReverse:
-			return MkPiVal("a", Type, func(a Value) Value {
-				return FnTypeVal("_", AppValue{List, a},
+			return NewPiVal("a", Type, func(a Value) Value {
+				return NewFnTypeVal("_", AppValue{List, a},
 					AppValue{List, a})
 			}), nil
 		case ListIndexed:
-			return MkPiVal("a", Type, func(a Value) Value {
-				return FnTypeVal("_", AppValue{List, a},
+			return NewPiVal("a", Type, func(a Value) Value {
+				return NewFnTypeVal("_", AppValue{List, a},
 					AppValue{List, RecordTypeVal{"index": Natural, "value": a}})
 			}), nil
 		case NaturalBuild:
-			return FnTypeVal("_",
-				MkPiVal("natural", Type, func(natural Value) Value {
-					return FnTypeVal("succ",
-						FnTypeVal("_", natural, natural),
-						FnTypeVal("zero", natural, natural))
+			return NewFnTypeVal("_",
+				NewPiVal("natural", Type, func(natural Value) Value {
+					return NewFnTypeVal("succ",
+						NewFnTypeVal("_", natural, natural),
+						NewFnTypeVal("zero", natural, natural))
 				}),
 				Natural), nil
 		case NaturalFold:
-			return FnTypeVal("_",
+			return NewFnTypeVal("_",
 				Natural,
-				MkPiVal("natural", Type, func(natural Value) Value {
-					return FnTypeVal("succ",
-						FnTypeVal("_", natural, natural),
-						FnTypeVal("zero", natural, natural))
+				NewPiVal("natural", Type, func(natural Value) Value {
+					return NewFnTypeVal("succ",
+						NewFnTypeVal("_", natural, natural),
+						NewFnTypeVal("zero", natural, natural))
 				})), nil
 		case NaturalIsZero, NaturalOdd, NaturalEven:
-			return FnTypeVal("_", Natural, Bool), nil
+			return NewFnTypeVal("_", Natural, Bool), nil
 		case NaturalShow:
-			return FnTypeVal("_", Natural, Text), nil
+			return NewFnTypeVal("_", Natural, Text), nil
 		case NaturalToInteger:
-			return FnTypeVal("_", Natural, Integer), nil
+			return NewFnTypeVal("_", Natural, Integer), nil
 		case NaturalSubtract:
-			return FnTypeVal("_", Natural, FnTypeVal("_", Natural, Natural)), nil
+			return NewFnTypeVal("_", Natural, NewFnTypeVal("_", Natural, Natural)), nil
 		case None:
-			return MkPiVal("A", Type, func(A Value) Value { return AppValue{Optional, A} }), nil
+			return NewPiVal("A", Type, func(A Value) Value { return AppValue{Optional, A} }), nil
 		case OptionalBuild:
-			return MkPiVal("a", Type, func(a Value) Value {
-				return FnTypeVal("_",
-					MkPiVal("optional", Type, func(optional Value) Value {
-						return FnTypeVal("just",
-							FnTypeVal("_", a, optional),
-							FnTypeVal("nothing", optional, optional))
+			return NewPiVal("a", Type, func(a Value) Value {
+				return NewFnTypeVal("_",
+					NewPiVal("optional", Type, func(optional Value) Value {
+						return NewFnTypeVal("just",
+							NewFnTypeVal("_", a, optional),
+							NewFnTypeVal("nothing", optional, optional))
 					}),
 					AppValue{Optional, a})
 			}), nil
 		case OptionalFold:
-			return MkPiVal("a", Type, func(a Value) Value {
-				return FnTypeVal("_",
+			return NewPiVal("a", Type, func(a Value) Value {
+				return NewFnTypeVal("_",
 					AppValue{Optional, a},
-					MkPiVal("optional", Type, func(optional Value) Value {
-						return FnTypeVal("just",
-							FnTypeVal("_", a, optional),
-							FnTypeVal("nothing", optional, optional))
+					NewPiVal("optional", Type, func(optional Value) Value {
+						return NewFnTypeVal("just",
+							NewFnTypeVal("_", a, optional),
+							NewFnTypeVal("nothing", optional, optional))
 					}))
 			}), nil
 		case TextShow:
-			return FnTypeVal("_", Text, Text), nil
+			return NewFnTypeVal("_", Text, Text), nil
 		default:
 			return nil, mkTypeError(unhandledTypeCase)
 		}
 	case Var:
 		return nil, mkTypeError(typeCheckBoundVar(t))
-	case LocalVar:
+	case localVar:
 		if vals, ok := ctx[t.Name]; ok {
 			if t.Index < len(vals) {
 				return vals[t.Index], nil
@@ -630,8 +630,8 @@ func typeWith(ctx context, t Term) (Value, error) {
 			}
 			return fieldType, nil
 		}
-		unionTypeVal := Eval(t.Record)
-		unionType, ok := unionTypeVal.(UnionTypeVal)
+		unionTypeV := Eval(t.Record)
+		unionType, ok := unionTypeV.(unionTypeVal)
 		if !ok {
 			return nil, mkTypeError(cantAccess)
 		}
@@ -734,7 +734,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		unionTypeVal, err := typeWith(ctx, t.Union)
+		unionTypeV, err := typeWith(ctx, t.Union)
 		if err != nil {
 			return nil, err
 		}
@@ -742,7 +742,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if !ok {
 			return nil, mkTypeError(mustMergeARecord)
 		}
-		unionType, ok := unionTypeVal.(UnionTypeVal)
+		unionType, ok := unionTypeV.(unionTypeVal)
 		if !ok {
 			return nil, mkTypeError(mustMergeUnion)
 		}
@@ -811,7 +811,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		op, ok := Eval(t.Annotation).(OpValue)
+		op, ok := Eval(t.Annotation).(opValue)
 		if !ok || op.OpCode != EquivOp {
 			return nil, mkTypeError(notAnEquivalence)
 		}

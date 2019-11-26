@@ -20,7 +20,7 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 			return replacement
 		}
 		return t
-	case LocalVar:
+	case localVar:
 		return t
 	case LambdaTerm:
 		j := i
@@ -171,11 +171,11 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 	}
 }
 
-func rebindLocal(local LocalVar, t Term) Term {
+func rebindLocal(local localVar, t Term) Term {
 	return rebindAtLevel(0, local, t)
 }
 
-func rebindAtLevel(i int, local LocalVar, t Term) Term {
+func rebindAtLevel(i int, local localVar, t Term) Term {
 	switch t := t.(type) {
 	case Universe:
 		return t
@@ -183,7 +183,7 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 		return t
 	case Var:
 		return t
-	case LocalVar:
+	case localVar:
 		if t == local {
 			return Var{
 				Name:  t.Name,

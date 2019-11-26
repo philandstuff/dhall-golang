@@ -3,68 +3,114 @@ package core
 import (
 	"fmt"
 	"math"
-	"net/url"
 	"strings"
 )
 
-// Terms in the dhall internal language
+// A Term is an arbitrary Dhall expression.  When you parse text into
+// Dhall, you get a value of type Term.
+//
+// To evaluate a Term, you call the Eval() function, which returns a
+// Value.
 type Term interface {
 	isTerm()
 }
 
-// values
+// A Value is a Dhall value in beta-normal form.  You can think of
+// Values as the subset of Dhall which cannot be beta-reduced any
+// further.  Valid Values include 3, "foo" and 5 + x.
+//
+// You create a Value by calling Eval() on a Term.  You can convert a
+// Value back to a Term with Quote().
 type Value interface {
 	isValue()
 }
 
+// A Universe is a type of types.
 type Universe int
 
 const (
+	// Type is the type of all types
 	Type Universe = iota
+	// Kind is the type of all kinds (including Type)
 	Kind
+	// Sort is the type of all sorts (including Kind)
 	Sort
 )
 
+// Builtin is the type of Dhall's builtin constants
 type Builtin string
 
 const (
-	Double   = Builtin("Double")
-	Text     = Builtin("Text")
-	Bool     = Builtin("Bool")
-	Natural  = Builtin("Natural")
-	Integer  = Builtin("Integer")
-	List     = Builtin("List")
+	// Double is the type of doubles
+	Double = Builtin("Double")
+	// Text is the type of Text
+	Text = Builtin("Text")
+	// Bool is the type of booleans
+	Bool = Builtin("Bool")
+	// Natural is the type of natural numbers
+	Natural = Builtin("Natural")
+	// Integer is the type of integers
+	Integer = Builtin("Integer")
+	// List is a function that takes a type to the type of lists of
+	// that type
+	List = Builtin("List")
+	// Optional is a function that takes a type to the type of
+	// optional values of that type
 	Optional = Builtin("Optional")
-	None     = Builtin("None")
+	// None takes a type to the empty optional value of that type
+	None = Builtin("None")
 
-	NaturalBuild     = Builtin("Natural/build")
-	NaturalFold      = Builtin("Natural/fold")
-	NaturalIsZero    = Builtin("Natural/isZero")
-	NaturalEven      = Builtin("Natural/even")
-	NaturalOdd       = Builtin("Natural/odd")
+	// NaturalBuild is Natural/build
+	NaturalBuild = Builtin("Natural/build")
+	// NaturalFold is Natural/fold
+	NaturalFold = Builtin("Natural/fold")
+	// NaturalZero is Natural/isZero
+	NaturalIsZero = Builtin("Natural/isZero")
+	// NaturalEven is Natural/even
+	NaturalEven = Builtin("Natural/even")
+	// NaturalOdd is Natural/odd
+	NaturalOdd = Builtin("Natural/odd")
+	// NaturalToInteger is Natural/toInteger
 	NaturalToInteger = Builtin("Natural/toInteger")
-	NaturalShow      = Builtin("Natural/show")
-	NaturalSubtract  = Builtin("Natural/subtract")
+	// NaturalShow is Natural/show
+	NaturalShow = Builtin("Natural/show")
+	// NaturalSubtract is Natural/subtract
+	NaturalSubtract = Builtin("Natural/subtract")
 
+	// IntegerToDouble is Integer/toDouble
 	IntegerToDouble = Builtin("Integer/toDouble")
-	IntegerShow     = Builtin("Integer/show")
+	// IntegerShow is Integer/show
+	IntegerShow = Builtin("Integer/show")
 
+	// DoubleShow is Double/show
 	DoubleShow = Builtin("Double/show")
 
+	// TextShow is Text/show
 	TextShow = Builtin("Text/show")
 
-	ListBuild   = Builtin("List/build")
-	ListFold    = Builtin("List/fold")
-	ListLength  = Builtin("List/length")
-	ListHead    = Builtin("List/head")
-	ListLast    = Builtin("List/last")
+	// ListBuild is List/build
+	ListBuild = Builtin("List/build")
+	// ListFold is List/fold
+	ListFold = Builtin("List/fold")
+	// ListLength is List/length
+	ListLength = Builtin("List/length")
+	// ListHead is List/head
+	ListHead = Builtin("List/head")
+	// ListLast is List/last
+	ListLast = Builtin("List/last")
+	// ListIndexed is List/indexed
 	ListIndexed = Builtin("List/indexed")
+	// ListReverse is List/reverse
 	ListReverse = Builtin("List/reverse")
 
+	// OptionalBuild is Optional/build
 	OptionalBuild = Builtin("Optional/build")
-	OptionalFold  = Builtin("Optional/fold")
+	// OptionalFold is Optional/fold
+	OptionalFold = Builtin("Optional/fold")
 
-	True  = BoolLit(true)
+	// True is the true Bool value
+	True = BoolLit(true)
+	// False is the false Bool value
 	False = BoolLit(false)
 )
 
@@ -148,23 +194,34 @@ func (listIndexedVal) isValue() {}
 func (listReverseVal) isValue() {}
 
 type (
+	// A Var is a variable, either bound or free.  A free Var is a
+	// valid Value; a bound Var is not.
+	//
+	// The Index is a de Bruijn index.  In an expression such as:
+	//
+	//  λ(x : Natural) → λ(x : Natural) → x@1
+	//
+	// x@1 refers to the outer bound variable x.  x@1 is represented
+	// by Var{"x", 1}.
 	Var struct {
 		Name  string
 		Index int
 	}
 
-	// a LocalVar is an internal sentinel value used by TypeOf() in the process
-	// of typechecking the body of lambdas and pis
-	// FIXME: should this be unexported?
-	LocalVar struct {
+	// A localVar is an internal sentinel value used by TypeOf() in
+	// the process of typechecking the body of lambdas and pis.
+	// Essentially it lets us convert de Bruijn indices (which count
+	// how many binders we need to pass from the variable to the
+	// correct binder) to de Bruijn levels (which count how many
+	// binders we passed before binding this variable)
+	localVar struct {
 		Name  string
 		Index int
 	}
 
-	// a QuoteVar is an internal sentinel value used by Quote() in the process
-	// of converting Values back to Terms
-	// FIXME: should this be unexported?
-	QuoteVar struct {
+	// A quoteVar is an internal sentinel value used by Quote() in the
+	// process of converting Values back to Terms.
+	quoteVar struct {
 		Name  string
 		Index int
 	}
@@ -179,33 +236,40 @@ func (Builtin) isValue() {}
 func (Var) isTerm()  {}
 func (Var) isValue() {}
 
-func (LocalVar) isTerm()  {}
-func (LocalVar) isValue() {}
+func (localVar) isTerm()  {}
+func (localVar) isValue() {}
 
-func (QuoteVar) isValue() {}
+func (quoteVar) isValue() {}
 
-func Bound(name string) Var {
+// NewVar returns a new Var Term
+func NewVar(name string) Term {
 	return Var{Name: name}
 }
 
 type (
+	// A LambdaTerm is a lambda abstraction.
 	LambdaTerm struct {
 		Label string
 		Type  Term
 		Body  Term
 	}
 
+	// A PiTerm is a function type.
 	PiTerm struct {
 		Label string
 		Type  Term
 		Body  Term
 	}
 
+	// An AppTerm is a Term formed by applying a function to an
+	// argument.
 	AppTerm struct {
 		Fn  Term
 		Arg Term
 	}
 
+	// An OpTerm is two Terms combined by an operator.  The OpCode
+	// determines the type of operator.
 	OpTerm struct {
 		OpCode int
 		L      Term
@@ -218,7 +282,8 @@ func (PiTerm) isTerm()     {}
 func (AppTerm) isTerm()    {}
 func (OpTerm) isTerm()     {}
 
-func Lambda(label string, t Term, body Term) LambdaTerm {
+// NewLambda constructs a new lambda Term.
+func NewLambda(label string, t Term, body Term) Term {
 	return LambdaTerm{
 		Label: label,
 		Type:  t,
@@ -226,15 +291,8 @@ func Lambda(label string, t Term, body Term) LambdaTerm {
 	}
 }
 
-func MkLambdaTerm(label string, t Term, body Term) LambdaTerm {
-	return LambdaTerm{
-		Label: label,
-		Type:  t,
-		Body:  body,
-	}
-}
-
-func MkPiTerm(label string, t Term, body Term) PiTerm {
+// NewPi constructs a new pi Term.
+func NewPi(label string, t Term, body Term) Term {
 	return PiTerm{
 		Label: label,
 		Type:  t,
@@ -242,15 +300,13 @@ func MkPiTerm(label string, t Term, body Term) PiTerm {
 	}
 }
 
-// FnType returns a non-dependent function type
-func FnType(domain Term, codomain Term) PiTerm {
-	return PiTerm{
-		Label: "_",
-		Type:  domain,
-		Body:  codomain,
-	}
+// NewAnonPi returns a pi Term with label "_", typically used for
+// non-dependent function types.
+func NewAnonPi(domain Term, codomain Term) Term {
+	return NewPi("_", domain, codomain)
 }
 
+// Apply takes fn and applies it successively to each arg in args.
 func Apply(fn Term, args ...Term) Term {
 	out := fn
 	for _, arg := range args {
@@ -262,42 +318,65 @@ func Apply(fn Term, args ...Term) Term {
 // Opcodes for use in the OpTerm type
 // These numbers match the binary encoding label numbers
 const (
+	// OrOp is the OpCode of logical or (a || b)
 	OrOp = iota
+	// AndOp is the OpCode of logical and (a && b)
 	AndOp
+	// EqOp is the OpCode of logical equality (a == b)
 	EqOp
+	// NeOp is the OpCode of logical disequality (a != b)
 	NeOp
+	// PlusOp is the OpCode of Natural addition (a + b)
 	PlusOp
+	// TimesOp is the OpCode of Natural multiplication (a * b)
 	TimesOp
+	// TextAppendOp is the OpCode of text append (a ++ b)
 	TextAppendOp
+	// ListAppendOp is the OpCode of list append (a # b)
 	ListAppendOp
+	// RecordMergeOp is the OpCode of recursive record merge (a /\ b)
 	RecordMergeOp
+	// RightBiasedRecordMergeOp is the OpCode of right-biased
+	// non-recursive record merge (a // b)
 	RightBiasedRecordMergeOp
+	// RecordTypeMergeOp is the OpCode of recursive record type merge
+	// (a //\\ b)
 	RecordTypeMergeOp
+	// ImportAltOp is the OpCode of offering an alternative import (a
+	// ? b)
 	ImportAltOp
+	// EquivOp is the OpCode of equivalence (a === b)
 	EquivOp
+	// CompleteOp is the OpCode of record completion (A::b)
 	CompleteOp
 )
 
+// NaturalPlus takes Terms l and r and returns (l + r)
 func NaturalPlus(l, r Term) Term {
 	return OpTerm{OpCode: PlusOp, L: l, R: r}
 }
 
+// NaturalTimes takes Terms l and r and returns (l * r)
 func NaturalTimes(l, r Term) Term {
 	return OpTerm{OpCode: TimesOp, L: l, R: r}
 }
 
+// BoolOr takes Terms l and r and returns (l || r)
 func BoolOr(l, r Term) Term {
 	return OpTerm{OpCode: OrOp, L: l, R: r}
 }
 
+// BoolAnd takes Terms l and r and returns (l && r)
 func BoolAnd(l, r Term) Term {
 	return OpTerm{OpCode: AndOp, L: l, R: r}
 }
 
+// ListAppend takes Terms l and r and returns (l # r)
 func ListAppend(l, r Term) Term {
 	return OpTerm{OpCode: ListAppendOp, L: l, R: r}
 }
 
+// TextAppend takes Terms l and r and returns (l ++ r)
 func TextAppend(l, r Term) Term {
 	return OpTerm{OpCode: TextAppendOp, L: l, R: r}
 }
@@ -320,27 +399,33 @@ var (
 )
 
 type (
-	// A LambdaValue is a go function
+	// A LambdaValue is a go function representing a Dhall function
+	// which has not yet been applied to its argument
 	LambdaValue struct {
 		Label  string
 		Domain Value
 		Fn     func(Value) Value
 	}
 
-	// A PiValue is: the type of the domain, and a go function capturing the
-	// range
+	// A PiValue is the value of a Dhall Pi type.  Domain is the type
+	// of the domain, and Range is a go function which returns the
+	// type of the range, given the type of the domain.
 	PiValue struct {
 		Label  string
 		Domain Value
 		Range  func(Value) Value
 	}
 
+	// An AppValue is the Value of a Fn applied to an Arg.  Note that
+	// this is only a valid Value if Fn is a free variable (such as f
+	// 3, with f free), or if Fn is a builtin function which hasn't
+	// been applied to enough arguments (such as Natural/subtract 3).
 	AppValue struct {
 		Fn  Value
 		Arg Value
 	}
 
-	OpValue struct {
+	opValue struct {
 		OpCode int
 		L      Value
 		R      Value
@@ -353,9 +438,10 @@ func (PiValue) isValue() {}
 
 func (AppValue) isValue() {}
 
-func (OpValue) isValue() {}
+func (opValue) isValue() {}
 
-func MkPiVal(label string, d Value, r func(Value) Value) PiValue {
+// NewPiVal returns a new pi Value.
+func NewPiVal(label string, d Value, r func(Value) Value) Value {
 	return PiValue{
 		Label:  label,
 		Domain: d,
@@ -363,13 +449,9 @@ func MkPiVal(label string, d Value, r func(Value) Value) PiValue {
 	}
 }
 
-// FnTypeVal returns a non-dependent function type Value
-func FnTypeVal(l string, d Value, r Value) PiValue {
-	return PiValue{
-		Label:  l,
-		Domain: d,
-		Range:  func(Value) Value { return r },
-	}
+// NewFnTypeVal returns a non-dependent function type Value.
+func NewFnTypeVal(l string, d Value, r Value) Value {
+	return NewPiVal(l, d, func(Value) Value { return r })
 }
 
 type (
@@ -396,19 +478,23 @@ type (
 func (Let) isTerm()   {}
 func (Annot) isTerm() {}
 
-func MakeLet(body Term, bindings ...Binding) Let {
+// NewLet returns a let Term
+func NewLet(body Term, bindings ...Binding) Term {
 	return Let{Bindings: bindings, Body: body}
 }
 
 type (
-	// 0, 1, 2, 3...
+	// A NaturalLit is a literal of type Natural
 	NaturalLit uint
 
-	// [] : List a
-	EmptyList    struct{ Type Term }
+	// An EmptyList is an empty list literal Term of the given type
+	EmptyList struct{ Type Term }
+	// An EmptyListVal is an empty list literal Value of the given type
 	EmptyListVal struct{ Type Value }
 
-	NonEmptyList    []Term
+	// A NonEmptyList is a non-empty list literal Term with the given contents
+	NonEmptyList []Term
+	// A NonEmptyListVal is a non-empty list literal Value with the given contents
 	NonEmptyListVal []Value
 
 	Chunk struct {
@@ -431,20 +517,29 @@ type (
 		Suffix string
 	}
 
+	// A BoolLit is a literal of type Bool.
 	BoolLit bool
-	IfTerm  struct {
+
+	// An IfTerm is an if-then-else Term.
+	IfTerm struct {
 		Cond Term
 		T    Term
 		F    Term
 	}
-	IfVal struct {
+
+	ifVal struct {
 		Cond Value
 		T    Value
 		F    Value
 	}
-	DoubleLit  float64
+
+	// A DoubleLit is a literal of type Double.
+	DoubleLit float64
+
+	// A IntegerLit is a literal of type Integer.
 	IntegerLit int
 
+	// Some represents a Term which is present in an Optional type.
 	Some    struct{ Val Term }
 	SomeVal struct{ Val Value }
 
@@ -458,7 +553,7 @@ type (
 		Record Term
 		Type   Term // optional
 	}
-	ToMapVal struct {
+	toMapVal struct {
 		Record Value
 		Type   Value // optional
 	}
@@ -467,7 +562,7 @@ type (
 		Record    Term
 		FieldName string
 	}
-	FieldVal struct {
+	fieldVal struct {
 		Record    Value
 		FieldName string
 	}
@@ -476,7 +571,7 @@ type (
 		Record     Term
 		FieldNames []string
 	}
-	ProjectVal struct {
+	projectVal struct {
 		Record     Value
 		FieldNames []string
 	}
@@ -488,21 +583,21 @@ type (
 	// no ProjectTypeVal because it cannot be in a normal form
 
 	UnionType    map[string]Term
-	UnionTypeVal map[string]Value
+	unionTypeVal map[string]Value
 
 	Merge struct {
 		Handler    Term
 		Union      Term
 		Annotation Term // optional
 	}
-	MergeVal struct {
+	mergeVal struct {
 		Handler    Value
 		Union      Value
 		Annotation Value // optional
 	}
 
 	Assert    struct{ Annotation Term }
-	AssertVal struct{ Annotation Value }
+	assertVal struct{ Annotation Value }
 )
 
 func (NaturalLit) isTerm()  {}
@@ -514,7 +609,8 @@ func (EmptyListVal) isValue() {}
 func (NonEmptyList) isTerm()     {}
 func (NonEmptyListVal) isValue() {}
 
-func MakeList(first Term, rest ...Term) NonEmptyList {
+// NewList returns a non-empty list Term from the given Terms
+func NewList(first Term, rest ...Term) Term {
 	return append(NonEmptyList{first}, rest...)
 }
 
@@ -524,7 +620,7 @@ func (TextLitVal) isValue() {}
 func (BoolLit) isTerm()  {}
 func (BoolLit) isValue() {}
 func (IfTerm) isTerm()   {}
-func (IfVal) isValue()   {}
+func (ifVal) isValue()   {}
 
 func (DoubleLit) isTerm()   {}
 func (DoubleLit) isValue()  {}
@@ -555,61 +651,48 @@ func (RecordTypeVal) isValue() {}
 func (RecordLit) isTerm()      {}
 func (RecordLitVal) isValue()  {}
 func (ToMap) isTerm()          {}
-func (ToMapVal) isValue()      {}
+func (toMapVal) isValue()      {}
 func (Field) isTerm()          {}
-func (FieldVal) isValue()      {}
+func (fieldVal) isValue()      {}
 func (Project) isTerm()        {}
-func (ProjectVal) isValue()    {}
+func (projectVal) isValue()    {}
 func (ProjectType) isTerm()    {}
 func (UnionType) isTerm()      {}
-func (UnionTypeVal) isValue()  {}
+func (unionTypeVal) isValue()  {}
 func (Merge) isTerm()          {}
-func (MergeVal) isValue()      {}
+func (mergeVal) isValue()      {}
 func (Assert) isTerm()         {}
-func (AssertVal) isValue()     {}
+func (assertVal) isValue()     {}
 
 type (
+	// An Import is an import Term.
 	Import struct {
 		ImportHashed
 		ImportMode
 	}
+
+	// ImportHashed is a Fetchable with an optional hash for integrity
+	// protection.
 	ImportHashed struct {
 		Fetchable
 		Hash []byte // stored in multihash form - ie first two bytes are 0x12 0x20
 	}
+
+	// ImportMode can be normal (ie code import), "as Text" or "as
+	// Location".
 	ImportMode byte
 )
 
 const (
+	// Code says to import as Dhall code.
 	Code ImportMode = iota
+	// RawText says to import as a Text value.
 	RawText
+	// Location says to import as a Location.
 	Location
 )
 
 func (Import) isTerm() {}
-
-func MakeImport(fetchable Fetchable, mode ImportMode) Import {
-	return Import{
-		ImportHashed: ImportHashed{
-			Fetchable: fetchable,
-		},
-		ImportMode: mode,
-	}
-}
-func MakeEnvVarImport(envvar string, mode ImportMode) Import {
-	return MakeImport(EnvVar(envvar), mode)
-}
-
-func MakeLocalImport(path string, mode ImportMode) Import {
-	return MakeImport(Local(path), mode)
-}
-
-// only for generating test data - discards errors
-func MakeRemoteImport(uri string, mode ImportMode) Import {
-	parsedURI, _ := url.ParseRequestURI(uri)
-	remote := MakeRemote(parsedURI)
-	return MakeImport(remote, mode)
-}
 
 // Decent output
 func (c Universe) String() string {
@@ -629,7 +712,7 @@ func (v Var) String() string {
 	return fmt.Sprint(v.Name, "@", v.Index)
 }
 
-func (v LocalVar) String() string {
+func (v localVar) String() string {
 	return fmt.Sprint("local:", v.Name, "/", v.Index)
 }
 

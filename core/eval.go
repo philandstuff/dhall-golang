@@ -75,7 +75,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return Var{t.Name, t.Index - len(e[t.Name])}
 		}
 		return e[t.Name][t.Index]
-	case LocalVar:
+	case localVar:
 		return t
 	case LambdaTerm:
 		v := LambdaValue{
@@ -179,7 +179,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		if judgmentallyEqualVals(tVal, fVal) {
 			return tVal
 		}
-		return IfVal{
+		return ifVal{
 			Cond: condVal,
 			T:    evalWith(t.T, e, shouldAlphaNormalize),
 			F:    evalWith(t.F, e, shouldAlphaNormalize),
@@ -366,7 +366,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		case EquivOp:
 			// nothing special
 		}
-		return OpValue{OpCode: t.OpCode, L: l, R: r}
+		return opValue{OpCode: t.OpCode, L: l, R: r}
 	case EmptyList:
 		return EmptyListVal{Type: evalWith(t.Type, e, shouldAlphaNormalize)}
 	case NonEmptyList:
@@ -407,23 +407,23 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			}
 			return result
 		}
-		return ToMapVal{
+		return toMapVal{
 			Record: record,
 			Type:   evalWith(t.Type, e, shouldAlphaNormalize),
 		}
 	case Field:
 		record := evalWith(t.Record, e, shouldAlphaNormalize)
 		for { // simplifications
-			if proj, ok := record.(ProjectVal); ok {
+			if proj, ok := record.(projectVal); ok {
 				record = proj.Record
 				continue
 			}
-			op, ok := record.(OpValue)
+			op, ok := record.(opValue)
 			if ok && op.OpCode == RecordMergeOp {
 				if l, ok := op.L.(RecordLitVal); ok {
 					if lField, ok := l[t.FieldName]; ok {
-						return FieldVal{
-							Record: OpValue{
+						return fieldVal{
+							Record: opValue{
 								L:      RecordLitVal{t.FieldName: lField},
 								R:      op.R,
 								OpCode: RecordMergeOp,
@@ -436,8 +436,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				}
 				if r, ok := op.R.(RecordLitVal); ok {
 					if rField, ok := r[t.FieldName]; ok {
-						return FieldVal{
-							Record: OpValue{
+						return fieldVal{
+							Record: opValue{
 								L:      op.L,
 								R:      RecordLitVal{t.FieldName: rField},
 								OpCode: RecordMergeOp,
@@ -452,8 +452,8 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			if ok && op.OpCode == RightBiasedRecordMergeOp {
 				if l, ok := op.L.(RecordLitVal); ok {
 					if lField, ok := l[t.FieldName]; ok {
-						return FieldVal{
-							Record: OpValue{
+						return fieldVal{
+							Record: opValue{
 								L:      RecordLitVal{t.FieldName: lField},
 								R:      op.R,
 								OpCode: RightBiasedRecordMergeOp,
@@ -477,7 +477,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		if lit, ok := record.(RecordLitVal); ok {
 			return lit[t.FieldName]
 		}
-		return FieldVal{
+		return fieldVal{
 			Record:    record,
 			FieldName: t.FieldName,
 		}
@@ -487,11 +487,11 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		sort.Strings(fieldNames)
 		// simplifications
 		for {
-			if proj, ok := record.(ProjectVal); ok {
+			if proj, ok := record.(projectVal); ok {
 				record = proj.Record
 				continue
 			}
-			op, ok := record.(OpValue)
+			op, ok := record.(opValue)
 			if ok && op.OpCode == RightBiasedRecordMergeOp {
 				if r, ok := op.R.(RecordLitVal); ok {
 					notOverridden := []string{}
@@ -506,9 +506,9 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 					if len(notOverridden) == 0 {
 						return overrides
 					}
-					return OpValue{
+					return opValue{
 						OpCode: RightBiasedRecordMergeOp,
-						L: ProjectVal{
+						L: projectVal{
 							Record:     op.L,
 							FieldNames: notOverridden,
 						},
@@ -529,7 +529,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		if len(fieldNames) == 0 {
 			return RecordLitVal{}
 		}
-		return ProjectVal{
+		return projectVal{
 			Record:     record,
 			FieldNames: fieldNames,
 		}
@@ -548,7 +548,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			},
 			e, shouldAlphaNormalize)
 	case UnionType:
-		result := make(UnionTypeVal, len(t))
+		result := make(unionTypeVal, len(t))
 		for k, v := range t {
 			if v == nil {
 				result[k] = nil
@@ -563,19 +563,19 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		if handlers, ok := handlerVal.(RecordLitVal); ok {
 			// TODO: test tricky Field inputs
 			if union, ok := unionVal.(AppValue); ok {
-				if field, ok := union.Fn.(FieldVal); ok {
+				if field, ok := union.Fn.(fieldVal); ok {
 					return applyVal(
 						handlers[field.FieldName],
 						union.Arg,
 					)
 				}
 			}
-			if union, ok := unionVal.(FieldVal); ok {
+			if union, ok := unionVal.(fieldVal); ok {
 				// empty union alternative
 				return handlers[union.FieldName]
 			}
 		}
-		output := MergeVal{
+		output := mergeVal{
 			Handler: handlerVal,
 			Union:   unionVal,
 		}
@@ -584,7 +584,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		}
 		return output
 	case Assert:
-		return AssertVal{Annotation: evalWith(t.Annotation, e, shouldAlphaNormalize)}
+		return assertVal{Annotation: evalWith(t.Annotation, e, shouldAlphaNormalize)}
 	default:
 		panic(fmt.Sprint("unknown term type", t))
 	}

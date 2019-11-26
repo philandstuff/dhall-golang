@@ -411,9 +411,9 @@ SubDelims ← "!" / "$" / "&" / "'" / "*" / "+" / ";" / "="
 
 Http ← u:HttpRaw usingClause:( _ Using _1 ImportExpression)? {
   if usingClause != nil {
-    return MakeRemote(u.(*url.URL)), errors.New("dhall-golang does not support ❰using❱ clauses")
+    return NewRemote(u.(*url.URL)), errors.New("dhall-golang does not support ❰using❱ clauses")
   }
-  return MakeRemote(u.(*url.URL)), nil
+  return NewRemote(u.(*url.URL)), nil
 }
 
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }
@@ -509,12 +509,12 @@ Expression ←
         for i, binding := range bindings.([]interface{}) {
             bs[i] = binding.(Binding)
         }
-        return MakeLet(b.(Term), bs...), nil
+        return NewLet(b.(Term), bs...), nil
       }
     / Forall _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
           return PiTerm{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
       }
-    / o:OperatorExpression _ Arrow _ e:Expression { return FnType(o.(Term),e.(Term)), nil }
+    / o:OperatorExpression _ Arrow _ e:Expression { return NewAnonPi(o.(Term),e.(Term)), nil }
     / Merge _1 h:ImportExpression _1 u:ImportExpression _ ':' _1 a:ApplicationExpression {
           return Merge{Handler:h.(Term), Union:u.(Term), Annotation:a.(Term)}, nil
       }
