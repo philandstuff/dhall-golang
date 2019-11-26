@@ -29,7 +29,8 @@ func dhallCacheDir() (string, error) {
 	return path.Join(cacheDir, "dhall"), nil
 }
 
-// Fetch implements DhallCache
+// Fetch searches the standard Dhall cache location for a term at the
+// index given by hash.  If the hash isn't in the cache, returns nil.
 func (StandardCache) Fetch(hash []byte) core.Term {
 	// FIXME: don't swallow these errors, maybe?
 	hash16 := fmt.Sprintf("%x", hash)
@@ -49,7 +50,8 @@ func (StandardCache) Fetch(hash []byte) core.Term {
 	return expr
 }
 
-// Save implements DhallCache
+// Save saves the given Term to the standard Dhall cache at the given
+// hash.
 func (StandardCache) Save(hash []byte, e core.Term) {
 	hash16 := fmt.Sprintf("%x", hash)
 	dir, err := dhallCacheDir()
@@ -68,8 +70,8 @@ func (StandardCache) Save(hash []byte, e core.Term) {
 // useful for testing.
 type NoCache struct{}
 
-// Fetch implements DhallCache
+// Fetch always returns nil.
 func (NoCache) Fetch([]byte) core.Term { return nil }
 
-// Save implements DhallCache
+// Save does nothing.
 func (NoCache) Save([]byte, core.Term) {}
