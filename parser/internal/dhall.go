@@ -630,8 +630,13 @@ var g = &grammar{
 							},
 						},
 					},
+					&litMatcher{
+						pos:        position{line: 184, col: 7, offset: 4554},
+						val:        "''",
+						ignoreCase: false,
+					},
 					&seqExpr{
-						pos: position{line: 184, col: 7, offset: 4554},
+						pos: position{line: 185, col: 7, offset: 4565},
 						exprs: []interface{}{
 							&choiceExpr{
 								pos: position{line: 194, col: 6, offset: 4850},
@@ -646,7 +651,7 @@ var g = &grammar{
 									},
 									&actionExpr{
 										pos: position{line: 61, col: 14, offset: 1321},
-										run: (*parser).callonSingleQuoteContinue16,
+										run: (*parser).callonSingleQuoteContinue17,
 										expr: &litMatcher{
 											pos:        position{line: 61, col: 14, offset: 1321},
 											val:        "\r\n",
@@ -656,15 +661,10 @@ var g = &grammar{
 								},
 							},
 							&ruleRefExpr{
-								pos:  position{line: 184, col: 23, offset: 4570},
+								pos:  position{line: 185, col: 23, offset: 4581},
 								name: "SingleQuoteContinue",
 							},
 						},
-					},
-					&litMatcher{
-						pos:        position{line: 185, col: 7, offset: 4596},
-						val:        "''",
-						ignoreCase: false,
 					},
 				},
 			},
@@ -14101,14 +14101,14 @@ func (p *parser) callonSingleQuoteContinue10() (interface{}, error) {
 	return p.cur.onSingleQuoteContinue10()
 }
 
-func (c *current) onSingleQuoteContinue16() (interface{}, error) {
+func (c *current) onSingleQuoteContinue17() (interface{}, error) {
 	return []byte{'\n'}, nil
 }
 
-func (p *parser) callonSingleQuoteContinue16() (interface{}, error) {
+func (p *parser) callonSingleQuoteContinue17() (interface{}, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onSingleQuoteContinue16()
+	return p.cur.onSingleQuoteContinue17()
 }
 
 func (c *current) onSingleQuoteLiteral6() (interface{}, error) {
