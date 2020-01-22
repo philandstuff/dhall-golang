@@ -24,8 +24,7 @@ var _ = DescribeTable("functionCheck",
 func typecheckTest(t Term, expectedType Value) {
 	actualType, err := TypeOf(t)
 	Ω(err).ShouldNot(HaveOccurred())
-	Ω(judgmentallyEqualVals(actualType, expectedType)).Should(
-		BeTrue())
+	Ω(actualType).Should(BeAlphaEquivalentTo(expectedType))
 }
 
 var _ = Describe("TypeOf", func() {

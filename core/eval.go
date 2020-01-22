@@ -176,7 +176,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		if tVal == True && fVal == False {
 			return condVal
 		}
-		if judgmentallyEqualVals(tVal, fVal) {
+		if AlphaEquivalentVals(tVal, fVal) {
 			return tVal
 		}
 		return ifVal{
@@ -227,7 +227,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 					}
 					return l
 				}
-				if judgmentallyEqualVals(l, r) {
+				if AlphaEquivalentVals(l, r) {
 					return l
 				}
 			case AndOp:
@@ -243,7 +243,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 					}
 					return False
 				}
-				if judgmentallyEqualVals(l, r) {
+				if AlphaEquivalentVals(l, r) {
 					return l
 				}
 			case EqOp:
@@ -253,7 +253,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				if rok && bool(rb) {
 					return l
 				}
-				if judgmentallyEqualVals(l, r) {
+				if AlphaEquivalentVals(l, r) {
 					return True
 				}
 			case NeOp:
@@ -263,7 +263,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				if rok && !bool(rb) {
 					return l
 				}
-				if judgmentallyEqualVals(l, r) {
+				if AlphaEquivalentVals(l, r) {
 					return False
 				}
 			}
@@ -358,7 +358,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				}
 				return result
 			}
-			if judgmentallyEqualVals(l, r) {
+			if AlphaEquivalentVals(l, r) {
 				return l
 			}
 		case ImportAltOp:

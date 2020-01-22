@@ -98,7 +98,7 @@ func (sub naturalSubtractVal) Call(x Value) Value {
 	if x == NaturalLit(0) {
 		return NaturalLit(0)
 	}
-	if judgmentallyEqualVals(sub.a, x) {
+	if AlphaEquivalentVals(sub.a, x) {
 		return NaturalLit(0)
 	}
 	return nil

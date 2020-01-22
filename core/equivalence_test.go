@@ -7,7 +7,7 @@ import (
 
 var _ = DescribeTable("judgmentallyEqual",
 	func(in, out Term, expected bool) {
-		Expect(judgmentallyEqual(in, out)).To(Equal(expected))
+		Expect(AlphaEquivalent(in, out)).To(Equal(expected))
 	},
 	Entry("Unequal things", Bool, Natural, false),
 	Entry("Lambda terms with the same label",

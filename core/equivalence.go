@@ -2,17 +2,25 @@ package core
 
 import "math"
 
-func judgmentallyEqual(t1 Term, t2 Term) bool {
+// AlphaEquivalent reports if two Terms are equal after
+// alpha-normalization, as defined by the standard.  Broadly, two
+// terms are alpha-equivalent if they are structurally identical,
+// ignoring label names.
+func AlphaEquivalent(t1 Term, t2 Term) bool {
 	v1 := Eval(t1)
 	v2 := Eval(t2)
-	return judgmentallyEqualVals(v1, v2)
+	return AlphaEquivalentVals(v1, v2)
 }
 
-func judgmentallyEqualVals(v1 Value, v2 Value) bool {
-	return judgmentallyEqualValsWith(0, v1, v2)
+// AlphaEquivalentVals reports if two Values are equal after
+// alpha-normalization, as defined by the standard.  Broadly, two
+// values are alpha-equivalent if they are structurally identical,
+// ignoring label names.
+func AlphaEquivalentVals(v1 Value, v2 Value) bool {
+	return alphaEquivalentValsWith(0, v1, v2)
 }
 
-func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
+func alphaEquivalentValsWith(level int, v1 Value, v2 Value) bool {
 	switch v1 := v1.(type) {
 	case Universe, Builtin,
 		naturalBuildVal, naturalEvenVal, naturalFoldVal,
@@ -34,9 +42,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 			return false
 		}
 		// we deliberately ignore the Labels here
-		// for alpha-equivalence
-		return judgmentallyEqualValsWith(level, v1.Domain, v2.Domain) &&
-			judgmentallyEqualValsWith(
+		return alphaEquivalentValsWith(level, v1.Domain, v2.Domain) &&
+			alphaEquivalentValsWith(
 				level+1,
 				v1.Call(quoteVar{Name: "_", Index: level}),
 				v2.Call(quoteVar{Name: "_", Index: level}),
@@ -46,8 +53,8 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		if !ok {
 			return false
 		}
-		return judgmentallyEqualValsWith(level, v1.Domain, v2.Domain) &&
-			judgmentallyEqualValsWith(
+		return alphaEquivalentValsWith(level, v1.Domain, v2.Domain) &&
+			alphaEquivalentValsWith(
 				level+1,
 				v1.Range(quoteVar{Name: "_", Index: level}),
 				v2.Range(quoteVar{Name: "_", Index: level}),
@@ -57,22 +64,22 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		if !ok {
 			return false
 		}
-		return judgmentallyEqualValsWith(level, v1.Fn, v2.Fn) &&
-			judgmentallyEqualValsWith(level, v1.Arg, v2.Arg)
+		return alphaEquivalentValsWith(level, v1.Fn, v2.Fn) &&
+			alphaEquivalentValsWith(level, v1.Arg, v2.Arg)
 	case opValue:
 		v2, ok := v2.(opValue)
 		if !ok {
 			return false
 		}
 		return v1.OpCode == v2.OpCode &&
-			judgmentallyEqualValsWith(level, v1.L, v2.L) &&
-			judgmentallyEqualValsWith(level, v1.R, v2.R)
+			alphaEquivalentValsWith(level, v1.L, v2.L) &&
+			alphaEquivalentValsWith(level, v1.R, v2.R)
 	case EmptyListVal:
 		v2, ok := v2.(EmptyListVal)
 		if !ok {
 			return false
 		}
-		return judgmentallyEqualValsWith(level, v1.Type, v2.Type)
+		return alphaEquivalentValsWith(level, v1.Type, v2.Type)
 	case NonEmptyListVal:
 		v2, ok := v2.(NonEmptyListVal)
 		if !ok {
@@ -82,7 +89,7 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 			return false
 		}
 		for i := range v1 {
-			if !judgmentallyEqualValsWith(level, v1[i], v2[i]) {
+			if !alphaEquivalentValsWith(level, v1[i], v2[i]) {
 				return false
 			}
 		}
@@ -101,7 +108,7 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 			if c1.Prefix != c2.Prefix {
 				return false
 			}
-			if !judgmentallyEqualValsWith(level, c1.Expr, c2.Expr) {
+			if !alphaEquivalentValsWith(level, c1.Expr, c2.Expr) {
 				return false
 			}
 		}
@@ -111,15 +118,15 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		if !ok {
 			return false
 		}
-		return judgmentallyEqualValsWith(level, v1.Cond, v2.Cond) &&
-			judgmentallyEqualValsWith(level, v1.T, v2.T) &&
-			judgmentallyEqualValsWith(level, v1.F, v2.F)
+		return alphaEquivalentValsWith(level, v1.Cond, v2.Cond) &&
+			alphaEquivalentValsWith(level, v1.T, v2.T) &&
+			alphaEquivalentValsWith(level, v1.F, v2.F)
 	case SomeVal:
 		v2, ok := v2.(SomeVal)
 		if !ok {
 			return false
 		}
-		return judgmentallyEqualValsWith(level, v1.Val, v2.Val)
+		return alphaEquivalentValsWith(level, v1.Val, v2.Val)
 	case RecordTypeVal:
 		v2, ok := v2.(RecordTypeVal)
 		if !ok {
@@ -130,7 +137,7 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		}
 		for k := range v1 {
 			if v2[k] == nil ||
-				!judgmentallyEqualValsWith(level, v1[k], v2[k]) {
+				!alphaEquivalentValsWith(level, v1[k], v2[k]) {
 				return false
 			}
 		}
@@ -145,7 +152,7 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		}
 		for k := range v1 {
 			if v2[k] == nil ||
-				!judgmentallyEqualValsWith(level, v1[k], v2[k]) {
+				!alphaEquivalentValsWith(level, v1[k], v2[k]) {
 				return false
 			}
 		}
@@ -155,15 +162,15 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 		if !ok {
 			return false
 		}
-		return judgmentallyEqualValsWith(level, v1.Record, v2.Record) &&
-			judgmentallyEqualValsWith(level, v1.Type, v2.Type)
+		return alphaEquivalentValsWith(level, v1.Record, v2.Record) &&
+			alphaEquivalentValsWith(level, v1.Type, v2.Type)
 	case fieldVal:
 		v2, ok := v2.(fieldVal)
 		if !ok {
 			return false
 		}
 		return v1.FieldName == v2.FieldName &&
-			judgmentallyEqualValsWith(level, v1.Record, v2.Record)
+			alphaEquivalentValsWith(level, v1.Record, v2.Record)
 	case projectVal:
 		v2, ok := v2.(projectVal)
 		if !ok {
@@ -177,7 +184,7 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 				return false
 			}
 		}
-		return judgmentallyEqualValsWith(level, v1.Record, v2.Record)
+		return alphaEquivalentValsWith(level, v1.Record, v2.Record)
 	case unionTypeVal:
 		v2, ok := v2.(unionTypeVal)
 		if !ok {
@@ -193,7 +200,7 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 				}
 				continue
 			}
-			if !judgmentallyEqualValsWith(level, v1[k], v2[k]) {
+			if !alphaEquivalentValsWith(level, v1[k], v2[k]) {
 				return false
 			}
 		}
@@ -207,18 +214,18 @@ func judgmentallyEqualValsWith(level int, v1 Value, v2 Value) bool {
 			if v2.Annotation == nil {
 				return false
 			}
-			if !judgmentallyEqualValsWith(level, v1.Annotation, v2.Annotation) {
+			if !alphaEquivalentValsWith(level, v1.Annotation, v2.Annotation) {
 				return false
 			}
 		}
-		return judgmentallyEqualValsWith(level, v1.Handler, v2.Handler) &&
-			judgmentallyEqualValsWith(level, v1.Union, v2.Union)
+		return alphaEquivalentValsWith(level, v1.Handler, v2.Handler) &&
+			alphaEquivalentValsWith(level, v1.Union, v2.Union)
 	case assertVal:
 		v2, ok := v2.(assertVal)
 		if !ok {
 			return false
 		}
-		return judgmentallyEqualValsWith(level, v1.Annotation, v2.Annotation)
+		return alphaEquivalentValsWith(level, v1.Annotation, v2.Annotation)
 	}
 	panic("unknown Value type")
 }

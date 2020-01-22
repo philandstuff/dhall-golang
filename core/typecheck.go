@@ -24,7 +24,7 @@ func assertTypeIs(ctx context, expr Term, expectedType Value, msg typeMessage) e
 	if err != nil {
 		return err
 	}
-	if !judgmentallyEqualVals(expectedType, actualType) {
+	if !AlphaEquivalentVals(expectedType, actualType) {
 		return mkTypeError(msg)
 	}
 	return nil
@@ -200,7 +200,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		}
 		expectedType := piType.Domain
 		actualType := argType
-		if !judgmentallyEqualVals(expectedType, actualType) {
+		if !AlphaEquivalentVals(expectedType, actualType) {
 			return nil, mkTypeError(typeMismatch(Quote(expectedType), Quote(actualType)))
 		}
 		bodyTypeVal := piType.Range(Eval(t.Arg))
@@ -269,7 +269,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 				if err != nil {
 					return nil, err
 				}
-				if !judgmentallyEqualVals(bindingType, Eval(binding.Annotation)) {
+				if !AlphaEquivalentVals(bindingType, Eval(binding.Annotation)) {
 					return nil, mkTypeError(annotMismatch(binding.Annotation, Quote(bindingType)))
 				}
 			}
@@ -292,7 +292,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			return nil, err
 		}
 		// T₀ ≡ T₁
-		if !judgmentallyEqualVals(Eval(t.Annotation), actualType) {
+		if !AlphaEquivalentVals(Eval(t.Annotation), actualType) {
 			return nil, mkTypeError(annotMismatch(t.Annotation, Quote(actualType)))
 		}
 		// ─────────────────
@@ -334,7 +334,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if t, _ := typeWith(ctx, Quote(R)); t != Type {
 			return nil, mkTypeError(ifBranchMustBeTerm)
 		}
-		if !judgmentallyEqualVals(L, R) {
+		if !AlphaEquivalentVals(L, R) {
 			return nil, mkTypeError(ifBranchMismatch)
 		}
 		return L, nil
@@ -390,7 +390,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if !ok {
 				return nil, mkTypeError(cantListAppend)
 			}
-			if !judgmentallyEqualVals(lElemT, rElemT) {
+			if !AlphaEquivalentVals(lElemT, rElemT) {
 				return nil, mkTypeError(listAppendMismatch)
 			}
 			return lt, nil
@@ -477,7 +477,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			if !judgmentallyEqualVals(lType, rType) {
+			if !AlphaEquivalentVals(lType, rType) {
 				return nil, mkTypeError(equivalenceTypeMismatch)
 			}
 			return Type, nil
@@ -519,7 +519,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			if !judgmentallyEqualVals(T0, T1) {
+			if !AlphaEquivalentVals(T0, T1) {
 				return nil, mkTypeError(mismatchedListElements(Quote(T0), Quote(T1)))
 			}
 		}
@@ -597,7 +597,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if elemType == nil {
 				elemType = v
 			} else {
-				if !judgmentallyEqualVals(elemType, v) {
+				if !AlphaEquivalentVals(elemType, v) {
 					return nil, mkTypeError(heterogenousRecordToMap)
 				}
 			}
@@ -613,7 +613,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			return nil, err
 		}
 		annot := Eval(t.Type)
-		if !judgmentallyEqualVals(inferred, annot) {
+		if !AlphaEquivalentVals(inferred, annot) {
 			return nil, mkTypeError(mapTypeMismatch(Quote(inferred), t.Type))
 		}
 		return inferred, nil
@@ -689,7 +689,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if !ok {
 				return nil, mkTypeError(missingField)
 			}
-			if !judgmentallyEqualVals(fieldType, typ) {
+			if !AlphaEquivalentVals(fieldType, typ) {
 				return nil, mkTypeError(projectionTypeMismatch(Quote(typ), Quote(fieldType)))
 			}
 			result[name] = typ
@@ -717,7 +717,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 					return nil, mkTypeError(invalidAlternativeType)
 				}
 			} else {
-				if !judgmentallyEqualVals(c, k) {
+				if !AlphaEquivalentVals(c, k) {
 					return nil, mkTypeError(alternativeAnnotationMismatch)
 				}
 			}
@@ -770,7 +770,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 				if result == nil {
 					result = fieldType
 				} else {
-					if !judgmentallyEqualVals(result, fieldType) {
+					if !AlphaEquivalentVals(result, fieldType) {
 						return nil, mkTypeError(handlerOutputTypeMismatch(Quote(result), Quote(fieldType)))
 					}
 				}
@@ -779,19 +779,19 @@ func typeWith(ctx context, t Term) (Value, error) {
 				if !ok {
 					return nil, mkTypeError(handlerNotAFunction)
 				}
-				if !judgmentallyEqualVals(altType, pi.Domain) {
+				if !AlphaEquivalentVals(altType, pi.Domain) {
 					return nil, mkTypeError(handlerInputTypeMismatch(Quote(altType), Quote(pi.Domain)))
 				}
 				outputType := pi.Range(NaturalLit(1))
 				outputType2 := pi.Range(NaturalLit(2))
-				if !judgmentallyEqualVals(outputType, outputType2) {
+				if !AlphaEquivalentVals(outputType, outputType2) {
 					// hacky way of detecting output type depending on input
 					return nil, mkTypeError(disallowedHandlerType)
 				}
 				if result == nil {
 					result = outputType
 				} else {
-					if !judgmentallyEqualVals(result, outputType) {
+					if !AlphaEquivalentVals(result, outputType) {
 						return nil, mkTypeError(handlerOutputTypeMismatch(Quote(result), Quote(outputType)))
 					}
 				}
@@ -801,7 +801,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			if _, err := typeWith(ctx, t.Annotation); err != nil {
 				return nil, err
 			}
-			if !judgmentallyEqualVals(result, Eval(t.Annotation)) {
+			if !AlphaEquivalentVals(result, Eval(t.Annotation)) {
 				return nil, mkTypeError(annotMismatch(t.Annotation, Quote(result)))
 			}
 		}
@@ -815,7 +815,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if !ok || op.OpCode != EquivOp {
 			return nil, mkTypeError(notAnEquivalence)
 		}
-		if !judgmentallyEqualVals(op.L, op.R) {
+		if !AlphaEquivalentVals(op.L, op.R) {
 			return nil, mkTypeError(assertionFailed(Quote(op.L), Quote(op.R)))
 		}
 		return op, nil
