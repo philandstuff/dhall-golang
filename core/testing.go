@@ -3,15 +3,22 @@ package core
 import (
 	"errors"
 	"fmt"
-
-	"github.com/onsi/gomega/types"
 )
+
+// GomegaMatcher is a copy of
+// github.com/onsi/gomega/types.GomegaMatcher, to avoid a dependency
+// on gomega for users who don't want it.
+type GomegaMatcher interface {
+	Match(actual interface{}) (success bool, err error)
+	FailureMessage(actual interface{}) (message string)
+	NegatedFailureMessage(actual interface{}) (message string)
+}
 
 // BeAlphaEquivalentTo returns a Gomega matcher which checks that a
 // Term or Value is equivalent to the expected Term or Value.  If
 // either the expected or actual is a Term, it is Eval()ed first; then
 // the Values are compared with AlphaEquivalentVals().
-func BeAlphaEquivalentTo(expected interface{}) types.GomegaMatcher {
+func BeAlphaEquivalentTo(expected interface{}) GomegaMatcher {
 	switch e := expected.(type) {
 	case Term:
 		return &alphaMatcher{
@@ -45,9 +52,9 @@ func (m *alphaMatcher) Match(actual interface{}) (success bool, err error) {
 func (m *alphaMatcher) FailureMessage(actual interface{}) (message string) {
 	switch a := actual.(type) {
 	case Value:
-		return fmt.Sprintf("Expected\n\t%v\nto be alpha-equivalent to\n\t%v", Quote(a), Quote(m.expected))
+		return fmt.Sprintf("Expected\n\t%#v\nto be alpha-equivalent to\n\t%#v", Quote(a), Quote(m.expected))
 	default:
-		return fmt.Sprintf("Expected\n\t%v\nto be alpha-equivalent to\n\t%v", a, Quote(m.expected))
+		return fmt.Sprintf("Expected\n\t%#v\nto be alpha-equivalent to\n\t%#v", a, Quote(m.expected))
 	}
 }
 

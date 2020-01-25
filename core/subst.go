@@ -275,8 +275,8 @@ func rebindAtLevel(i int, local localVar, t Term) Term {
 		}
 	case NonEmptyList:
 		result := make(NonEmptyList, len(t))
-		for i, e := range t {
-			result[i] = rebindAtLevel(i, local, e)
+		for j, e := range t {
+			result[j] = rebindAtLevel(i, local, e)
 		}
 		return result
 	case Some:

@@ -381,6 +381,11 @@ func TextAppend(l, r Term) Term {
 	return OpTerm{OpCode: TextAppendOp, L: l, R: r}
 }
 
+// Equivalent takes Terms l and r and returns (l ≡ r)
+func Equivalent(l, r Term) Term {
+	return OpTerm{OpCode: EquivOp, L: l, R: r}
+}
+
 // Callable is a function Value that can be called with one Value
 // argument.  Call() may return nil if normalization isn't possible
 // (for example, `Natural/even x` does not normalize)
@@ -612,6 +617,12 @@ func (NonEmptyListVal) isValue() {}
 // NewList returns a non-empty list Term from the given Terms
 func NewList(first Term, rest ...Term) Term {
 	return append(NonEmptyList{first}, rest...)
+}
+
+// PlainText returns an uninterpolated text literal containing the
+// given string as text.
+func PlainText(content string) Term {
+	return TextLitTerm{Suffix: content}
 }
 
 func (TextLitTerm) isTerm() {}
