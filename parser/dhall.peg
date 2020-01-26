@@ -226,6 +226,8 @@ Reserved ←
   / "Natural/toInteger" { return NaturalToInteger, nil }
   / "Natural/show" { return NaturalShow, nil }
   / "Natural/subtract" { return NaturalSubtract, nil }
+  / "Integer/clamp" { return IntegerClamp, nil }
+  / "Integer/negate" { return IntegerNegate, nil }
   / "Integer/toDouble" { return IntegerToDouble, nil }
   / "Integer/show" { return IntegerShow, nil }
   / "Double/show" { return DoubleShow, nil }
@@ -261,7 +263,7 @@ In ← "in"
 As ← "as"
 Using ← "using"
 Merge ← "merge"
-Missing ← "missing" { return Missing{}, nil }
+Missing ← "missing" !SimpleLabelNextChar { return Missing{}, nil }
 True ← "True"
 False ← "False"
 Infinity ← "Infinity"
@@ -583,11 +585,11 @@ FirstApplicationExpression ←
 
 ImportExpression ← Import / CompletionExpression
 
-CompletionExpression ← a:SelectorExpression b:(Complete SelectorExpression)? {
+CompletionExpression ← a:SelectorExpression b:(_ Complete _ SelectorExpression)? {
     if b == nil {
         return a, nil
     }
-    return OpTerm{OpCode:CompleteOp ,L:a.(Term),R:b.([]interface{})[1].(Term)},nil
+    return OpTerm{OpCode:CompleteOp ,L:a.(Term),R:b.([]interface{})[3].(Term)},nil
 }
 
 SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {

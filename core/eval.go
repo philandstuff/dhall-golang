@@ -41,6 +41,10 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return NaturalSubtractVal
 		case NaturalToInteger:
 			return NaturalToIntegerVal
+		case IntegerClamp:
+			return IntegerClampVal
+		case IntegerNegate:
+			return IntegerNegateVal
 		case IntegerShow:
 			return IntegerShowVal
 		case IntegerToDouble:

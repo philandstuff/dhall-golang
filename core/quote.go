@@ -52,6 +52,10 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			return AppTerm{NaturalSubtract, quoteWith(ctx, v.a)}
 		}
 		return NaturalSubtract
+	case integerClampVal:
+		return IntegerClamp
+	case integerNegateVal:
+		return IntegerNegate
 	case naturalToIntegerVal:
 		return NaturalToInteger
 	case integerShowVal:

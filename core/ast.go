@@ -77,6 +77,10 @@ const (
 	// NaturalSubtract is Natural/subtract
 	NaturalSubtract = Builtin("Natural/subtract")
 
+	// IntegerClamp is Integer/clamp
+	IntegerClamp = Builtin("Integer/clamp")
+	// IntegerNegate is Integer/negate
+	IntegerNegate = Builtin("Integer/negate")
 	// IntegerToDouble is Integer/toDouble
 	IntegerToDouble = Builtin("Integer/toDouble")
 	// IntegerShow is Integer/show
@@ -132,6 +136,8 @@ type (
 	}
 	naturalToIntegerVal struct{}
 
+	integerClampVal    struct{}
+	integerNegateVal   struct{}
 	integerShowVal     struct{}
 	integerToDoubleVal struct{}
 
@@ -175,6 +181,8 @@ func (naturalShowVal) isValue()      {}
 func (naturalSubtractVal) isValue()  {}
 func (naturalToIntegerVal) isValue() {}
 
+func (integerClampVal) isValue()    {}
+func (integerNegateVal) isValue()   {}
 func (integerShowVal) isValue()     {}
 func (integerToDoubleVal) isValue() {}
 

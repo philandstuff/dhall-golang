@@ -79,6 +79,10 @@ func typeWith(ctx context, t Term) (Value, error) {
 			return Type, nil
 		case DoubleShow:
 			return NewFnTypeVal("_", Double, Text), nil
+		case IntegerClamp:
+			return NewFnTypeVal("_", Integer, Natural), nil
+		case IntegerNegate:
+			return NewFnTypeVal("_", Integer, Integer), nil
 		case IntegerShow:
 			return NewFnTypeVal("_", Integer, Text), nil
 		case IntegerToDouble:
@@ -176,7 +180,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 			return nil, mkTypeError(unhandledTypeCase)
 		}
 	case Var:
-		return nil, mkTypeError(typeCheckBoundVar(t))
+		return nil, mkTypeError(typeCheckVar(t))
 	case localVar:
 		if vals, ok := ctx[t.Name]; ok {
 			if t.Index < len(vals) {
@@ -963,9 +967,9 @@ func assertionFailed(leftTerm, rightTerm Term) typeMessage {
 	}
 }
 
-func typeCheckBoundVar(boundVar Term) typeMessage {
+func typeCheckVar(boundVar Term) typeMessage {
 	return oneArgTypeMessage{
-		format: "Internal error: shouldn't ever see BoundVar in TypeOf(), but saw %s",
+		format: "Unbound variable %s",
 		expr:   boundVar,
 	}
 }

@@ -16,11 +16,6 @@ func (naturalBuildVal) Call(x Value) Value {
 			return opValue{OpCode: PlusOp, L: x, R: NaturalLit(1)}
 		},
 	}
-	if fold, ok := x.(naturalFoldVal); ok {
-		if fold.n != nil && fold.typ == nil {
-			return fold.n
-		}
-	}
 	return applyVal(x, Natural, succ, NaturalLit(0))
 }
 
@@ -111,6 +106,23 @@ func (naturalToIntegerVal) Call(x Value) Value {
 	return nil
 }
 
+func (integerClampVal) Call(x Value) Value {
+	if i, ok := x.(IntegerLit); ok {
+		if i < 0 {
+			return NaturalLit(0)
+		}
+		return NaturalLit(i)
+	}
+	return nil
+}
+
+func (integerNegateVal) Call(x Value) Value {
+	if i, ok := x.(IntegerLit); ok {
+		return IntegerLit(-i)
+	}
+	return nil
+}
+
 func (integerShowVal) Call(x Value) Value {
 	if i, ok := x.(IntegerLit); ok {
 		return TextLitVal{Suffix: fmt.Sprintf("%+d", i)}
@@ -143,13 +155,7 @@ func (build optionalBuildVal) Call(x Value) Value {
 			return SomeVal{a}
 		},
 	}
-	g := x
-	if fold, ok := g.(optionalFoldVal); ok {
-		if fold.opt != nil && fold.typ2 == nil {
-			return fold.opt
-		}
-	}
-	return applyVal(g, AppValue{Optional, build.typ}, some, AppValue{None, build.typ})
+	return applyVal(x, AppValue{Optional, build.typ}, some, AppValue{None, build.typ})
 }
 
 func (fold optionalFoldVal) Call(x Value) Value {
@@ -247,13 +253,7 @@ func (l listBuildVal) Call(x Value) Value {
 			}
 		},
 	}
-	g := x
-	if fold, ok := g.(listFoldVal); ok {
-		if fold.list != nil && fold.typ2 == nil {
-			return fold.list
-		}
-	}
-	return applyVal(g, AppValue{List, l.typ}, cons, EmptyListVal{AppValue{List, l.typ}})
+	return applyVal(x, AppValue{List, l.typ}, cons, EmptyListVal{AppValue{List, l.typ}})
 }
 
 func (l listFoldVal) Call(x Value) Value {
@@ -378,6 +378,8 @@ var (
 	NaturalShowVal      = naturalShowVal{}
 	NaturalSubtractVal  = naturalSubtractVal{}
 	NaturalToIntegerVal = naturalToIntegerVal{}
+	IntegerClampVal     = integerClampVal{}
+	IntegerNegateVal    = integerNegateVal{}
 	IntegerShowVal      = integerShowVal{}
 	IntegerToDoubleVal  = integerToDoubleVal{}
 	DoubleShowVal       = doubleShowVal{}

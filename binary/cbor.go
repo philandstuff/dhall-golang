@@ -37,6 +37,8 @@ var nameToBuiltin = map[string]Term{
 	"Natural/show":      NaturalShow,
 	"Natural/subtract":  NaturalSubtract,
 
+	"Integer/clamp":    IntegerClamp,
+	"Integer/negate":   IntegerNegate,
 	"Integer/toDouble": IntegerToDouble,
 	"Integer/show":     IntegerShow,
 

@@ -26,6 +26,7 @@ func alphaEquivalentValsWith(level int, v1 Value, v2 Value) bool {
 		naturalBuildVal, naturalEvenVal, naturalFoldVal,
 		naturalIsZeroVal, naturalOddVal, naturalShowVal,
 		naturalSubtractVal, naturalToIntegerVal, integerShowVal,
+		integerClampVal, integerNegateVal,
 		integerToDoubleVal, doubleShowVal, optionalBuildVal,
 		optionalFoldVal, textShowVal, listBuildVal, listFoldVal,
 		listHeadVal, listIndexedVal, listLengthVal, listLastVal,

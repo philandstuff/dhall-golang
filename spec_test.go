@@ -35,9 +35,15 @@ var expectedFailures = []string{
 	"TestImport/noHeaderForwardingA.dhall",
 	"TestImportFails/customHeadersUsingBoundVariable",
 
+	// very awkward grammar corner case, especially with a PEG parser
+	"TestParserAccepts/preferMissingNoSpaces",
+
 	// needs bigint support
 	"TestNormalization/simple/integerToDoubleA.dhall",
 	"TestSemanticHash/simple/integerToDouble",
+	"TestBinaryDecode/unit/IntegerBigNegative",
+	"TestBinaryDecode/unit/IntegerBigPositive",
+	"TestBinaryDecode/unit/NaturalBig",
 
 	// needs quoted paths in URLs
 	"TestParserAccepts/unit/import/quotedPaths",     // needs.. quoted paths
@@ -56,6 +62,9 @@ var expectedFailures = []string{
 	"TestTypeInferenceFails/unit/RecordProjectionDuplicateFields.dhall",
 	"TestTypeInferenceFails/unit/UnionTypeDuplicateVariants",
 	"TestTypeInferenceFails/unit/README", // FIXME, shouldn't need excluding
+
+	// test suite bug, fixed in standard master
+	"TestNormalization/unit/NaturalBuildFoldFusion",
 }
 
 func pass(t *testing.T) {
