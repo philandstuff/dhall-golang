@@ -573,10 +573,21 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 						union.Arg,
 					)
 				}
+				if union.Fn == None {
+					// Treating Optional as < Some a | None >
+					return handlers["None"]
+				}
 			}
 			if union, ok := unionVal.(fieldVal); ok {
 				// empty union alternative
 				return handlers[union.FieldName]
+			}
+			if some, ok := unionVal.(SomeVal); ok {
+				// Treating Optional as < Some a | None >
+				return applyVal(
+					handlers["Some"],
+					some.Val,
+				)
 			}
 		}
 		output := mergeVal{

@@ -126,6 +126,8 @@ NonreservedLabel ← &(Reserved SimpleLabelNextChar) label:Label { return label,
 
 AnyLabel ← Label
 
+AnyLabelOrSome ← AnyLabel / Some { return string(c.text), nil }
+
 
 DoubleQuoteChunk ←
      Interpolation
@@ -310,18 +312,19 @@ DoubleLiteral ← d:NumericDoubleLiteral
   / "-" Infinity { return DoubleLit(math.Inf(-1)), nil }
   / NaN { return DoubleLit(math.NaN()), nil }
 
-NaturalLiteral ← Digit+ {
+NaturalLiteral ←
+  "0x" HexDig+ {
+      i, err := strconv.ParseInt(string(c.text), 0, 0)
+      return NaturalLit(i), err
+  }
+  / Digit+ {
       i, err := strconv.Atoi(string(c.text))
       return NaturalLit(i), err
-}
+  }
 
-IntegerLiteral ← [+-]NaturalLiteral {
-      i, err := strconv.Atoi(string(c.text))
-      if err != nil {
-         return nil, err
-      }
-      return IntegerLit(i), nil
-}
+IntegerLiteral ←
+    '+' n:NaturalLiteral { return IntegerLit(n.(NaturalLit)), nil }
+  / '-' n:NaturalLiteral { return IntegerLit(-(n.(NaturalLit))), nil }
 
 DeBruijn ← _ '@' _ index:NaturalLiteral { return int(index.(NaturalLit)), nil }
 
@@ -613,7 +616,7 @@ SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {
 
 Selector ← AnyLabel / Labels / TypeSelector
 
-Labels ← '{' _ optclauses:( AnyLabel _ (',' _ AnyLabel _ )* )? '}' {
+Labels ← '{' _ optclauses:( AnyLabelOrSome _ (',' _ AnyLabelOrSome _ )* )? '}' {
     if optclauses == nil { return []string{}, nil }
     clauses := optclauses.([]interface{})
     labels := []string{clauses[0].(string)}
@@ -642,12 +645,12 @@ RecordTypeOrLiteral ←
     / NonEmptyRecordLiteral
     / "" { return RecordType{}, nil }
 
-RecordTypeField ← name:AnyLabel _ ':' _1 expr:Expression {
+RecordTypeEntry ← name:AnyLabelOrSome _ ':' _1 expr:Expression {
     return []interface{}{name, expr}, nil
 }
-MoreRecordType ← _ ',' _ f:RecordTypeField {return f, nil}
+MoreRecordType ← _ ',' _ f:RecordTypeEntry {return f, nil}
 NonEmptyRecordType ←
-      first:RecordTypeField rest:MoreRecordType* {
+      first:RecordTypeEntry rest:MoreRecordType* {
           fields := rest.([]interface{})
           content := make(RecordType, len(fields)+1)
           content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Term)
@@ -661,12 +664,12 @@ NonEmptyRecordType ←
           return content, nil
       }
 
-RecordLiteralField ← name:AnyLabel _ '=' _ expr:Expression {
+RecordLiteralEntry ← name:AnyLabelOrSome _ '=' _ expr:Expression {
     return []interface{}{name, expr}, nil
 }
-MoreRecordLiteral ← _ ',' _ f:RecordLiteralField {return f, nil}
+MoreRecordLiteral ← _ ',' _ f:RecordLiteralEntry {return f, nil}
 NonEmptyRecordLiteral ←
-      first:RecordLiteralField rest:MoreRecordLiteral* {
+      first:RecordLiteralEntry rest:MoreRecordLiteral* {
           fields := rest.([]interface{})
           content := make(RecordLit, len(fields)+1)
           content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Term)
@@ -684,7 +687,7 @@ UnionType ← NonEmptyUnionType / EmptyUnionType
 
 EmptyUnionType ← "" { return UnionType{}, nil }
 
-NonEmptyUnionType ← first:UnionVariant rest:(_ '|' _ UnionVariant)* {
+NonEmptyUnionType ← first:UnionTypeEntry rest:(_ '|' _ UnionTypeEntry)* {
     alternatives := make(UnionType)
     first2 := first.([]interface{})
     if first2[1] == nil {
@@ -709,7 +712,7 @@ NonEmptyUnionType ← first:UnionVariant rest:(_ '|' _ UnionVariant)* {
     return alternatives, nil
 }
 
-UnionVariant ← AnyLabel (_ ':' _1 Expression)?
+UnionTypeEntry ← AnyLabelOrSome (_ ':' _1 Expression)?
 
 MoreList ← ',' _ e:Expression _ {return e, nil}
 

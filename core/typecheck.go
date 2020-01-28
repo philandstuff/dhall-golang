@@ -748,7 +748,11 @@ func typeWith(ctx context, t Term) (Value, error) {
 		}
 		unionType, ok := unionTypeV.(unionTypeVal)
 		if !ok {
-			return nil, mkTypeError(mustMergeUnion)
+			apply, ok := unionTypeV.(AppValue)
+			if !ok || apply.Fn != Optional {
+				return nil, mkTypeError(mustMergeUnion)
+			}
+			unionType = unionTypeVal{"Some": apply.Arg, "None": nil}
 		}
 		if len(handlerType) > len(unionType) {
 			return nil, mkTypeError(unusedHandler)
@@ -1028,7 +1032,7 @@ var (
 	missingToMapType        = staticTypeMessage{"An empty ❰toMap❱ requires a type annotation"}
 
 	mustMergeARecord      = staticTypeMessage{"❰merge❱ expects a record of handlers"}
-	mustMergeUnion        = staticTypeMessage{"❰merge❱ expects a union"}
+	mustMergeUnion        = staticTypeMessage{"❰merge❱ expects a union or Optional"}
 	missingMergeType      = staticTypeMessage{"An empty ❰merge❱ requires a type annotation"}
 	unusedHandler         = staticTypeMessage{"Unused handler"}
 	missingHandler        = staticTypeMessage{"Missing handler"}
