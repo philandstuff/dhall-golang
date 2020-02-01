@@ -10,14 +10,6 @@ import (
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
-func resolveStringAsExpr(name, content string) (Term, error) {
-	expr, err := parser.Parse(name, []byte(content))
-	if err != nil {
-		return nil, err
-	}
-	return expr.(Term), nil
-}
-
 // Load takes a Term and resolves all imports
 func Load(e Term, ancestors ...Fetchable) (Term, error) {
 	return LoadWith(StandardCache{}, e, ancestors...)
@@ -64,7 +56,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 			expr = TextLitTerm{Suffix: content}
 		} else {
 			// dynamicExpr may contain more imports
-			dynamicExpr, err := resolveStringAsExpr(here.Name(), content)
+			dynamicExpr, err := parser.Parse(here.Name(), []byte(content))
 			if err != nil {
 				return nil, err
 			}

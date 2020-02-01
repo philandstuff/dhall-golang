@@ -1,7 +1,6 @@
 package dhall
 
 import (
-	"errors"
 	"reflect"
 	"sort"
 	"strings"
@@ -22,14 +21,9 @@ func isMapEntryType(recordType core.RecordTypeVal) bool {
 // Unmarshal takes dhall input as a byte array and parses it,
 // evaluates it, and unmarshals it into the given variable.
 func Unmarshal(b []byte, out interface{}) error {
-	parsed, err := parser.Parse("-", b)
+	term, err := parser.Parse("-", b)
 	if err != nil {
 		return err
-	}
-	term, ok := parsed.(core.Term)
-	if !ok {
-		// shouldn't happen
-		return errors.New("Internal error: parsed non-term")
 	}
 	Decode(core.Eval(term), out)
 	return nil

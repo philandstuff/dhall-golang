@@ -1,4 +1,4 @@
-package parser
+package internal
 
 import (
 	. "github.com/philandstuff/dhall-golang/core"

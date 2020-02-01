@@ -17,7 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Parse error: %v", err)
 	}
-	resolvedExpr, err := imports.Load(expr.(core.Term))
+	resolvedExpr, err := imports.Load(expr)
 	if err != nil {
 		log.Fatalf("Import resolve error: %v", err)
 	}

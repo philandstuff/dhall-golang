@@ -87,7 +87,7 @@ func TestParseWhatYouWrite(t *testing.T) {
 				if err != nil {
 					return false
 				}
-				return reflect.DeepEqual(e, expr)
+				return core.AlphaEquivalent(e, expr)
 			},
 			ExprOf(ExprOf(LeafExpr)),
 		))

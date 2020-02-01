@@ -238,7 +238,7 @@ func TestParserAccepts(t *testing.T) {
 			parsed, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
 
-			err = binary.EncodeAsCbor(actualBuf, parsed.(core.Term))
+			err = binary.EncodeAsCbor(actualBuf, parsed)
 			expectNoError(t, err)
 
 			expected, err := ioutil.ReadFile(bPath)
@@ -272,32 +272,25 @@ func TestTypeInference(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			var resolvedA core.Term
-			if isSimpleTest(t.Name()) {
-				resolvedA = parsedA.(core.Term)
-			} else {
-				resolvedA, err = imports.LoadWith(imports.NoCache{}, parsedA.(core.Term), core.Local(aPath))
+			resolvedA := parsedA
+			if !isSimpleTest(t.Name()) {
+				resolvedA, err = imports.LoadWith(imports.NoCache{}, parsedA, core.Local(aPath))
 				expectNoError(t, err)
 			}
 
 			inferredType, err := core.TypeOf(resolvedA)
 			expectNoError(t, err)
 
-			expectEqualTerms(t, parsedB.(core.Term), core.Quote(inferredType))
+			expectEqualTerms(t, parsedB, core.Quote(inferredType))
 		})
 }
 
 func TestTypeInferenceFails(t *testing.T) {
 	t.Parallel()
 	runTestOnEachFile(t, "dhall-lang/tests/type-inference/failure/", func(t *testing.T, testPath string) {
-		parsed, err := parser.ParseFile(testPath)
+		expr, err := parser.ParseFile(testPath)
 
 		expectNoError(t, err)
-
-		expr, ok := parsed.(core.Term)
-		if !ok {
-			failf(t, "Expected core.Term, got %+v\n", parsed)
-		}
 
 		_, err = core.TypeOf(expr)
 
@@ -316,8 +309,8 @@ func TestAlphaNormalization(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			normA := core.Quote(core.AlphaBetaEval(parsedA.(core.Term)))
-			normB := core.Quote(core.AlphaBetaEval(parsedB.(core.Term)))
+			normA := core.Quote(core.AlphaBetaEval(parsedA))
+			normB := core.Quote(core.AlphaBetaEval(parsedB))
 
 			expectEqualTerms(t, normB, normA)
 		})
@@ -334,16 +327,13 @@ func TestNormalization(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			var resolvedA, resolvedB core.Term
-			if isSimpleTest(t.Name()) {
-				resolvedA = parsedA.(core.Term)
-				resolvedB = parsedB.(core.Term)
-			} else {
-
-				resolvedA, err = imports.Load(parsedA.(core.Term), core.Local(aPath))
+			resolvedA := parsedA
+			resolvedB := parsedB
+			if !isSimpleTest(t.Name()) {
+				resolvedA, err = imports.Load(parsedA, core.Local(aPath))
 				expectNoError(t, err)
 
-				resolvedB, err = imports.Load(parsedB.(core.Term), core.Local(bPath))
+				resolvedB, err = imports.Load(parsedB, core.Local(bPath))
 				expectNoError(t, err)
 			}
 
@@ -359,7 +349,7 @@ func TestImportFails(t *testing.T) {
 		parsed, err := parser.ParseFile(testPath)
 		expectNoError(t, err)
 
-		_, err = imports.Load(parsed.(core.Term), core.Local(testPath))
+		_, err = imports.Load(parsed, core.Local(testPath))
 		expectError(t, err)
 	})
 }
@@ -378,10 +368,10 @@ func TestImport(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA.(core.Term), core.Local(aPath))
+			resolvedA, err := imports.Load(parsedA, core.Local(aPath))
 			expectNoError(t, err)
 
-			resolvedB, err := imports.Load(parsedB.(core.Term), core.Local(bPath))
+			resolvedB, err := imports.Load(parsedB, core.Local(bPath))
 			expectNoError(t, err)
 
 			expectEqualTerms(t, resolvedB, resolvedA)
@@ -397,11 +387,9 @@ func TestSemanticHash(t *testing.T) {
 			parsedA, err := parser.ParseFile(aPath)
 			expectNoError(t, err)
 
-			var resolvedA core.Term
-			if isSimpleTest(t.Name()) {
-				resolvedA = parsedA.(core.Term)
-			} else {
-				resolvedA, err = imports.Load(parsedA.(core.Term), core.Local(aPath))
+			resolvedA := parsedA
+			if !isSimpleTest(t.Name()) {
+				resolvedA, err = imports.Load(parsedA, core.Local(aPath))
 				expectNoError(t, err)
 			}
 
@@ -438,7 +426,7 @@ func TestBinaryDecode(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			expectEqualTerms(t, parsedB.(core.Term), expr)
+			expectEqualTerms(t, parsedB, expr)
 		})
 }
 

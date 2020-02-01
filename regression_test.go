@@ -13,7 +13,7 @@ func parseAndTypecheckTest(source string, expectedTypeSource string) {
 	Ω(err).ShouldNot(HaveOccurred())
 	parsedType, err := parser.Parse("-", []byte(expectedTypeSource))
 	Ω(err).ShouldNot(HaveOccurred())
-	Ω(TypeOf(parsed.(Term))).Should(BeAlphaEquivalentTo(parsedType))
+	Ω(TypeOf(parsed)).Should(BeAlphaEquivalentTo(parsedType))
 }
 
 var _ = Describe("Regression tests", func() {
