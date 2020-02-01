@@ -63,7 +63,8 @@ func (StandardCache) Save(hash []byte, e core.Term) {
 		return
 	}
 	defer file.Close()
-	err = binary.EncodeAsCbor(file, e)
+	// ignores returned error
+	binary.EncodeAsCbor(file, e)
 }
 
 // NoCache is a DhallCache which doesn't do any caching.  It might be
