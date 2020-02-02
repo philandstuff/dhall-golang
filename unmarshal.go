@@ -59,7 +59,6 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		default:
 			panic("unknown Builtin")
 		}
-		// TODO: RecordLit
 	case core.AppValue:
 		switch e.Fn {
 		case core.List:
@@ -74,6 +73,12 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		default:
 			panic("unknown app")
 		}
+	case core.RecordTypeVal:
+		rec := core.RecordLitVal{}
+		for key, typ := range e {
+			rec[key] = encode(val.FieldByName(key), typ)
+		}
+		return rec
 	default:
 		panic("Don't know what to do with val")
 	}

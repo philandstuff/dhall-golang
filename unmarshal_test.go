@@ -129,7 +129,7 @@ var _ = Describe("Decode", func() {
 			core.Apply(core.List, core.Natural), []int{1, 2, 3}),
 		XEntry("Optional Natural into int",
 			core.Apply(core.Optional, core.Natural), 1),
-		XEntry("record into struct",
+		Entry("record into struct",
 			core.RecordType{"Foo": core.Natural, "Bar": core.Text},
 			testStruct{Foo: 1, Bar: "howdy"},
 		),
