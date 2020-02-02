@@ -98,40 +98,43 @@ var _ = Describe("Decode", func() {
 			new(map[int]string),
 			map[int]string{}),
 	)
+	// Testing various identity functions ensures we support both
+	// encoding and decoding each particular type
+	DescribeTable("Identity functions of various Dhall and Go types",
+		func(inputType core.Term, testValue interface{}) {
+			id := core.Eval(core.LambdaTerm{
+				Label: "x",
+				Type:  inputType,
+				Body:  core.NewVar("x"),
+			})
+			arg := reflect.ValueOf(testValue)
+			fnPtr := reflect.New(
+				reflect.FuncOf(
+					[]reflect.Type{arg.Type()},
+					[]reflect.Type{arg.Type()},
+					false))
+			Decode(id, fnPtr.Interface())
+			fnVal := fnPtr.Elem()
+			result := fnVal.Call([]reflect.Value{arg})
+			Expect(result[0].Interface()).To(Equal(arg.Interface()))
+		},
+		Entry("Bool into bool", core.Bool, true),
+		Entry("Natural into int", core.Natural, 1),
+		XEntry("Natural into uint", core.Natural, uint(1)),
+		Entry("Natural into int64", core.Natural, int64(1)),
+		Entry("Integer into int", core.Integer, 1),
+		Entry("Integer into int64", core.Integer, int64(1)),
+		Entry("Text into string", core.Text, "foo"),
+		Entry("List Natural into []int",
+			core.Apply(core.List, core.Natural), []int{1, 2, 3}),
+		XEntry("Optional Natural into int",
+			core.Apply(core.Optional, core.Natural), 1),
+		XEntry("record into struct",
+			core.RecordType{"Foo": core.Natural, "Bar": core.Text},
+			testStruct{Foo: 1, Bar: "howdy"},
+		),
+	)
 	Describe("Function types", func() {
-		It("Decodes the identity int function", func() {
-			var fn func(int) int
-			dhallFn := core.Eval(core.LambdaTerm{
-				Label: "x",
-				Type:  core.Natural,
-				Body:  core.NewVar("x"),
-			})
-			Decode(dhallFn, &fn)
-			Expect(fn).ToNot(BeNil())
-			Expect(fn(3)).To(Equal(3))
-		})
-		It("Decodes the identity int64 function", func() {
-			var fn func(int64) int64
-			dhallFn := core.Eval(core.LambdaTerm{
-				Label: "x",
-				Type:  core.Natural,
-				Body:  core.NewVar("x"),
-			})
-			Decode(dhallFn, &fn)
-			Expect(fn).ToNot(BeNil())
-			Expect(fn(int64(3))).To(Equal(int64(3)))
-		})
-		It("Decodes the identity string function", func() {
-			var fn func(string) string
-			dhallFn := core.Eval(core.LambdaTerm{
-				Label: "x",
-				Type:  core.Text,
-				Body:  core.NewVar("x"),
-			})
-			Decode(dhallFn, &fn)
-			Expect(fn).ToNot(BeNil())
-			Expect(fn("foo")).To(Equal("foo"))
-		})
 		It("Decodes the int successor function", func() {
 			var fn func(int) int
 			dhallFn := core.LambdaValue{
