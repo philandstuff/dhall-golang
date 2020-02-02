@@ -133,6 +133,11 @@ var _ = Describe("Decode", func() {
 			core.RecordType{"Foo": core.Natural, "Bar": core.Text},
 			testStruct{Foo: 1, Bar: "howdy"},
 		),
+		Entry("map into map",
+			core.Apply(core.List,
+				core.RecordType{"mapKey": core.Text, "mapValue": core.Natural}),
+			map[string]int{"foo": 1, "bar": 2},
+		),
 	)
 	Describe("Function types", func() {
 		It("Decodes the int successor function", func() {

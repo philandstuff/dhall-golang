@@ -34,6 +34,8 @@ func Decode(e core.Value, out interface{}) {
 	decode(e, v.Elem())
 }
 
+// encode converts a reflect.Value to a core.Value with the given
+// Dhall type
 func encode(val reflect.Value, typ core.Value) core.Value {
 	switch e := typ.(type) {
 	case core.Builtin:
@@ -62,6 +64,26 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 	case core.AppValue:
 		switch e.Fn {
 		case core.List:
+			if val.Kind() == reflect.Map {
+				mapEntryType := e.Arg.(core.RecordTypeVal)
+				if !isMapEntryType(mapEntryType) {
+					panic("Can't unmarshal golang map into given Dhall type")
+				}
+				if val.Len() == 0 {
+					return core.EmptyListVal{Type: e.Arg}
+				}
+				l := make(core.NonEmptyListVal, val.Len())
+				iter := val.MapRange()
+				i := 0
+				for iter.Next() {
+					l[i] = core.RecordLitVal{
+						"mapKey":   encode(iter.Key(), mapEntryType["mapKey"]),
+						"mapValue": encode(iter.Value(), mapEntryType["mapValue"]),
+					}
+					i++
+				}
+				return l
+			}
 			if val.Len() == 0 {
 				return core.EmptyListVal{Type: e.Arg}
 			}
