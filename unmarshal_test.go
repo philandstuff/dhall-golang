@@ -120,7 +120,7 @@ var _ = Describe("Decode", func() {
 		},
 		Entry("Bool into bool", core.Bool, true),
 		Entry("Natural into int", core.Natural, 1),
-		XEntry("Natural into uint", core.Natural, uint(1)),
+		Entry("Natural into uint", core.Natural, uint(1)),
 		Entry("Natural into int64", core.Natural, int64(1)),
 		Entry("Integer into int", core.Integer, 1),
 		Entry("Integer into int64", core.Integer, int64(1)),

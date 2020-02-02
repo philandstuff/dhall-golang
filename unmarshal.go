@@ -43,7 +43,13 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		case core.Bool:
 			return core.BoolLit(val.Bool())
 		case core.Natural:
-			return core.NaturalLit(val.Int())
+			switch val.Kind() {
+			case reflect.Uint, reflect.Uint8, reflect.Uint16,
+				reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+				return core.NaturalLit(val.Uint())
+			default:
+				return core.NaturalLit(val.Int())
+			}
 		case core.Integer:
 			return core.IntegerLit(val.Int())
 		case core.Text:
@@ -158,6 +164,12 @@ func decode(e core.Value, v reflect.Value) {
 			decode(expr, slice.Index(i))
 		}
 		v.Set(slice)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16,
+		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		switch e := e.(type) {
+		case core.NaturalLit:
+			v.SetUint(uint64(e))
+		}
 	default:
 		switch e := e.(type) {
 		case core.DoubleLit:
