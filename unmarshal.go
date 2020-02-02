@@ -2,8 +2,6 @@ package dhall
 
 import (
 	"reflect"
-	"sort"
-	"strings"
 
 	"github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/parser"
@@ -36,7 +34,7 @@ func Decode(e core.Value, out interface{}) {
 	decode(e, v.Elem())
 }
 
-func reflectValToDhallVal(val reflect.Value, typ core.Value) core.Value {
+func encode(val reflect.Value, typ core.Value) core.Value {
 	switch e := typ.(type) {
 	case core.Builtin:
 		switch typ {
@@ -64,7 +62,7 @@ func reflectValToDhallVal(val reflect.Value, typ core.Value) core.Value {
 			}
 			l := make(core.NonEmptyListVal, val.Len())
 			for i := 0; i < val.Len(); i++ {
-				l[i] = reflectValToDhallVal(val.Index(i), e.Arg)
+				l[i] = encode(val.Index(i), e.Arg)
 			}
 			return l
 		default:
@@ -75,19 +73,17 @@ func reflectValToDhallVal(val reflect.Value, typ core.Value) core.Value {
 	}
 }
 
-func argNType(fn core.LambdaValue, n int) core.Value {
-	if n == 0 {
-		return fn.Domain
-	}
-	return argNType(fn.Call(core.Var{}).(core.LambdaValue), n-1)
-}
-
+// dhallShim takes a LambdaValue and wraps it so that it can be passed
+// to reflect.MakeFunc().  This means it converts reflect.Value inputs
+// to core.Value inputs, and converts core.Value outputs to
+// reflect.Value outputs.
 func dhallShim(out reflect.Type, dhallFunc core.LambdaValue) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
 		var expr core.Value = dhallFunc
-		for i, arg := range args {
-			dhallArg := reflectValToDhallVal(arg, argNType(dhallFunc, i))
-			expr = expr.(core.Callable).Call(dhallArg)
+		for _, arg := range args {
+			fn := expr.(core.LambdaValue)
+			dhallArg := encode(arg, fn.Domain)
+			expr = fn.Call(dhallArg)
 		}
 		ptr := reflect.New(out)
 		decode(expr, ptr.Elem())
@@ -113,90 +109,12 @@ func flattenOptional(e core.Value) core.Value {
 	return e
 }
 
-// assumes e : core.Type
-func dhallTypeToReflectType(e core.Value) reflect.Type {
-	switch e := e.(type) {
-	case core.Builtin:
-		switch e {
-		case core.Double:
-			return reflect.TypeOf(float64(0))
-		case core.Bool:
-			return reflect.TypeOf(true)
-		case core.Integer:
-			return reflect.TypeOf(int(0))
-		case core.Natural:
-			return reflect.TypeOf(uint(0))
-		case core.Text:
-			return reflect.TypeOf("foo")
-		}
-	case core.AppValue:
-		switch e.Fn {
-		case core.List:
-			return reflect.SliceOf(dhallTypeToReflectType(e.Arg))
-		case core.Optional:
-			return dhallTypeToReflectType(e.Arg)
-		}
-	case core.RecordTypeVal:
-		fields := make([]reflect.StructField, 0)
-		// go through fields alphabetically
-		fieldNames := make([]string, 0)
-		for k := range e {
-			fieldNames = append(fieldNames, k)
-		}
-		sort.Strings(fieldNames)
-		for _, k := range fieldNames {
-			fields = append(fields, reflect.StructField{
-				// force upper case first letter
-				Name: strings.Title(k),
-				Type: dhallTypeToReflectType(e[k]),
-			})
-		}
-		return reflect.StructOf(fields)
-	}
-	// Pi types?
-	// union types
-	panic("unknown type")
-}
-
 func decode(e core.Value, v reflect.Value) {
 	e = flattenOptional(e)
 	if e == nil {
 		return
 	}
 	switch v.Kind() {
-	case reflect.Interface:
-		switch e := e.(type) {
-		case core.DoubleLit:
-			v.Set(reflect.ValueOf(float64(e)))
-		case core.BoolLit:
-			v.Set(reflect.ValueOf(bool(e)))
-		case core.NaturalLit:
-			v.Set(reflect.ValueOf(uint(e)))
-		case core.IntegerLit:
-			v.Set(reflect.ValueOf(int(e)))
-		case core.TextLitVal:
-			// FIXME ensure TextLitVal is uninterpolated
-			v.Set(reflect.ValueOf(e.Suffix))
-		case core.EmptyListVal:
-			// check if it's a list of map entries
-			if r, ok := e.Type.(core.RecordTypeVal); ok {
-				if isMapEntryType(r) {
-					v.Set(reflect.MakeMap(reflect.MapOf(
-						dhallTypeToReflectType(r["mapKey"]),
-						dhallTypeToReflectType(r["mapValue"]),
-					)))
-					return
-				}
-			}
-			sliceType := reflect.SliceOf(dhallTypeToReflectType(e.Type))
-			v.Set(reflect.MakeSlice(sliceType, 0, 0))
-		case core.NonEmptyListVal:
-			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
-			for i, expr := range e {
-				decode(expr, slice.Index(i))
-			}
-			v.Set(slice)
-		}
 	case reflect.Map:
 		// initialise with new (non-nil) value
 		v.Set(reflect.MakeMap(v.Type()))
