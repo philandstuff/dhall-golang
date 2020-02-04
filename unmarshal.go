@@ -1,6 +1,7 @@
 package dhall
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/philandstuff/dhall-golang/core"
@@ -193,10 +194,7 @@ func decode(e core.Value, v reflect.Value) {
 		v.Set(slice)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16,
 		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		switch e := e.(type) {
-		case core.NaturalLit:
-			v.SetUint(uint64(e))
-		}
+		v.SetUint(uint64(e.(core.NaturalLit)))
 	default:
 		switch e := e.(type) {
 		case core.DoubleLit:
@@ -210,6 +208,8 @@ func decode(e core.Value, v reflect.Value) {
 		case core.TextLitVal:
 			// FIXME: ensure TextLitVal doesn't have interpolations
 			v.SetString(e.Suffix)
+		default:
+			panic(fmt.Sprintf("Don't know how to decode %v into %v", e, v.Kind()))
 		}
 	}
 }
