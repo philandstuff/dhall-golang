@@ -68,7 +68,7 @@ var _ = Describe("Decode", func() {
 			new([]bool),
 			[]bool{}),
 		Entry("unmarshals None (List Bool) into slice",
-			core.AppValue{core.None, core.EmptyListVal{core.Bool}},
+			core.AppValue{core.None, core.AppValue{core.List, core.Bool}},
 			new([]bool),
 			[]bool(nil)),
 		Entry("unmarshals List (List Bool) into slice",
