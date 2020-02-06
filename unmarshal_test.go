@@ -23,6 +23,11 @@ type testStruct struct {
 	Bar string
 }
 
+type testTaggedStruct struct {
+	Foo int `json:"baz"`
+	Bar string
+}
+
 var _ = Describe("Decode", func() {
 	DescribeTable("Simple types", DecodeAndCompare,
 		Entry("unmarshals DoubleLit into float32",
@@ -80,6 +85,10 @@ var _ = Describe("Decode", func() {
 			core.RecordLitVal{"Foo": core.NaturalLit(3), "Bar": core.TextLitVal{Suffix: "xyzzy"}},
 			new(testStruct),
 			testStruct{Foo: 3, Bar: "xyzzy"}),
+		Entry("unmarshals {baz : Natural, Bar : Text} into tagged struct",
+			core.RecordLitVal{"baz": core.NaturalLit(3), "Bar": core.TextLitVal{Suffix: "xyzzy"}},
+			new(testTaggedStruct),
+			testTaggedStruct{Foo: 3, Bar: "xyzzy"}),
 		Entry("unmarshals None {Foo : Natural, Bar : Text} into struct",
 			core.AppValue{core.None, core.RecordTypeVal{"Foo": core.Natural, "Bar": core.Text}},
 			new(testStruct),
@@ -132,6 +141,10 @@ var _ = Describe("Decode", func() {
 		Entry("record into struct",
 			core.RecordType{"Foo": core.Natural, "Bar": core.Text},
 			testStruct{Foo: 1, Bar: "howdy"},
+		),
+		Entry("record into tagged struct",
+			core.RecordType{"baz": core.Natural, "Bar": core.Text},
+			testTaggedStruct{Foo: 1, Bar: "howdy"},
 		),
 		Entry("map into map",
 			core.Apply(core.List,

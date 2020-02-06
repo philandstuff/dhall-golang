@@ -98,7 +98,15 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		}
 	case core.RecordTypeVal:
 		rec := core.RecordLitVal{}
+	fields:
 		for key, typ := range e {
+			structType := val.Type()
+			for i := 0; i < structType.NumField(); i++ {
+				if key == structType.Field(i).Tag.Get("json") {
+					rec[key] = encode(val.Field(i), typ)
+					continue fields
+				}
+			}
 			rec[key] = encode(val.FieldByName(key), typ)
 		}
 		return rec
@@ -173,7 +181,12 @@ func decode(e core.Value, v reflect.Value) {
 		structType := v.Type()
 		for i := 0; i < structType.NumField(); i++ {
 			// FIXME ignores fields in RecordLit not in Struct
-			decode(e[structType.Field(i).Name], v.Field(i))
+			tag := structType.Field(i).Tag.Get("json")
+			if tag != "" {
+				decode(e[tag], v.Field(i))
+			} else {
+				decode(e[structType.Field(i).Name], v.Field(i))
+			}
 		}
 	case reflect.Func:
 		e := e.(core.LambdaValue)
