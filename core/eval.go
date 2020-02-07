@@ -82,7 +82,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 	case localVar:
 		return t
 	case LambdaTerm:
-		v := LambdaValue{
+		v := lambdaValue{
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
 			Fn: func(x Value) Value {

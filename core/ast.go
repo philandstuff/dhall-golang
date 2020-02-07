@@ -397,24 +397,31 @@ func Equivalent(l, r Term) Term {
 // Callable is a function Value that can be called with one Value
 // argument.  Call() may return nil if normalization isn't possible
 // (for example, `Natural/even x` does not normalize)
+// ArgType() returns the declared type of Call()'s parameter
 type Callable interface {
 	Value
 	Call(Value) Value
+	ArgType() Value
 }
 
 // Call implements Callable
-func (l LambdaValue) Call(a Value) Value {
+func (l lambdaValue) Call(a Value) Value {
 	return l.Fn(a)
 }
 
+// ArgType implements Callable
+func (l lambdaValue) ArgType() Value {
+	return l.Domain
+}
+
 var (
-	_ Callable = LambdaValue{}
+	_ Callable = lambdaValue{}
 )
 
 type (
 	// A LambdaValue is a go function representing a Dhall function
 	// which has not yet been applied to its argument
-	LambdaValue struct {
+	lambdaValue struct {
 		Label  string
 		Domain Value
 		Fn     func(Value) Value
@@ -445,7 +452,7 @@ type (
 	}
 )
 
-func (LambdaValue) isValue() {}
+func (lambdaValue) isValue() {}
 
 func (PiValue) isValue() {}
 

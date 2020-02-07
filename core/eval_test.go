@@ -18,14 +18,14 @@ var _ = Describe("Eval", func() {
 			To(Equal(Var{Name: "foo"}))
 	})
 	It("Lambda id function", func() {
-		f := Eval(NewLambda("x", Type, Var{Name: "x"})).(LambdaValue)
+		f := Eval(NewLambda("x", Type, Var{Name: "x"})).(lambdaValue)
 		Expect(f.Call(Type)).
 			To(Equal(Type))
 		Expect(f.Label).
 			To(Equal("x"))
 	})
 	It("Lambda id function with alpha normalization", func() {
-		f := AlphaBetaEval(NewLambda("x", Type, Var{Name: "x"})).(LambdaValue)
+		f := AlphaBetaEval(NewLambda("x", Type, Var{Name: "x"})).(lambdaValue)
 		Expect(f.Call(Type)).
 			To(Equal(Type))
 		Expect(f.Label).

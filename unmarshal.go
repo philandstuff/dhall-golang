@@ -115,16 +115,16 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 	}
 }
 
-// dhallShim takes a LambdaValue and wraps it so that it can be passed
+// dhallShim takes a Callable and wraps it so that it can be passed
 // to reflect.MakeFunc().  This means it converts reflect.Value inputs
 // to core.Value inputs, and converts core.Value outputs to
 // reflect.Value outputs.
-func dhallShim(out reflect.Type, dhallFunc core.LambdaValue) func([]reflect.Value) []reflect.Value {
+func dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
 		var expr core.Value = dhallFunc
 		for _, arg := range args {
-			fn := expr.(core.LambdaValue)
-			dhallArg := encode(arg, fn.Domain)
+			fn := expr.(core.Callable)
+			dhallArg := encode(arg, fn.ArgType())
 			expr = fn.Call(dhallArg)
 		}
 		ptr := reflect.New(out)
@@ -189,7 +189,7 @@ func decode(e core.Value, v reflect.Value) {
 			}
 		}
 	case reflect.Func:
-		e := e.(core.LambdaValue)
+		e := e.(core.Callable)
 		fnType := v.Type()
 		returnType := fnType.Out(0)
 		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e))

@@ -155,38 +155,45 @@ var _ = Describe("Decode", func() {
 	Describe("Function types", func() {
 		It("Decodes the int successor function", func() {
 			var fn func(int) int
-			dhallFn := core.LambdaValue{
-				Label:  "x",
-				Domain: core.Natural,
-				Fn: func(x core.Value) core.Value {
-					return core.Eval(core.NaturalPlus(
-						core.Quote(x),
-						core.NaturalLit(1),
-					))
-				},
-			}
+			dhallFn := core.Eval(core.LambdaTerm{
+				Label: "x",
+				Type:  core.Natural,
+				Body: core.NaturalPlus(
+					core.NewVar("x"),
+					core.NaturalLit(1),
+				),
+			})
 			Decode(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(3)).To(Equal(4))
 		})
 		It("Decodes the natural sum function", func() {
 			var fn func(int, int) int
-			dhallFn := core.LambdaValue{
-				Label:  "x",
-				Domain: core.Natural,
-				Fn: func(x core.Value) core.Value {
-					return core.LambdaValue{
-						Label:  "y",
-						Domain: core.Natural,
-						Fn: func(y core.Value) core.Value {
-							return core.Eval(core.NaturalPlus(core.Quote(x), core.Quote(y)))
-						},
-					}
+			dhallFn := core.Eval(core.LambdaTerm{
+				Label: "x",
+				Type:  core.Natural,
+				Body: core.LambdaTerm{
+					Label: "y",
+					Type:  core.Natural,
+					Body: core.NaturalPlus(
+						core.NewVar("x"), core.NewVar("y")),
 				},
-			}
+			})
 			Decode(dhallFn, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(3, 4)).To(Equal(7))
+		})
+		It("Decodes the Natural/subtract builtin as a function", func() {
+			var fn func(int, int) int
+			Decode(core.NaturalSubtractVal, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn(1, 3)).To(Equal(2))
+		})
+		It("Decodes the Natural/subtract builtin as a curried function", func() {
+			var fn func(int) func(int) int
+			Decode(core.NaturalSubtractVal, &fn)
+			Expect(fn).ToNot(BeNil())
+			Expect(fn(1)(3)).To(Equal(2))
 		})
 	})
 })

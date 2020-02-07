@@ -6,7 +6,7 @@ import (
 )
 
 func (naturalBuildVal) Call(x Value) Value {
-	var succ Value = LambdaValue{
+	var succ Value = lambdaValue{
 		Label:  "x",
 		Domain: Natural,
 		Fn: func(x Value) Value {
@@ -19,12 +19,22 @@ func (naturalBuildVal) Call(x Value) Value {
 	return applyVal(x, Natural, succ, NaturalLit(0))
 }
 
+func (naturalBuildVal) ArgType() Value {
+	return NewPiVal("natural", Type, func(natural Value) Value {
+		return NewFnTypeVal("succ", NewFnTypeVal("_", natural, natural),
+			NewFnTypeVal("zero", natural,
+				Natural))
+	})
+}
+
 func (naturalEvenVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return BoolLit(n%2 == 0)
 	}
 	return nil
 }
+
+func (naturalEvenVal) ArgType() Value { return Natural }
 
 func (fold naturalFoldVal) Call(x Value) Value {
 	if fold.n == nil {
@@ -54,12 +64,28 @@ func (fold naturalFoldVal) Call(x Value) Value {
 	return nil
 }
 
+func (fold naturalFoldVal) ArgType() Value {
+	if fold.n == nil {
+		return Natural
+	}
+	if fold.typ == nil {
+		return Type
+	}
+	if fold.succ == nil {
+		return NewFnTypeVal("_", fold.typ, fold.typ)
+	}
+	// zero
+	return fold.typ
+}
+
 func (naturalIsZeroVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return BoolLit(n == 0)
 	}
 	return nil
 }
+
+func (naturalIsZeroVal) ArgType() Value { return Natural }
 
 func (naturalOddVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
@@ -68,12 +94,16 @@ func (naturalOddVal) Call(x Value) Value {
 	return nil
 }
 
+func (naturalOddVal) ArgType() Value { return Natural }
+
 func (naturalShowVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return TextLitVal{Suffix: fmt.Sprintf("%d", n)}
 	}
 	return nil
 }
+
+func (naturalShowVal) ArgType() Value { return Natural }
 
 func (sub naturalSubtractVal) Call(x Value) Value {
 	if sub.a == nil {
@@ -99,12 +129,16 @@ func (sub naturalSubtractVal) Call(x Value) Value {
 	return nil
 }
 
+func (naturalSubtractVal) ArgType() Value { return Natural }
+
 func (naturalToIntegerVal) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
 		return IntegerLit(n)
 	}
 	return nil
 }
+
+func (naturalToIntegerVal) ArgType() Value { return Natural }
 
 func (integerClampVal) Call(x Value) Value {
 	if i, ok := x.(IntegerLit); ok {
@@ -116,12 +150,16 @@ func (integerClampVal) Call(x Value) Value {
 	return nil
 }
 
+func (integerClampVal) ArgType() Value { return Integer }
+
 func (integerNegateVal) Call(x Value) Value {
 	if i, ok := x.(IntegerLit); ok {
 		return IntegerLit(-i)
 	}
 	return nil
 }
+
+func (integerNegateVal) ArgType() Value { return Integer }
 
 func (integerShowVal) Call(x Value) Value {
 	if i, ok := x.(IntegerLit); ok {
@@ -130,12 +168,16 @@ func (integerShowVal) Call(x Value) Value {
 	return nil
 }
 
+func (integerShowVal) ArgType() Value { return Integer }
+
 func (integerToDoubleVal) Call(x Value) Value {
 	if i, ok := x.(IntegerLit); ok {
 		return DoubleLit(i)
 	}
 	return nil
 }
+
+func (integerToDoubleVal) ArgType() Value { return Integer }
 
 func (doubleShowVal) Call(x Value) Value {
 	if d, ok := x.(DoubleLit); ok {
@@ -144,11 +186,13 @@ func (doubleShowVal) Call(x Value) Value {
 	return nil
 }
 
+func (doubleShowVal) ArgType() Value { return Double }
+
 func (build optionalBuildVal) Call(x Value) Value {
 	if build.typ == nil {
 		return optionalBuildVal{typ: x}
 	}
-	var some Value = LambdaValue{
+	var some Value = lambdaValue{
 		Label:  "a",
 		Domain: build.typ,
 		Fn: func(a Value) Value {
@@ -156,6 +200,17 @@ func (build optionalBuildVal) Call(x Value) Value {
 		},
 	}
 	return applyVal(x, AppValue{Optional, build.typ}, some, AppValue{None, build.typ})
+}
+
+func (build optionalBuildVal) ArgType() Value {
+	if build.typ == nil {
+		return Type
+	}
+	return NewPiVal("optional", Type, func(optional Value) Value {
+		return NewFnTypeVal("just", NewFnTypeVal("_", build.typ, optional),
+			NewFnTypeVal("nothing", optional,
+				applyVal(Optional, build.typ)))
+	})
 }
 
 func (fold optionalFoldVal) Call(x Value) Value {
@@ -190,6 +245,23 @@ func (fold optionalFoldVal) Call(x Value) Value {
 		}
 	}
 	return nil
+}
+
+func (fold optionalFoldVal) ArgType() Value {
+	if fold.typ1 == nil {
+		return Type
+	}
+	if fold.opt == nil {
+		return applyVal(Optional, fold.typ1)
+	}
+	if fold.typ2 == nil {
+		return Type
+	}
+	if fold.some == nil {
+		return NewFnTypeVal("_", fold.typ1, fold.typ2)
+	}
+	// none
+	return fold.typ2
 }
 
 func (textShowVal) Call(a0 Value) Value {
@@ -230,15 +302,19 @@ func (textShowVal) Call(a0 Value) Value {
 	return nil
 }
 
+func (textShowVal) ArgType() Value {
+	return Text
+}
+
 func (l listBuildVal) Call(x Value) Value {
 	if l.typ == nil {
 		return listBuildVal{typ: x}
 	}
-	var cons Value = LambdaValue{
+	var cons Value = lambdaValue{
 		Label:  "a",
 		Domain: l.typ,
 		Fn: func(a Value) Value {
-			return LambdaValue{
+			return lambdaValue{
 				Label:  "as",
 				Domain: AppValue{List, l.typ},
 				Fn: func(as Value) Value {
@@ -254,6 +330,17 @@ func (l listBuildVal) Call(x Value) Value {
 		},
 	}
 	return applyVal(x, AppValue{List, l.typ}, cons, EmptyListVal{AppValue{List, l.typ}})
+}
+
+func (l listBuildVal) ArgType() Value {
+	if l.typ == nil {
+		return Type
+	}
+	return NewPiVal("list", Type, func(list Value) Value {
+		return NewFnTypeVal("cons", NewFnTypeVal("_", l.typ, NewFnTypeVal("_", list, list)),
+			NewFnTypeVal("nil", list,
+				applyVal(List, l.typ)))
+	})
 }
 
 func (l listFoldVal) Call(x Value) Value {
@@ -292,6 +379,23 @@ func (l listFoldVal) Call(x Value) Value {
 	return nil
 }
 
+func (l listFoldVal) ArgType() Value {
+	if l.typ1 == nil {
+		return Type
+	}
+	if l.list == nil {
+		return applyVal(List, l.typ1)
+	}
+	if l.typ2 == nil {
+		return Type
+	}
+	if l.cons == nil {
+		return NewFnTypeVal("_", l.typ1, NewFnTypeVal("_", l.typ2, l.typ2))
+	}
+	// nil
+	return l.typ2
+}
+
 func (length listLengthVal) Call(x Value) Value {
 	if length.typ == nil {
 		return listLengthVal{typ: x}
@@ -303,6 +407,13 @@ func (length listLengthVal) Call(x Value) Value {
 		return NaturalLit(len(l))
 	}
 	return nil
+}
+
+func (length listLengthVal) ArgType() Value {
+	if length.typ == nil {
+		return Type
+	}
+	return applyVal(List, length.typ)
 }
 
 func (head listHeadVal) Call(x Value) Value {
@@ -318,6 +429,13 @@ func (head listHeadVal) Call(x Value) Value {
 	return nil
 }
 
+func (head listHeadVal) ArgType() Value {
+	if head.typ == nil {
+		return Type
+	}
+	return applyVal(List, head.typ)
+}
+
 func (last listLastVal) Call(x Value) Value {
 	if last.typ == nil {
 		return listLastVal{typ: x}
@@ -329,6 +447,13 @@ func (last listLastVal) Call(x Value) Value {
 		return SomeVal{l[len(l)-1]}
 	}
 	return nil
+}
+
+func (last listLastVal) ArgType() Value {
+	if last.typ == nil {
+		return Type
+	}
+	return applyVal(List, last.typ)
 }
 
 func (indexed listIndexedVal) Call(x Value) Value {
@@ -352,6 +477,13 @@ func (indexed listIndexedVal) Call(x Value) Value {
 	return nil
 }
 
+func (indexed listIndexedVal) ArgType() Value {
+	if indexed.typ == nil {
+		return Type
+	}
+	return applyVal(List, indexed.typ)
+}
+
 func (rev listReverseVal) Call(x Value) Value {
 	if rev.typ == nil {
 		return listReverseVal{typ: x}
@@ -369,31 +501,38 @@ func (rev listReverseVal) Call(x Value) Value {
 	return nil
 }
 
+func (rev listReverseVal) ArgType() Value {
+	if rev.typ == nil {
+		return Type
+	}
+	return applyVal(List, rev.typ)
+}
+
 var (
-	NaturalBuildVal     = naturalBuildVal{}
-	NaturalEvenVal      = naturalEvenVal{}
-	NaturalFoldVal      = naturalFoldVal{}
-	NaturalIsZeroVal    = naturalIsZeroVal{}
-	NaturalOddVal       = naturalOddVal{}
-	NaturalShowVal      = naturalShowVal{}
-	NaturalSubtractVal  = naturalSubtractVal{}
-	NaturalToIntegerVal = naturalToIntegerVal{}
-	IntegerClampVal     = integerClampVal{}
-	IntegerNegateVal    = integerNegateVal{}
-	IntegerShowVal      = integerShowVal{}
-	IntegerToDoubleVal  = integerToDoubleVal{}
-	DoubleShowVal       = doubleShowVal{}
+	NaturalBuildVal     Callable = naturalBuildVal{}
+	NaturalEvenVal      Callable = naturalEvenVal{}
+	NaturalFoldVal      Callable = naturalFoldVal{}
+	NaturalIsZeroVal    Callable = naturalIsZeroVal{}
+	NaturalOddVal       Callable = naturalOddVal{}
+	NaturalShowVal      Callable = naturalShowVal{}
+	NaturalSubtractVal  Callable = naturalSubtractVal{}
+	NaturalToIntegerVal Callable = naturalToIntegerVal{}
+	IntegerClampVal     Callable = integerClampVal{}
+	IntegerNegateVal    Callable = integerNegateVal{}
+	IntegerShowVal      Callable = integerShowVal{}
+	IntegerToDoubleVal  Callable = integerToDoubleVal{}
+	DoubleShowVal       Callable = doubleShowVal{}
 
-	OptionalBuildVal = optionalBuildVal{}
-	OptionalFoldVal  = optionalFoldVal{}
+	OptionalBuildVal Callable = optionalBuildVal{}
+	OptionalFoldVal  Callable = optionalFoldVal{}
 
-	TextShowVal = textShowVal{}
+	TextShowVal Callable = textShowVal{}
 
-	ListBuildVal   = listBuildVal{}
-	ListFoldVal    = listFoldVal{}
-	ListLengthVal  = listLengthVal{}
-	ListHeadVal    = listHeadVal{}
-	ListLastVal    = listLastVal{}
-	ListIndexedVal = listIndexedVal{}
-	ListReverseVal = listReverseVal{}
+	ListBuildVal   Callable = listBuildVal{}
+	ListFoldVal    Callable = listFoldVal{}
+	ListLengthVal  Callable = listLengthVal{}
+	ListHeadVal    Callable = listHeadVal{}
+	ListLastVal    Callable = listLastVal{}
+	ListIndexedVal Callable = listIndexedVal{}
+	ListReverseVal Callable = listReverseVal{}
 )

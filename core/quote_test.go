@@ -14,14 +14,14 @@ var _ = DescribeTable("Quote",
 	Entry("Kind", Kind, Kind),
 	Entry("Sort", Sort, Sort),
 	Entry(`λ(x : Natural) → x`,
-		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
+		lambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
 			return x
 		}},
 		LambdaTerm{Label: "x", Type: Natural, Body: Var{"x", 0}},
 	),
 	Entry(`λ(x : Natural) → λ(x : Natural) → x`,
-		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
-			return LambdaValue{
+		lambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
+			return lambdaValue{
 				Label:  "x",
 				Domain: Natural,
 				Fn:     func(x Value) Value { return x },
@@ -32,8 +32,8 @@ var _ = DescribeTable("Quote",
 			Body: Var{"x", 0}}},
 	),
 	Entry(`λ(x : Natural) → λ(x : Natural) → x@1`,
-		LambdaValue{Label: "x", Domain: Natural, Fn: func(x1 Value) Value {
-			return LambdaValue{
+		lambdaValue{Label: "x", Domain: Natural, Fn: func(x1 Value) Value {
+			return lambdaValue{
 				Label:  "x",
 				Domain: Natural,
 				Fn:     func(x Value) Value { return x1 },
@@ -44,8 +44,8 @@ var _ = DescribeTable("Quote",
 			Body: Var{"x", 1}}},
 	),
 	Entry(`λ(x : Natural) → λ(y : Natural) → x`,
-		LambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
-			return LambdaValue{
+		lambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
+			return lambdaValue{
 				Label:  "y",
 				Domain: Natural,
 				Fn:     func(y Value) Value { return x },

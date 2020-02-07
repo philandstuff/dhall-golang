@@ -37,8 +37,8 @@ func alphaEquivalentValsWith(level int, v1 Value, v2 Value) bool {
 	case DoubleLit:
 		v2, ok := v2.(DoubleLit)
 		return ok && v1 == v2 && math.Signbit(float64(v1)) == math.Signbit(float64(v2))
-	case LambdaValue:
-		v2, ok := v2.(LambdaValue)
+	case lambdaValue:
+		v2, ok := v2.(lambdaValue)
 		if !ok {
 			return false
 		}
