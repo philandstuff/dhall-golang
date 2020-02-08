@@ -279,7 +279,7 @@ type (
 	// An OpTerm is two Terms combined by an operator.  The OpCode
 	// determines the type of operator.
 	OpTerm struct {
-		OpCode int
+		OpCode OpCode
 		L      Term
 		R      Term
 	}
@@ -323,40 +323,30 @@ func Apply(fn Term, args ...Term) Term {
 	return out
 }
 
-// Opcodes for use in the OpTerm type
-// These numbers match the binary encoding label numbers
+// An OpCode encodes the type of an operator.
+type OpCode int
+
+// These are the valid OpCodes.  Note that the actual integer values
+// have been chosen to match the binary encoding label numbers.
 const (
-	// OrOp is the OpCode of logical or (a || b)
-	OrOp = iota
-	// AndOp is the OpCode of logical and (a && b)
-	AndOp
-	// EqOp is the OpCode of logical equality (a == b)
-	EqOp
-	// NeOp is the OpCode of logical disequality (a != b)
-	NeOp
-	// PlusOp is the OpCode of Natural addition (a + b)
-	PlusOp
-	// TimesOp is the OpCode of Natural multiplication (a * b)
-	TimesOp
-	// TextAppendOp is the OpCode of text append (a ++ b)
-	TextAppendOp
-	// ListAppendOp is the OpCode of list append (a # b)
-	ListAppendOp
-	// RecordMergeOp is the OpCode of recursive record merge (a /\ b)
-	RecordMergeOp
-	// RightBiasedRecordMergeOp is the OpCode of right-biased
-	// non-recursive record merge (a // b)
-	RightBiasedRecordMergeOp
-	// RecordTypeMergeOp is the OpCode of recursive record type merge
-	// (a //\\ b)
-	RecordTypeMergeOp
-	// ImportAltOp is the OpCode of offering an alternative import (a
-	// ? b)
-	ImportAltOp
-	// EquivOp is the OpCode of equivalence (a === b)
-	EquivOp
-	// CompleteOp is the OpCode of record completion (A::b)
-	CompleteOp
+	OrOp  OpCode = iota // a || b
+	AndOp               // a && b
+	EqOp                // a == b
+	NeOp                // a != b
+
+	PlusOp  // a + b
+	TimesOp // a * b
+
+	TextAppendOp // a ++ b
+	ListAppendOp // a # b
+
+	RecordMergeOp            // a /\ b
+	RightBiasedRecordMergeOp // a // b
+	RecordTypeMergeOp        // a //\\ b
+
+	ImportAltOp // a ? b
+	EquivOp     // a === b
+	CompleteOp  // A::b
 )
 
 // NaturalPlus takes Terms l and r and returns (l + r)
@@ -446,7 +436,7 @@ type (
 	}
 
 	opValue struct {
-		OpCode int
+		OpCode OpCode
 		L      Value
 		R      Value
 	}

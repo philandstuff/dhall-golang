@@ -978,7 +978,7 @@ func typeCheckVar(boundVar Term) typeMessage {
 	}
 }
 
-func cantBoolOp(opCode int) typeMessage {
+func cantBoolOp(opCode OpCode) typeMessage {
 	var opStr string
 	switch opCode {
 	case OrOp:
@@ -995,7 +995,7 @@ func cantBoolOp(opCode int) typeMessage {
 	return staticTypeMessage{fmt.Sprintf("❰%s❱ only works on ❰Bool❱s", opStr)}
 }
 
-func cantNaturalOp(opCode int) typeMessage {
+func cantNaturalOp(opCode OpCode) typeMessage {
 	var opStr string
 	switch opCode {
 	case PlusOp:

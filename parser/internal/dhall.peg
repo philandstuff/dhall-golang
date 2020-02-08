@@ -23,7 +23,7 @@ import . "github.com/philandstuff/dhall-golang/core"
 
 // Helper function for parsing all the operator parsing blocks
 // see OrExpression for an example of how this is used
-func parseOperator(opcode int, first, rest interface{}) Term {
+func parseOperator(opcode OpCode, first, rest interface{}) Term {
     out := first.(Term)
     if rest == nil { return out }
     for _, b := range rest.([]interface{}) {
