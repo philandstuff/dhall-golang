@@ -23,7 +23,7 @@ func (naturalBuildVal) ArgType() Value {
 	return NewPiVal("natural", Type, func(natural Value) Value {
 		return NewFnTypeVal("succ", NewFnTypeVal("_", natural, natural),
 			NewFnTypeVal("zero", natural,
-				Natural))
+				natural))
 	})
 }
 
@@ -209,7 +209,7 @@ func (build optionalBuildVal) ArgType() Value {
 	return NewPiVal("optional", Type, func(optional Value) Value {
 		return NewFnTypeVal("just", NewFnTypeVal("_", build.typ, optional),
 			NewFnTypeVal("nothing", optional,
-				applyVal(Optional, build.typ)))
+				optional))
 	})
 }
 
@@ -339,7 +339,7 @@ func (l listBuildVal) ArgType() Value {
 	return NewPiVal("list", Type, func(list Value) Value {
 		return NewFnTypeVal("cons", NewFnTypeVal("_", l.typ, NewFnTypeVal("_", list, list)),
 			NewFnTypeVal("nil", list,
-				applyVal(List, l.typ)))
+				list))
 	})
 }
 
