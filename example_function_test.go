@@ -18,28 +18,6 @@ const configMessage = `
 { Name = "Alice", Greet = λ(name : Text) → "Howdy, ${name}!" }
 `
 
-func Example_int() {
-	var i int
-	err := dhall.Unmarshal([]byte(`5`), &i)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(i)
-	// Output:
-	// 5
-}
-
-func Example_string() {
-	var s string
-	err := dhall.Unmarshal([]byte(`"foo"`), &s)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(s)
-	// Output:
-	// foo
-}
-
 func Example_function() {
 	// you can also unmarshal Dhall functions to Go functions
 	var greet func(string) string
