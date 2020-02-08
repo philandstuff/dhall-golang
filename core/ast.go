@@ -28,94 +28,64 @@ type Value interface {
 // A Universe is a type of types.
 type Universe int
 
+// These are the valid Universes.
 const (
-	// Type is the type of all types
 	Type Universe = iota
-	// Kind is the type of all kinds (including Type)
 	Kind
-	// Sort is the type of all sorts (including Kind)
 	Sort
 )
 
-// Builtin is the type of Dhall's builtin constants
+// Builtin is the type of Dhall's builtin constants.
 type Builtin string
 
+// These are the Builtins.
 const (
-	// Double is the type of doubles
-	Double = Builtin("Double")
-	// Text is the type of Text
-	Text = Builtin("Text")
-	// Bool is the type of booleans
-	Bool = Builtin("Bool")
-	// Natural is the type of natural numbers
-	Natural = Builtin("Natural")
-	// Integer is the type of integers
-	Integer = Builtin("Integer")
-	// List is a function that takes a type to the type of lists of
-	// that type
-	List = Builtin("List")
-	// Optional is a function that takes a type to the type of
-	// optional values of that type
-	Optional = Builtin("Optional")
-	// None takes a type to the empty optional value of that type
-	None = Builtin("None")
+	Double   Builtin = "Double"
+	Text     Builtin = "Text"
+	Bool     Builtin = "Bool"
+	Natural  Builtin = "Natural"
+	Integer  Builtin = "Integer"
+	List     Builtin = "List"
+	Optional Builtin = "Optional"
+	None     Builtin = "None"
 
-	// NaturalBuild is Natural/build
-	NaturalBuild = Builtin("Natural/build")
-	// NaturalFold is Natural/fold
-	NaturalFold = Builtin("Natural/fold")
-	// NaturalZero is Natural/isZero
-	NaturalIsZero = Builtin("Natural/isZero")
-	// NaturalEven is Natural/even
-	NaturalEven = Builtin("Natural/even")
-	// NaturalOdd is Natural/odd
-	NaturalOdd = Builtin("Natural/odd")
-	// NaturalToInteger is Natural/toInteger
-	NaturalToInteger = Builtin("Natural/toInteger")
-	// NaturalShow is Natural/show
-	NaturalShow = Builtin("Natural/show")
-	// NaturalSubtract is Natural/subtract
-	NaturalSubtract = Builtin("Natural/subtract")
+	NaturalBuild     Builtin = "Natural/build"
+	NaturalFold      Builtin = "Natural/fold"
+	NaturalIsZero    Builtin = "Natural/isZero"
+	NaturalEven      Builtin = "Natural/even"
+	NaturalOdd       Builtin = "Natural/odd"
+	NaturalToInteger Builtin = "Natural/toInteger"
+	NaturalShow      Builtin = "Natural/show"
+	NaturalSubtract  Builtin = "Natural/subtract"
 
-	// IntegerClamp is Integer/clamp
-	IntegerClamp = Builtin("Integer/clamp")
-	// IntegerNegate is Integer/negate
-	IntegerNegate = Builtin("Integer/negate")
-	// IntegerToDouble is Integer/toDouble
-	IntegerToDouble = Builtin("Integer/toDouble")
-	// IntegerShow is Integer/show
-	IntegerShow = Builtin("Integer/show")
+	IntegerClamp    Builtin = "Integer/clamp"
+	IntegerNegate   Builtin = "Integer/negate"
+	IntegerToDouble Builtin = "Integer/toDouble"
+	IntegerShow     Builtin = "Integer/show"
 
-	// DoubleShow is Double/show
-	DoubleShow = Builtin("Double/show")
+	DoubleShow Builtin = "Double/show"
 
-	// TextShow is Text/show
-	TextShow = Builtin("Text/show")
+	TextShow Builtin = "Text/show"
 
-	// ListBuild is List/build
-	ListBuild = Builtin("List/build")
-	// ListFold is List/fold
-	ListFold = Builtin("List/fold")
-	// ListLength is List/length
-	ListLength = Builtin("List/length")
-	// ListHead is List/head
-	ListHead = Builtin("List/head")
-	// ListLast is List/last
-	ListLast = Builtin("List/last")
-	// ListIndexed is List/indexed
-	ListIndexed = Builtin("List/indexed")
-	// ListReverse is List/reverse
-	ListReverse = Builtin("List/reverse")
+	ListBuild   Builtin = "List/build"
+	ListFold    Builtin = "List/fold"
+	ListLength  Builtin = "List/length"
+	ListHead    Builtin = "List/head"
+	ListLast    Builtin = "List/last"
+	ListIndexed Builtin = "List/indexed"
+	ListReverse Builtin = "List/reverse"
 
-	// OptionalBuild is Optional/build
-	OptionalBuild = Builtin("Optional/build")
-	// OptionalFold is Optional/fold
-	OptionalFold = Builtin("Optional/fold")
+	OptionalBuild Builtin = "Optional/build"
+	OptionalFold  Builtin = "Optional/fold"
+)
 
-	// True is the true Bool value
-	True = BoolLit(true)
-	// False is the false Bool value
-	False = BoolLit(false)
+// A BoolLit is a Dhall boolean literal.
+type BoolLit bool
+
+// Naturally, it is True or False.
+const (
+	True  BoolLit = true
+	False BoolLit = false
 )
 
 type (
@@ -201,21 +171,21 @@ func (listLastVal) isValue()    {}
 func (listIndexedVal) isValue() {}
 func (listReverseVal) isValue() {}
 
-type (
-	// A Var is a variable, either bound or free.  A free Var is a
-	// valid Value; a bound Var is not.
-	//
-	// The Index is a de Bruijn index.  In an expression such as:
-	//
-	//  λ(x : Natural) → λ(x : Natural) → x@1
-	//
-	// x@1 refers to the outer bound variable x.  x@1 is represented
-	// by Var{"x", 1}.
-	Var struct {
-		Name  string
-		Index int
-	}
+// A Var is a variable, either bound or free.  A free Var is a
+// valid Value; a bound Var is not.
+//
+// The Index is a de Bruijn index.  In an expression such as:
+//
+//  λ(x : Natural) → λ(x : Natural) → x@1
+//
+// x@1 refers to the outer bound variable x.  x@1 is represented
+// by Var{"x", 1}.
+type Var struct {
+	Name  string
+	Index int
+}
 
+type (
 	// A localVar is an internal sentinel value used by TypeOf() in
 	// the process of typechecking the body of lambdas and pis.
 	// Essentially it lets us convert de Bruijn indices (which count
@@ -249,8 +219,8 @@ func (localVar) isValue() {}
 
 func (quoteVar) isValue() {}
 
-// NewVar returns a new Var Term
-func NewVar(name string) Term {
+// NewVar returns a new Var Term.
+func NewVar(name string) Var {
 	return Var{Name: name}
 }
 
@@ -291,7 +261,7 @@ func (AppTerm) isTerm()    {}
 func (OpTerm) isTerm()     {}
 
 // NewLambda constructs a new lambda Term.
-func NewLambda(label string, t Term, body Term) Term {
+func NewLambda(label string, t Term, body Term) LambdaTerm {
 	return LambdaTerm{
 		Label: label,
 		Type:  t,
@@ -300,7 +270,7 @@ func NewLambda(label string, t Term, body Term) Term {
 }
 
 // NewPi constructs a new pi Term.
-func NewPi(label string, t Term, body Term) Term {
+func NewPi(label string, t Term, body Term) PiTerm {
 	return PiTerm{
 		Label: label,
 		Type:  t,
@@ -310,7 +280,7 @@ func NewPi(label string, t Term, body Term) Term {
 
 // NewAnonPi returns a pi Term with label "_", typically used for
 // non-dependent function types.
-func NewAnonPi(domain Term, codomain Term) Term {
+func NewAnonPi(domain Term, codomain Term) PiTerm {
 	return NewPi("_", domain, codomain)
 }
 
@@ -349,57 +319,55 @@ const (
 	CompleteOp  // A::b
 )
 
-// NaturalPlus takes Terms l and r and returns (l + r)
-func NaturalPlus(l, r Term) Term {
+// NaturalPlus takes Terms l and r and returns (l + r).
+func NaturalPlus(l, r Term) OpTerm {
 	return OpTerm{OpCode: PlusOp, L: l, R: r}
 }
 
-// NaturalTimes takes Terms l and r and returns (l * r)
-func NaturalTimes(l, r Term) Term {
+// NaturalTimes takes Terms l and r and returns (l * r).
+func NaturalTimes(l, r Term) OpTerm {
 	return OpTerm{OpCode: TimesOp, L: l, R: r}
 }
 
-// BoolOr takes Terms l and r and returns (l || r)
-func BoolOr(l, r Term) Term {
+// BoolOr takes Terms l and r and returns (l || r).
+func BoolOr(l, r Term) OpTerm {
 	return OpTerm{OpCode: OrOp, L: l, R: r}
 }
 
-// BoolAnd takes Terms l and r and returns (l && r)
-func BoolAnd(l, r Term) Term {
+// BoolAnd takes Terms l and r and returns (l && r).
+func BoolAnd(l, r Term) OpTerm {
 	return OpTerm{OpCode: AndOp, L: l, R: r}
 }
 
-// ListAppend takes Terms l and r and returns (l # r)
-func ListAppend(l, r Term) Term {
+// ListAppend takes Terms l and r and returns (l # r).
+func ListAppend(l, r Term) OpTerm {
 	return OpTerm{OpCode: ListAppendOp, L: l, R: r}
 }
 
-// TextAppend takes Terms l and r and returns (l ++ r)
-func TextAppend(l, r Term) Term {
+// TextAppend takes Terms l and r and returns (l ++ r).
+func TextAppend(l, r Term) OpTerm {
 	return OpTerm{OpCode: TextAppendOp, L: l, R: r}
 }
 
-// Equivalent takes Terms l and r and returns (l ≡ r)
-func Equivalent(l, r Term) Term {
+// Equivalent takes Terms l and r and returns (l ≡ r).
+func Equivalent(l, r Term) OpTerm {
 	return OpTerm{OpCode: EquivOp, L: l, R: r}
 }
 
 // Callable is a function Value that can be called with one Value
 // argument.  Call() may return nil if normalization isn't possible
-// (for example, `Natural/even x` does not normalize)
-// ArgType() returns the declared type of Call()'s parameter
+// (for example, `Natural/even x` does not normalize).  ArgType()
+// returns the declared type of Call()'s parameter.
 type Callable interface {
 	Value
 	Call(Value) Value
 	ArgType() Value
 }
 
-// Call implements Callable
 func (l lambdaValue) Call(a Value) Value {
 	return l.Fn(a)
 }
 
-// ArgType implements Callable
 func (l lambdaValue) ArgType() Value {
 	return l.Domain
 }
@@ -451,7 +419,7 @@ func (AppValue) isValue() {}
 func (opValue) isValue() {}
 
 // NewPiVal returns a new pi Value.
-func NewPiVal(label string, d Value, r func(Value) Value) Value {
+func NewPiVal(label string, d Value, r func(Value) Value) PiValue {
 	return PiValue{
 		Label:  label,
 		Domain: d,
@@ -460,7 +428,7 @@ func NewPiVal(label string, d Value, r func(Value) Value) Value {
 }
 
 // NewFnTypeVal returns a non-dependent function type Value.
-func NewFnTypeVal(l string, d Value, r Value) Value {
+func NewFnTypeVal(l string, d Value, r Value) PiValue {
 	return NewPiVal(l, d, func(Value) Value { return r })
 }
 
@@ -488,23 +456,23 @@ type (
 func (Let) isTerm()   {}
 func (Annot) isTerm() {}
 
-// NewLet returns a let Term
-func NewLet(body Term, bindings ...Binding) Term {
+// NewLet returns a let Term.
+func NewLet(body Term, bindings ...Binding) Let {
 	return Let{Bindings: bindings, Body: body}
 }
 
 type (
-	// A NaturalLit is a literal of type Natural
+	// A NaturalLit is a literal of type Natural.
 	NaturalLit uint
 
-	// An EmptyList is an empty list literal Term of the given type
+	// An EmptyList is an empty list literal Term of the given type.
 	EmptyList struct{ Type Term }
-	// An EmptyListVal is an empty list literal Value of the given type
+	// An EmptyListVal is an empty list literal Value of the given type.
 	EmptyListVal struct{ Type Value }
 
-	// A NonEmptyList is a non-empty list literal Term with the given contents
+	// A NonEmptyList is a non-empty list literal Term with the given contents.
 	NonEmptyList []Term
-	// A NonEmptyListVal is a non-empty list literal Value with the given contents
+	// A NonEmptyListVal is a non-empty list literal Value with the given contents.
 	NonEmptyListVal []Value
 
 	Chunk struct {
@@ -527,10 +495,6 @@ type (
 		Suffix string
 	}
 
-	// A BoolLit is a literal of type Bool.
-	BoolLit bool
-
-	// An IfTerm is an if-then-else Term.
 	IfTerm struct {
 		Cond Term
 		T    Term
@@ -619,14 +583,14 @@ func (EmptyListVal) isValue() {}
 func (NonEmptyList) isTerm()     {}
 func (NonEmptyListVal) isValue() {}
 
-// NewList returns a non-empty list Term from the given Terms
-func NewList(first Term, rest ...Term) Term {
+// NewList returns a non-empty list Term from the given Terms.
+func NewList(first Term, rest ...Term) NonEmptyList {
 	return append(NonEmptyList{first}, rest...)
 }
 
 // PlainText returns an uninterpolated text literal containing the
 // given string as text.
-func PlainText(content string) Term {
+func PlainText(content string) TextLitTerm {
 	return TextLitTerm{Suffix: content}
 }
 
@@ -693,24 +657,21 @@ type (
 		Fetchable
 		Hash []byte // stored in multihash form - ie first two bytes are 0x12 0x20
 	}
-
-	// ImportMode can be normal (ie code import), "as Text" or "as
-	// Location".
-	ImportMode byte
 )
 
+// An ImportMode encodes how an import should be processed once
+// fetched.
+type ImportMode byte
+
+// These are the valid ImportModes.
 const (
-	// Code says to import as Dhall code.
-	Code ImportMode = iota
-	// RawText says to import as a Text value.
-	RawText
-	// Location says to import as a Location.
-	Location
+	Code     ImportMode = iota // Import as Dhall code.
+	RawText                    // Import as a Text value - `as Text`.
+	Location                   // Import as a Location - `as Location`.
 )
 
 func (Import) isTerm() {}
 
-// Decent output
 func (c Universe) String() string {
 	if c == Type {
 		return "Type"

@@ -16,6 +16,7 @@ type Local string
 type Remote struct{ url *url.URL }
 type Missing struct{}
 
+// NullOrigin is used in Fetchable.Fetch() to indicate no origin.
 const NullOrigin = "null"
 
 var LocationType = UnionType{
