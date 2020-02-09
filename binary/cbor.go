@@ -208,7 +208,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 				if opcode > 13 {
 					return nil, fmt.Errorf("CBOR decode error: unknown operator code %d", opcode)
 				}
-				return OpTerm{OpCode: int(opcode), L: l, R: r}, nil
+				return OpTerm{OpCode: OpCode(opcode), L: l, R: r}, nil
 			case 4: // list
 				if val[1] != nil {
 					if len(val) > 2 {
