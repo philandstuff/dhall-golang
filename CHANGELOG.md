@@ -2,7 +2,15 @@
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.0...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.1...HEAD
+
+## [1.0.0-rc.1] - 2020-02-09
+
+### Changed
+
+ - Fixed a compile error in cbor.go :/
+
+[1.0.0-rc.1]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.0...v1.0.0-rc.1
 
 ## [1.0.0-rc.0] - 2020-02-09
 
