@@ -34,7 +34,7 @@ var _ = Describe("Eval", func() {
 	Describe("application", func() {
 		It("To neutral", func() {
 			Expect(Eval(Apply(Var{Name: "f"}, Var{Name: "x"}))).
-				To(Equal(AppValue{Fn: Var{Name: "f"}, Arg: Var{Name: "x"}}))
+				To(Equal(appValue{Fn: Var{Name: "f"}, Arg: Var{Name: "x"}}))
 		})
 		It("To lambda", func() {
 			Expect(Eval(Apply(

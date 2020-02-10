@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 // Quote takes the Value v and turns it back into a Term.
 func Quote(v Value) Term {
 	return quoteWith(quoteContext{}, v)
@@ -64,6 +66,8 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return IntegerToDouble
 	case doubleShowVal:
 		return DoubleShow
+	case optionalVal:
+		return Optional
 	case optionalBuildVal:
 		if v.typ != nil {
 			return AppTerm{OptionalBuild, quoteWith(ctx, v.typ)}
@@ -87,8 +91,12 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			return result
 		}
 		return AppTerm{result, quoteWith(ctx, v.some)}
+	case noneVal:
+		return None
 	case textShowVal:
 		return TextShow
+	case listVal:
+		return List
 	case listBuildVal:
 		if v.typ != nil {
 			return AppTerm{ListBuild, quoteWith(ctx, v.typ)}
@@ -160,7 +168,7 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			Type:  quoteWith(ctx, v.Domain),
 			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
 		}
-	case AppValue:
+	case appValue:
 		return AppTerm{
 			Fn:  quoteWith(ctx, v.Fn),
 			Arg: quoteWith(ctx, v.Arg),
@@ -179,6 +187,8 @@ func quoteWith(ctx quoteContext, v Value) Term {
 		return v
 	case BoolLit:
 		return v
+	case ListOf:
+		return Apply(List, quoteWith(ctx, v.Type))
 	case EmptyListVal:
 		return EmptyList{Type: quoteWith(ctx, v.Type)}
 	case NonEmptyListVal:
@@ -205,8 +215,12 @@ func quoteWith(ctx quoteContext, v Value) Term {
 			T:    quoteWith(ctx, v.T),
 			F:    quoteWith(ctx, v.F),
 		}
+	case OptionalOf:
+		return Apply(Optional, quoteWith(ctx, v.Type))
 	case SomeVal:
 		return Some{Val: quoteWith(ctx, v.Val)}
+	case NoneOf:
+		return Apply(None, quoteWith(ctx, v.Type))
 	case RecordTypeVal:
 		rt := RecordType{}
 		for k, v := range v {
@@ -257,5 +271,5 @@ func quoteWith(ctx quoteContext, v Value) Term {
 	case assertVal:
 		return Assert{Annotation: quoteWith(ctx, v.Annotation)}
 	}
-	panic("unknown Value type")
+	panic(fmt.Sprintf("unknown Value type %#v", v))
 }

@@ -25,12 +25,13 @@ func alphaEquivalentValsWith(level int, v1 Value, v2 Value) bool {
 	case Universe, Builtin,
 		naturalBuildVal, naturalEvenVal, naturalFoldVal,
 		naturalIsZeroVal, naturalOddVal, naturalShowVal,
-		naturalSubtractVal, naturalToIntegerVal, integerShowVal,
-		integerClampVal, integerNegateVal,
-		integerToDoubleVal, doubleShowVal, optionalBuildVal,
-		optionalFoldVal, textShowVal, listBuildVal, listFoldVal,
-		listHeadVal, listIndexedVal, listLengthVal, listLastVal,
-		listReverseVal,
+		naturalSubtractVal, naturalToIntegerVal,
+		integerShowVal, integerClampVal, integerNegateVal, integerToDoubleVal,
+		doubleShowVal,
+		optionalVal, optionalBuildVal, optionalFoldVal, noneVal,
+		textShowVal,
+		listVal, listBuildVal, listFoldVal, listHeadVal, listIndexedVal,
+		listLengthVal, listLastVal, listReverseVal,
 		Var, localVar, quoteVar,
 		NaturalLit, IntegerLit, BoolLit:
 		return v1 == v2
@@ -60,8 +61,8 @@ func alphaEquivalentValsWith(level int, v1 Value, v2 Value) bool {
 				v1.Range(quoteVar{Name: "_", Index: level}),
 				v2.Range(quoteVar{Name: "_", Index: level}),
 			)
-	case AppValue:
-		v2, ok := v2.(AppValue)
+	case appValue:
+		v2, ok := v2.(appValue)
 		if !ok {
 			return false
 		}
@@ -75,6 +76,12 @@ func alphaEquivalentValsWith(level int, v1 Value, v2 Value) bool {
 		return v1.OpCode == v2.OpCode &&
 			alphaEquivalentValsWith(level, v1.L, v2.L) &&
 			alphaEquivalentValsWith(level, v1.R, v2.R)
+	case ListOf:
+		v2, ok := v2.(ListOf)
+		if !ok {
+			return false
+		}
+		return alphaEquivalentValsWith(level, v1.Type, v2.Type)
 	case EmptyListVal:
 		v2, ok := v2.(EmptyListVal)
 		if !ok {
@@ -122,12 +129,24 @@ func alphaEquivalentValsWith(level int, v1 Value, v2 Value) bool {
 		return alphaEquivalentValsWith(level, v1.Cond, v2.Cond) &&
 			alphaEquivalentValsWith(level, v1.T, v2.T) &&
 			alphaEquivalentValsWith(level, v1.F, v2.F)
+	case OptionalOf:
+		v2, ok := v2.(OptionalOf)
+		if !ok {
+			return false
+		}
+		return alphaEquivalentValsWith(level, v1.Type, v2.Type)
 	case SomeVal:
 		v2, ok := v2.(SomeVal)
 		if !ok {
 			return false
 		}
 		return alphaEquivalentValsWith(level, v1.Val, v2.Val)
+	case NoneOf:
+		v2, ok := v2.(NoneOf)
+		if !ok {
+			return false
+		}
+		return alphaEquivalentValsWith(level, v1.Type, v2.Type)
 	case RecordTypeVal:
 		v2, ok := v2.(RecordTypeVal)
 		if !ok {

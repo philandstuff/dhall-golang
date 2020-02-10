@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Breaking changes
+
+ - removed `core.AppValue` from public interface
+
+### Added
+
+  - added `core.ListOf`, `core.OptionalOf`, `core.NoneOf` Value types
+    to represent `List a`, `Optional a` and `None a` Values
+    respectively
+
 [Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.1...HEAD
 
 ## [1.0.0-rc.1] - 2020-02-09

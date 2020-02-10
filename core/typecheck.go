@@ -34,11 +34,11 @@ func assertTypeIs(ctx context, expr Term, expectedType Value, msg typeMessage) e
 //  Value: the element type of a list type
 //  Bool: whether it succeeded
 func listElementType(e Value) (Value, bool) {
-	app, ok := e.(AppValue)
-	if !ok || app.Fn != List {
+	list, ok := e.(ListOf)
+	if !ok {
 		return nil, false
 	}
-	return app.Arg, true
+	return list.Type, true
 }
 
 func functionCheck(input Universe, output Universe) Universe {
@@ -97,12 +97,12 @@ func typeWith(ctx context, t Term) (Value, error) {
 							NewFnTypeVal("_", a, NewFnTypeVal("_", list, list)),
 							NewFnTypeVal("nil", list, list))
 					}),
-					AppValue{List, a})
+					ListOf{a})
 			}), nil
 		case ListFold:
 			return NewPiVal("a", Type, func(a Value) Value {
 				return NewFnTypeVal("_",
-					AppValue{List, a},
+					ListOf{a},
 					NewPiVal("list", Type, func(list Value) Value {
 						return NewFnTypeVal("cons",
 							NewFnTypeVal("_", a, NewFnTypeVal("_", list, list)),
@@ -111,22 +111,22 @@ func typeWith(ctx context, t Term) (Value, error) {
 			}), nil
 		case ListLength:
 			return NewPiVal("a", Type, func(a Value) Value {
-				return NewFnTypeVal("_", AppValue{List, a}, Natural)
+				return NewFnTypeVal("_", ListOf{a}, Natural)
 			}), nil
 		case ListHead, ListLast:
 			return NewPiVal("a", Type, func(a Value) Value {
-				return NewFnTypeVal("_", AppValue{List, a},
-					AppValue{Optional, a})
+				return NewFnTypeVal("_", ListOf{a},
+					OptionalOf{a})
 			}), nil
 		case ListReverse:
 			return NewPiVal("a", Type, func(a Value) Value {
-				return NewFnTypeVal("_", AppValue{List, a},
-					AppValue{List, a})
+				return NewFnTypeVal("_", ListOf{a},
+					ListOf{a})
 			}), nil
 		case ListIndexed:
 			return NewPiVal("a", Type, func(a Value) Value {
-				return NewFnTypeVal("_", AppValue{List, a},
-					AppValue{List, RecordTypeVal{"index": Natural, "value": a}})
+				return NewFnTypeVal("_", ListOf{a},
+					ListOf{RecordTypeVal{"index": Natural, "value": a}})
 			}), nil
 		case NaturalBuild:
 			return NewFnTypeVal("_",
@@ -153,7 +153,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		case NaturalSubtract:
 			return NewFnTypeVal("_", Natural, NewFnTypeVal("_", Natural, Natural)), nil
 		case None:
-			return NewPiVal("A", Type, func(A Value) Value { return AppValue{Optional, A} }), nil
+			return NewPiVal("A", Type, func(A Value) Value { return OptionalOf{A} }), nil
 		case OptionalBuild:
 			return NewPiVal("a", Type, func(a Value) Value {
 				return NewFnTypeVal("_",
@@ -162,12 +162,12 @@ func typeWith(ctx context, t Term) (Value, error) {
 							NewFnTypeVal("_", a, optional),
 							NewFnTypeVal("nothing", optional, optional))
 					}),
-					AppValue{Optional, a})
+					OptionalOf{a})
 			}), nil
 		case OptionalFold:
 			return NewPiVal("a", Type, func(a Value) Value {
 				return NewFnTypeVal("_",
-					AppValue{Optional, a},
+					OptionalOf{a},
 					NewPiVal("optional", Type, func(optional Value) Value {
 						return NewFnTypeVal("just",
 							NewFnTypeVal("_", a, optional),
@@ -527,7 +527,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 				return nil, mkTypeError(mismatchedListElements(Quote(T0), Quote(T1)))
 			}
 		}
-		return AppValue{List, T0}, nil
+		return ListOf{T0}, nil
 	case Some:
 		A, err := typeWith(ctx, t.Val)
 		if err != nil {
@@ -536,7 +536,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if err = assertTypeIs(ctx, Quote(A), Type, invalidSome); err != nil {
 			return nil, err
 		}
-		return AppValue{Optional, A}, nil
+		return OptionalOf{A}, nil
 	case RecordType:
 		recordUniverse := Type
 		for _, v := range t {
@@ -609,7 +609,7 @@ func typeWith(ctx context, t Term) (Value, error) {
 		if k, _ := typeWith(ctx, Quote(elemType)); k != Type {
 			return nil, mkTypeError(invalidToMapRecordKind)
 		}
-		inferred := AppValue{List, RecordTypeVal{"mapKey": Text, "mapValue": elemType}}
+		inferred := ListOf{RecordTypeVal{"mapKey": Text, "mapValue": elemType}}
 		if t.Type == nil {
 			return inferred, nil
 		}
@@ -748,11 +748,11 @@ func typeWith(ctx context, t Term) (Value, error) {
 		}
 		unionType, ok := unionTypeV.(unionTypeVal)
 		if !ok {
-			apply, ok := unionTypeV.(AppValue)
-			if !ok || apply.Fn != Optional {
+			opt, ok := unionTypeV.(OptionalOf)
+			if !ok {
 				return nil, mkTypeError(mustMergeUnion)
 			}
-			unionType = unionTypeVal{"Some": apply.Arg, "None": nil}
+			unionType = unionTypeVal{"Some": opt.Type, "None": nil}
 		}
 		if len(handlerType) > len(unionType) {
 			return nil, mkTypeError(unusedHandler)

@@ -51,12 +51,18 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			return IntegerToDoubleVal
 		case DoubleShow:
 			return DoubleShowVal
+		case Optional:
+			return OptionalVal
 		case OptionalBuild:
 			return OptionalBuildVal
 		case OptionalFold:
 			return OptionalFoldVal
+		case None:
+			return NoneVal
 		case TextShow:
 			return TextShowVal
+		case List:
+			return ListVal
 		case ListBuild:
 			return ListBuildVal
 		case ListFold:
@@ -566,16 +572,12 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		unionVal := evalWith(t.Union, e, shouldAlphaNormalize)
 		if handlers, ok := handlerVal.(RecordLitVal); ok {
 			// TODO: test tricky Field inputs
-			if union, ok := unionVal.(AppValue); ok {
+			if union, ok := unionVal.(appValue); ok {
 				if field, ok := union.Fn.(fieldVal); ok {
 					return applyVal(
 						handlers[field.FieldName],
 						union.Arg,
 					)
-				}
-				if union.Fn == None {
-					// Treating Optional as < Some a | None >
-					return handlers["None"]
 				}
 			}
 			if union, ok := unionVal.(fieldVal); ok {
@@ -588,6 +590,10 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 					handlers["Some"],
 					some.Val,
 				)
+			}
+			if _, ok := unionVal.(NoneOf); ok {
+				// Treating Optional as < Some a | None >
+				return handlers["None"]
 			}
 		}
 		output := mergeVal{
@@ -614,7 +620,7 @@ func applyVal(fn Value, args ...Value) Value {
 				continue
 			}
 		}
-		out = AppValue{Fn: out, Arg: arg}
+		out = appValue{Fn: out, Arg: arg}
 	}
 	return out
 }

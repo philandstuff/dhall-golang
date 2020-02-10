@@ -63,40 +63,35 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		default:
 			panic("unknown Builtin")
 		}
-	case core.AppValue:
-		switch e.Fn {
-		case core.List:
-			if val.Kind() == reflect.Map {
-				mapEntryType := e.Arg.(core.RecordTypeVal)
-				if !isMapEntryType(mapEntryType) {
-					panic("Can't unmarshal golang map into given Dhall type")
-				}
-				if val.Len() == 0 {
-					return core.EmptyListVal{Type: e.Arg}
-				}
-				l := make(core.NonEmptyListVal, val.Len())
-				iter := val.MapRange()
-				i := 0
-				for iter.Next() {
-					l[i] = core.RecordLitVal{
-						"mapKey":   encode(iter.Key(), mapEntryType["mapKey"]),
-						"mapValue": encode(iter.Value(), mapEntryType["mapValue"]),
-					}
-					i++
-				}
-				return l
+	case core.ListOf:
+		if val.Kind() == reflect.Map {
+			mapEntryType := e.Type.(core.RecordTypeVal)
+			if !isMapEntryType(mapEntryType) {
+				panic("Can't unmarshal golang map into given Dhall type")
 			}
 			if val.Len() == 0 {
-				return core.EmptyListVal{Type: e.Arg}
+				return core.EmptyListVal{Type: e.Type}
 			}
 			l := make(core.NonEmptyListVal, val.Len())
-			for i := 0; i < val.Len(); i++ {
-				l[i] = encode(val.Index(i), e.Arg)
+			iter := val.MapRange()
+			i := 0
+			for iter.Next() {
+				l[i] = core.RecordLitVal{
+					"mapKey":   encode(iter.Key(), mapEntryType["mapKey"]),
+					"mapValue": encode(iter.Value(), mapEntryType["mapValue"]),
+				}
+				i++
 			}
 			return l
-		default:
-			panic("unknown app")
 		}
+		if val.Len() == 0 {
+			return core.EmptyListVal{Type: e.Type}
+		}
+		l := make(core.NonEmptyListVal, val.Len())
+		for i := 0; i < val.Len(); i++ {
+			l[i] = encode(val.Index(i), e.Type)
+		}
+		return l
 	case core.RecordTypeVal:
 		rec := core.RecordLitVal{}
 	fields:
@@ -148,10 +143,8 @@ func flattenOptional(e core.Value) core.Value {
 	if some, ok := e.(core.SomeVal); ok {
 		return flattenOptional(some.Val)
 	}
-	if app, ok := e.(core.AppValue); ok {
-		if app.Fn == core.None {
-			return nil
-		}
+	if _, ok := e.(core.NoneOf); ok {
+		return nil
 	}
 	return e
 }

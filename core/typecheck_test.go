@@ -45,7 +45,7 @@ var _ = Describe("TypeOf", func() {
 			NewLambda("a", Type,
 				EmptyList{AppTerm{List, NewVar("a")}}),
 			NewPiVal("a", Type, func(a Value) Value {
-				return AppValue{List, a}
+				return ListOf{a}
 			})),
 		Entry("λ(a : Natural) → assert : a ≡ a -- check presence of variables in resulting type",
 			NewLambda("a", Natural,
@@ -72,7 +72,7 @@ var _ = Describe("TypeOf", func() {
 		typecheckTest,
 		Entry(`3 : Natural`, NaturalLit(3), Natural),
 		Entry(`[] : List Natural : List Natural`,
-			EmptyList{Apply(List, Natural)}, AppValue{List, Natural}),
+			EmptyList{Apply(List, Natural)}, ListOf{Natural}),
 	)
 	DescribeTable("Expected failures",
 		func(t Term) {

@@ -188,6 +188,9 @@ func (doubleShowVal) Call(x Value) Value {
 
 func (doubleShowVal) ArgType() Value { return Double }
 
+func (optionalVal) Call(x Value) Value { return OptionalOf{x} }
+func (optionalVal) ArgType() Value     { return Type }
+
 func (build optionalBuildVal) Call(x Value) Value {
 	if build.typ == nil {
 		return optionalBuildVal{typ: x}
@@ -199,7 +202,7 @@ func (build optionalBuildVal) Call(x Value) Value {
 			return SomeVal{a}
 		},
 	}
-	return applyVal(x, AppValue{Optional, build.typ}, some, AppValue{None, build.typ})
+	return applyVal(x, OptionalOf{build.typ}, some, NoneOf{build.typ})
 }
 
 func (build optionalBuildVal) ArgType() Value {
@@ -239,10 +242,8 @@ func (fold optionalFoldVal) Call(x Value) Value {
 	if s, ok := fold.opt.(SomeVal); ok {
 		return applyVal(fold.some, s.Val)
 	}
-	if app, ok := fold.opt.(AppValue); ok {
-		if app.Fn == None {
-			return none
-		}
+	if _, ok := fold.opt.(NoneOf); ok {
+		return none
 	}
 	return nil
 }
@@ -252,7 +253,7 @@ func (fold optionalFoldVal) ArgType() Value {
 		return Type
 	}
 	if fold.opt == nil {
-		return applyVal(Optional, fold.typ1)
+		return OptionalOf{fold.typ1}
 	}
 	if fold.typ2 == nil {
 		return Type
@@ -263,6 +264,9 @@ func (fold optionalFoldVal) ArgType() Value {
 	// none
 	return fold.typ2
 }
+
+func (noneVal) Call(a Value) Value { return NoneOf{a} }
+func (noneVal) ArgType() Value     { return Type }
 
 func (textShowVal) Call(a0 Value) Value {
 	if t, ok := a0.(TextLitVal); ok {
@@ -302,9 +306,10 @@ func (textShowVal) Call(a0 Value) Value {
 	return nil
 }
 
-func (textShowVal) ArgType() Value {
-	return Text
-}
+func (textShowVal) ArgType() Value { return Text }
+
+func (listVal) Call(x Value) Value { return ListOf{x} }
+func (listVal) ArgType() Value     { return Type }
 
 func (l listBuildVal) Call(x Value) Value {
 	if l.typ == nil {
@@ -316,7 +321,7 @@ func (l listBuildVal) Call(x Value) Value {
 		Fn: func(a Value) Value {
 			return lambdaValue{
 				Label:  "as",
-				Domain: AppValue{List, l.typ},
+				Domain: ListOf{l.typ},
 				Fn: func(as Value) Value {
 					if _, ok := as.(EmptyListVal); ok {
 						return NonEmptyListVal{a}
@@ -329,7 +334,7 @@ func (l listBuildVal) Call(x Value) Value {
 			}
 		},
 	}
-	return applyVal(x, AppValue{List, l.typ}, cons, EmptyListVal{AppValue{List, l.typ}})
+	return applyVal(x, ListOf{l.typ}, cons, EmptyListVal{ListOf{l.typ}})
 }
 
 func (l listBuildVal) ArgType() Value {
@@ -384,7 +389,7 @@ func (l listFoldVal) ArgType() Value {
 		return Type
 	}
 	if l.list == nil {
-		return applyVal(List, l.typ1)
+		return ListOf{l.typ1}
 	}
 	if l.typ2 == nil {
 		return Type
@@ -413,7 +418,7 @@ func (length listLengthVal) ArgType() Value {
 	if length.typ == nil {
 		return Type
 	}
-	return applyVal(List, length.typ)
+	return ListOf{length.typ}
 }
 
 func (head listHeadVal) Call(x Value) Value {
@@ -421,7 +426,7 @@ func (head listHeadVal) Call(x Value) Value {
 		return listHeadVal{typ: x}
 	}
 	if _, ok := x.(EmptyListVal); ok {
-		return AppValue{None, head.typ}
+		return NoneOf{head.typ}
 	}
 	if l, ok := x.(NonEmptyListVal); ok {
 		return SomeVal{l[0]}
@@ -433,7 +438,7 @@ func (head listHeadVal) ArgType() Value {
 	if head.typ == nil {
 		return Type
 	}
-	return applyVal(List, head.typ)
+	return ListOf{head.typ}
 }
 
 func (last listLastVal) Call(x Value) Value {
@@ -441,7 +446,7 @@ func (last listLastVal) Call(x Value) Value {
 		return listLastVal{typ: x}
 	}
 	if _, ok := x.(EmptyListVal); ok {
-		return AppValue{None, last.typ}
+		return NoneOf{last.typ}
 	}
 	if l, ok := x.(NonEmptyListVal); ok {
 		return SomeVal{l[len(l)-1]}
@@ -453,7 +458,7 @@ func (last listLastVal) ArgType() Value {
 	if last.typ == nil {
 		return Type
 	}
-	return applyVal(List, last.typ)
+	return ListOf{last.typ}
 }
 
 func (indexed listIndexedVal) Call(x Value) Value {
@@ -461,10 +466,8 @@ func (indexed listIndexedVal) Call(x Value) Value {
 		return listIndexedVal{typ: x}
 	}
 	if _, ok := x.(EmptyListVal); ok {
-		return EmptyListVal{AppValue{
-			List,
-			RecordTypeVal{"index": Natural, "value": indexed.typ},
-		}}
+		return EmptyListVal{ListOf{
+			RecordTypeVal{"index": Natural, "value": indexed.typ}}}
 	}
 	if l, ok := x.(NonEmptyListVal); ok {
 		var result []Value
@@ -481,7 +484,7 @@ func (indexed listIndexedVal) ArgType() Value {
 	if indexed.typ == nil {
 		return Type
 	}
-	return applyVal(List, indexed.typ)
+	return ListOf{indexed.typ}
 }
 
 func (rev listReverseVal) Call(x Value) Value {
@@ -505,7 +508,7 @@ func (rev listReverseVal) ArgType() Value {
 	if rev.typ == nil {
 		return Type
 	}
-	return applyVal(List, rev.typ)
+	return ListOf{rev.typ}
 }
 
 var (
@@ -523,11 +526,14 @@ var (
 	IntegerToDoubleVal  Callable = integerToDoubleVal{}
 	DoubleShowVal       Callable = doubleShowVal{}
 
+	OptionalVal      Callable = optionalVal{}
 	OptionalBuildVal Callable = optionalBuildVal{}
 	OptionalFoldVal  Callable = optionalFoldVal{}
+	NoneVal          Callable = noneVal{}
 
 	TextShowVal Callable = textShowVal{}
 
+	ListVal        Callable = listVal{}
 	ListBuildVal   Callable = listBuildVal{}
 	ListFoldVal    Callable = listFoldVal{}
 	ListLengthVal  Callable = listLengthVal{}

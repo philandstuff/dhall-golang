@@ -63,11 +63,11 @@ var _ = DescribeTable("Quote",
 	),
 	Entry(`∀(a : Type) → List a`,
 		PiValue{Label: "a", Domain: Type, Range: func(x Value) Value {
-			return AppValue{List, x}
+			return ListOf{x}
 		}},
 		PiTerm{Label: "a", Type: Type, Body: AppTerm{List, Var{"a", 0}}},
 	),
 	Entry(`[] : List Natural`,
-		EmptyListVal{Type: AppValue{Fn: List, Arg: Natural}},
+		EmptyListVal{Type: ListOf{Type: Natural}},
 		EmptyList{Type: AppTerm{Fn: List, Arg: Natural}}),
 )

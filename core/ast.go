@@ -113,6 +113,7 @@ type (
 
 	doubleShowVal struct{}
 
+	optionalVal      struct{}
 	optionalBuildVal struct{ typ Value }
 	optionalFoldVal  struct {
 		typ1 Value
@@ -121,9 +122,11 @@ type (
 		some Value
 		// none Value
 	}
+	noneVal struct{}
 
 	textShowVal struct{}
 
+	listVal      struct{}
 	listBuildVal struct {
 		typ Value
 		// fn  Value
@@ -158,11 +161,14 @@ func (integerToDoubleVal) isValue() {}
 
 func (doubleShowVal) isValue() {}
 
+func (optionalVal) isValue()      {}
 func (optionalBuildVal) isValue() {}
 func (optionalFoldVal) isValue()  {}
+func (noneVal) isValue()          {}
 
 func (textShowVal) isValue() {}
 
+func (listVal) isValue()        {}
 func (listBuildVal) isValue()   {}
 func (listFoldVal) isValue()    {}
 func (listLengthVal) isValue()  {}
@@ -170,6 +176,21 @@ func (listHeadVal) isValue()    {}
 func (listLastVal) isValue()    {}
 func (listIndexedVal) isValue() {}
 func (listReverseVal) isValue() {}
+
+type (
+	// OptionalOf is the Value version of `Optional a`
+	OptionalOf struct{ Type Value }
+
+	// ListOf is the Value version of `List a`
+	ListOf struct{ Type Value }
+
+	// NoneOf is the Value version of `None a`
+	NoneOf struct{ Type Value }
+)
+
+func (OptionalOf) isValue() {}
+func (ListOf) isValue()     {}
+func (NoneOf) isValue()     {}
 
 // A Var is a variable, either bound or free.  A free Var is a
 // valid Value; a bound Var is not.
@@ -398,7 +419,7 @@ type (
 	// this is only a valid Value if Fn is a free variable (such as f
 	// 3, with f free), or if Fn is a builtin function which hasn't
 	// been applied to enough arguments (such as Natural/subtract 3).
-	AppValue struct {
+	appValue struct {
 		Fn  Value
 		Arg Value
 	}
@@ -414,7 +435,7 @@ func (lambdaValue) isValue() {}
 
 func (PiValue) isValue() {}
 
-func (AppValue) isValue() {}
+func (appValue) isValue() {}
 
 func (opValue) isValue() {}
 
