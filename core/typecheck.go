@@ -227,7 +227,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		}
 		pi.Range = func(x Value) Value {
 			rebound := term.RebindLocal(freshLocal, Quote(bt))
-			return evalWith(rebound, Env{
+			return evalWith(rebound, env{
 				t.Label: []Value{x},
 			}, false)
 		}

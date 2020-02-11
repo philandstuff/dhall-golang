@@ -9,19 +9,19 @@ import (
 	"github.com/philandstuff/dhall-golang/term"
 )
 
-type Env map[string][]Value
+type env map[string][]Value
 
 // Eval normalizes Term to a Value.
 func Eval(t term.Term) Value {
-	return evalWith(t, Env{}, false)
+	return evalWith(t, env{}, false)
 }
 
 // AlphaBetaEval alpha-beta-normalizes Term to a Value.
 func AlphaBetaEval(t term.Term) Value {
-	return evalWith(t, Env{}, true)
+	return evalWith(t, env{}, true)
 }
 
-func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
+func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 	switch t := t.(type) {
 	case term.Universe:
 		return Universe(t)
@@ -104,7 +104,7 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
 			Fn: func(x Value) Value {
-				newEnv := Env{}
+				newEnv := env{}
 				for k, v := range e {
 					newEnv[k] = v
 				}
@@ -121,7 +121,7 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
 			Range: func(x Value) Value {
-				newEnv := Env{}
+				newEnv := env{}
 				for k, v := range e {
 					newEnv[k] = v
 				}
@@ -137,7 +137,7 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 		arg := evalWith(t.Arg, e, shouldAlphaNormalize)
 		return apply(fn, arg)
 	case term.Let:
-		newEnv := Env{}
+		newEnv := env{}
 		for k, v := range e {
 			newEnv[k] = v
 		}

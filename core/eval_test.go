@@ -11,11 +11,11 @@ var _ = Describe("Eval", func() {
 		Expect(Eval(term.Type)).To(Equal(Type))
 	})
 	It("Bound variable", func() {
-		Expect(evalWith(term.Var{Name: "foo"}, Env{"foo": []Value{Type}}, false)).
+		Expect(evalWith(term.Var{Name: "foo"}, env{"foo": []Value{Type}}, false)).
 			To(Equal(Type))
 	})
 	It("Free variable", func() {
-		Expect(evalWith(term.Var{Name: "foo"}, Env{}, false)).
+		Expect(evalWith(term.Var{Name: "foo"}, env{}, false)).
 			To(Equal(freeVar{Name: "foo"}))
 	})
 	It("Lambda id function", func() {
