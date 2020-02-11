@@ -44,13 +44,13 @@ var _ = Describe("TypeOf", func() {
 			NewPiVal("x", Natural, func(Value) Value { return Natural })),
 		Entry("λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
 			term.NewLambda("a", term.Type,
-				term.EmptyList{term.AppTerm{term.List, term.NewVar("a")}}),
+				term.EmptyList{term.App{term.List, term.NewVar("a")}}),
 			NewPiVal("a", Type, func(a Value) Value {
 				return ListOf{a}
 			})),
 		Entry("λ(a : Natural) → assert : a ≡ a -- check presence of variables in resulting type",
 			term.NewLambda("a", term.Natural,
-				term.Assert{term.OpTerm{term.EquivOp, term.NewVar("a"), term.NewVar("a")}}),
+				term.Assert{term.Op{term.EquivOp, term.NewVar("a"), term.NewVar("a")}}),
 			NewPiVal("a", Natural, func(a Value) Value {
 				return opValue{term.EquivOp, a, a}
 			})),
@@ -61,11 +61,11 @@ var _ = Describe("TypeOf", func() {
 	)
 	DescribeTable("Application",
 		typecheckTest,
-		Entry(`List Natural : Type`, term.AppTerm{term.List, term.Natural}, Type),
+		Entry(`List Natural : Type`, term.App{term.List, term.Natural}, Type),
 		Entry("(λ(a : Natural) → assert : a ≡ a) 3 -- check presence of variables in resulting type",
 			term.Apply(
 				term.NewLambda("a", term.Natural,
-					term.Assert{term.OpTerm{term.EquivOp, term.NewVar("a"), term.NewVar("a")}}),
+					term.Assert{term.Op{term.EquivOp, term.NewVar("a"), term.NewVar("a")}}),
 				term.NaturalLit(3)),
 			opValue{term.EquivOp, NaturalLit(3), NaturalLit(3)}),
 	)

@@ -89,7 +89,7 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 		return e[t.Name][t.Index]
 	case term.LocalVar:
 		return localVar(t)
-	case term.LambdaTerm:
+	case term.Lambda:
 		v := lambdaValue{
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
@@ -106,7 +106,7 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 			v.Label = "_"
 		}
 		return v
-	case term.PiTerm:
+	case term.Pi:
 		v := PiValue{
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
@@ -122,7 +122,7 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 			v.Label = "_"
 		}
 		return v
-	case term.AppTerm:
+	case term.App:
 		fn := evalWith(t.Fn, e, shouldAlphaNormalize)
 		arg := evalWith(t.Arg, e, shouldAlphaNormalize)
 		return applyVal(fn, arg)
@@ -141,7 +141,7 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 		return evalWith(t.Expr, e, shouldAlphaNormalize)
 	case term.DoubleLit:
 		return DoubleLit(t)
-	case term.TextLitTerm:
+	case term.TextLit:
 		var str strings.Builder
 		var newChunks ChunkVals
 		for _, chunk := range t.Chunks {
@@ -175,7 +175,7 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 		return TextLitVal{Chunks: newChunks, Suffix: newSuffix}
 	case term.BoolLit:
 		return BoolLit(t)
-	case term.IfTerm:
+	case term.If:
 		condVal := evalWith(t.Cond, e, shouldAlphaNormalize)
 		if condVal == True {
 			return evalWith(t.T, e, shouldAlphaNormalize)
@@ -200,17 +200,17 @@ func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 		return NaturalLit(t)
 	case term.IntegerLit:
 		return IntegerLit(t)
-	case term.OpTerm:
+	case term.Op:
 		// these are cases where we *don't* evaluate t.L and t.R up front
 		switch t.OpCode {
 		case term.TextAppendOp:
 			return evalWith(
-				term.TextLitTerm{Chunks: term.Chunks{{Expr: t.L}, {Expr: t.R}}},
+				term.TextLit{Chunks: term.Chunks{{Expr: t.L}, {Expr: t.R}}},
 				e, shouldAlphaNormalize)
 		case term.CompleteOp:
 			return evalWith(
 				term.Annot{
-					Expr: term.OpTerm{
+					Expr: term.Op{
 						OpCode: term.RightBiasedRecordMergeOp,
 						L:      term.Field{t.L, "default"},
 						R:      t.R,

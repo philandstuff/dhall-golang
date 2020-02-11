@@ -38,15 +38,15 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		if v.n == nil {
 			return result
 		}
-		result = term.AppTerm{result, quoteWith(ctx, v.n)}
+		result = term.App{result, quoteWith(ctx, v.n)}
 		if v.typ == nil {
 			return result
 		}
-		result = term.AppTerm{result, quoteWith(ctx, v.typ)}
+		result = term.App{result, quoteWith(ctx, v.typ)}
 		if v.succ == nil {
 			return result
 		}
-		return term.AppTerm{result, quoteWith(ctx, v.succ)}
+		return term.App{result, quoteWith(ctx, v.succ)}
 	case naturalIsZeroVal:
 		return term.NaturalIsZero
 	case naturalOddVal:
@@ -55,7 +55,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		return term.NaturalShow
 	case naturalSubtractVal:
 		if v.a != nil {
-			return term.AppTerm{term.NaturalSubtract, quoteWith(ctx, v.a)}
+			return term.App{term.NaturalSubtract, quoteWith(ctx, v.a)}
 		}
 		return term.NaturalSubtract
 	case integerClampVal:
@@ -74,7 +74,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		return term.Optional
 	case optionalBuildVal:
 		if v.typ != nil {
-			return term.AppTerm{term.OptionalBuild, quoteWith(ctx, v.typ)}
+			return term.App{term.OptionalBuild, quoteWith(ctx, v.typ)}
 		}
 		return term.OptionalBuild
 	case optionalFoldVal:
@@ -82,19 +82,19 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		if v.typ1 == nil {
 			return result
 		}
-		result = term.AppTerm{result, quoteWith(ctx, v.typ1)}
+		result = term.App{result, quoteWith(ctx, v.typ1)}
 		if v.opt == nil {
 			return result
 		}
-		result = term.AppTerm{result, quoteWith(ctx, v.opt)}
+		result = term.App{result, quoteWith(ctx, v.opt)}
 		if v.typ2 == nil {
 			return result
 		}
-		result = term.AppTerm{result, quoteWith(ctx, v.typ2)}
+		result = term.App{result, quoteWith(ctx, v.typ2)}
 		if v.some == nil {
 			return result
 		}
-		return term.AppTerm{result, quoteWith(ctx, v.some)}
+		return term.App{result, quoteWith(ctx, v.some)}
 	case noneVal:
 		return term.None
 	case textShowVal:
@@ -103,7 +103,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		return term.List
 	case listBuildVal:
 		if v.typ != nil {
-			return term.AppTerm{term.ListBuild, quoteWith(ctx, v.typ)}
+			return term.App{term.ListBuild, quoteWith(ctx, v.typ)}
 		}
 		return term.ListBuild
 	case listFoldVal:
@@ -111,42 +111,42 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		if v.typ1 == nil {
 			return result
 		}
-		result = term.AppTerm{result, quoteWith(ctx, v.typ1)}
+		result = term.App{result, quoteWith(ctx, v.typ1)}
 		if v.list == nil {
 			return result
 		}
-		result = term.AppTerm{result, quoteWith(ctx, v.list)}
+		result = term.App{result, quoteWith(ctx, v.list)}
 		if v.typ2 == nil {
 			return result
 		}
-		result = term.AppTerm{result, quoteWith(ctx, v.typ2)}
+		result = term.App{result, quoteWith(ctx, v.typ2)}
 		if v.cons == nil {
 			return result
 		}
-		return term.AppTerm{result, quoteWith(ctx, v.cons)}
+		return term.App{result, quoteWith(ctx, v.cons)}
 	case listHeadVal:
 		if v.typ != nil {
-			return term.AppTerm{term.ListHead, quoteWith(ctx, v.typ)}
+			return term.App{term.ListHead, quoteWith(ctx, v.typ)}
 		}
 		return term.ListHead
 	case listIndexedVal:
 		if v.typ != nil {
-			return term.AppTerm{term.ListIndexed, quoteWith(ctx, v.typ)}
+			return term.App{term.ListIndexed, quoteWith(ctx, v.typ)}
 		}
 		return term.ListIndexed
 	case listLengthVal:
 		if v.typ != nil {
-			return term.AppTerm{term.ListLength, quoteWith(ctx, v.typ)}
+			return term.App{term.ListLength, quoteWith(ctx, v.typ)}
 		}
 		return term.ListLength
 	case listLastVal:
 		if v.typ != nil {
-			return term.AppTerm{term.ListLast, quoteWith(ctx, v.typ)}
+			return term.App{term.ListLast, quoteWith(ctx, v.typ)}
 		}
 		return term.ListLast
 	case listReverseVal:
 		if v.typ != nil {
-			return term.AppTerm{term.ListReverse, quoteWith(ctx, v.typ)}
+			return term.App{term.ListReverse, quoteWith(ctx, v.typ)}
 		}
 		return term.ListReverse
 	case freeVar:
@@ -160,25 +160,25 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		}
 	case lambdaValue:
 		bodyVal := v.Call(quoteVar{Name: v.Label, Index: ctx[v.Label]})
-		return term.LambdaTerm{
+		return term.Lambda{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),
 			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
 		}
 	case PiValue:
 		bodyVal := v.Range(quoteVar{Name: v.Label, Index: ctx[v.Label]})
-		return term.PiTerm{
+		return term.Pi{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),
 			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
 		}
 	case appValue:
-		return term.AppTerm{
+		return term.App{
 			Fn:  quoteWith(ctx, v.Fn),
 			Arg: quoteWith(ctx, v.Arg),
 		}
 	case opValue:
-		return term.OpTerm{
+		return term.Op{
 			OpCode: v.OpCode,
 			L:      quoteWith(ctx, v.L),
 			R:      quoteWith(ctx, v.R),
@@ -209,12 +209,12 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 				Expr:   quoteWith(ctx, chunk.Expr),
 			})
 		}
-		return term.TextLitTerm{
+		return term.TextLit{
 			Chunks: newChunks,
 			Suffix: v.Suffix,
 		}
 	case ifVal:
-		return term.IfTerm{
+		return term.If{
 			Cond: quoteWith(ctx, v.Cond),
 			T:    quoteWith(ctx, v.T),
 			F:    quoteWith(ctx, v.F),

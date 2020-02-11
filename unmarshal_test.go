@@ -112,7 +112,7 @@ var _ = Describe("Decode", func() {
 	// encoding and decoding each particular type
 	DescribeTable("Identity functions of various Dhall and Go types",
 		func(inputType term.Term, testValue interface{}) {
-			id := core.Eval(term.LambdaTerm{
+			id := core.Eval(term.Lambda{
 				Label: "x",
 				Type:  inputType,
 				Body:  term.NewVar("x"),
@@ -156,7 +156,7 @@ var _ = Describe("Decode", func() {
 	Describe("Function types", func() {
 		It("Decodes the int successor function", func() {
 			var fn func(int) int
-			dhallFn := core.Eval(term.LambdaTerm{
+			dhallFn := core.Eval(term.Lambda{
 				Label: "x",
 				Type:  term.Natural,
 				Body: term.NaturalPlus(
@@ -170,10 +170,10 @@ var _ = Describe("Decode", func() {
 		})
 		It("Decodes the natural sum function", func() {
 			var fn func(int, int) int
-			dhallFn := core.Eval(term.LambdaTerm{
+			dhallFn := core.Eval(term.Lambda{
 				Label: "x",
 				Type:  term.Natural,
-				Body: term.LambdaTerm{
+				Body: term.Lambda{
 					Label: "y",
 					Type:  term.Natural,
 					Body: term.NaturalPlus(

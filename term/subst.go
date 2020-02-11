@@ -24,28 +24,28 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		return t
 	case LocalVar:
 		return t
-	case LambdaTerm:
+	case Lambda:
 		j := i
 		if t.Label == name {
 			j = i + 1
 		}
-		return LambdaTerm{
+		return Lambda{
 			Label: t.Label,
 			Type:  substAtLevel(i, name, replacement, t.Type),
 			Body:  substAtLevel(j, name, replacement, t.Body),
 		}
-	case PiTerm:
+	case Pi:
 		j := i
 		if t.Label == name {
 			j = i + 1
 		}
-		return PiTerm{
+		return Pi{
 			Label: t.Label,
 			Type:  substAtLevel(i, name, replacement, t.Type),
 			Body:  substAtLevel(j, name, replacement, t.Body),
 		}
-	case AppTerm:
-		return AppTerm{
+	case App:
+		return App{
 			Fn:  substAtLevel(i, name, replacement, t.Fn),
 			Arg: substAtLevel(i, name, replacement, t.Arg),
 		}
@@ -72,8 +72,8 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		return substAtLevel(i, name, replacement, t.Expr)
 	case DoubleLit:
 		return t
-	case TextLitTerm:
-		result := TextLitTerm{Suffix: t.Suffix}
+	case TextLit:
+		result := TextLit{Suffix: t.Suffix}
 		if t.Chunks == nil {
 			return result
 		}
@@ -88,16 +88,16 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		return result
 	case BoolLit:
 		return t
-	case IfTerm:
-		return IfTerm{
+	case If:
+		return If{
 			Cond: substAtLevel(i, name, replacement, t.Cond),
 			T:    substAtLevel(i, name, replacement, t.T),
 			F:    substAtLevel(i, name, replacement, t.F),
 		}
 	case IntegerLit:
 		return t
-	case OpTerm:
-		return OpTerm{
+	case Op:
+		return Op{
 			OpCode: t.OpCode,
 			L:      substAtLevel(i, name, replacement, t.L),
 			R:      substAtLevel(i, name, replacement, t.R),
@@ -195,28 +195,28 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 			}
 		}
 		return t
-	case LambdaTerm:
+	case Lambda:
 		j := i
 		if t.Label == local.Name {
 			j = i + 1
 		}
-		return LambdaTerm{
+		return Lambda{
 			Label: t.Label,
 			Type:  rebindAtLevel(i, local, t.Type),
 			Body:  rebindAtLevel(j, local, t.Body),
 		}
-	case PiTerm:
+	case Pi:
 		j := i
 		if t.Label == local.Name {
 			j = i + 1
 		}
-		return PiTerm{
+		return Pi{
 			Label: t.Label,
 			Type:  rebindAtLevel(i, local, t.Type),
 			Body:  rebindAtLevel(j, local, t.Body),
 		}
-	case AppTerm:
-		return AppTerm{
+	case App:
+		return App{
 			Fn:  rebindAtLevel(i, local, t.Fn),
 			Arg: rebindAtLevel(i, local, t.Arg),
 		}
@@ -243,8 +243,8 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 		return rebindAtLevel(i, local, t.Expr)
 	case DoubleLit:
 		return t
-	case TextLitTerm:
-		result := TextLitTerm{Suffix: t.Suffix}
+	case TextLit:
+		result := TextLit{Suffix: t.Suffix}
 		if t.Chunks == nil {
 			return result
 		}
@@ -259,16 +259,16 @@ func rebindAtLevel(i int, local LocalVar, t Term) Term {
 		return result
 	case BoolLit:
 		return t
-	case IfTerm:
-		return IfTerm{
+	case If:
+		return If{
 			Cond: rebindAtLevel(i, local, t.Cond),
 			T:    rebindAtLevel(i, local, t.T),
 			F:    rebindAtLevel(i, local, t.F),
 		}
 	case IntegerLit:
 		return t
-	case OpTerm:
-		return OpTerm{
+	case Op:
+		return Op{
 			OpCode: t.OpCode,
 			L:      rebindAtLevel(i, local, t.L),
 			R:      rebindAtLevel(i, local, t.R),

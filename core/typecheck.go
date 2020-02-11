@@ -191,7 +191,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			return nil, mkTypeError(unboundVariable(t))
 		}
 		return nil, fmt.Errorf("Unknown variable %s", t.Name)
-	case term.AppTerm:
+	case term.App:
 		fnType, err := typeWith(ctx, t.Fn)
 		if err != nil {
 			return nil, err
@@ -211,7 +211,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		}
 		bodyTypeVal := piType.Range(Eval(t.Arg))
 		return bodyTypeVal, nil
-	case term.LambdaTerm:
+	case term.Lambda:
 		_, err := typeWith(ctx, t.Type)
 		if err != nil {
 			return nil, err
@@ -236,7 +236,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			return nil, err
 		}
 		return pi, nil
-	case term.PiTerm:
+	case term.Pi:
 		inUniv, err := typeWith(ctx, t.Type)
 		if err != nil {
 			return nil, err
@@ -306,7 +306,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		return actualType, nil
 	case term.DoubleLit:
 		return Double, nil
-	case term.TextLitTerm:
+	case term.TextLit:
 		for _, chunk := range t.Chunks {
 			err := assertTypeIs(ctx, chunk.Expr, Text,
 				cantInterpolate)
@@ -317,7 +317,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		return Text, nil
 	case term.BoolLit:
 		return Bool, nil
-	case term.IfTerm:
+	case term.If:
 		condType, err := typeWith(ctx, t.Cond)
 		if err != nil {
 			return nil, err
@@ -346,7 +346,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		return L, nil
 	case term.IntegerLit:
 		return Integer, nil
-	case term.OpTerm:
+	case term.Op:
 		switch t.OpCode {
 		case term.OrOp, term.AndOp, term.EqOp, term.NeOp:
 			err := assertTypeIs(ctx, t.L, Bool, cantBoolOp(t.OpCode))
@@ -409,7 +409,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			recordType := term.OpTerm{L: Quote(lType), R: Quote(rType), OpCode: term.RecordTypeMergeOp}
+			recordType := term.Op{L: Quote(lType), R: Quote(rType), OpCode: term.RecordTypeMergeOp}
 			if _, err = typeWith(ctx, recordType); err != nil {
 				return nil, err
 			}
@@ -490,7 +490,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		case term.CompleteOp:
 			return typeWith(ctx,
 				term.Annot{
-					Expr: term.OpTerm{OpCode: term.RightBiasedRecordMergeOp,
+					Expr: term.Op{OpCode: term.RightBiasedRecordMergeOp,
 						L: term.Field{Record: t.L, FieldName: "default"},
 						R: t.R,
 					},

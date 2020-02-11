@@ -29,7 +29,7 @@ var (
 )
 
 func PlusOf(inner gopter.Gen) gopter.Gen {
-	return gen.Struct(reflect.TypeOf(term.OpTerm{}), map[string]gopter.Gen{
+	return gen.Struct(reflect.TypeOf(term.Op{}), map[string]gopter.Gen{
 		"OpCode": gen.Const(term.PlusOp),
 		"L":      inner,
 		"R":      inner,
@@ -37,7 +37,7 @@ func PlusOf(inner gopter.Gen) gopter.Gen {
 }
 
 func TimesOf(inner gopter.Gen) gopter.Gen {
-	return gen.Struct(reflect.TypeOf(term.OpTerm{}), map[string]gopter.Gen{
+	return gen.Struct(reflect.TypeOf(term.Op{}), map[string]gopter.Gen{
 		"OpCode": gen.Const(term.TimesOp),
 		"L":      inner,
 		"R":      inner,
@@ -58,7 +58,7 @@ var BasicType = gen.OneConstOf(term.Double, term.Text, term.Bool, term.Natural, 
 func ListOf(inner gopter.Gen) gopter.Gen {
 	return gopter.DeriveGen(
 		func(expr term.Term) term.Term { return term.Apply(term.List, expr) },
-		func(listType term.Term) term.Term { return listType.(term.AppTerm).Arg },
+		func(listType term.Term) term.Term { return listType.(term.App).Arg },
 		inner,
 	)
 }

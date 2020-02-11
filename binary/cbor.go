@@ -185,9 +185,9 @@ func decode(decodedCbor interface{}) (Term, error) {
 					return nil, fmt.Errorf("CBOR decode error: malformed function expression: %v", val)
 				}
 				if label == 1 {
-					return LambdaTerm{name, t, body}, nil
+					return Lambda{name, t, body}, nil
 				} else {
-					return PiTerm{name, t, body}, nil
+					return Pi{name, t, body}, nil
 				}
 			case 3: // operator
 				if len(val) != 4 {
@@ -208,7 +208,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 				if opcode > 13 {
 					return nil, fmt.Errorf("CBOR decode error: unknown operator code %d", opcode)
 				}
-				return OpTerm{OpCode: OpCode(opcode), L: l, R: r}, nil
+				return Op{OpCode: OpCode(opcode), L: l, R: r}, nil
 			case 4: // list
 				if val[1] != nil {
 					if len(val) > 2 {
@@ -331,7 +331,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 				if err != nil {
 					return nil, err
 				}
-				return IfTerm{Cond: cond, T: tBranch, F: fBranch}, nil
+				return If{Cond: cond, T: tBranch, F: fBranch}, nil
 			case 15: // natural literal
 				n, err := unwrapUint(val[1])
 				if err != nil {
@@ -362,7 +362,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 				if err != nil {
 					return nil, err
 				}
-				return TextLitTerm{Chunks: chunks, Suffix: s}, nil
+				return TextLit{Chunks: chunks, Suffix: s}, nil
 			case 19: // assert
 				annot, err := decode(val[1])
 				if err != nil {
@@ -530,11 +530,11 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 	case Builtin:
 		e.Encode(string(val))
-	case AppTerm:
+	case App:
 		fn := val.Fn
 		args := []interface{}{box(val.Arg)}
 		for true {
-			parentapp, ok := fn.(AppTerm)
+			parentapp, ok := fn.(App)
 			if !ok {
 				break
 			}
@@ -543,22 +543,22 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		}
 		e.Encode(append([]interface{}{0, box(fn)}, args...))
 
-	case LambdaTerm:
+	case Lambda:
 		if val.Label == "_" {
 			e.Encode([]interface{}{1, box(val.Type), box(val.Body)})
 		} else {
 			e.Encode([]interface{}{1, val.Label, box(val.Type), box(val.Body)})
 		}
-	case PiTerm:
+	case Pi:
 		if val.Label == "_" {
 			e.Encode([]interface{}{2, box(val.Type), box(val.Body)})
 		} else {
 			e.Encode([]interface{}{2, val.Label, box(val.Type), box(val.Body)})
 		}
-	case OpTerm:
+	case Op:
 		e.Encode([]interface{}{3, val.OpCode, box(val.L), box(val.R)})
 	case EmptyList:
-		if app, ok := val.Type.(AppTerm); ok {
+		if app, ok := val.Type.(App); ok {
 			if app.Fn == List {
 				e.Encode([]interface{}{4, box(app.Arg)})
 				break
@@ -630,7 +630,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		e.Encode([]interface{}{11, items})
 	case BoolLit:
 		e.Encode(bool(val))
-	case IfTerm:
+	case If:
 		e.Encode([]interface{}{14, box(val.Cond), box(val.T), box(val.F)})
 	case NaturalLit:
 		e.Encode(append([]interface{}{15}, int(val)))
@@ -658,7 +658,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 				e.Encode(float64(val))
 			}
 		}
-	case TextLitTerm:
+	case TextLit:
 		output := []interface{}{18}
 		for _, chunk := range val.Chunks {
 			output = append(output, chunk.Prefix, box(chunk.Expr))

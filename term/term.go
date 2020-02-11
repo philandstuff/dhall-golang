@@ -127,14 +127,14 @@ func (LocalVar) isTerm() {}
 
 type (
 	// A LambdaTerm is a lambda abstraction.
-	LambdaTerm struct {
+	Lambda struct {
 		Label string
 		Type  Term
 		Body  Term
 	}
 
 	// A PiTerm is a function type.
-	PiTerm struct {
+	Pi struct {
 		Label string
 		Type  Term
 		Body  Term
@@ -142,28 +142,28 @@ type (
 
 	// An AppTerm is a Term formed by applying a function to an
 	// argument.
-	AppTerm struct {
+	App struct {
 		Fn  Term
 		Arg Term
 	}
 
 	// An OpTerm is two Terms combined by an operator.  The OpCode
 	// determines the type of operator.
-	OpTerm struct {
+	Op struct {
 		OpCode OpCode
 		L      Term
 		R      Term
 	}
 )
 
-func (LambdaTerm) isTerm() {}
-func (PiTerm) isTerm()     {}
-func (AppTerm) isTerm()    {}
-func (OpTerm) isTerm()     {}
+func (Lambda) isTerm() {}
+func (Pi) isTerm()     {}
+func (App) isTerm()    {}
+func (Op) isTerm()     {}
 
 // NewLambda constructs a new lambda Term.
-func NewLambda(label string, t Term, body Term) LambdaTerm {
-	return LambdaTerm{
+func NewLambda(label string, t Term, body Term) Lambda {
+	return Lambda{
 		Label: label,
 		Type:  t,
 		Body:  body,
@@ -171,8 +171,8 @@ func NewLambda(label string, t Term, body Term) LambdaTerm {
 }
 
 // NewPi constructs a new pi Term.
-func NewPi(label string, t Term, body Term) PiTerm {
-	return PiTerm{
+func NewPi(label string, t Term, body Term) Pi {
+	return Pi{
 		Label: label,
 		Type:  t,
 		Body:  body,
@@ -181,7 +181,7 @@ func NewPi(label string, t Term, body Term) PiTerm {
 
 // NewAnonPi returns a pi Term with label "_", typically used for
 // non-dependent function types.
-func NewAnonPi(domain Term, codomain Term) PiTerm {
+func NewAnonPi(domain Term, codomain Term) Pi {
 	return NewPi("_", domain, codomain)
 }
 
@@ -189,7 +189,7 @@ func NewAnonPi(domain Term, codomain Term) PiTerm {
 func Apply(fn Term, args ...Term) Term {
 	out := fn
 	for _, arg := range args {
-		out = AppTerm{Fn: out, Arg: arg}
+		out = App{Fn: out, Arg: arg}
 	}
 	return out
 }
@@ -221,38 +221,38 @@ const (
 )
 
 // NaturalPlus takes Terms l and r and returns (l + r).
-func NaturalPlus(l, r Term) OpTerm {
-	return OpTerm{OpCode: PlusOp, L: l, R: r}
+func NaturalPlus(l, r Term) Op {
+	return Op{OpCode: PlusOp, L: l, R: r}
 }
 
 // NaturalTimes takes Terms l and r and returns (l * r).
-func NaturalTimes(l, r Term) OpTerm {
-	return OpTerm{OpCode: TimesOp, L: l, R: r}
+func NaturalTimes(l, r Term) Op {
+	return Op{OpCode: TimesOp, L: l, R: r}
 }
 
 // BoolOr takes Terms l and r and returns (l || r).
-func BoolOr(l, r Term) OpTerm {
-	return OpTerm{OpCode: OrOp, L: l, R: r}
+func BoolOr(l, r Term) Op {
+	return Op{OpCode: OrOp, L: l, R: r}
 }
 
 // BoolAnd takes Terms l and r and returns (l && r).
-func BoolAnd(l, r Term) OpTerm {
-	return OpTerm{OpCode: AndOp, L: l, R: r}
+func BoolAnd(l, r Term) Op {
+	return Op{OpCode: AndOp, L: l, R: r}
 }
 
 // ListAppend takes Terms l and r and returns (l # r).
-func ListAppend(l, r Term) OpTerm {
-	return OpTerm{OpCode: ListAppendOp, L: l, R: r}
+func ListAppend(l, r Term) Op {
+	return Op{OpCode: ListAppendOp, L: l, R: r}
 }
 
 // TextAppend takes Terms l and r and returns (l ++ r).
-func TextAppend(l, r Term) OpTerm {
-	return OpTerm{OpCode: TextAppendOp, L: l, R: r}
+func TextAppend(l, r Term) Op {
+	return Op{OpCode: TextAppendOp, L: l, R: r}
 }
 
 // Equivalent takes Terms l and r and returns (l ≡ r).
-func Equivalent(l, r Term) OpTerm {
-	return OpTerm{OpCode: EquivOp, L: l, R: r}
+func Equivalent(l, r Term) Op {
+	return Op{OpCode: EquivOp, L: l, R: r}
 }
 
 type (
@@ -298,13 +298,13 @@ type (
 		Prefix string
 		Expr   Term
 	}
-	Chunks      []Chunk
-	TextLitTerm struct {
+	Chunks  []Chunk
+	TextLit struct {
 		Chunks Chunks
 		Suffix string
 	}
 
-	IfTerm struct {
+	If struct {
 		Cond Term
 		T    Term
 		F    Term
@@ -367,13 +367,13 @@ func NewList(first Term, rest ...Term) NonEmptyList {
 
 // PlainText returns an uninterpolated text literal containing the
 // given string as text.
-func PlainText(content string) TextLitTerm {
-	return TextLitTerm{Suffix: content}
+func PlainText(content string) TextLit {
+	return TextLit{Suffix: content}
 }
 
-func (TextLitTerm) isTerm() {}
+func (TextLit) isTerm() {}
 
-func (IfTerm) isTerm() {}
+func (If) isTerm() {}
 
 func (DoubleLit) isTerm()  {}
 func (IntegerLit) isTerm() {}
@@ -455,33 +455,33 @@ func (v LocalVar) String() string {
 	return fmt.Sprint("local:", v.Name, "/", v.Index)
 }
 
-func (lam LambdaTerm) String() string {
+func (lam Lambda) String() string {
 	return fmt.Sprintf("(λ(%s : %v) → %v)", lam.Label, lam.Type, lam.Body)
 }
 
-func (pi PiTerm) String() string {
+func (pi Pi) String() string {
 	if pi.Label == "_" {
 		return fmt.Sprintf("%v → %v", pi.Type, pi.Body)
 	}
 	return fmt.Sprintf("∀(%s : %v) → %v", pi.Label, pi.Type, pi.Body)
 }
 
-func (app AppTerm) String() string {
-	if subApp, ok := app.Fn.(AppTerm); ok {
+func (app App) String() string {
+	if subApp, ok := app.Fn.(App); ok {
 		return fmt.Sprintf("(%v %v)", subApp.stringNoParens(), app.Arg)
 	}
 	return fmt.Sprintf("(%v %v)", app.Fn, app.Arg)
 }
 
-func (app AppTerm) stringNoParens() string {
-	if subApp, ok := app.Fn.(AppTerm); ok {
+func (app App) stringNoParens() string {
+	if subApp, ok := app.Fn.(App); ok {
 		return fmt.Sprintf("%v %v", subApp.stringNoParens(), app.Arg)
 	}
 	return fmt.Sprintf("%v %v", app.Fn, app.Arg)
 }
 
 // higher precedence binds tighter
-func (op OpTerm) precedence() int {
+func (op Op) precedence() int {
 	switch op.OpCode {
 	case ImportAltOp:
 		return 1
@@ -516,7 +516,7 @@ func (op OpTerm) precedence() int {
 	}
 }
 
-func (op OpTerm) operatorStr() string {
+func (op Op) operatorStr() string {
 	switch op.OpCode {
 	case ImportAltOp:
 		return " ? "
@@ -551,14 +551,14 @@ func (op OpTerm) operatorStr() string {
 	}
 }
 
-func (op OpTerm) String() string {
+func (op Op) String() string {
 	prec := op.precedence()
 	l := fmt.Sprint(op.L)
 	r := fmt.Sprint(op.R)
 
 	var buf strings.Builder
 
-	if lop, ok := op.L.(OpTerm); ok {
+	if lop, ok := op.L.(Op); ok {
 		if prec > lop.precedence() {
 			buf.WriteRune('(')
 		}
@@ -566,7 +566,7 @@ func (op OpTerm) String() string {
 		if prec > lop.precedence() {
 			buf.WriteRune(')')
 		}
-	} else if _, ok := op.L.(AppTerm); ok {
+	} else if _, ok := op.L.(App); ok {
 		buf.WriteString(l)
 
 	} else {
@@ -575,7 +575,7 @@ func (op OpTerm) String() string {
 		buf.WriteRune(')')
 	}
 	buf.WriteString(op.operatorStr())
-	if rop, ok := op.R.(OpTerm); ok {
+	if rop, ok := op.R.(Op); ok {
 		if prec > rop.precedence() {
 			buf.WriteRune('(')
 		}
@@ -583,7 +583,7 @@ func (op OpTerm) String() string {
 		if prec > rop.precedence() {
 			buf.WriteRune(')')
 		}
-	} else if _, ok := op.R.(AppTerm); ok {
+	} else if _, ok := op.R.(App); ok {
 		buf.WriteString(r)
 
 	} else {
