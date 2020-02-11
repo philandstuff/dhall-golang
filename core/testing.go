@@ -48,7 +48,7 @@ func (m *alphaMatcher) Match(actual interface{}) (success bool, err error) {
 	default:
 		return false, errors.New("BeAlphaEquivalentTo expects a Term or a Value")
 	}
-	return AlphaEquivalentVals(m.expected, actualValue), nil
+	return AlphaEquivalent(m.expected, actualValue), nil
 }
 
 func (m *alphaMatcher) FailureMessage(actual interface{}) (message string) {

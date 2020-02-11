@@ -35,24 +35,24 @@ var _ = Describe("TypeOf", func() {
 	DescribeTable("Builtin",
 		typecheckTest,
 		Entry(`Natural : Type`, term.Natural, Type),
-		Entry(`List : Type -> Type`, term.List, NewFnTypeVal("_", Type, Type)),
+		Entry(`List : Type -> Type`, term.List, NewFnType("_", Type, Type)),
 	)
 	DescribeTable("Lambda",
 		typecheckTest,
 		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
 			term.NewLambda("x", term.Natural, term.NewVar("x")),
-			NewPiVal("x", Natural, func(Value) Value { return Natural })),
+			NewPi("x", Natural, func(Value) Value { return Natural })),
 		Entry("λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
 			term.NewLambda("a", term.Type,
 				term.EmptyList{term.App{term.List, term.NewVar("a")}}),
-			NewPiVal("a", Type, func(a Value) Value {
+			NewPi("a", Type, func(a Value) Value {
 				return ListOf{a}
 			})),
 		Entry("λ(a : Natural) → assert : a ≡ a -- check presence of variables in resulting type",
 			term.NewLambda("a", term.Natural,
 				term.Assert{term.Op{term.EquivOp, term.NewVar("a"), term.NewVar("a")}}),
-			NewPiVal("a", Natural, func(a Value) Value {
-				return opValue{term.EquivOp, a, a}
+			NewPi("a", Natural, func(a Value) Value {
+				return oper{term.EquivOp, a, a}
 			})),
 	)
 	DescribeTable("Pi",
@@ -67,7 +67,7 @@ var _ = Describe("TypeOf", func() {
 				term.NewLambda("a", term.Natural,
 					term.Assert{term.Op{term.EquivOp, term.NewVar("a"), term.NewVar("a")}}),
 				term.NaturalLit(3)),
-			opValue{term.EquivOp, NaturalLit(3), NaturalLit(3)}),
+			oper{term.EquivOp, NaturalLit(3), NaturalLit(3)}),
 	)
 	DescribeTable("Others",
 		typecheckTest,

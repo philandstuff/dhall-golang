@@ -46,11 +46,11 @@ var _ = Describe("Decode", func() {
 		Entry("unmarshals IntegerLit into int",
 			core.IntegerLit(5), new(int64), int64(5)),
 		Entry("unmarshals TextLit into string",
-			core.TextLitVal{Suffix: "lalala"}, new(string), "lalala"),
+			core.TextLit{Suffix: "lalala"}, new(string), "lalala"),
 	)
 	DescribeTable("Compound types", DecodeAndCompare,
 		Entry("unmarshals Some 5 into int",
-			core.SomeVal{core.NaturalLit(5)},
+			core.Some{core.NaturalLit(5)},
 			new(int),
 			5),
 		Entry("unmarshals None Natural into int",
@@ -58,19 +58,19 @@ var _ = Describe("Decode", func() {
 			new(int),
 			0),
 		Entry("unmarshals List Integer into int slice",
-			core.NonEmptyListVal{core.IntegerLit(5)},
+			core.NonEmptyList{core.IntegerLit(5)},
 			new([]int),
 			[]int{5}),
 		Entry("unmarshals List Integer into int64 slice",
-			core.NonEmptyListVal{core.IntegerLit(5)},
+			core.NonEmptyList{core.IntegerLit(5)},
 			new([]int64),
 			[]int64{5}),
 		Entry("unmarshals List Bool into slice",
-			core.NonEmptyListVal{core.True, core.False},
+			core.NonEmptyList{core.True, core.False},
 			new([]bool),
 			[]bool{true, false}),
 		Entry("unmarshals empty List Bool into slice",
-			core.EmptyListVal{core.Bool},
+			core.EmptyList{core.Bool},
 			new([]bool),
 			[]bool{}),
 		Entry("unmarshals None (List Bool) into slice",
@@ -78,33 +78,33 @@ var _ = Describe("Decode", func() {
 			new([]bool),
 			[]bool(nil)),
 		Entry("unmarshals List (List Bool) into slice",
-			core.NonEmptyListVal{
-				core.NonEmptyListVal{core.True, core.False}},
+			core.NonEmptyList{
+				core.NonEmptyList{core.True, core.False}},
 			new([][]bool),
 			[][]bool{{true, false}}),
 		Entry("unmarshals {Foo : Natural, Bar : Text} into struct",
-			core.RecordLitVal{"Foo": core.NaturalLit(3), "Bar": core.TextLitVal{Suffix: "xyzzy"}},
+			core.RecordLit{"Foo": core.NaturalLit(3), "Bar": core.TextLit{Suffix: "xyzzy"}},
 			new(testStruct),
 			testStruct{Foo: 3, Bar: "xyzzy"}),
 		Entry("unmarshals {baz : Natural, Bar : Text} into tagged struct",
-			core.RecordLitVal{"baz": core.NaturalLit(3), "Bar": core.TextLitVal{Suffix: "xyzzy"}},
+			core.RecordLit{"baz": core.NaturalLit(3), "Bar": core.TextLit{Suffix: "xyzzy"}},
 			new(testTaggedStruct),
 			testTaggedStruct{Foo: 3, Bar: "xyzzy"}),
 		Entry("unmarshals None {Foo : Natural, Bar : Text} into struct",
-			core.NoneOf{core.RecordTypeVal{"Foo": core.Natural, "Bar": core.Text}},
+			core.NoneOf{core.RecordType{"Foo": core.Natural, "Bar": core.Text}},
 			new(testStruct),
 			testStruct{}),
 		Entry("unmarshals List {mapKey : Natural, mapValue : Text} into map",
-			core.NonEmptyListVal{core.RecordLitVal{"mapKey": core.NaturalLit(3), "mapValue": core.TextLitVal{Suffix: "fizz"}},
-				core.RecordLitVal{"mapKey": core.NaturalLit(5), "mapValue": core.TextLitVal{Suffix: "buzz"}}},
+			core.NonEmptyList{core.RecordLit{"mapKey": core.NaturalLit(3), "mapValue": core.TextLit{Suffix: "fizz"}},
+				core.RecordLit{"mapKey": core.NaturalLit(5), "mapValue": core.TextLit{Suffix: "buzz"}}},
 			new(map[int]string),
 			map[int]string{3: "fizz", 5: "buzz"}),
 		Entry("unmarshals None List {mapKey : Natural, mapValue : Text} into map",
-			core.NoneOf{core.ListOf{core.RecordTypeVal{"mapKey": core.Natural, "mapValue": core.Text}}},
+			core.NoneOf{core.ListOf{core.RecordType{"mapKey": core.Natural, "mapValue": core.Text}}},
 			new(map[int]string),
 			map[int]string(nil)),
 		Entry("unmarshals empty List {mapKey : Natural, mapValue : Text} into map",
-			core.EmptyListVal{core.RecordTypeVal{"mapKey": core.Natural, "mapValue": core.Text}},
+			core.EmptyList{core.RecordType{"mapKey": core.Natural, "mapValue": core.Text}},
 			new(map[int]string),
 			map[int]string{}),
 	)
@@ -186,13 +186,13 @@ var _ = Describe("Decode", func() {
 		})
 		It("Decodes the Natural/subtract builtin as a function", func() {
 			var fn func(int, int) int
-			Decode(core.NaturalSubtractVal, &fn)
+			Decode(core.NaturalSubtract, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(1, 3)).To(Equal(2))
 		})
 		It("Decodes the Natural/subtract builtin as a curried function", func() {
 			var fn func(int) func(int) int
-			Decode(core.NaturalSubtractVal, &fn)
+			Decode(core.NaturalSubtract, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(1)(3)).To(Equal(2))
 		})

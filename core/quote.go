@@ -29,11 +29,11 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		return term.Universe(v)
 	case Builtin:
 		return term.Builtin(v)
-	case naturalBuildVal:
+	case naturalBuild:
 		return term.NaturalBuild
-	case naturalEvenVal:
+	case naturalEven:
 		return term.NaturalEven
-	case naturalFoldVal:
+	case naturalFold:
 		var result term.Term = term.NaturalFold
 		if v.n == nil {
 			return result
@@ -47,37 +47,37 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			return result
 		}
 		return term.App{result, quoteWith(ctx, v.succ)}
-	case naturalIsZeroVal:
+	case naturalIsZero:
 		return term.NaturalIsZero
-	case naturalOddVal:
+	case naturalOdd:
 		return term.NaturalOdd
-	case naturalShowVal:
+	case naturalShow:
 		return term.NaturalShow
-	case naturalSubtractVal:
+	case naturalSubtract:
 		if v.a != nil {
 			return term.App{term.NaturalSubtract, quoteWith(ctx, v.a)}
 		}
 		return term.NaturalSubtract
-	case integerClampVal:
+	case integerClamp:
 		return term.IntegerClamp
-	case integerNegateVal:
+	case integerNegate:
 		return term.IntegerNegate
-	case naturalToIntegerVal:
+	case naturalToInteger:
 		return term.NaturalToInteger
-	case integerShowVal:
+	case integerShow:
 		return term.IntegerShow
-	case integerToDoubleVal:
+	case integerToDouble:
 		return term.IntegerToDouble
-	case doubleShowVal:
+	case doubleShow:
 		return term.DoubleShow
-	case optionalVal:
+	case optional:
 		return term.Optional
-	case optionalBuildVal:
+	case optionalBuild:
 		if v.typ != nil {
 			return term.App{term.OptionalBuild, quoteWith(ctx, v.typ)}
 		}
 		return term.OptionalBuild
-	case optionalFoldVal:
+	case optionalFold:
 		var result term.Term = term.OptionalFold
 		if v.typ1 == nil {
 			return result
@@ -95,18 +95,18 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			return result
 		}
 		return term.App{result, quoteWith(ctx, v.some)}
-	case noneVal:
+	case none:
 		return term.None
-	case textShowVal:
+	case textShow:
 		return term.TextShow
-	case listVal:
+	case list:
 		return term.List
-	case listBuildVal:
+	case listBuild:
 		if v.typ != nil {
 			return term.App{term.ListBuild, quoteWith(ctx, v.typ)}
 		}
 		return term.ListBuild
-	case listFoldVal:
+	case listFold:
 		var result term.Term = term.ListFold
 		if v.typ1 == nil {
 			return result
@@ -124,27 +124,27 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			return result
 		}
 		return term.App{result, quoteWith(ctx, v.cons)}
-	case listHeadVal:
+	case listHead:
 		if v.typ != nil {
 			return term.App{term.ListHead, quoteWith(ctx, v.typ)}
 		}
 		return term.ListHead
-	case listIndexedVal:
+	case listIndexed:
 		if v.typ != nil {
 			return term.App{term.ListIndexed, quoteWith(ctx, v.typ)}
 		}
 		return term.ListIndexed
-	case listLengthVal:
+	case listLength:
 		if v.typ != nil {
 			return term.App{term.ListLength, quoteWith(ctx, v.typ)}
 		}
 		return term.ListLength
-	case listLastVal:
+	case listLast:
 		if v.typ != nil {
 			return term.App{term.ListLast, quoteWith(ctx, v.typ)}
 		}
 		return term.ListLast
-	case listReverseVal:
+	case listReverse:
 		if v.typ != nil {
 			return term.App{term.ListReverse, quoteWith(ctx, v.typ)}
 		}
@@ -158,26 +158,26 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			Name:  v.Name,
 			Index: ctx[v.Name] - v.Index - 1,
 		}
-	case lambdaValue:
+	case lambda:
 		bodyVal := v.Call(quoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return term.Lambda{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),
 			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
 		}
-	case PiValue:
+	case Pi:
 		bodyVal := v.Range(quoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return term.Pi{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),
 			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
 		}
-	case appValue:
+	case app:
 		return term.App{
 			Fn:  quoteWith(ctx, v.Fn),
 			Arg: quoteWith(ctx, v.Arg),
 		}
-	case opValue:
+	case oper:
 		return term.Op{
 			OpCode: v.OpCode,
 			L:      quoteWith(ctx, v.L),
@@ -193,15 +193,15 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		return term.BoolLit(v)
 	case ListOf:
 		return term.Apply(term.List, quoteWith(ctx, v.Type))
-	case EmptyListVal:
+	case EmptyList:
 		return term.EmptyList{Type: quoteWith(ctx, v.Type)}
-	case NonEmptyListVal:
+	case NonEmptyList:
 		l := term.NonEmptyList{}
 		for _, e := range v {
 			l = append(l, quoteWith(ctx, e))
 		}
 		return l
-	case TextLitVal:
+	case TextLit:
 		var newChunks term.Chunks
 		for _, chunk := range v.Chunks {
 			newChunks = append(newChunks, term.Chunk{
@@ -221,39 +221,39 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		}
 	case OptionalOf:
 		return term.Apply(term.Optional, quoteWith(ctx, v.Type))
-	case SomeVal:
+	case Some:
 		return term.Some{Val: quoteWith(ctx, v.Val)}
 	case NoneOf:
 		return term.Apply(term.None, quoteWith(ctx, v.Type))
-	case RecordTypeVal:
+	case RecordType:
 		rt := term.RecordType{}
 		for k, v := range v {
 			rt[k] = quoteWith(ctx, v)
 		}
 		return rt
-	case RecordLitVal:
+	case RecordLit:
 		rt := term.RecordLit{}
 		for k, v := range v {
 			rt[k] = quoteWith(ctx, v)
 		}
 		return rt
-	case toMapVal:
+	case toMap:
 		result := term.ToMap{Record: quoteWith(ctx, v.Record)}
 		if v.Type != nil {
 			result.Type = quoteWith(ctx, v.Type)
 		}
 		return result
-	case fieldVal:
+	case field:
 		return term.Field{
 			Record:    quoteWith(ctx, v.Record),
 			FieldName: v.FieldName,
 		}
-	case projectVal:
+	case project:
 		return term.Project{
 			Record:     quoteWith(ctx, v.Record),
 			FieldNames: v.FieldNames,
 		}
-	case unionTypeVal:
+	case UnionType:
 		result := term.UnionType{}
 		for k, v := range v {
 			if v == nil {
@@ -263,7 +263,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			result[k] = quoteWith(ctx, v)
 		}
 		return result
-	case mergeVal:
+	case merge:
 		result := term.Merge{
 			Handler: quoteWith(ctx, v.Handler),
 			Union:   quoteWith(ctx, v.Union),
@@ -272,7 +272,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			result.Annotation = quoteWith(ctx, v.Annotation)
 		}
 		return result
-	case assertVal:
+	case assert:
 		return term.Assert{Annotation: quoteWith(ctx, v.Annotation)}
 	}
 	panic(fmt.Sprintf("unknown Value type %#v", v))

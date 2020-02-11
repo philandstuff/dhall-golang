@@ -32,43 +32,11 @@ type Builtin string
 
 // These are the Builtins.
 const (
-	Double   Builtin = "Double"
-	Text     Builtin = "Text"
-	Bool     Builtin = "Bool"
-	Natural  Builtin = "Natural"
-	Integer  Builtin = "Integer"
-	List     Builtin = "List"
-	Optional Builtin = "Optional"
-	None     Builtin = "None"
-
-	NaturalBuild     Builtin = "Natural/build"
-	NaturalFold      Builtin = "Natural/fold"
-	NaturalIsZero    Builtin = "Natural/isZero"
-	NaturalEven      Builtin = "Natural/even"
-	NaturalOdd       Builtin = "Natural/odd"
-	NaturalToInteger Builtin = "Natural/toInteger"
-	NaturalShow      Builtin = "Natural/show"
-	NaturalSubtract  Builtin = "Natural/subtract"
-
-	IntegerClamp    Builtin = "Integer/clamp"
-	IntegerNegate   Builtin = "Integer/negate"
-	IntegerToDouble Builtin = "Integer/toDouble"
-	IntegerShow     Builtin = "Integer/show"
-
-	DoubleShow Builtin = "Double/show"
-
-	TextShow Builtin = "Text/show"
-
-	ListBuild   Builtin = "List/build"
-	ListFold    Builtin = "List/fold"
-	ListLength  Builtin = "List/length"
-	ListHead    Builtin = "List/head"
-	ListLast    Builtin = "List/last"
-	ListIndexed Builtin = "List/indexed"
-	ListReverse Builtin = "List/reverse"
-
-	OptionalBuild Builtin = "Optional/build"
-	OptionalFold  Builtin = "Optional/fold"
+	Double  Builtin = "Double"
+	Text    Builtin = "Text"
+	Bool    Builtin = "Bool"
+	Natural Builtin = "Natural"
+	Integer Builtin = "Integer"
 )
 
 // A BoolLit is a Dhall boolean literal.
@@ -83,93 +51,93 @@ const (
 )
 
 type (
-	naturalBuildVal struct{}
-	naturalEvenVal  struct{}
-	naturalFoldVal  struct {
+	naturalBuild struct{}
+	naturalEven  struct{}
+	naturalFold  struct {
 		n    Value
 		typ  Value
 		succ Value
 		// zero Value
 	}
-	naturalIsZeroVal   struct{}
-	naturalOddVal      struct{}
-	naturalShowVal     struct{}
-	naturalSubtractVal struct {
+	naturalIsZero   struct{}
+	naturalOdd      struct{}
+	naturalShow     struct{}
+	naturalSubtract struct {
 		a Value
 		// b Value
 	}
-	naturalToIntegerVal struct{}
+	naturalToInteger struct{}
 
-	integerClampVal    struct{}
-	integerNegateVal   struct{}
-	integerShowVal     struct{}
-	integerToDoubleVal struct{}
+	integerClamp    struct{}
+	integerNegate   struct{}
+	integerShow     struct{}
+	integerToDouble struct{}
 
-	doubleShowVal struct{}
+	doubleShow struct{}
 
-	optionalVal      struct{}
-	optionalBuildVal struct{ typ Value }
-	optionalFoldVal  struct {
+	optional      struct{}
+	optionalBuild struct{ typ Value }
+	optionalFold  struct {
 		typ1 Value
 		opt  Value
 		typ2 Value
 		some Value
 		// none Value
 	}
-	noneVal struct{}
+	none struct{}
 
-	textShowVal struct{}
+	textShow struct{}
 
-	listVal      struct{}
-	listBuildVal struct {
+	list      struct{}
+	listBuild struct {
 		typ Value
 		// fn  Value
 	}
-	listFoldVal struct {
+	listFold struct {
 		typ1 Value
 		list Value
 		typ2 Value
 		cons Value
 		// empty Value
 	}
-	listLengthVal  struct{ typ Value }
-	listHeadVal    struct{ typ Value }
-	listLastVal    struct{ typ Value }
-	listIndexedVal struct{ typ Value }
-	listReverseVal struct{ typ Value }
+	listLength  struct{ typ Value }
+	listHead    struct{ typ Value }
+	listLast    struct{ typ Value }
+	listIndexed struct{ typ Value }
+	listReverse struct{ typ Value }
 )
 
-func (naturalBuildVal) isValue()     {}
-func (naturalEvenVal) isValue()      {}
-func (naturalFoldVal) isValue()      {}
-func (naturalIsZeroVal) isValue()    {}
-func (naturalOddVal) isValue()       {}
-func (naturalShowVal) isValue()      {}
-func (naturalSubtractVal) isValue()  {}
-func (naturalToIntegerVal) isValue() {}
+func (naturalBuild) isValue()     {}
+func (naturalEven) isValue()      {}
+func (naturalFold) isValue()      {}
+func (naturalIsZero) isValue()    {}
+func (naturalOdd) isValue()       {}
+func (naturalShow) isValue()      {}
+func (naturalSubtract) isValue()  {}
+func (naturalToInteger) isValue() {}
 
-func (integerClampVal) isValue()    {}
-func (integerNegateVal) isValue()   {}
-func (integerShowVal) isValue()     {}
-func (integerToDoubleVal) isValue() {}
+func (integerClamp) isValue()    {}
+func (integerNegate) isValue()   {}
+func (integerShow) isValue()     {}
+func (integerToDouble) isValue() {}
 
-func (doubleShowVal) isValue() {}
+func (doubleShow) isValue() {}
 
-func (optionalVal) isValue()      {}
-func (optionalBuildVal) isValue() {}
-func (optionalFoldVal) isValue()  {}
-func (noneVal) isValue()          {}
+func (optional) isValue()      {}
+func (optionalBuild) isValue() {}
+func (optionalFold) isValue()  {}
+func (none) isValue()          {}
 
-func (textShowVal) isValue() {}
+func (textShow) isValue() {}
 
-func (listVal) isValue()        {}
-func (listBuildVal) isValue()   {}
-func (listFoldVal) isValue()    {}
-func (listLengthVal) isValue()  {}
-func (listHeadVal) isValue()    {}
-func (listLastVal) isValue()    {}
-func (listIndexedVal) isValue() {}
-func (listReverseVal) isValue() {}
+func (list) isValue()        {}
+func (listBuild) isValue()   {}
+func (listFold) isValue()    {}
+func (listLength) isValue()  {}
+func (listHead) isValue()    {}
+func (listLast) isValue()    {}
+func (listIndexed) isValue() {}
+func (listReverse) isValue() {}
 
 type (
 	// OptionalOf is the Value version of `Optional a`
@@ -233,91 +201,91 @@ type Callable interface {
 	ArgType() Value
 }
 
-func (l lambdaValue) Call(a Value) Value {
+func (l lambda) Call(a Value) Value {
 	return l.Fn(a)
 }
 
-func (l lambdaValue) ArgType() Value {
+func (l lambda) ArgType() Value {
 	return l.Domain
 }
 
 var (
-	_ Callable = lambdaValue{}
+	_ Callable = lambda{}
 )
 
 type (
-	// A LambdaValue is a go function representing a Dhall function
+	// A lambda is a go function representing a Dhall function
 	// which has not yet been applied to its argument
-	lambdaValue struct {
+	lambda struct {
 		Label  string
 		Domain Value
 		Fn     func(Value) Value
 	}
 
-	// A PiValue is the value of a Dhall Pi type.  Domain is the type
+	// A Pi is the value of a Dhall Pi type.  Domain is the type
 	// of the domain, and Range is a go function which returns the
 	// type of the range, given the type of the domain.
-	PiValue struct {
+	Pi struct {
 		Label  string
 		Domain Value
 		Range  func(Value) Value
 	}
 
-	// An AppValue is the Value of a Fn applied to an Arg.  Note that
+	// An app is the Value of a Fn applied to an Arg.  Note that
 	// this is only a valid Value if Fn is a free variable (such as f
 	// 3, with f free), or if Fn is a builtin function which hasn't
 	// been applied to enough arguments (such as Natural/subtract 3).
-	appValue struct {
+	app struct {
 		Fn  Value
 		Arg Value
 	}
 
-	opValue struct {
+	oper struct {
 		OpCode term.OpCode
 		L      Value
 		R      Value
 	}
 )
 
-func (lambdaValue) isValue() {}
+func (lambda) isValue() {}
 
-func (PiValue) isValue() {}
+func (Pi) isValue() {}
 
-func (appValue) isValue() {}
+func (app) isValue() {}
 
-func (opValue) isValue() {}
+func (oper) isValue() {}
 
-// NewPiVal returns a new pi Value.
-func NewPiVal(label string, d Value, r func(Value) Value) PiValue {
-	return PiValue{
+// NewPi returns a new pi Value.
+func NewPi(label string, d Value, r func(Value) Value) Pi {
+	return Pi{
 		Label:  label,
 		Domain: d,
 		Range:  r,
 	}
 }
 
-// NewFnTypeVal returns a non-dependent function type Value.
-func NewFnTypeVal(l string, d Value, r Value) PiValue {
-	return NewPiVal(l, d, func(Value) Value { return r })
+// NewFnType returns a non-dependent function type Value.
+func NewFnType(l string, d Value, r Value) Pi {
+	return NewPi(l, d, func(Value) Value { return r })
 }
 
 type (
 	// A NaturalLit is a literal of type Natural.
 	NaturalLit uint
 
-	// An EmptyListVal is an empty list literal Value of the given type.
-	EmptyListVal struct{ Type Value }
+	// An EmptyList is an empty list literal Value of the given type.
+	EmptyList struct{ Type Value }
 
-	// A NonEmptyListVal is a non-empty list literal Value with the given contents.
-	NonEmptyListVal []Value
+	// A NonEmptyList is a non-empty list literal Value with the given contents.
+	NonEmptyList []Value
 
-	ChunkVal struct {
+	Chunk struct {
 		Prefix string
 		Expr   Value
 	}
-	ChunkVals  []ChunkVal
-	TextLitVal struct {
-		Chunks ChunkVals
+	Chunks  []Chunk
+	TextLit struct {
+		Chunks Chunks
 		Suffix string
 	}
 
@@ -333,47 +301,48 @@ type (
 	// A IntegerLit is a literal of type Integer.
 	IntegerLit int
 
-	// SomeVal represents a Value which is present in an Optional type.
-	SomeVal struct{ Val Value }
+	// Some represents a Value which is present in an Optional type.
+	Some struct{ Val Value }
 
-	RecordTypeVal map[string]Value
+	RecordType map[string]Value
 
-	RecordLitVal map[string]Value
+	RecordLit map[string]Value
 
-	toMapVal struct {
+	toMap struct {
 		Record Value
 		Type   Value // optional
 	}
 
-	fieldVal struct {
+	field struct {
 		Record    Value
 		FieldName string
 	}
 
-	projectVal struct {
+	project struct {
 		Record     Value
 		FieldNames []string
 	}
 
-	// no ProjectTypeVal because it cannot be in a normal form
+	// no projectType because it cannot be in a normal form so cannot
+	// be a Value
 
-	unionTypeVal map[string]Value
+	UnionType map[string]Value
 
-	mergeVal struct {
+	merge struct {
 		Handler    Value
 		Union      Value
 		Annotation Value // optional
 	}
 
-	assertVal struct{ Annotation Value }
+	assert struct{ Annotation Value }
 )
 
 func (NaturalLit) isValue() {}
 
-func (EmptyListVal) isValue()    {}
-func (NonEmptyListVal) isValue() {}
+func (EmptyList) isValue()    {}
+func (NonEmptyList) isValue() {}
 
-func (TextLitVal) isValue() {}
+func (TextLit) isValue() {}
 
 func (ifVal) isValue() {}
 
@@ -396,13 +365,13 @@ func (d DoubleLit) String() string {
 	return fmt.Sprintf("%#v", float64(d))
 }
 
-func (SomeVal) isValue() {}
+func (Some) isValue() {}
 
-func (RecordTypeVal) isValue() {}
-func (RecordLitVal) isValue()  {}
-func (toMapVal) isValue()      {}
-func (fieldVal) isValue()      {}
-func (projectVal) isValue()    {}
-func (unionTypeVal) isValue()  {}
-func (mergeVal) isValue()      {}
-func (assertVal) isValue()     {}
+func (RecordType) isValue() {}
+func (RecordLit) isValue()  {}
+func (toMap) isValue()      {}
+func (field) isValue()      {}
+func (project) isValue()    {}
+func (UnionType) isValue()  {}
+func (merge) isValue()      {}
+func (assert) isValue()     {}

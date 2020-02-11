@@ -15,14 +15,14 @@ var _ = DescribeTable("Quote",
 	Entry("Kind", Kind, term.Kind),
 	Entry("Sort", Sort, term.Sort),
 	Entry(`λ(x : Natural) → x`,
-		lambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
+		lambda{Label: "x", Domain: Natural, Fn: func(x Value) Value {
 			return x
 		}},
 		term.Lambda{Label: "x", Type: term.Natural, Body: term.Var{"x", 0}},
 	),
 	Entry(`λ(x : Natural) → λ(x : Natural) → x`,
-		lambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
-			return lambdaValue{
+		lambda{Label: "x", Domain: Natural, Fn: func(x Value) Value {
+			return lambda{
 				Label:  "x",
 				Domain: Natural,
 				Fn:     func(x Value) Value { return x },
@@ -33,8 +33,8 @@ var _ = DescribeTable("Quote",
 			Body: term.Var{"x", 0}}},
 	),
 	Entry(`λ(x : Natural) → λ(x : Natural) → x@1`,
-		lambdaValue{Label: "x", Domain: Natural, Fn: func(x1 Value) Value {
-			return lambdaValue{
+		lambda{Label: "x", Domain: Natural, Fn: func(x1 Value) Value {
+			return lambda{
 				Label:  "x",
 				Domain: Natural,
 				Fn:     func(x Value) Value { return x1 },
@@ -45,8 +45,8 @@ var _ = DescribeTable("Quote",
 			Body: term.Var{"x", 1}}},
 	),
 	Entry(`λ(x : Natural) → λ(y : Natural) → x`,
-		lambdaValue{Label: "x", Domain: Natural, Fn: func(x Value) Value {
-			return lambdaValue{
+		lambda{Label: "x", Domain: Natural, Fn: func(x Value) Value {
+			return lambda{
 				Label:  "y",
 				Domain: Natural,
 				Fn:     func(y Value) Value { return x },
@@ -57,18 +57,18 @@ var _ = DescribeTable("Quote",
 			Body: term.Var{"x", 0}}},
 	),
 	Entry(`Natural → Natural`,
-		PiValue{Label: "_", Domain: Natural, Range: func(x Value) Value {
+		Pi{Label: "_", Domain: Natural, Range: func(x Value) Value {
 			return Natural
 		}},
 		term.Pi{Label: "_", Type: term.Natural, Body: term.Natural},
 	),
 	Entry(`∀(a : Type) → List a`,
-		PiValue{Label: "a", Domain: Type, Range: func(x Value) Value {
+		Pi{Label: "a", Domain: Type, Range: func(x Value) Value {
 			return ListOf{x}
 		}},
 		term.Pi{Label: "a", Type: term.Type, Body: term.App{term.List, term.Var{"a", 0}}},
 	),
 	Entry(`[] : List Natural`,
-		EmptyListVal{Type: ListOf{Type: Natural}},
+		EmptyList{Type: ListOf{Type: Natural}},
 		term.EmptyList{Type: term.App{Fn: term.List, Arg: term.Natural}}),
 )
