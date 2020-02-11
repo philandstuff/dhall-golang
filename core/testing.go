@@ -3,6 +3,8 @@ package core
 import (
 	"errors"
 	"fmt"
+
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 // GomegaMatcher is a copy of
@@ -20,7 +22,7 @@ type GomegaMatcher interface {
 // the Values are compared with AlphaEquivalentVals().
 func BeAlphaEquivalentTo(expected interface{}) GomegaMatcher {
 	switch e := expected.(type) {
-	case Term:
+	case term.Term:
 		return &alphaMatcher{
 			expected: Eval(e),
 		}
@@ -39,7 +41,7 @@ type alphaMatcher struct {
 func (m *alphaMatcher) Match(actual interface{}) (success bool, err error) {
 	var actualValue Value
 	switch a := actual.(type) {
-	case Term:
+	case term.Term:
 		actualValue = Eval(a)
 	case Value:
 		actualValue = a

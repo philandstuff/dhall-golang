@@ -6,8 +6,9 @@ import (
 
 	"github.com/philandstuff/dhall-golang/binary"
 	"github.com/philandstuff/dhall-golang/core"
-	. "github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/philandstuff/dhall-golang/term"
+	. "github.com/philandstuff/dhall-golang/term"
 )
 
 // Load takes a Term and resolves all imports
@@ -21,7 +22,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 	switch e := e.(type) {
 	case Import:
 		here := e.Fetchable
-		origin := core.NullOrigin
+		origin := term.NullOrigin
 		if len(ancestors) >= 1 {
 			origin = ancestors[len(ancestors)-1].Origin()
 

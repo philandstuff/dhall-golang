@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 // Ensure that alphaMatcher is a valid GomegaMatcher
@@ -12,48 +13,48 @@ var _ types.GomegaMatcher = &alphaMatcher{}
 
 var _ = Describe("AlphaEquivalent", func() {
 	DescribeTable("returns false for Terms that aren't equivalent",
-		func(l, r Term) {
+		func(l, r term.Term) {
 			Expect(l).ToNot(BeAlphaEquivalentTo(r))
 		},
-		Entry("Bool and Natural", Bool, Natural),
+		Entry("Bool and Natural", term.Bool, term.Natural),
 		Entry("λ(a : Natural) → a` and `λ(b : Natural) → 3",
-			NewLambda("a", Natural, NewVar("a")),
-			NewLambda("b", Natural, NaturalLit(3))),
+			term.NewLambda("a", term.Natural, term.NewVar("a")),
+			term.NewLambda("b", term.Natural, term.NaturalLit(3))),
 	)
 	DescribeTable("a Term is AlphaEquivalent to itself",
-		func(t Term) {
+		func(t term.Term) {
 			Expect(t).To(BeAlphaEquivalentTo(t))
 		},
 		Entry(`λ(a : Natural) → a`,
-			NewLambda("a", Natural, NewVar("a"))),
+			term.NewLambda("a", term.Natural, term.NewVar("a"))),
 		Entry(`∀(a : Type) → List a`,
-			NewPi("a", Type, Apply(List, NewVar("a")))),
+			term.NewPi("a", term.Type, term.Apply(term.List, term.NewVar("a")))),
 		Entry(`{a = True, c = _}`,
-			RecordLit{"a": True, "c": NewVar("_")}),
+			term.RecordLit{"a": term.True, "c": term.NewVar("_")}),
 		Entry(`toMap {a = True, c = _}`,
-			ToMap{Record: RecordLit{"a": True, "c": NewVar("_")}}),
+			term.ToMap{Record: term.RecordLit{"a": term.True, "c": term.NewVar("_")}}),
 		Entry(`toMap {a = True, c = _} ≡ toMap {a = True, c = _}`,
-			Equivalent(ToMap{Record: RecordLit{"a": True, "c": NewVar("_")}}, ToMap{Record: RecordLit{"a": True, "c": NewVar("_")}})),
+			term.Equivalent(term.ToMap{Record: term.RecordLit{"a": term.True, "c": term.NewVar("_")}}, term.ToMap{Record: term.RecordLit{"a": term.True, "c": term.NewVar("_")}})),
 		Entry(`[{mapKey = "a", mapValue = True}, {mapKey = "c", mapValue = _}] ≡ [{mapKey = "a", mapValue = True}, {mapKey = "c", mapValue = _}]`,
-			Equivalent(
-				NewList(RecordLit{"mapKey": PlainText("a"), "mapValue": True}, RecordLit{"mapKey": PlainText("a"), "mapValue": NewVar("_")}),
-				NewList(RecordLit{"mapKey": PlainText("a"), "mapValue": True}, RecordLit{"mapKey": PlainText("a"), "mapValue": NewVar("_")}))),
+			term.Equivalent(
+				term.NewList(term.RecordLit{"mapKey": term.PlainText("a"), "mapValue": term.True}, term.RecordLit{"mapKey": term.PlainText("a"), "mapValue": term.NewVar("_")}),
+				term.NewList(term.RecordLit{"mapKey": term.PlainText("a"), "mapValue": term.True}, term.RecordLit{"mapKey": term.PlainText("a"), "mapValue": term.NewVar("_")}))),
 		Entry(`∀(_ : Bool) → [{mapKey = "a", mapValue = True}, {mapKey = "c", mapValue = _}] ≡ [{mapKey = "a", mapValue = True}, {mapKey = "c", mapValue = _}]`,
-			NewPi("_", Bool, Equivalent(
-				NewList(RecordLit{"mapKey": PlainText("a"), "mapValue": True}, RecordLit{"mapKey": PlainText("a"), "mapValue": NewVar("_")}),
-				NewList(RecordLit{"mapKey": PlainText("a"), "mapValue": True}, RecordLit{"mapKey": PlainText("a"), "mapValue": NewVar("_")})))),
+			term.NewPi("_", term.Bool, term.Equivalent(
+				term.NewList(term.RecordLit{"mapKey": term.PlainText("a"), "mapValue": term.True}, term.RecordLit{"mapKey": term.PlainText("a"), "mapValue": term.NewVar("_")}),
+				term.NewList(term.RecordLit{"mapKey": term.PlainText("a"), "mapValue": term.True}, term.RecordLit{"mapKey": term.PlainText("a"), "mapValue": term.NewVar("_")})))),
 		Entry("`∀(_ : Type) → toMap {a = True, c = _} ≡ toMap {a = True, c = _}`",
-			NewPi("_", Type, Equivalent(ToMap{Record: RecordLit{"a": True, "c": NewVar("_")}}, ToMap{Record: RecordLit{"a": True, "c": NewVar("_")}}))),
+			term.NewPi("_", term.Type, term.Equivalent(term.ToMap{Record: term.RecordLit{"a": term.True, "c": term.NewVar("_")}}, term.ToMap{Record: term.RecordLit{"a": term.True, "c": term.NewVar("_")}}))),
 	)
 	DescribeTable("returns true for nonidentical but alpha-equivalent Terms",
-		func(l, r Term) {
+		func(l, r term.Term) {
 			Expect(l).To(BeAlphaEquivalentTo(r))
 		},
 		Entry("`λ(a : Natural) → a` and `λ(b : Natural) → b`",
-			NewLambda("a", Natural, NewVar("a")),
-			NewLambda("b", Natural, NewVar("b"))),
+			term.NewLambda("a", term.Natural, term.NewVar("a")),
+			term.NewLambda("b", term.Natural, term.NewVar("b"))),
 		Entry("`∀(a : Type) → List a` and ∀(b : Type) → List b`",
-			NewPi("a", Type, Apply(List, NewVar("a"))),
-			NewPi("b", Type, Apply(List, NewVar("b")))),
+			term.NewPi("a", term.Type, term.Apply(term.List, term.NewVar("a"))),
+			term.NewPi("b", term.Type, term.Apply(term.List, term.NewVar("b")))),
 	)
 })

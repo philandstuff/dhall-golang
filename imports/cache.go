@@ -7,15 +7,15 @@ import (
 	"path"
 
 	"github.com/philandstuff/dhall-golang/binary"
-	"github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 // DhallCache is an interface for caching implementations.
 type DhallCache interface {
 	// Fetch fetches a Term from the cache
-	Fetch(hash []byte) core.Term
+	Fetch(hash []byte) term.Term
 	// Save saves a Term to the cache
-	Save(hash []byte, term core.Term)
+	Save(hash []byte, term term.Term)
 }
 
 // StandardCache is the standard DhallCache implementation.
@@ -31,7 +31,7 @@ func dhallCacheDir() (string, error) {
 
 // Fetch searches the standard Dhall cache location for a term at the
 // index given by hash.  If the hash isn't in the cache, returns nil.
-func (StandardCache) Fetch(hash []byte) core.Term {
+func (StandardCache) Fetch(hash []byte) term.Term {
 	// FIXME: don't swallow these errors, maybe?
 	hash16 := fmt.Sprintf("%x", hash)
 	dir, err := dhallCacheDir()
@@ -52,7 +52,7 @@ func (StandardCache) Fetch(hash []byte) core.Term {
 
 // Save saves the given Term to the standard Dhall cache at the given
 // hash.
-func (StandardCache) Save(hash []byte, e core.Term) {
+func (StandardCache) Save(hash []byte, e term.Term) {
 	hash16 := fmt.Sprintf("%x", hash)
 	dir, err := dhallCacheDir()
 	if err != nil {
@@ -72,7 +72,7 @@ func (StandardCache) Save(hash []byte, e core.Term) {
 type NoCache struct{}
 
 // Fetch always returns nil.
-func (NoCache) Fetch([]byte) core.Term { return nil }
+func (NoCache) Fetch([]byte) term.Term { return nil }
 
 // Save does nothing.
-func (NoCache) Save([]byte, core.Term) {}
+func (NoCache) Save([]byte, term.Term) {}

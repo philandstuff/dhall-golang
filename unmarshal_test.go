@@ -5,6 +5,7 @@ import (
 
 	. "github.com/philandstuff/dhall-golang"
 	"github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -110,11 +111,11 @@ var _ = Describe("Decode", func() {
 	// Testing various identity functions ensures we support both
 	// encoding and decoding each particular type
 	DescribeTable("Identity functions of various Dhall and Go types",
-		func(inputType core.Term, testValue interface{}) {
-			id := core.Eval(core.LambdaTerm{
+		func(inputType term.Term, testValue interface{}) {
+			id := core.Eval(term.LambdaTerm{
 				Label: "x",
 				Type:  inputType,
-				Body:  core.NewVar("x"),
+				Body:  term.NewVar("x"),
 			})
 			arg := reflect.ValueOf(testValue)
 			fnPtr := reflect.New(
@@ -127,40 +128,40 @@ var _ = Describe("Decode", func() {
 			result := fnVal.Call([]reflect.Value{arg})
 			Expect(result[0].Interface()).To(Equal(arg.Interface()))
 		},
-		Entry("Bool into bool", core.Bool, true),
-		Entry("Natural into int", core.Natural, 1),
-		Entry("Natural into uint", core.Natural, uint(1)),
-		Entry("Natural into int64", core.Natural, int64(1)),
-		Entry("Integer into int", core.Integer, 1),
-		Entry("Integer into int64", core.Integer, int64(1)),
-		Entry("Text into string", core.Text, "foo"),
+		Entry("Bool into bool", term.Bool, true),
+		Entry("Natural into int", term.Natural, 1),
+		Entry("Natural into uint", term.Natural, uint(1)),
+		Entry("Natural into int64", term.Natural, int64(1)),
+		Entry("Integer into int", term.Integer, 1),
+		Entry("Integer into int64", term.Integer, int64(1)),
+		Entry("Text into string", term.Text, "foo"),
 		Entry("List Natural into []int",
-			core.Apply(core.List, core.Natural), []int{1, 2, 3}),
+			term.Apply(term.List, term.Natural), []int{1, 2, 3}),
 		XEntry("Optional Natural into int",
-			core.Apply(core.Optional, core.Natural), 1),
+			term.Apply(term.Optional, term.Natural), 1),
 		Entry("record into struct",
-			core.RecordType{"Foo": core.Natural, "Bar": core.Text},
+			term.RecordType{"Foo": term.Natural, "Bar": term.Text},
 			testStruct{Foo: 1, Bar: "howdy"},
 		),
 		Entry("record into tagged struct",
-			core.RecordType{"baz": core.Natural, "Bar": core.Text},
+			term.RecordType{"baz": term.Natural, "Bar": term.Text},
 			testTaggedStruct{Foo: 1, Bar: "howdy"},
 		),
 		Entry("map into map",
-			core.Apply(core.List,
-				core.RecordType{"mapKey": core.Text, "mapValue": core.Natural}),
+			term.Apply(term.List,
+				term.RecordType{"mapKey": term.Text, "mapValue": term.Natural}),
 			map[string]int{"foo": 1, "bar": 2},
 		),
 	)
 	Describe("Function types", func() {
 		It("Decodes the int successor function", func() {
 			var fn func(int) int
-			dhallFn := core.Eval(core.LambdaTerm{
+			dhallFn := core.Eval(term.LambdaTerm{
 				Label: "x",
-				Type:  core.Natural,
-				Body: core.NaturalPlus(
-					core.NewVar("x"),
-					core.NaturalLit(1),
+				Type:  term.Natural,
+				Body: term.NaturalPlus(
+					term.NewVar("x"),
+					term.NaturalLit(1),
 				),
 			})
 			Decode(dhallFn, &fn)
@@ -169,14 +170,14 @@ var _ = Describe("Decode", func() {
 		})
 		It("Decodes the natural sum function", func() {
 			var fn func(int, int) int
-			dhallFn := core.Eval(core.LambdaTerm{
+			dhallFn := core.Eval(term.LambdaTerm{
 				Label: "x",
-				Type:  core.Natural,
-				Body: core.LambdaTerm{
+				Type:  term.Natural,
+				Body: term.LambdaTerm{
 					Label: "y",
-					Type:  core.Natural,
-					Body: core.NaturalPlus(
-						core.NewVar("x"), core.NewVar("y")),
+					Type:  term.Natural,
+					Body: term.NaturalPlus(
+						term.NewVar("x"), term.NewVar("y")),
 				},
 			})
 			Decode(dhallFn, &fn)

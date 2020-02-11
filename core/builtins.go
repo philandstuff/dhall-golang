@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 	"strings"
+
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 func (naturalBuildVal) Call(x Value) Value {
@@ -13,7 +15,7 @@ func (naturalBuildVal) Call(x Value) Value {
 			if n, ok := x.(NaturalLit); ok {
 				return NaturalLit(n + 1)
 			}
-			return opValue{OpCode: PlusOp, L: x, R: NaturalLit(1)}
+			return opValue{OpCode: term.PlusOp, L: x, R: NaturalLit(1)}
 		},
 	}
 	return applyVal(x, Natural, succ, NaturalLit(0))
@@ -329,7 +331,7 @@ func (l listBuildVal) Call(x Value) Value {
 					if as, ok := as.(NonEmptyListVal); ok {
 						return append(NonEmptyListVal{a}, as...)
 					}
-					return opValue{OpCode: ListAppendOp, L: NonEmptyListVal{a}, R: as}
+					return opValue{OpCode: term.ListAppendOp, L: NonEmptyListVal{a}, R: as}
 				},
 			}
 		},

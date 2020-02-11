@@ -10,28 +10,28 @@ package internal
 import (
 	"net/url"
 
-	"github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/term"
 )
 
-func NewImport(fetchable core.Fetchable, mode core.ImportMode) core.Import {
-	return core.Import{
-		ImportHashed: core.ImportHashed{
+func NewImport(fetchable term.Fetchable, mode term.ImportMode) term.Import {
+	return term.Import{
+		ImportHashed: term.ImportHashed{
 			Fetchable: fetchable,
 		},
 		ImportMode: mode,
 	}
 }
-func NewEnvVarImport(envvar string, mode core.ImportMode) core.Import {
-	return NewImport(core.EnvVar(envvar), mode)
+func NewEnvVarImport(envvar string, mode term.ImportMode) term.Import {
+	return NewImport(term.EnvVar(envvar), mode)
 }
 
-func NewLocalImport(path string, mode core.ImportMode) core.Import {
-	return NewImport(core.Local(path), mode)
+func NewLocalImport(path string, mode term.ImportMode) term.Import {
+	return NewImport(term.Local(path), mode)
 }
 
 // only for generating test data - discards errors
-func NewRemoteImport(uri string, mode core.ImportMode) core.Import {
+func NewRemoteImport(uri string, mode term.ImportMode) term.Import {
 	parsedURI, _ := url.ParseRequestURI(uri)
-	remote := core.NewRemote(parsedURI)
+	remote := term.NewRemote(parsedURI)
 	return NewImport(remote, mode)
 }

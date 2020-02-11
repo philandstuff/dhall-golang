@@ -1,11 +1,13 @@
-package core
+package term
 
 import (
 	"fmt"
 	"reflect"
 )
 
-func subst(name string, replacement, t Term) Term {
+// Subst takes a Term and finds all instances of a variable called
+// `name` and replaces them with the replacement.
+func Subst(name string, replacement, t Term) Term {
 	return substAtLevel(0, name, replacement, t)
 }
 
@@ -20,7 +22,7 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 			return replacement
 		}
 		return t
-	case localVar:
+	case LocalVar:
 		return t
 	case LambdaTerm:
 		j := i
@@ -171,11 +173,13 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 	}
 }
 
-func rebindLocal(local localVar, t Term) Term {
+// RebindLocal takes a Term and finds all instances of a LocalVar and
+// replaces them with the equivalent Var.
+func RebindLocal(local LocalVar, t Term) Term {
 	return rebindAtLevel(0, local, t)
 }
 
-func rebindAtLevel(i int, local localVar, t Term) Term {
+func rebindAtLevel(i int, local LocalVar, t Term) Term {
 	switch t := t.(type) {
 	case Universe:
 		return t
@@ -183,7 +187,7 @@ func rebindAtLevel(i int, local localVar, t Term) Term {
 		return t
 	case Var:
 		return t
-	case localVar:
+	case LocalVar:
 		if t == local {
 			return Var{
 				Name:  t.Name,

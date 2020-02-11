@@ -21,7 +21,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	. "github.com/philandstuff/dhall-golang/core"
+	. "github.com/philandstuff/dhall-golang/term"
 )
 
 // Helper function for parsing all the operator parsing blocks

@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"path"
 
-	. "github.com/philandstuff/dhall-golang/core"
+	. "github.com/philandstuff/dhall-golang/term"
 	"github.com/ugorji/go/codec"
 )
 

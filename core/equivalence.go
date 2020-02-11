@@ -1,12 +1,16 @@
 package core
 
-import "math"
+import (
+	"math"
+
+	"github.com/philandstuff/dhall-golang/term"
+)
 
 // AlphaEquivalent reports if two Terms are equal after
 // alpha-normalization, as defined by the standard.  Broadly, two
 // terms are alpha-equivalent if they are structurally identical,
 // ignoring label names.
-func AlphaEquivalent(t1 Term, t2 Term) bool {
+func AlphaEquivalent(t1 term.Term, t2 term.Term) bool {
 	v1 := Eval(t1)
 	v2 := Eval(t2)
 	return AlphaEquivalentVals(v1, v2)
@@ -32,7 +36,7 @@ func alphaEquivalentValsWith(level int, v1 Value, v2 Value) bool {
 		textShowVal,
 		listVal, listBuildVal, listFoldVal, listHeadVal, listIndexedVal,
 		listLengthVal, listLastVal, listReverseVal,
-		Var, localVar, quoteVar,
+		freeVar, localVar, quoteVar,
 		NaturalLit, IntegerLit, BoolLit:
 		return v1 == v2
 	case DoubleLit:

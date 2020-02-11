@@ -5,89 +5,91 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 type Env map[string][]Value
 
 // Eval normalizes Term to a Value.
-func Eval(t Term) Value {
+func Eval(t term.Term) Value {
 	return evalWith(t, Env{}, false)
 }
 
 // AlphaBetaEval alpha-beta-normalizes Term to a Value.
-func AlphaBetaEval(t Term) Value {
+func AlphaBetaEval(t term.Term) Value {
 	return evalWith(t, Env{}, true)
 }
 
-func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
+func evalWith(t term.Term, e Env, shouldAlphaNormalize bool) Value {
 	switch t := t.(type) {
-	case Universe:
-		return t
-	case Builtin:
+	case term.Universe:
+		return Universe(t)
+	case term.Builtin:
 		switch t {
-		case NaturalBuild:
+		case term.NaturalBuild:
 			return NaturalBuildVal
-		case NaturalEven:
+		case term.NaturalEven:
 			return NaturalEvenVal
-		case NaturalFold:
+		case term.NaturalFold:
 			return NaturalFoldVal
-		case NaturalIsZero:
+		case term.NaturalIsZero:
 			return NaturalIsZeroVal
-		case NaturalOdd:
+		case term.NaturalOdd:
 			return NaturalOddVal
-		case NaturalShow:
+		case term.NaturalShow:
 			return NaturalShowVal
-		case NaturalSubtract:
+		case term.NaturalSubtract:
 			return NaturalSubtractVal
-		case NaturalToInteger:
+		case term.NaturalToInteger:
 			return NaturalToIntegerVal
-		case IntegerClamp:
+		case term.IntegerClamp:
 			return IntegerClampVal
-		case IntegerNegate:
+		case term.IntegerNegate:
 			return IntegerNegateVal
-		case IntegerShow:
+		case term.IntegerShow:
 			return IntegerShowVal
-		case IntegerToDouble:
+		case term.IntegerToDouble:
 			return IntegerToDoubleVal
-		case DoubleShow:
+		case term.DoubleShow:
 			return DoubleShowVal
-		case Optional:
+		case term.Optional:
 			return OptionalVal
-		case OptionalBuild:
+		case term.OptionalBuild:
 			return OptionalBuildVal
-		case OptionalFold:
+		case term.OptionalFold:
 			return OptionalFoldVal
-		case None:
+		case term.None:
 			return NoneVal
-		case TextShow:
+		case term.TextShow:
 			return TextShowVal
-		case List:
+		case term.List:
 			return ListVal
-		case ListBuild:
+		case term.ListBuild:
 			return ListBuildVal
-		case ListFold:
+		case term.ListFold:
 			return ListFoldVal
-		case ListHead:
+		case term.ListHead:
 			return ListHeadVal
-		case ListIndexed:
+		case term.ListIndexed:
 			return ListIndexedVal
-		case ListLength:
+		case term.ListLength:
 			return ListLengthVal
-		case ListLast:
+		case term.ListLast:
 			return ListLastVal
-		case ListReverse:
+		case term.ListReverse:
 			return ListReverseVal
 		default:
-			return t
+			return Builtin(t)
 		}
-	case Var:
+	case term.Var:
 		if t.Index >= len(e[t.Name]) {
-			return Var{t.Name, t.Index - len(e[t.Name])}
+			return freeVar{t.Name, t.Index - len(e[t.Name])}
 		}
 		return e[t.Name][t.Index]
-	case localVar:
-		return t
-	case LambdaTerm:
+	case term.LocalVar:
+		return localVar(t)
+	case term.LambdaTerm:
 		v := lambdaValue{
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
@@ -104,7 +106,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			v.Label = "_"
 		}
 		return v
-	case PiTerm:
+	case term.PiTerm:
 		v := PiValue{
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
@@ -120,11 +122,11 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			v.Label = "_"
 		}
 		return v
-	case AppTerm:
+	case term.AppTerm:
 		fn := evalWith(t.Fn, e, shouldAlphaNormalize)
 		arg := evalWith(t.Arg, e, shouldAlphaNormalize)
 		return applyVal(fn, arg)
-	case Let:
+	case term.Let:
 		newEnv := Env{}
 		for k, v := range e {
 			newEnv[k] = v
@@ -135,11 +137,11 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			newEnv[b.Variable] = append([]Value{val}, newEnv[b.Variable]...)
 		}
 		return evalWith(t.Body, newEnv, shouldAlphaNormalize)
-	case Annot:
+	case term.Annot:
 		return evalWith(t.Expr, e, shouldAlphaNormalize)
-	case DoubleLit:
-		return t
-	case TextLitTerm:
+	case term.DoubleLit:
+		return DoubleLit(t)
+	case term.TextLitTerm:
 		var str strings.Builder
 		var newChunks ChunkVals
 		for _, chunk := range t.Chunks {
@@ -171,9 +173,9 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 		}
 
 		return TextLitVal{Chunks: newChunks, Suffix: newSuffix}
-	case BoolLit:
-		return t
-	case IfTerm:
+	case term.BoolLit:
+		return BoolLit(t)
+	case term.IfTerm:
 		condVal := evalWith(t.Cond, e, shouldAlphaNormalize)
 		if condVal == True {
 			return evalWith(t.T, e, shouldAlphaNormalize)
@@ -194,37 +196,37 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			T:    evalWith(t.T, e, shouldAlphaNormalize),
 			F:    evalWith(t.F, e, shouldAlphaNormalize),
 		}
-	case NaturalLit:
-		return t
-	case IntegerLit:
-		return t
-	case OpTerm:
+	case term.NaturalLit:
+		return NaturalLit(t)
+	case term.IntegerLit:
+		return IntegerLit(t)
+	case term.OpTerm:
 		// these are cases where we *don't* evaluate t.L and t.R up front
 		switch t.OpCode {
-		case TextAppendOp:
+		case term.TextAppendOp:
 			return evalWith(
-				TextLitTerm{Chunks: Chunks{{Expr: t.L}, {Expr: t.R}}},
+				term.TextLitTerm{Chunks: term.Chunks{{Expr: t.L}, {Expr: t.R}}},
 				e, shouldAlphaNormalize)
-		case CompleteOp:
+		case term.CompleteOp:
 			return evalWith(
-				Annot{
-					Expr: OpTerm{
-						OpCode: RightBiasedRecordMergeOp,
-						L:      Field{t.L, "default"},
+				term.Annot{
+					Expr: term.OpTerm{
+						OpCode: term.RightBiasedRecordMergeOp,
+						L:      term.Field{t.L, "default"},
 						R:      t.R,
 					},
-					Annotation: Field{t.L, "Type"},
+					Annotation: term.Field{t.L, "Type"},
 				},
 				e, shouldAlphaNormalize)
 		}
 		l := evalWith(t.L, e, shouldAlphaNormalize)
 		r := evalWith(t.R, e, shouldAlphaNormalize)
 		switch t.OpCode {
-		case OrOp, AndOp, EqOp, NeOp:
+		case term.OrOp, term.AndOp, term.EqOp, term.NeOp:
 			lb, lok := l.(BoolLit)
 			rb, rok := r.(BoolLit)
 			switch t.OpCode {
-			case OrOp:
+			case term.OrOp:
 				if lok {
 					if lb {
 						return True
@@ -240,7 +242,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				if AlphaEquivalentVals(l, r) {
 					return l
 				}
-			case AndOp:
+			case term.AndOp:
 				if lok {
 					if lb {
 						return r
@@ -256,7 +258,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				if AlphaEquivalentVals(l, r) {
 					return l
 				}
-			case EqOp:
+			case term.EqOp:
 				if lok && bool(lb) {
 					return r
 				}
@@ -266,7 +268,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				if AlphaEquivalentVals(l, r) {
 					return True
 				}
-			case NeOp:
+			case term.NeOp:
 				if lok && !bool(lb) {
 					return r
 				}
@@ -277,7 +279,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 					return False
 				}
 			}
-		case ListAppendOp:
+		case term.ListAppendOp:
 			if _, ok := l.(EmptyListVal); ok {
 				return r
 			}
@@ -289,7 +291,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			if lok && rok {
 				return append(ll, rl...)
 			}
-		case PlusOp:
+		case term.PlusOp:
 			ln, lok := l.(NaturalLit)
 			rn, rok := r.(NaturalLit)
 			if lok && rok {
@@ -301,7 +303,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			if r == NaturalLit(0) {
 				return l
 			}
-		case TimesOp:
+		case term.TimesOp:
 			ln, lok := l.(NaturalLit)
 			rn, rok := r.(NaturalLit)
 			if lok && rok {
@@ -319,7 +321,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			if r == NaturalLit(1) {
 				return l
 			}
-		case RecordMergeOp:
+		case term.RecordMergeOp:
 			lR, lOk := l.(RecordLitVal)
 			rR, rOk := r.(RecordLitVal)
 
@@ -332,7 +334,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			if lOk && rOk {
 				return mustMergeRecordLitVals(lR, rR)
 			}
-		case RecordTypeMergeOp:
+		case term.RecordTypeMergeOp:
 			lRT, lOk := l.(RecordTypeVal)
 			rRT, rOk := r.(RecordTypeVal)
 
@@ -349,7 +351,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				}
 				return result
 			}
-		case RightBiasedRecordMergeOp:
+		case term.RightBiasedRecordMergeOp:
 			lLit, lOk := l.(RecordLitVal)
 			rLit, rOk := r.(RecordLitVal)
 			if lOk && len(lLit) == 0 {
@@ -371,35 +373,35 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			if AlphaEquivalentVals(l, r) {
 				return l
 			}
-		case ImportAltOp:
+		case term.ImportAltOp:
 			// nothing special
-		case EquivOp:
+		case term.EquivOp:
 			// nothing special
 		}
 		return opValue{OpCode: t.OpCode, L: l, R: r}
-	case EmptyList:
+	case term.EmptyList:
 		return EmptyListVal{Type: evalWith(t.Type, e, shouldAlphaNormalize)}
-	case NonEmptyList:
+	case term.NonEmptyList:
 		result := make([]Value, len(t))
 		for i, t := range t {
 			result[i] = evalWith(t, e, shouldAlphaNormalize)
 		}
 		return NonEmptyListVal(result)
-	case Some:
+	case term.Some:
 		return SomeVal{evalWith(t.Val, e, shouldAlphaNormalize)}
-	case RecordType:
+	case term.RecordType:
 		newRT := RecordTypeVal{}
 		for k, v := range t {
 			newRT[k] = evalWith(v, e, shouldAlphaNormalize)
 		}
 		return newRT
-	case RecordLit:
+	case term.RecordLit:
 		newRT := RecordLitVal{}
 		for k, v := range t {
 			newRT[k] = evalWith(v, e, shouldAlphaNormalize)
 		}
 		return newRT
-	case ToMap:
+	case term.ToMap:
 		recordVal := evalWith(t.Record, e, shouldAlphaNormalize)
 		record, ok := recordVal.(RecordLitVal)
 		if ok {
@@ -421,7 +423,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			Record: record,
 			Type:   evalWith(t.Type, e, shouldAlphaNormalize),
 		}
-	case Field:
+	case term.Field:
 		record := evalWith(t.Record, e, shouldAlphaNormalize)
 		for { // simplifications
 			if proj, ok := record.(projectVal); ok {
@@ -429,14 +431,14 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				continue
 			}
 			op, ok := record.(opValue)
-			if ok && op.OpCode == RecordMergeOp {
+			if ok && op.OpCode == term.RecordMergeOp {
 				if l, ok := op.L.(RecordLitVal); ok {
 					if lField, ok := l[t.FieldName]; ok {
 						return fieldVal{
 							Record: opValue{
 								L:      RecordLitVal{t.FieldName: lField},
 								R:      op.R,
-								OpCode: RecordMergeOp,
+								OpCode: term.RecordMergeOp,
 							},
 							FieldName: t.FieldName,
 						}
@@ -450,7 +452,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 							Record: opValue{
 								L:      op.L,
 								R:      RecordLitVal{t.FieldName: rField},
-								OpCode: RecordMergeOp,
+								OpCode: term.RecordMergeOp,
 							},
 							FieldName: t.FieldName,
 						}
@@ -459,14 +461,14 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 					continue
 				}
 			}
-			if ok && op.OpCode == RightBiasedRecordMergeOp {
+			if ok && op.OpCode == term.RightBiasedRecordMergeOp {
 				if l, ok := op.L.(RecordLitVal); ok {
 					if lField, ok := l[t.FieldName]; ok {
 						return fieldVal{
 							Record: opValue{
 								L:      RecordLitVal{t.FieldName: lField},
 								R:      op.R,
-								OpCode: RightBiasedRecordMergeOp,
+								OpCode: term.RightBiasedRecordMergeOp,
 							},
 							FieldName: t.FieldName,
 						}
@@ -491,7 +493,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			Record:    record,
 			FieldName: t.FieldName,
 		}
-	case Project:
+	case term.Project:
 		record := evalWith(t.Record, e, shouldAlphaNormalize)
 		fieldNames := t.FieldNames
 		sort.Strings(fieldNames)
@@ -502,7 +504,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 				continue
 			}
 			op, ok := record.(opValue)
-			if ok && op.OpCode == RightBiasedRecordMergeOp {
+			if ok && op.OpCode == term.RightBiasedRecordMergeOp {
 				if r, ok := op.R.(RecordLitVal); ok {
 					notOverridden := []string{}
 					overrides := RecordLitVal{}
@@ -517,7 +519,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 						return overrides
 					}
 					return opValue{
-						OpCode: RightBiasedRecordMergeOp,
+						OpCode: term.RightBiasedRecordMergeOp,
 						L: projectVal{
 							Record:     op.L,
 							FieldNames: notOverridden,
@@ -543,7 +545,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			Record:     record,
 			FieldNames: fieldNames,
 		}
-	case ProjectType:
+	case term.ProjectType:
 		// if `t` typechecks, `t.Selector` has to eval to a
 		// RecordTypeVal, so this is safe
 		s := evalWith(t.Selector, e, shouldAlphaNormalize).(RecordTypeVal)
@@ -552,12 +554,12 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			fieldNames = append(fieldNames, fieldName)
 		}
 		return evalWith(
-			Project{
+			term.Project{
 				Record:     t.Record,
 				FieldNames: fieldNames,
 			},
 			e, shouldAlphaNormalize)
-	case UnionType:
+	case term.UnionType:
 		result := make(unionTypeVal, len(t))
 		for k, v := range t {
 			if v == nil {
@@ -567,7 +569,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			result[k] = evalWith(v, e, shouldAlphaNormalize)
 		}
 		return result
-	case Merge:
+	case term.Merge:
 		handlerVal := evalWith(t.Handler, e, shouldAlphaNormalize)
 		unionVal := evalWith(t.Union, e, shouldAlphaNormalize)
 		if handlers, ok := handlerVal.(RecordLitVal); ok {
@@ -604,7 +606,7 @@ func evalWith(t Term, e Env, shouldAlphaNormalize bool) Value {
 			output.Annotation = evalWith(t.Annotation, e, shouldAlphaNormalize)
 		}
 		return output
-	case Assert:
+	case term.Assert:
 		return assertVal{Annotation: evalWith(t.Annotation, e, shouldAlphaNormalize)}
 	default:
 		panic(fmt.Sprint("unknown term type", t))

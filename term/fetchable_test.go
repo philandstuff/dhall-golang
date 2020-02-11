@@ -1,4 +1,4 @@
-package core_test
+package term_test
 
 import (
 	"io"
@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"os"
 
-	. "github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/internal"
+	. "github.com/philandstuff/dhall-golang/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

@@ -16,6 +16,7 @@ import (
 	"github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/philandstuff/dhall-golang/term"
 	"github.com/pkg/errors"
 )
 
@@ -109,7 +110,7 @@ func expectEqualBytes(t *testing.T, expected, actual []byte) {
 	}
 }
 
-func expectEqualTerms(t *testing.T, expected, actual core.Term) {
+func expectEqualTerms(t *testing.T, expected, actual term.Term) {
 	t.Helper()
 	if !reflect.DeepEqual(expected, actual) {
 		failf(t, "Expected %v to equal %v", actual, expected)
@@ -274,7 +275,7 @@ func TestTypeInference(t *testing.T) {
 
 			resolvedA := parsedA
 			if !isSimpleTest(t.Name()) {
-				resolvedA, err = imports.LoadWith(imports.NoCache{}, parsedA, core.Local(aPath))
+				resolvedA, err = imports.LoadWith(imports.NoCache{}, parsedA, term.Local(aPath))
 				expectNoError(t, err)
 			}
 
@@ -330,10 +331,10 @@ func TestNormalization(t *testing.T) {
 			resolvedA := parsedA
 			resolvedB := parsedB
 			if !isSimpleTest(t.Name()) {
-				resolvedA, err = imports.Load(parsedA, core.Local(aPath))
+				resolvedA, err = imports.Load(parsedA, term.Local(aPath))
 				expectNoError(t, err)
 
-				resolvedB, err = imports.Load(parsedB, core.Local(bPath))
+				resolvedB, err = imports.Load(parsedB, term.Local(bPath))
 				expectNoError(t, err)
 			}
 
@@ -349,7 +350,7 @@ func TestImportFails(t *testing.T) {
 		parsed, err := parser.ParseFile(testPath)
 		expectNoError(t, err)
 
-		_, err = imports.Load(parsed, core.Local(testPath))
+		_, err = imports.Load(parsed, term.Local(testPath))
 		expectError(t, err)
 	})
 }
@@ -368,10 +369,10 @@ func TestImport(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA, core.Local(aPath))
+			resolvedA, err := imports.Load(parsedA, term.Local(aPath))
 			expectNoError(t, err)
 
-			resolvedB, err := imports.Load(parsedB, core.Local(bPath))
+			resolvedB, err := imports.Load(parsedB, term.Local(bPath))
 			expectNoError(t, err)
 
 			expectEqualTerms(t, resolvedB, resolvedA)
@@ -389,7 +390,7 @@ func TestSemanticHash(t *testing.T) {
 
 			resolvedA := parsedA
 			if !isSimpleTest(t.Name()) {
-				resolvedA, err = imports.Load(parsedA, core.Local(aPath))
+				resolvedA, err = imports.Load(parsedA, term.Local(aPath))
 				expectNoError(t, err)
 			}
 
