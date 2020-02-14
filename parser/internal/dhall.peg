@@ -19,7 +19,7 @@ import (
 "unicode"
 "unicode/utf8"
 )
-import . "github.com/philandstuff/dhall-golang/core"
+import . "github.com/philandstuff/dhall-golang/term"
 
 // Helper function for parsing all the operator parsing blocks
 // see OrExpression for an example of how this is used
@@ -28,7 +28,7 @@ func parseOperator(opcode OpCode, first, rest interface{}) Term {
     if rest == nil { return out }
     for _, b := range rest.([]interface{}) {
         nextTerm := b.([]interface{})[3].(Term)
-        out = OpTerm{OpCode: opcode, L: out, R: nextTerm}
+        out = Op{OpCode: opcode, L: out, R: nextTerm}
     }
     return out
 }
@@ -174,7 +174,7 @@ DoubleQuoteLiteral ← '"' chunks:DoubleQuoteChunk* '"' {
                 return nil, errors.New("can't happen")
         }
     }
-    return TextLitTerm{Chunks: outChunks, Suffix: str.String()}, nil
+    return TextLit{Chunks: outChunks, Suffix: str.String()}, nil
 }
 
 SingleQuoteContinue ←
@@ -211,7 +211,7 @@ SingleQuoteLiteral ← "''" EOL content:SingleQuoteContinue {
             return nil, errors.New("unimplemented")
         }
     }
-    return removeLeadingCommonIndent(TextLitTerm{Chunks: outChunks, Suffix: str.String()}), nil
+    return removeLeadingCommonIndent(TextLit{Chunks: outChunks, Suffix: str.String()}), nil
 }
 
 Interpolation ← "${" e:CompleteExpression "}" { return e, nil }
@@ -504,10 +504,10 @@ LetBinding ← Let _1 label:NonreservedLabel _ a:(Annotation _)?
 
 Expression ←
       Lambda _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
-          return LambdaTerm{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
+          return Lambda{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
       }
     / If _1 cond:Expression _ Then _1 t:Expression _ Else _1 f:Expression {
-          return IfTerm{cond.(Term),t.(Term),f.(Term)},nil
+          return If{cond.(Term),t.(Term),f.(Term)},nil
       }
     / bindings:LetBinding+ In _1 b:Expression {
         bs := make([]Binding, len(bindings.([]interface{})))
@@ -517,7 +517,7 @@ Expression ←
         return NewLet(b.(Term), bs...), nil
       }
     / Forall _ '(' _ label:NonreservedLabel _ ':' _1 t:Expression _ ')' _ Arrow _ body:Expression {
-          return PiTerm{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
+          return Pi{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
       }
     / o:OperatorExpression _ Arrow _ e:Expression { return NewAnonPi(o.(Term),e.(Term)), nil }
     / Merge _1 h:ImportExpression _1 u:ImportExpression _ ':' _1 a:ApplicationExpression {
@@ -592,7 +592,7 @@ CompletionExpression ← a:SelectorExpression b:(_ Complete _ SelectorExpression
     if b == nil {
         return a, nil
     }
-    return OpTerm{OpCode:CompleteOp ,L:a.(Term),R:b.([]interface{})[3].(Term)},nil
+    return Op{OpCode:CompleteOp ,L:a.(Term),R:b.([]interface{})[3].(Term)},nil
 }
 
 SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {

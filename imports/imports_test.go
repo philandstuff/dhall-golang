@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	. "github.com/philandstuff/dhall-golang/core"
 	. "github.com/philandstuff/dhall-golang/imports"
 	. "github.com/philandstuff/dhall-golang/internal"
+	. "github.com/philandstuff/dhall-golang/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -24,7 +24,7 @@ func expectResolves(input, expected Term) {
 }
 
 var importFooAsText = NewEnvVarImport("FOO", RawText)
-var resolvedFooAsText = TextLitTerm{Suffix: "abcd"}
+var resolvedFooAsText = TextLit{Suffix: "abcd"}
 
 var _ = Describe("Import resolution", func() {
 	Describe("Environment varibles", func() {
@@ -83,7 +83,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(NewRemoteImport(server.URL()+"/foo.dhall", RawText))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(TextLitTerm{Suffix: "abcd"}))
+			Expect(actual).To(Equal(TextLit{Suffix: "abcd"}))
 		})
 		It("Resolves as code", func() {
 			server.RouteToHandler("GET", "/foo.dhall",
@@ -183,7 +183,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(NewLocalImport("./testdata/just_text.txt", RawText))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(TextLitTerm{Suffix: "here is some text\n"}))
+			Expect(actual).To(Equal(TextLit{Suffix: "here is some text\n"}))
 		})
 		It("Resolves as code", func() {
 			actual, err := Load(NewLocalImport("./testdata/natural.dhall", Code))
@@ -217,28 +217,28 @@ var _ = Describe("Import resolution", func() {
 		Entry("Literal expression", NaturalLit(3), NaturalLit(3)),
 		Entry("Simple import", importFooAsText, resolvedFooAsText),
 		Entry("Import within lambda type",
-			LambdaTerm{Type: importFooAsText},
-			LambdaTerm{Type: resolvedFooAsText},
+			Lambda{Type: importFooAsText},
+			Lambda{Type: resolvedFooAsText},
 		),
 		Entry("Import within lambda body",
-			LambdaTerm{Body: importFooAsText},
-			LambdaTerm{Body: resolvedFooAsText},
+			Lambda{Body: importFooAsText},
+			Lambda{Body: resolvedFooAsText},
 		),
 		Entry("Import within pi type",
-			PiTerm{Type: importFooAsText},
-			PiTerm{Type: resolvedFooAsText},
+			Pi{Type: importFooAsText},
+			Pi{Type: resolvedFooAsText},
 		),
 		Entry("Import within pi body",
-			PiTerm{Body: importFooAsText},
-			PiTerm{Body: resolvedFooAsText},
+			Pi{Body: importFooAsText},
+			Pi{Body: resolvedFooAsText},
 		),
 		Entry("Import within app fn",
-			AppTerm{Fn: importFooAsText},
-			AppTerm{Fn: resolvedFooAsText},
+			App{Fn: importFooAsText},
+			App{Fn: resolvedFooAsText},
 		),
 		Entry("Import within app arg",
-			AppTerm{Arg: importFooAsText},
-			AppTerm{Arg: resolvedFooAsText},
+			App{Arg: importFooAsText},
+			App{Arg: resolvedFooAsText},
 		),
 		Entry("Import within let binding value",
 			NewLet(Natural, Binding{Value: importFooAsText}),
@@ -259,7 +259,7 @@ var _ = Describe("Import resolution", func() {
 			Annot{Natural, resolvedFooAsText},
 		),
 		Entry("Import within TextLit",
-			TextLitTerm{
+			TextLit{
 				Chunks: []Chunk{
 					{
 						Prefix: "foo",
@@ -267,7 +267,7 @@ var _ = Describe("Import resolution", func() {
 					}},
 				Suffix: "baz",
 			},
-			TextLitTerm{
+			TextLit{
 				Chunks: []Chunk{
 					{
 						Prefix: "foo",
@@ -278,24 +278,24 @@ var _ = Describe("Import resolution", func() {
 			},
 		),
 		Entry("Import within if condition",
-			IfTerm{Cond: importFooAsText},
-			IfTerm{Cond: resolvedFooAsText},
+			If{Cond: importFooAsText},
+			If{Cond: resolvedFooAsText},
 		),
 		Entry("Import within if true branch",
-			IfTerm{T: importFooAsText},
-			IfTerm{T: resolvedFooAsText},
+			If{T: importFooAsText},
+			If{T: resolvedFooAsText},
 		),
 		Entry("Import within if false branch",
-			IfTerm{F: importFooAsText},
-			IfTerm{F: resolvedFooAsText},
+			If{F: importFooAsText},
+			If{F: resolvedFooAsText},
 		),
 		Entry("Import within Operator (left side)",
-			OpTerm{L: importFooAsText},
-			OpTerm{L: resolvedFooAsText},
+			Op{L: importFooAsText},
+			Op{L: resolvedFooAsText},
 		),
 		Entry("Import within natural plus (right side)",
-			OpTerm{R: importFooAsText},
-			OpTerm{R: resolvedFooAsText},
+			Op{R: importFooAsText},
+			Op{R: resolvedFooAsText},
 		),
 		Entry("Import within empty list type",
 			EmptyList{Type: importFooAsText},

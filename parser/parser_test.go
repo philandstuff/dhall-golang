@@ -3,9 +3,9 @@ package parser_test
 import (
 	"math"
 
-	. "github.com/philandstuff/dhall-golang/core"
 	. "github.com/philandstuff/dhall-golang/internal"
 	"github.com/philandstuff/dhall-golang/parser"
+	. "github.com/philandstuff/dhall-golang/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -45,7 +45,7 @@ var _ = Describe("Expression", func() {
 		Entry("Bool", `Bool`, Bool),
 		Entry("True", `True`, BoolLit(true)),
 		Entry("False", `False`, BoolLit(false)),
-		Entry("if True then x else y", `if True then x else y`, IfTerm{True, NewVar("x"), NewVar("y")}),
+		Entry("if True then x else y", `if True then x else y`, If{True, NewVar("x"), NewVar("y")}),
 	)
 	DescribeTable("naturals", ParseAndCompare,
 		Entry("Natural", `Natural`, Natural),
@@ -61,60 +61,60 @@ var _ = Describe("Expression", func() {
 		Entry("Plus without whitespace", `3 +5`, Apply(NaturalLit(3), IntegerLit(5))),
 	)
 	DescribeTable("double-quoted text literals", ParseAndCompare,
-		Entry("Empty TextLitTerm", `""`, TextLitTerm{}),
-		Entry("Simple TextLitTerm", `"foo"`, TextLitTerm{Suffix: "foo"}),
-		Entry(`TextLitTerm escape "`, `"\""`, TextLitTerm{Suffix: `"`}),
-		Entry(`TextLitTerm escape $`, `"\$"`, TextLitTerm{Suffix: `$`}),
-		Entry(`TextLitTerm escape \`, `"\\"`, TextLitTerm{Suffix: `\`}),
-		Entry(`TextLitTerm escape /`, `"\/"`, TextLitTerm{Suffix: `/`}),
-		Entry(`TextLitTerm escape \b`, `"\b"`, TextLitTerm{Suffix: "\b"}),
-		Entry(`TextLitTerm escape \f`, `"\f"`, TextLitTerm{Suffix: "\f"}),
-		Entry(`TextLitTerm escape \n`, `"\n"`, TextLitTerm{Suffix: "\n"}),
-		Entry(`TextLitTerm escape \r`, `"\r"`, TextLitTerm{Suffix: "\r"}),
-		Entry(`TextLitTerm escape \t`, `"\t"`, TextLitTerm{Suffix: "\t"}),
-		Entry(`TextLitTerm escape \u2200`, `"\u2200"`, TextLitTerm{Suffix: "∀"}),
-		Entry(`TextLitTerm escape \u03bb`, `"\u03bb"`, TextLitTerm{Suffix: "λ"}),
-		Entry(`TextLitTerm escape \u03BB`, `"\u03BB"`, TextLitTerm{Suffix: "λ"}),
+		Entry("Empty TextLitTerm", `""`, TextLit{}),
+		Entry("Simple TextLitTerm", `"foo"`, TextLit{Suffix: "foo"}),
+		Entry(`TextLitTerm escape "`, `"\""`, TextLit{Suffix: `"`}),
+		Entry(`TextLitTerm escape $`, `"\$"`, TextLit{Suffix: `$`}),
+		Entry(`TextLitTerm escape \`, `"\\"`, TextLit{Suffix: `\`}),
+		Entry(`TextLitTerm escape /`, `"\/"`, TextLit{Suffix: `/`}),
+		Entry(`TextLitTerm escape \b`, `"\b"`, TextLit{Suffix: "\b"}),
+		Entry(`TextLitTerm escape \f`, `"\f"`, TextLit{Suffix: "\f"}),
+		Entry(`TextLitTerm escape \n`, `"\n"`, TextLit{Suffix: "\n"}),
+		Entry(`TextLitTerm escape \r`, `"\r"`, TextLit{Suffix: "\r"}),
+		Entry(`TextLitTerm escape \t`, `"\t"`, TextLit{Suffix: "\t"}),
+		Entry(`TextLitTerm escape \u2200`, `"\u2200"`, TextLit{Suffix: "∀"}),
+		Entry(`TextLitTerm escape \u03bb`, `"\u03bb"`, TextLit{Suffix: "λ"}),
+		Entry(`TextLitTerm escape \u03BB`, `"\u03BB"`, TextLit{Suffix: "λ"}),
 		Entry("Interpolated TextLitTerm", `"foo ${"bar"} baz"`,
-			TextLitTerm{Chunks{Chunk{"foo ", TextLitTerm{Suffix: "bar"}}},
+			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
 				" baz"},
 		),
 	)
 	DescribeTable("single-quoted text literals", ParseAndCompare,
 		Entry("Empty TextLitTerm", `''
-''`, TextLitTerm{}),
+''`, TextLit{}),
 		Entry("Simple TextLitTerm with no newlines", `''
-foo''`, TextLitTerm{Suffix: "foo"}),
+foo''`, TextLit{Suffix: "foo"}),
 		Entry("Simple TextLitTerm with newlines", `''
 foo
-''`, TextLitTerm{Suffix: "foo\n"}),
+''`, TextLit{Suffix: "foo\n"}),
 		Entry("TextLitTerm with space indent", `''
   foo
   bar
-  ''`, TextLitTerm{Suffix: "foo\nbar\n"}),
+  ''`, TextLit{Suffix: "foo\nbar\n"}),
 		Entry("TextLitTerm with tab indent", `''
 		foo
 		bar
-		''`, TextLitTerm{Suffix: "foo\nbar\n"}),
+		''`, TextLit{Suffix: "foo\nbar\n"}),
 		Entry("TextLitTerm with mixed tab/space indent", `''
 	  foo
 	  bar
-	  ''`, TextLitTerm{Suffix: "foo\nbar\n"}),
+	  ''`, TextLit{Suffix: "foo\nbar\n"}),
 		Entry("TextLitTerm with weird indenting", `''
 	    foo
 	  	bar
-	  ''`, TextLitTerm{Suffix: "  foo\n\tbar\n"}),
+	  ''`, TextLit{Suffix: "  foo\n\tbar\n"}),
 		Entry(`Escape ''`, `''
 '''
-''`, TextLitTerm{Suffix: "''\n"}),
+''`, TextLit{Suffix: "''\n"}),
 		Entry(`Escape ${`, `''
 ''${
-''`, TextLitTerm{Suffix: "${\n"}),
+''`, TextLit{Suffix: "${\n"}),
 		Entry("Interpolation", `''
 foo ${"bar"}
 baz
 ''`,
-			TextLitTerm{Chunks{Chunk{"foo ", TextLitTerm{Suffix: "bar"}}},
+			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
 				"\nbaz\n"},
 		),
 	)
@@ -179,32 +179,32 @@ baz
 	DescribeTable("lambda expressions", ParseAndCompare,
 		Entry("simple λ",
 			`λ(foo : bar) → baz`,
-			LambdaTerm{
+			Lambda{
 				"foo", NewVar("bar"), NewVar("baz")}),
 		Entry(`simple \`,
 			`\(foo : bar) → baz`,
-			LambdaTerm{
+			Lambda{
 				"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("with line comment",
 			"λ(foo : bar) --asdf\n → baz",
-			LambdaTerm{
+			Lambda{
 				"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("with block comment",
 			"λ(foo : bar) {-asdf\n-} → baz",
-			LambdaTerm{
+			Lambda{
 				"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("simple ∀",
 			`∀(foo : bar) → baz`,
-			PiTerm{"foo", NewVar("bar"), NewVar("baz")}),
+			Pi{"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("arrow type has implicit _ var",
 			`foo → bar`,
 			NewAnonPi(NewVar("foo"), NewVar("bar"))),
 		Entry(`simple forall`,
 			`forall(foo : bar) → baz`,
-			PiTerm{"foo", NewVar("bar"), NewVar("baz")}),
+			Pi{"foo", NewVar("bar"), NewVar("baz")}),
 		Entry("with line comment",
 			"∀(foo : bar) --asdf\n → baz",
-			PiTerm{"foo", NewVar("bar"), NewVar("baz")}),
+			Pi{"foo", NewVar("bar"), NewVar("baz")}),
 	)
 	DescribeTable("applications", ParseAndCompare,
 		Entry("identifier application",
@@ -216,7 +216,7 @@ baz
 		Entry("lambda application",
 			`(λ(foo : bar) → baz) quux`,
 			Apply(
-				LambdaTerm{
+				Lambda{
 					"foo", NewVar("bar"), NewVar("baz")},
 				NewVar("quux"))),
 	)
@@ -229,7 +229,7 @@ baz
 		Entry("lambda application",
 			`(λ(foo : bar) → baz) quux`,
 			Apply(
-				LambdaTerm{
+				Lambda{
 					"foo", NewVar("bar"), NewVar("baz")},
 				NewVar("quux"))),
 	)

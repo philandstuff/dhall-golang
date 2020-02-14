@@ -1,4 +1,4 @@
-package core
+package term
 
 import (
 	"errors"
@@ -62,7 +62,7 @@ func (e EnvVar) ChainOnto(base Fetchable) (Fetchable, error) {
 	return e, nil
 }
 func (e EnvVar) AsLocation() Term {
-	return Apply(Field{LocationType, "Environment"}, TextLitTerm{Suffix: e.String()})
+	return Apply(Field{LocationType, "Environment"}, TextLit{Suffix: e.String()})
 }
 
 func (l Local) Name() string { return string(l) }
@@ -136,7 +136,7 @@ func (l Local) PathComponents() []string {
 	}
 }
 func (l Local) AsLocation() Term {
-	return Apply(Field{LocationType, "Local"}, TextLitTerm{Suffix: l.String()})
+	return Apply(Field{LocationType, "Local"}, TextLit{Suffix: l.String()})
 }
 func NewRemote(u *url.URL) Remote {
 	return Remote{url: u}
@@ -198,7 +198,7 @@ func (r Remote) Query() *string {
 	return &r.url.RawQuery
 }
 func (r Remote) AsLocation() Term {
-	return Apply(Field{LocationType, "Remote"}, TextLitTerm{Suffix: r.String()})
+	return Apply(Field{LocationType, "Remote"}, TextLit{Suffix: r.String()})
 }
 
 func (Missing) Name() string   { return "" }

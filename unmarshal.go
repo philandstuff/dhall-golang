@@ -9,7 +9,7 @@ import (
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
-func isMapEntryType(recordType core.RecordTypeVal) bool {
+func isMapEntryType(recordType core.RecordType) bool {
 	if _, ok := recordType["mapKey"]; ok {
 		if _, ok := recordType["mapValue"]; ok {
 			return len(recordType) == 2
@@ -57,48 +57,41 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		case core.Integer:
 			return core.IntegerLit(val.Int())
 		case core.Text:
-			return core.TextLitVal{Suffix: val.String()}
-		case core.List:
-			panic("wrong Kind")
+			return core.TextLit{Suffix: val.String()}
 		default:
 			panic("unknown Builtin")
 		}
-	case core.AppValue:
-		switch e.Fn {
-		case core.List:
-			if val.Kind() == reflect.Map {
-				mapEntryType := e.Arg.(core.RecordTypeVal)
-				if !isMapEntryType(mapEntryType) {
-					panic("Can't unmarshal golang map into given Dhall type")
-				}
-				if val.Len() == 0 {
-					return core.EmptyListVal{Type: e.Arg}
-				}
-				l := make(core.NonEmptyListVal, val.Len())
-				iter := val.MapRange()
-				i := 0
-				for iter.Next() {
-					l[i] = core.RecordLitVal{
-						"mapKey":   encode(iter.Key(), mapEntryType["mapKey"]),
-						"mapValue": encode(iter.Value(), mapEntryType["mapValue"]),
-					}
-					i++
-				}
-				return l
+	case core.ListOf:
+		if val.Kind() == reflect.Map {
+			mapEntryType := e.Type.(core.RecordType)
+			if !isMapEntryType(mapEntryType) {
+				panic("Can't unmarshal golang map into given Dhall type")
 			}
 			if val.Len() == 0 {
-				return core.EmptyListVal{Type: e.Arg}
+				return core.EmptyList{Type: e.Type}
 			}
-			l := make(core.NonEmptyListVal, val.Len())
-			for i := 0; i < val.Len(); i++ {
-				l[i] = encode(val.Index(i), e.Arg)
+			l := make(core.NonEmptyList, val.Len())
+			iter := val.MapRange()
+			i := 0
+			for iter.Next() {
+				l[i] = core.RecordLit{
+					"mapKey":   encode(iter.Key(), mapEntryType["mapKey"]),
+					"mapValue": encode(iter.Value(), mapEntryType["mapValue"]),
+				}
+				i++
 			}
 			return l
-		default:
-			panic("unknown app")
 		}
-	case core.RecordTypeVal:
-		rec := core.RecordLitVal{}
+		if val.Len() == 0 {
+			return core.EmptyList{Type: e.Type}
+		}
+		l := make(core.NonEmptyList, val.Len())
+		for i := 0; i < val.Len(); i++ {
+			l[i] = encode(val.Index(i), e.Type)
+		}
+		return l
+	case core.RecordType:
+		rec := core.RecordLit{}
 	fields:
 		for key, typ := range e {
 			structType := val.Type()
@@ -145,13 +138,11 @@ func dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) 
 // note that there may be options buried deeper in e; we just strip any outer
 // Optional layers.
 func flattenOptional(e core.Value) core.Value {
-	if some, ok := e.(core.SomeVal); ok {
+	if some, ok := e.(core.Some); ok {
 		return flattenOptional(some.Val)
 	}
-	if app, ok := e.(core.AppValue); ok {
-		if app.Fn == core.None {
-			return nil
-		}
+	if _, ok := e.(core.NoneOf); ok {
+		return nil
 	}
 	return e
 }
@@ -165,16 +156,16 @@ func decode(e core.Value, v reflect.Value) {
 	case reflect.Map:
 		// initialise with new (non-nil) value
 		v.Set(reflect.MakeMap(v.Type()))
-		if _, ok := e.(core.EmptyListVal); ok {
+		if _, ok := e.(core.EmptyList); ok {
 			return
 		}
-		e := e.(core.NonEmptyListVal)
-		recordLit := e[0].(core.RecordLitVal)
+		e := e.(core.NonEmptyList)
+		recordLit := e[0].(core.RecordLit)
 		if len(recordLit) != 2 {
 			panic("can only unmarshal `List {mapKey : T, mapValue : U}` into go map")
 		}
 		for _, r := range e {
-			entry := r.(core.RecordLitVal)
+			entry := r.(core.RecordLit)
 			key := reflect.New(v.Type().Key()).Elem()
 			val := reflect.New(v.Type().Elem()).Elem()
 			decode(entry["mapKey"], key)
@@ -182,7 +173,7 @@ func decode(e core.Value, v reflect.Value) {
 			v.SetMapIndex(key, val)
 		}
 	case reflect.Struct:
-		e := e.(core.RecordLitVal)
+		e := e.(core.RecordLit)
 		structType := v.Type()
 		for i := 0; i < structType.NumField(); i++ {
 			// FIXME ignores fields in RecordLit not in Struct
@@ -206,11 +197,11 @@ func decode(e core.Value, v reflect.Value) {
 		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e))
 		v.Set(fn)
 	case reflect.Slice:
-		if _, ok := e.(core.EmptyListVal); ok {
+		if _, ok := e.(core.EmptyList); ok {
 			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
 			return
 		}
-		e := e.(core.NonEmptyListVal)
+		e := e.(core.NonEmptyList)
 		slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 		for i, expr := range e {
 			decode(expr, slice.Index(i))
@@ -229,8 +220,8 @@ func decode(e core.Value, v reflect.Value) {
 			v.SetInt(int64(e))
 		case core.IntegerLit:
 			v.SetInt(int64(e))
-		case core.TextLitVal:
-			// FIXME: ensure TextLitVal doesn't have interpolations
+		case core.TextLit:
+			// FIXME: ensure TextLit doesn't have interpolations
 			v.SetString(e.Suffix)
 		default:
 			panic(fmt.Sprintf("Don't know how to decode %v into %v", e, v.Kind()))

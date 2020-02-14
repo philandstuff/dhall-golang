@@ -1,7 +1,7 @@
 package internal
 
 import (
-	. "github.com/philandstuff/dhall-golang/core"
+	. "github.com/philandstuff/dhall-golang/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -10,8 +10,8 @@ import (
 
 var _ = Describe("removeLeadingCommonIndent removes leading common indent", func() {
 	DescribeTable("when the TextLitTerm has no interpolations", func(input, expected string) {
-		actual := removeLeadingCommonIndent(TextLitTerm{Suffix: input})
-		Expect(actual).To(Equal(TextLitTerm{Suffix: expected}))
+		actual := removeLeadingCommonIndent(TextLit{Suffix: input})
+		Expect(actual).To(Equal(TextLit{Suffix: expected}))
 	},
 		Entry("when every line has a 3-space prefix",
 			`   foo
@@ -34,31 +34,31 @@ var _ = Describe("removeLeadingCommonIndent removes leading common indent", func
 
    bar`, "foo\n\nbar"),
 	)
-	DescribeTable("when the TextLitTerm has interpolations", func(input, expected TextLitTerm) {
+	DescribeTable("when the TextLitTerm has interpolations", func(input, expected TextLit) {
 		actual := removeLeadingCommonIndent(input)
 		Expect(actual).To(Equal(expected))
 	},
 		Entry("when every line has a 3-space prefix",
-			TextLitTerm{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: "\n   foo"},
-			TextLitTerm{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: "\nfoo"}),
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: "\n   foo"},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: "\nfoo"}),
 		Entry("when there is trailing space after an interpolation",
-			TextLitTerm{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: "   foo"},
-			TextLitTerm{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: "   foo"}),
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: "   foo"},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: "   foo"}),
 		Entry("when there is trailing space after every interpolation",
 			// this is ''
 			//    ${True}   ${True}   foo''
-			TextLitTerm{Chunks: Chunks{{Prefix: "   ", Expr: True}, {Prefix: "   ", Expr: True}}, Suffix: "   foo"},
-			TextLitTerm{Chunks: Chunks{{Prefix: "", Expr: True}, {Prefix: "   ", Expr: True}}, Suffix: "   foo"}),
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}, {Prefix: "   ", Expr: True}}, Suffix: "   foo"},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}, {Prefix: "   ", Expr: True}}, Suffix: "   foo"}),
 		Entry("when there are multiple interpolations on the same line",
 			// this is ''
 			//    ${True} ${True}
 			//    ''
-			TextLitTerm{Chunks: Chunks{{Prefix: "   ", Expr: True}, {Prefix: " ", Expr: True}}, Suffix: "\n   "},
-			TextLitTerm{Chunks: Chunks{{Prefix: "", Expr: True}, {Prefix: " ", Expr: True}}, Suffix: "\n"}),
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}, {Prefix: " ", Expr: True}}, Suffix: "\n   "},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}, {Prefix: " ", Expr: True}}, Suffix: "\n"}),
 		Entry("when there is no trailing newline",
 			// this is ''
 			//    ${True}''
-			TextLitTerm{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: ""},
-			TextLitTerm{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: ""}),
+			TextLit{Chunks: Chunks{{Prefix: "   ", Expr: True}}, Suffix: ""},
+			TextLit{Chunks: Chunks{{Prefix: "", Expr: True}}, Suffix: ""}),
 	)
 })

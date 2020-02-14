@@ -1,11 +1,13 @@
-package core
+package term
 
 import (
 	"fmt"
 	"reflect"
 )
 
-func subst(name string, replacement, t Term) Term {
+// Subst takes a Term and finds all instances of a variable called
+// `name` and replaces them with the replacement.
+func Subst(name string, replacement, t Term) Term {
 	return substAtLevel(0, name, replacement, t)
 }
 
@@ -20,30 +22,30 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 			return replacement
 		}
 		return t
-	case localVar:
+	case LocalVar:
 		return t
-	case LambdaTerm:
+	case Lambda:
 		j := i
 		if t.Label == name {
 			j = i + 1
 		}
-		return LambdaTerm{
+		return Lambda{
 			Label: t.Label,
 			Type:  substAtLevel(i, name, replacement, t.Type),
 			Body:  substAtLevel(j, name, replacement, t.Body),
 		}
-	case PiTerm:
+	case Pi:
 		j := i
 		if t.Label == name {
 			j = i + 1
 		}
-		return PiTerm{
+		return Pi{
 			Label: t.Label,
 			Type:  substAtLevel(i, name, replacement, t.Type),
 			Body:  substAtLevel(j, name, replacement, t.Body),
 		}
-	case AppTerm:
-		return AppTerm{
+	case App:
+		return App{
 			Fn:  substAtLevel(i, name, replacement, t.Fn),
 			Arg: substAtLevel(i, name, replacement, t.Arg),
 		}
@@ -70,8 +72,8 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		return substAtLevel(i, name, replacement, t.Expr)
 	case DoubleLit:
 		return t
-	case TextLitTerm:
-		result := TextLitTerm{Suffix: t.Suffix}
+	case TextLit:
+		result := TextLit{Suffix: t.Suffix}
 		if t.Chunks == nil {
 			return result
 		}
@@ -86,16 +88,16 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 		return result
 	case BoolLit:
 		return t
-	case IfTerm:
-		return IfTerm{
+	case If:
+		return If{
 			Cond: substAtLevel(i, name, replacement, t.Cond),
 			T:    substAtLevel(i, name, replacement, t.T),
 			F:    substAtLevel(i, name, replacement, t.F),
 		}
 	case IntegerLit:
 		return t
-	case OpTerm:
-		return OpTerm{
+	case Op:
+		return Op{
 			OpCode: t.OpCode,
 			L:      substAtLevel(i, name, replacement, t.L),
 			R:      substAtLevel(i, name, replacement, t.R),
@@ -171,11 +173,13 @@ func substAtLevel(i int, name string, replacement, t Term) Term {
 	}
 }
 
-func rebindLocal(local localVar, t Term) Term {
+// RebindLocal takes a Term and finds all instances of a LocalVar and
+// replaces them with the equivalent Var.
+func RebindLocal(local LocalVar, t Term) Term {
 	return rebindAtLevel(0, local, t)
 }
 
-func rebindAtLevel(i int, local localVar, t Term) Term {
+func rebindAtLevel(i int, local LocalVar, t Term) Term {
 	switch t := t.(type) {
 	case Universe:
 		return t
@@ -183,7 +187,7 @@ func rebindAtLevel(i int, local localVar, t Term) Term {
 		return t
 	case Var:
 		return t
-	case localVar:
+	case LocalVar:
 		if t == local {
 			return Var{
 				Name:  t.Name,
@@ -191,28 +195,28 @@ func rebindAtLevel(i int, local localVar, t Term) Term {
 			}
 		}
 		return t
-	case LambdaTerm:
+	case Lambda:
 		j := i
 		if t.Label == local.Name {
 			j = i + 1
 		}
-		return LambdaTerm{
+		return Lambda{
 			Label: t.Label,
 			Type:  rebindAtLevel(i, local, t.Type),
 			Body:  rebindAtLevel(j, local, t.Body),
 		}
-	case PiTerm:
+	case Pi:
 		j := i
 		if t.Label == local.Name {
 			j = i + 1
 		}
-		return PiTerm{
+		return Pi{
 			Label: t.Label,
 			Type:  rebindAtLevel(i, local, t.Type),
 			Body:  rebindAtLevel(j, local, t.Body),
 		}
-	case AppTerm:
-		return AppTerm{
+	case App:
+		return App{
 			Fn:  rebindAtLevel(i, local, t.Fn),
 			Arg: rebindAtLevel(i, local, t.Arg),
 		}
@@ -239,8 +243,8 @@ func rebindAtLevel(i int, local localVar, t Term) Term {
 		return rebindAtLevel(i, local, t.Expr)
 	case DoubleLit:
 		return t
-	case TextLitTerm:
-		result := TextLitTerm{Suffix: t.Suffix}
+	case TextLit:
+		result := TextLit{Suffix: t.Suffix}
 		if t.Chunks == nil {
 			return result
 		}
@@ -255,16 +259,16 @@ func rebindAtLevel(i int, local localVar, t Term) Term {
 		return result
 	case BoolLit:
 		return t
-	case IfTerm:
-		return IfTerm{
+	case If:
+		return If{
 			Cond: rebindAtLevel(i, local, t.Cond),
 			T:    rebindAtLevel(i, local, t.T),
 			F:    rebindAtLevel(i, local, t.F),
 		}
 	case IntegerLit:
 		return t
-	case OpTerm:
-		return OpTerm{
+	case Op:
+		return Op{
 			OpCode: t.OpCode,
 			L:      rebindAtLevel(i, local, t.L),
 			R:      rebindAtLevel(i, local, t.R),

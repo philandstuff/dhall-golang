@@ -5,6 +5,7 @@ import (
 
 	. "github.com/philandstuff/dhall-golang"
 	"github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -45,76 +46,76 @@ var _ = Describe("Decode", func() {
 		Entry("unmarshals IntegerLit into int",
 			core.IntegerLit(5), new(int64), int64(5)),
 		Entry("unmarshals TextLit into string",
-			core.TextLitVal{Suffix: "lalala"}, new(string), "lalala"),
+			core.TextLit{Suffix: "lalala"}, new(string), "lalala"),
 	)
 	DescribeTable("Compound types", DecodeAndCompare,
 		Entry("unmarshals Some 5 into int",
-			core.SomeVal{core.NaturalLit(5)},
+			core.Some{core.NaturalLit(5)},
 			new(int),
 			5),
 		Entry("unmarshals None Natural into int",
-			core.AppValue{core.None, core.Natural},
+			core.NoneOf{core.Natural},
 			new(int),
 			0),
 		Entry("unmarshals List Integer into int slice",
-			core.NonEmptyListVal{core.IntegerLit(5)},
+			core.NonEmptyList{core.IntegerLit(5)},
 			new([]int),
 			[]int{5}),
 		Entry("unmarshals List Integer into int64 slice",
-			core.NonEmptyListVal{core.IntegerLit(5)},
+			core.NonEmptyList{core.IntegerLit(5)},
 			new([]int64),
 			[]int64{5}),
 		Entry("unmarshals List Bool into slice",
-			core.NonEmptyListVal{core.True, core.False},
+			core.NonEmptyList{core.True, core.False},
 			new([]bool),
 			[]bool{true, false}),
 		Entry("unmarshals empty List Bool into slice",
-			core.EmptyListVal{core.Bool},
+			core.EmptyList{core.Bool},
 			new([]bool),
 			[]bool{}),
 		Entry("unmarshals None (List Bool) into slice",
-			core.AppValue{core.None, core.AppValue{core.List, core.Bool}},
+			core.NoneOf{core.ListOf{core.Bool}},
 			new([]bool),
 			[]bool(nil)),
 		Entry("unmarshals List (List Bool) into slice",
-			core.NonEmptyListVal{
-				core.NonEmptyListVal{core.True, core.False}},
+			core.NonEmptyList{
+				core.NonEmptyList{core.True, core.False}},
 			new([][]bool),
 			[][]bool{{true, false}}),
 		Entry("unmarshals {Foo : Natural, Bar : Text} into struct",
-			core.RecordLitVal{"Foo": core.NaturalLit(3), "Bar": core.TextLitVal{Suffix: "xyzzy"}},
+			core.RecordLit{"Foo": core.NaturalLit(3), "Bar": core.TextLit{Suffix: "xyzzy"}},
 			new(testStruct),
 			testStruct{Foo: 3, Bar: "xyzzy"}),
 		Entry("unmarshals {baz : Natural, Bar : Text} into tagged struct",
-			core.RecordLitVal{"baz": core.NaturalLit(3), "Bar": core.TextLitVal{Suffix: "xyzzy"}},
+			core.RecordLit{"baz": core.NaturalLit(3), "Bar": core.TextLit{Suffix: "xyzzy"}},
 			new(testTaggedStruct),
 			testTaggedStruct{Foo: 3, Bar: "xyzzy"}),
 		Entry("unmarshals None {Foo : Natural, Bar : Text} into struct",
-			core.AppValue{core.None, core.RecordTypeVal{"Foo": core.Natural, "Bar": core.Text}},
+			core.NoneOf{core.RecordType{"Foo": core.Natural, "Bar": core.Text}},
 			new(testStruct),
 			testStruct{}),
 		Entry("unmarshals List {mapKey : Natural, mapValue : Text} into map",
-			core.NonEmptyListVal{core.RecordLitVal{"mapKey": core.NaturalLit(3), "mapValue": core.TextLitVal{Suffix: "fizz"}},
-				core.RecordLitVal{"mapKey": core.NaturalLit(5), "mapValue": core.TextLitVal{Suffix: "buzz"}}},
+			core.NonEmptyList{core.RecordLit{"mapKey": core.NaturalLit(3), "mapValue": core.TextLit{Suffix: "fizz"}},
+				core.RecordLit{"mapKey": core.NaturalLit(5), "mapValue": core.TextLit{Suffix: "buzz"}}},
 			new(map[int]string),
 			map[int]string{3: "fizz", 5: "buzz"}),
 		Entry("unmarshals None List {mapKey : Natural, mapValue : Text} into map",
-			core.AppValue{core.None, core.AppValue{core.List, core.RecordTypeVal{"mapKey": core.Natural, "mapValue": core.Text}}},
+			core.NoneOf{core.ListOf{core.RecordType{"mapKey": core.Natural, "mapValue": core.Text}}},
 			new(map[int]string),
 			map[int]string(nil)),
 		Entry("unmarshals empty List {mapKey : Natural, mapValue : Text} into map",
-			core.EmptyListVal{core.RecordTypeVal{"mapKey": core.Natural, "mapValue": core.Text}},
+			core.EmptyList{core.RecordType{"mapKey": core.Natural, "mapValue": core.Text}},
 			new(map[int]string),
 			map[int]string{}),
 	)
 	// Testing various identity functions ensures we support both
 	// encoding and decoding each particular type
 	DescribeTable("Identity functions of various Dhall and Go types",
-		func(inputType core.Term, testValue interface{}) {
-			id := core.Eval(core.LambdaTerm{
+		func(inputType term.Term, testValue interface{}) {
+			id := core.Eval(term.Lambda{
 				Label: "x",
 				Type:  inputType,
-				Body:  core.NewVar("x"),
+				Body:  term.NewVar("x"),
 			})
 			arg := reflect.ValueOf(testValue)
 			fnPtr := reflect.New(
@@ -127,40 +128,40 @@ var _ = Describe("Decode", func() {
 			result := fnVal.Call([]reflect.Value{arg})
 			Expect(result[0].Interface()).To(Equal(arg.Interface()))
 		},
-		Entry("Bool into bool", core.Bool, true),
-		Entry("Natural into int", core.Natural, 1),
-		Entry("Natural into uint", core.Natural, uint(1)),
-		Entry("Natural into int64", core.Natural, int64(1)),
-		Entry("Integer into int", core.Integer, 1),
-		Entry("Integer into int64", core.Integer, int64(1)),
-		Entry("Text into string", core.Text, "foo"),
+		Entry("Bool into bool", term.Bool, true),
+		Entry("Natural into int", term.Natural, 1),
+		Entry("Natural into uint", term.Natural, uint(1)),
+		Entry("Natural into int64", term.Natural, int64(1)),
+		Entry("Integer into int", term.Integer, 1),
+		Entry("Integer into int64", term.Integer, int64(1)),
+		Entry("Text into string", term.Text, "foo"),
 		Entry("List Natural into []int",
-			core.Apply(core.List, core.Natural), []int{1, 2, 3}),
+			term.Apply(term.List, term.Natural), []int{1, 2, 3}),
 		XEntry("Optional Natural into int",
-			core.Apply(core.Optional, core.Natural), 1),
+			term.Apply(term.Optional, term.Natural), 1),
 		Entry("record into struct",
-			core.RecordType{"Foo": core.Natural, "Bar": core.Text},
+			term.RecordType{"Foo": term.Natural, "Bar": term.Text},
 			testStruct{Foo: 1, Bar: "howdy"},
 		),
 		Entry("record into tagged struct",
-			core.RecordType{"baz": core.Natural, "Bar": core.Text},
+			term.RecordType{"baz": term.Natural, "Bar": term.Text},
 			testTaggedStruct{Foo: 1, Bar: "howdy"},
 		),
 		Entry("map into map",
-			core.Apply(core.List,
-				core.RecordType{"mapKey": core.Text, "mapValue": core.Natural}),
+			term.Apply(term.List,
+				term.RecordType{"mapKey": term.Text, "mapValue": term.Natural}),
 			map[string]int{"foo": 1, "bar": 2},
 		),
 	)
 	Describe("Function types", func() {
 		It("Decodes the int successor function", func() {
 			var fn func(int) int
-			dhallFn := core.Eval(core.LambdaTerm{
+			dhallFn := core.Eval(term.Lambda{
 				Label: "x",
-				Type:  core.Natural,
-				Body: core.NaturalPlus(
-					core.NewVar("x"),
-					core.NaturalLit(1),
+				Type:  term.Natural,
+				Body: term.NaturalPlus(
+					term.NewVar("x"),
+					term.NaturalLit(1),
 				),
 			})
 			Decode(dhallFn, &fn)
@@ -169,14 +170,14 @@ var _ = Describe("Decode", func() {
 		})
 		It("Decodes the natural sum function", func() {
 			var fn func(int, int) int
-			dhallFn := core.Eval(core.LambdaTerm{
+			dhallFn := core.Eval(term.Lambda{
 				Label: "x",
-				Type:  core.Natural,
-				Body: core.LambdaTerm{
+				Type:  term.Natural,
+				Body: term.Lambda{
 					Label: "y",
-					Type:  core.Natural,
-					Body: core.NaturalPlus(
-						core.NewVar("x"), core.NewVar("y")),
+					Type:  term.Natural,
+					Body: term.NaturalPlus(
+						term.NewVar("x"), term.NewVar("y")),
 				},
 			})
 			Decode(dhallFn, &fn)
@@ -185,13 +186,13 @@ var _ = Describe("Decode", func() {
 		})
 		It("Decodes the Natural/subtract builtin as a function", func() {
 			var fn func(int, int) int
-			Decode(core.NaturalSubtractVal, &fn)
+			Decode(core.NaturalSubtract, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(1, 3)).To(Equal(2))
 		})
 		It("Decodes the Natural/subtract builtin as a curried function", func() {
 			var fn func(int) func(int) int
-			Decode(core.NaturalSubtractVal, &fn)
+			Decode(core.NaturalSubtract, &fn)
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(1)(3)).To(Equal(2))
 		})

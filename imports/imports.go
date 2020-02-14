@@ -6,8 +6,9 @@ import (
 
 	"github.com/philandstuff/dhall-golang/binary"
 	"github.com/philandstuff/dhall-golang/core"
-	. "github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/philandstuff/dhall-golang/term"
+	. "github.com/philandstuff/dhall-golang/term"
 )
 
 // Load takes a Term and resolves all imports
@@ -21,7 +22,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 	switch e := e.(type) {
 	case Import:
 		here := e.Fetchable
-		origin := core.NullOrigin
+		origin := term.NullOrigin
 		if len(ancestors) >= 1 {
 			origin = ancestors[len(ancestors)-1].Origin()
 
@@ -53,7 +54,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 		}
 		var expr Term
 		if e.ImportMode == RawText {
-			expr = TextLitTerm{Suffix: content}
+			expr = TextLit{Suffix: content}
 		} else {
 			// dynamicExpr may contain more imports
 			dynamicExpr, err := parser.Parse(here.Name(), []byte(content))
@@ -86,7 +87,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 			cache.Save(actualHash, expr)
 		}
 		return expr, nil
-	case LambdaTerm:
+	case Lambda:
 		resolvedType, err := LoadWith(cache, e.Type, ancestors...)
 		if err != nil {
 			return nil, err
@@ -95,12 +96,12 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		return LambdaTerm{
+		return Lambda{
 			Label: e.Label,
 			Type:  resolvedType,
 			Body:  resolvedBody,
 		}, nil
-	case PiTerm:
+	case Pi:
 		resolvedType, err := LoadWith(cache, e.Type, ancestors...)
 		if err != nil {
 			return nil, err
@@ -109,12 +110,12 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		return PiTerm{
+		return Pi{
 			Label: e.Label,
 			Type:  resolvedType,
 			Body:  resolvedBody,
 		}, nil
-	case AppTerm:
+	case App:
 		resolvedFn, err := LoadWith(cache, e.Fn, ancestors...)
 		if err != nil {
 			return nil, err
@@ -158,7 +159,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 			return nil, err
 		}
 		return Annot{Expr: resolvedExpr, Annotation: resolvedAnnotation}, nil
-	case TextLitTerm:
+	case TextLit:
 		var newChunks Chunks
 		for _, chunk := range e.Chunks {
 			resolvedExpr, err := LoadWith(cache, chunk.Expr, ancestors...)
@@ -170,8 +171,8 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 				Expr:   resolvedExpr,
 			})
 		}
-		return TextLitTerm{newChunks, e.Suffix}, nil
-	case IfTerm:
+		return TextLit{newChunks, e.Suffix}, nil
+	case If:
 		resolvedCond, err := LoadWith(cache, e.Cond, ancestors...)
 		if err != nil {
 			return nil, err
@@ -184,12 +185,12 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		return IfTerm{
+		return If{
 			Cond: resolvedCond,
 			T:    resolvedT,
 			F:    resolvedF,
 		}, nil
-	case OpTerm:
+	case Op:
 		if e.OpCode == ImportAltOp {
 			resolvedL, err := LoadWith(cache, e.L, ancestors...)
 			if err == nil {
@@ -209,7 +210,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		return OpTerm{OpCode: e.OpCode, L: resolvedL, R: resolvedR}, nil
+		return Op{OpCode: e.OpCode, L: resolvedL, R: resolvedR}, nil
 	case EmptyList:
 		resolvedType, err := LoadWith(cache, e.Type, ancestors...)
 		if err != nil {

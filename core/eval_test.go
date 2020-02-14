@@ -3,29 +3,30 @@ package core
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 var _ = Describe("Eval", func() {
 	It("Type", func() {
-		Expect(Eval(Type)).To(Equal(Type))
+		Expect(Eval(term.Type)).To(Equal(Type))
 	})
 	It("Bound variable", func() {
-		Expect(evalWith(Var{Name: "foo"}, Env{"foo": []Value{Type}}, false)).
+		Expect(evalWith(term.Var{Name: "foo"}, env{"foo": []Value{Type}}, false)).
 			To(Equal(Type))
 	})
 	It("Free variable", func() {
-		Expect(evalWith(Var{Name: "foo"}, Env{}, false)).
-			To(Equal(Var{Name: "foo"}))
+		Expect(evalWith(term.Var{Name: "foo"}, env{}, false)).
+			To(Equal(freeVar{Name: "foo"}))
 	})
 	It("Lambda id function", func() {
-		f := Eval(NewLambda("x", Type, Var{Name: "x"})).(lambdaValue)
+		f := Eval(term.NewLambda("x", term.Type, term.Var{Name: "x"})).(lambda)
 		Expect(f.Call(Type)).
 			To(Equal(Type))
 		Expect(f.Label).
 			To(Equal("x"))
 	})
 	It("Lambda id function with alpha normalization", func() {
-		f := AlphaBetaEval(NewLambda("x", Type, Var{Name: "x"})).(lambdaValue)
+		f := AlphaBetaEval(term.NewLambda("x", term.Type, term.Var{Name: "x"})).(lambda)
 		Expect(f.Call(Type)).
 			To(Equal(Type))
 		Expect(f.Label).
@@ -33,13 +34,13 @@ var _ = Describe("Eval", func() {
 	})
 	Describe("application", func() {
 		It("To neutral", func() {
-			Expect(Eval(Apply(Var{Name: "f"}, Var{Name: "x"}))).
-				To(Equal(AppValue{Fn: Var{Name: "f"}, Arg: Var{Name: "x"}}))
+			Expect(Eval(term.Apply(term.Var{Name: "f"}, term.Var{Name: "x"}))).
+				To(Equal(app{Fn: freeVar{Name: "f"}, Arg: freeVar{Name: "x"}}))
 		})
 		It("To lambda", func() {
-			Expect(Eval(Apply(
-				NewLambda("x", Kind, Var{Name: "x"}),
-				Type,
+			Expect(Eval(term.Apply(
+				term.NewLambda("x", term.Kind, term.Var{Name: "x"}),
+				term.Type,
 			))).
 				To(Equal(Type))
 		})

@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 var _ = DescribeTable("functionCheck",
@@ -21,81 +22,81 @@ var _ = DescribeTable("functionCheck",
 	Entry(`Sort ↝ Sort : Sort`, Sort, Sort, Sort),
 )
 
-func typecheckTest(t Term, expectedType Value) {
+func typecheckTest(t term.Term, expectedType Value) {
 	Ω(TypeOf(t)).Should(BeAlphaEquivalentTo(expectedType))
 }
 
 var _ = Describe("TypeOf", func() {
 	DescribeTable("Universe",
 		typecheckTest,
-		Entry("Type : Kind", Type, Kind),
-		Entry("Kind : Sort", Kind, Sort),
+		Entry("Type : Kind", term.Type, Kind),
+		Entry("Kind : Sort", term.Kind, Sort),
 	)
 	DescribeTable("Builtin",
 		typecheckTest,
-		Entry(`Natural : Type`, Natural, Type),
-		Entry(`List : Type -> Type`, List, NewFnTypeVal("_", Type, Type)),
+		Entry(`Natural : Type`, term.Natural, Type),
+		Entry(`List : Type -> Type`, term.List, NewFnType("_", Type, Type)),
 	)
 	DescribeTable("Lambda",
 		typecheckTest,
 		Entry("λ(x : Natural) → x : ∀(x : Natural) → Natural",
-			NewLambda("x", Natural, NewVar("x")),
-			NewPiVal("x", Natural, func(Value) Value { return Natural })),
+			term.NewLambda("x", term.Natural, term.NewVar("x")),
+			NewPi("x", Natural, func(Value) Value { return Natural })),
 		Entry("λ(a : Type) → ([] : List a) : ∀(a : Type) → List a -- check presence of variables in resulting type",
-			NewLambda("a", Type,
-				EmptyList{AppTerm{List, NewVar("a")}}),
-			NewPiVal("a", Type, func(a Value) Value {
-				return AppValue{List, a}
+			term.NewLambda("a", term.Type,
+				term.EmptyList{term.App{term.List, term.NewVar("a")}}),
+			NewPi("a", Type, func(a Value) Value {
+				return ListOf{a}
 			})),
 		Entry("λ(a : Natural) → assert : a ≡ a -- check presence of variables in resulting type",
-			NewLambda("a", Natural,
-				Assert{OpTerm{EquivOp, NewVar("a"), NewVar("a")}}),
-			NewPiVal("a", Natural, func(a Value) Value {
-				return opValue{EquivOp, a, a}
+			term.NewLambda("a", term.Natural,
+				term.Assert{term.Op{term.EquivOp, term.NewVar("a"), term.NewVar("a")}}),
+			NewPi("a", Natural, func(a Value) Value {
+				return oper{term.EquivOp, a, a}
 			})),
 	)
 	DescribeTable("Pi",
 		typecheckTest,
-		Entry(`Natural → Natural : Type`, NewAnonPi(Natural, Natural), Type),
+		Entry(`Natural → Natural : Type`, term.NewAnonPi(term.Natural, term.Natural), Type),
 	)
 	DescribeTable("Application",
 		typecheckTest,
-		Entry(`List Natural : Type`, AppTerm{List, Natural}, Type),
+		Entry(`List Natural : Type`, term.App{term.List, term.Natural}, Type),
 		Entry("(λ(a : Natural) → assert : a ≡ a) 3 -- check presence of variables in resulting type",
-			Apply(
-				NewLambda("a", Natural,
-					Assert{OpTerm{EquivOp, NewVar("a"), NewVar("a")}}),
-				NaturalLit(3)),
-			opValue{EquivOp, NaturalLit(3), NaturalLit(3)}),
+			term.Apply(
+				term.NewLambda("a", term.Natural,
+					term.Assert{term.Op{term.EquivOp, term.NewVar("a"), term.NewVar("a")}}),
+				term.NaturalLit(3)),
+			oper{term.EquivOp, NaturalLit(3), NaturalLit(3)}),
 	)
 	DescribeTable("Others",
 		typecheckTest,
-		Entry(`3 : Natural`, NaturalLit(3), Natural),
+		Entry(`3 : Natural`, term.NaturalLit(3), Natural),
 		Entry(`[] : List Natural : List Natural`,
-			EmptyList{Apply(List, Natural)}, AppValue{List, Natural}),
+			term.EmptyList{term.Apply(term.List, term.Natural)}, ListOf{Natural}),
 	)
 	DescribeTable("Expected failures",
-		func(t Term) {
+		func(t term.Term) {
 			_, err := TypeOf(t)
 			Ω(err).Should(HaveOccurred())
 		},
 		// Universe
 		Entry(`Sort -- Sort has no type`,
-			Sort),
+			term.Sort),
 		// EmptyList
 		Entry(`[] : List 3 -- not a valid list type`,
-			EmptyList{Apply(List, NaturalLit(3))}),
+			term.EmptyList{term.Apply(term.List, term.NaturalLit(3))}),
 		Entry(`[] : Natural -- not in form "List a"`,
-			EmptyList{Natural}),
+			term.EmptyList{term.Natural}),
 
 		// AppTerm
 		Entry(`Sort Type -- Fn of AppTerm doesn't typecheck`,
-			Apply(Sort, Type)),
+			term.Apply(term.Sort, term.Type)),
 		Entry(`List Sort -- Arg of AppTerm doesn't typecheck`,
-			Apply(List, Sort)),
+			term.Apply(term.List, term.Sort)),
 		Entry(`List 3 -- Arg of AppTerm doesn't match function input type`,
-			Apply(List, NaturalLit(3))),
+			term.Apply(term.List, term.NaturalLit(3))),
 		Entry(`Natural Natural -- Fn of AppTerm isn't of function type`,
-			Apply(Natural, Natural)),
+			term.Apply(term.Natural, term.Natural)),
 	)
 })

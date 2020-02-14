@@ -12,32 +12,33 @@ import (
 
 	"github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 var (
 	NaturalLit = gopter.DeriveGen(
-		func(n int) core.Term { var x core.Term = core.NaturalLit(n); return x },
-		func(n core.Term) int { return int(n.(core.NaturalLit)) },
+		func(n int) term.Term { var x term.Term = term.NaturalLit(n); return x },
+		func(n term.Term) int { return int(n.(term.NaturalLit)) },
 		gen.IntRange(0, math.MaxInt32).WithLabel("NaturalLit"),
 	)
 	IntegerLit = gopter.DeriveGen(
-		func(i int) core.Term { return core.IntegerLit(i) },
-		func(i core.Term) int { return int(i.(core.IntegerLit)) },
+		func(i int) term.Term { return term.IntegerLit(i) },
+		func(i term.Term) int { return int(i.(term.IntegerLit)) },
 		gen.Int()).WithLabel("IntegerLit")
 	LeafExpr = gen.OneGenOf(NaturalLit, IntegerLit, BasicType).WithLabel("LeafExpr")
 )
 
 func PlusOf(inner gopter.Gen) gopter.Gen {
-	return gen.Struct(reflect.TypeOf(core.OpTerm{}), map[string]gopter.Gen{
-		"OpCode": gen.Const(core.PlusOp),
+	return gen.Struct(reflect.TypeOf(term.Op{}), map[string]gopter.Gen{
+		"OpCode": gen.Const(term.PlusOp),
 		"L":      inner,
 		"R":      inner,
 	}).WithLabel("NaturalPlus")
 }
 
 func TimesOf(inner gopter.Gen) gopter.Gen {
-	return gen.Struct(reflect.TypeOf(core.OpTerm{}), map[string]gopter.Gen{
-		"OpCode": gen.Const(core.TimesOp),
+	return gen.Struct(reflect.TypeOf(term.Op{}), map[string]gopter.Gen{
+		"OpCode": gen.Const(term.TimesOp),
 		"L":      inner,
 		"R":      inner,
 	}).WithLabel("NaturalTimes")
@@ -52,12 +53,12 @@ func ExprOf(inner gopter.Gen) gopter.Gen {
 	).WithLabel("ExprOf")
 }
 
-var BasicType = gen.OneConstOf(core.Double, core.Text, core.Bool, core.Natural, core.Integer).WithLabel("BasicType")
+var BasicType = gen.OneConstOf(term.Double, term.Text, term.Bool, term.Natural, term.Integer).WithLabel("BasicType")
 
 func ListOf(inner gopter.Gen) gopter.Gen {
 	return gopter.DeriveGen(
-		func(expr core.Term) core.Term { return core.Apply(core.List, expr) },
-		func(listType core.Term) core.Term { return listType.(core.AppTerm).Arg },
+		func(expr term.Term) term.Term { return term.Apply(term.List, expr) },
+		func(listType term.Term) term.Term { return listType.(term.App).Arg },
 		inner,
 	)
 }
@@ -82,12 +83,12 @@ func TestParseWhatYouWrite(t *testing.T) {
 
 	properties.Property("written expressions parse back as themselves",
 		prop.ForAll(
-			func(e core.Term) bool {
+			func(e term.Term) bool {
 				expr, err := parser.Parse("-", []byte(fmt.Sprint(e)))
 				if err != nil {
 					return false
 				}
-				return core.AlphaEquivalent(e, expr)
+				return core.AlphaEquivalent(core.Eval(e), core.Eval(expr))
 			},
 			ExprOf(ExprOf(LeafExpr)),
 		))
