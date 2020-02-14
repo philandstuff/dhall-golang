@@ -275,7 +275,7 @@ func TestTypeInference(t *testing.T) {
 
 			resolvedA := parsedA
 			if !isSimpleTest(t.Name()) {
-				resolvedA, err = imports.LoadWith(imports.NoCache{}, parsedA, term.Local(aPath))
+				resolvedA, err = imports.LoadWith(imports.NoCache{}, parsedA, term.LocalFile(aPath))
 				expectNoError(t, err)
 			}
 
@@ -331,10 +331,10 @@ func TestNormalization(t *testing.T) {
 			resolvedA := parsedA
 			resolvedB := parsedB
 			if !isSimpleTest(t.Name()) {
-				resolvedA, err = imports.Load(parsedA, term.Local(aPath))
+				resolvedA, err = imports.Load(parsedA, term.LocalFile(aPath))
 				expectNoError(t, err)
 
-				resolvedB, err = imports.Load(parsedB, term.Local(bPath))
+				resolvedB, err = imports.Load(parsedB, term.LocalFile(bPath))
 				expectNoError(t, err)
 			}
 
@@ -350,7 +350,7 @@ func TestImportFails(t *testing.T) {
 		parsed, err := parser.ParseFile(testPath)
 		expectNoError(t, err)
 
-		_, err = imports.Load(parsed, term.Local(testPath))
+		_, err = imports.Load(parsed, term.LocalFile(testPath))
 		expectError(t, err)
 	})
 }
@@ -369,10 +369,10 @@ func TestImport(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA, term.Local(aPath))
+			resolvedA, err := imports.Load(parsedA, term.LocalFile(aPath))
 			expectNoError(t, err)
 
-			resolvedB, err := imports.Load(parsedB, term.Local(bPath))
+			resolvedB, err := imports.Load(parsedB, term.LocalFile(bPath))
 			expectNoError(t, err)
 
 			expectEqualTerms(t, resolvedB, resolvedA)
@@ -390,7 +390,7 @@ func TestSemanticHash(t *testing.T) {
 
 			resolvedA := parsedA
 			if !isSimpleTest(t.Name()) {
-				resolvedA, err = imports.Load(parsedA, term.Local(aPath))
+				resolvedA, err = imports.Load(parsedA, term.LocalFile(aPath))
 				expectNoError(t, err)
 			}
 

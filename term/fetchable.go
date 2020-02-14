@@ -12,8 +12,8 @@ import (
 )
 
 type EnvVar string
-type Local string
-type Remote struct{ url *url.URL }
+type LocalFile string
+type RemoteFile struct{ url *url.URL }
 type Missing struct{}
 
 // NullOrigin is used in Fetchable.Fetch() to indicate no origin.
@@ -39,8 +39,8 @@ type Fetchable interface {
 }
 
 var _ Fetchable = EnvVar("")
-var _ Fetchable = Local("")
-var _ Fetchable = Remote{}
+var _ Fetchable = LocalFile("")
+var _ Fetchable = RemoteFile{}
 var _ Fetchable = Missing{}
 
 func (e EnvVar) Name() string { return string(e) }
@@ -65,30 +65,30 @@ func (e EnvVar) AsLocation() Term {
 	return Apply(Field{LocationType, "Environment"}, TextLit{Suffix: e.String()})
 }
 
-func (l Local) Name() string { return string(l) }
-func (Local) Origin() string { return NullOrigin }
-func (l Local) String() string {
+func (l LocalFile) Name() string { return string(l) }
+func (LocalFile) Origin() string { return NullOrigin }
+func (l LocalFile) String() string {
 	if l.IsAbs() || l.IsRelativeToHome() || l.IsRelativeToParent() {
 		return string(l)
 	} else {
 		return "./" + string(l)
 	}
 }
-func (l Local) Fetch(origin string) (string, error) {
+func (l LocalFile) Fetch(origin string) (string, error) {
 	if origin != NullOrigin {
 		return "", fmt.Errorf("Can't get %s from remote import at %s", l, origin)
 	}
 	bytes, err := ioutil.ReadFile(string(l))
 	return string(bytes), err
 }
-func (l Local) ChainOnto(base Fetchable) (Fetchable, error) {
+func (l LocalFile) ChainOnto(base Fetchable) (Fetchable, error) {
 	switch r := base.(type) {
-	case Local:
+	case LocalFile:
 		if l.IsAbs() || l.IsRelativeToHome() {
 			return l, nil
 		}
-		return Local(path.Join(path.Dir(string(r)), string(l))), nil
-	case Remote:
+		return LocalFile(path.Join(path.Dir(string(r)), string(l))), nil
+	case RemoteFile:
 		if l.IsAbs() {
 			return nil, errors.New("Can't get absolute path from remote import")
 		}
@@ -96,18 +96,18 @@ func (l Local) ChainOnto(base Fetchable) (Fetchable, error) {
 			return nil, errors.New("Can't get home-relative path from remote import")
 		}
 		newURL := r.url.ResolveReference(l.asRelativeRef())
-		return Remote{url: newURL}, nil
+		return RemoteFile{url: newURL}, nil
 	default:
 		return l, nil
 	}
 }
 
-func (l Local) IsAbs() bool              { return path.IsAbs(string(l)) }
-func (l Local) IsRelativeToParent() bool { return strings.HasPrefix(string(l), "..") }
-func (l Local) IsRelativeToHome() bool   { return string(l)[0] == '~' }
+func (l LocalFile) IsAbs() bool              { return path.IsAbs(string(l)) }
+func (l LocalFile) IsRelativeToParent() bool { return strings.HasPrefix(string(l), "..") }
+func (l LocalFile) IsRelativeToHome() bool   { return string(l)[0] == '~' }
 
 //asRelativeRef converts a local path to a relative reference
-func (l Local) asRelativeRef() *url.URL {
+func (l LocalFile) asRelativeRef() *url.URL {
 	if l.IsAbs() || l.IsRelativeToHome() {
 		panic("Can't convert absolute or home-relative path to relative reference")
 	}
@@ -128,26 +128,26 @@ func (l Local) asRelativeRef() *url.URL {
 	return u
 }
 
-func (l Local) PathComponents() []string {
+func (l LocalFile) PathComponents() []string {
 	if l.IsAbs() || l.IsRelativeToHome() || l.IsRelativeToParent() {
 		return strings.Split(string(l), "/")[1:]
 	} else {
 		return strings.Split(string(l), "/")
 	}
 }
-func (l Local) AsLocation() Term {
+func (l LocalFile) AsLocation() Term {
 	return Apply(Field{LocationType, "Local"}, TextLit{Suffix: l.String()})
 }
-func NewRemote(u *url.URL) Remote {
-	return Remote{url: u}
+func NewRemoteFile(u *url.URL) RemoteFile {
+	return RemoteFile{url: u}
 }
 
 var client http.Client
 
-func (r Remote) Name() string   { return r.url.String() }
-func (r Remote) Origin() string { return fmt.Sprintf("%s://%s", r.url.Scheme, r.Authority()) }
-func (r Remote) String() string { return fmt.Sprintf("%v", r.url) }
-func (r Remote) Fetch(origin string) (string, error) {
+func (r RemoteFile) Name() string   { return r.url.String() }
+func (r RemoteFile) Origin() string { return fmt.Sprintf("%s://%s", r.url.Scheme, r.Authority()) }
+func (r RemoteFile) String() string { return fmt.Sprintf("%v", r.url) }
+func (r RemoteFile) Fetch(origin string) (string, error) {
 	req, err := http.NewRequest("GET", r.url.String(), nil)
 	if err != nil {
 		return "", err
@@ -175,29 +175,29 @@ func (r Remote) Fetch(origin string) (string, error) {
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	return string(bodyBytes), err
 }
-func (r Remote) ChainOnto(base Fetchable) (Fetchable, error) {
+func (r RemoteFile) ChainOnto(base Fetchable) (Fetchable, error) {
 	return r, nil
 }
-func (r Remote) IsPlainHttp() bool { return r.url.Scheme == "http" }
-func (r Remote) Authority() string {
+func (r RemoteFile) IsPlainHTTP() bool { return r.url.Scheme == "http" }
+func (r RemoteFile) Authority() string {
 	if r.url.User != nil {
 		return fmt.Sprintf("%s@%s", r.url.User.String(), r.url.Host)
 	}
 	return r.url.Host
 }
-func (r Remote) PathComponents() []string {
+func (r RemoteFile) PathComponents() []string {
 	if r.url.Path == "" || r.url.Path == "/" {
 		return []string{""}
 	}
 	return strings.Split(r.url.EscapedPath()[1:], "/")
 }
-func (r Remote) Query() *string {
+func (r RemoteFile) Query() *string {
 	if r.url.RawQuery == "" && !r.url.ForceQuery {
 		return nil
 	}
 	return &r.url.RawQuery
 }
-func (r Remote) AsLocation() Term {
+func (r RemoteFile) AsLocation() Term {
 	return Apply(Field{LocationType, "Remote"}, TextLit{Suffix: r.String()})
 }
 

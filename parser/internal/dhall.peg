@@ -373,10 +373,10 @@ Path ← cs:PathComponent+ {
 
 Local ← ParentPath / HerePath / HomePath / AbsolutePath
 
-ParentPath ← ".." p:Path { return Local(path.Join("..", p.(string))), nil }
-HerePath ← '.' p:Path { return Local(p.(string)), nil }
-HomePath ← '~' p:Path { return Local(path.Join("~", p.(string))), nil }
-AbsolutePath ← p:Path { return Local(path.Join("/", p.(string))), nil }
+ParentPath ← ".." p:Path { return LocalFile(path.Join("..", p.(string))), nil }
+HerePath ← '.' p:Path { return LocalFile(p.(string)), nil }
+HomePath ← '~' p:Path { return LocalFile(path.Join("~", p.(string))), nil }
+AbsolutePath ← p:Path { return LocalFile(path.Join("/", p.(string))), nil }
 
 Scheme ← "http" 's'?
 
@@ -416,9 +416,9 @@ SubDelims ← "!" / "$" / "&" / "'" / "*" / "+" / ";" / "="
 
 Http ← u:HttpRaw usingClause:( _ Using _1 ImportExpression)? {
   if usingClause != nil {
-    return NewRemote(u.(*url.URL)), errors.New("dhall-golang does not support ❰using❱ clauses")
+    return NewRemoteFile(u.(*url.URL)), errors.New("dhall-golang does not support ❰using❱ clauses")
   }
-  return NewRemote(u.(*url.URL)), nil
+  return NewRemoteFile(u.(*url.URL)), nil
 }
 
 Env ← "env:" v:(BashEnvironmentVariable / PosixEnvironmentVariable) { return v, nil }

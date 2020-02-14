@@ -26,12 +26,12 @@ func NewEnvVarImport(envvar string, mode term.ImportMode) term.Import {
 }
 
 func NewLocalImport(path string, mode term.ImportMode) term.Import {
-	return NewImport(term.Local(path), mode)
+	return NewImport(term.LocalFile(path), mode)
 }
 
 // only for generating test data - discards errors
 func NewRemoteImport(uri string, mode term.ImportMode) term.Import {
 	parsedURI, _ := url.ParseRequestURI(uri)
-	remote := term.NewRemote(parsedURI)
+	remote := term.NewRemoteFile(parsedURI)
 	return NewImport(remote, mode)
 }

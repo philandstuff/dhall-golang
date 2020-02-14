@@ -15,9 +15,9 @@ import (
 	"github.com/onsi/gomega/ghttp"
 )
 
-func makeRemote(u string) Remote {
+func makeRemoteFile(u string) RemoteFile {
 	parsed, _ := url.ParseRequestURI(u)
-	remote := NewRemote(parsed)
+	remote := NewRemoteFile(parsed)
 	return remote
 }
 
@@ -32,41 +32,41 @@ var _ = DescribeTable("ChainOnto", func(fetchable, base, expected Fetchable) {
 	}
 },
 	Entry("Missing onto EnvVar", Missing{}, EnvVar(""), Missing{}),
-	Entry("Missing onto Local", Missing{}, Local(""), Missing{}),
-	Entry("Missing onto Remote", Missing{}, Remote{}, Missing{}),
+	Entry("Missing onto LocalFile", Missing{}, LocalFile(""), Missing{}),
+	Entry("Missing onto RemoteFile", Missing{}, RemoteFile{}, Missing{}),
 	Entry("Missing onto Missing", Missing{}, Missing{}, Missing{}),
 	Entry("EnvVar onto EnvVar", EnvVar("foo"), EnvVar("bar"), EnvVar("foo")),
-	Entry("EnvVar onto Local", EnvVar("foo"), Local(""), EnvVar("foo")),
-	Entry("EnvVar onto Remote", EnvVar("foo"), Remote{}, EnvVar("foo")),
+	Entry("EnvVar onto LocalFile", EnvVar("foo"), LocalFile(""), EnvVar("foo")),
+	Entry("EnvVar onto RemoteFile", EnvVar("foo"), RemoteFile{}, EnvVar("foo")),
 	Entry("EnvVar onto Missing", EnvVar("foo"), Missing{}, EnvVar("foo")),
-	Entry("Relative local onto EnvVar", Local("foo"), EnvVar("bar"), Local("foo")),
-	Entry("Relative local onto Local", Local("foo"), Local("/bar/baz"), Local("/bar/foo")),
-	Entry("Relative local onto Remote", Local("foo"), makeRemote("https://example.com/bar/baz"), makeRemote("https://example.com/bar/foo")),
-	Entry("Relative local with tricky chars onto Remote", Local("foo:bar#[☃"), makeRemote("https://example.com/bar/baz"), makeRemote("https://example.com/bar/foo:bar%23%5B%E2%98%83")),
-	Entry("Relative local onto Missing", Local("foo"), Missing{}, Local("foo")),
-	Entry("Parent-relative local onto EnvVar", Local("../foo"), EnvVar("bar"), Local("../foo")),
-	Entry("Parent-relative local onto Local", Local("../foo"), Local("/bar/baz/quux"), Local("/bar/foo")),
-	Entry("Parent-relative local onto Remote", Local("../foo"), makeRemote("https://example.com/bar/baz/quux"), makeRemote("https://example.com/bar/foo")),
-	Entry("Parent-relative local with tricky chars onto Remote", Local("../foo#[☃"), makeRemote("https://example.com/bar/baz/quux"), makeRemote("https://example.com/bar/foo%23%5B%E2%98%83")),
-	Entry("Parent-relative local onto Missing", Local("../foo"), Missing{}, Local("../foo")),
-	Entry("Home-relative local onto EnvVar", Local("~/foo"), EnvVar("bar"), Local("~/foo")),
-	Entry("Home-relative local onto Local", Local("~/foo"), Local("/bar/baz"), Local("~/foo")),
-	Entry("Home-relative local onto Remote", Local("~/foo"), makeRemote("https://example.com/bar/baz"), nil),
-	Entry("Home-relative local onto Missing", Local("~/foo"), Missing{}, Local("~/foo")),
-	Entry("Absolute local onto EnvVar", Local("/foo"), EnvVar("bar"), Local("/foo")),
-	Entry("Absolute local onto Local", Local("/foo"), Local("/bar/baz"), Local("/foo")),
-	Entry("Absolute local onto Remote", Local("/foo"), makeRemote("https://example.com/bar/baz"), nil),
-	Entry("Absolute local onto Missing", Local("/foo"), Missing{}, Local("/foo")),
-	Entry("Remote onto EnvVar", makeRemote("https://example.com/foo"), EnvVar("bar"), makeRemote("https://example.com/foo")),
-	Entry("Remote onto Local", makeRemote("https://example.com/foo"), Local(""), makeRemote("https://example.com/foo")),
-	Entry("Remote onto Remote", makeRemote("https://example.com/foo"), Remote{}, makeRemote("https://example.com/foo")),
-	Entry("Remote onto Missing", makeRemote("https://example.com/foo"), Missing{}, makeRemote("https://example.com/foo")),
+	Entry("Relative local onto EnvVar", LocalFile("foo"), EnvVar("bar"), LocalFile("foo")),
+	Entry("Relative local onto LocalFile", LocalFile("foo"), LocalFile("/bar/baz"), LocalFile("/bar/foo")),
+	Entry("Relative local onto RemoteFile", LocalFile("foo"), makeRemoteFile("https://example.com/bar/baz"), makeRemoteFile("https://example.com/bar/foo")),
+	Entry("Relative local with tricky chars onto RemoteFile", LocalFile("foo:bar#[☃"), makeRemoteFile("https://example.com/bar/baz"), makeRemoteFile("https://example.com/bar/foo:bar%23%5B%E2%98%83")),
+	Entry("Relative local onto Missing", LocalFile("foo"), Missing{}, LocalFile("foo")),
+	Entry("Parent-relative local onto EnvVar", LocalFile("../foo"), EnvVar("bar"), LocalFile("../foo")),
+	Entry("Parent-relative local onto LocalFile", LocalFile("../foo"), LocalFile("/bar/baz/quux"), LocalFile("/bar/foo")),
+	Entry("Parent-relative local onto RemoteFile", LocalFile("../foo"), makeRemoteFile("https://example.com/bar/baz/quux"), makeRemoteFile("https://example.com/bar/foo")),
+	Entry("Parent-relative local with tricky chars onto RemoteFile", LocalFile("../foo#[☃"), makeRemoteFile("https://example.com/bar/baz/quux"), makeRemoteFile("https://example.com/bar/foo%23%5B%E2%98%83")),
+	Entry("Parent-relative local onto Missing", LocalFile("../foo"), Missing{}, LocalFile("../foo")),
+	Entry("Home-relative local onto EnvVar", LocalFile("~/foo"), EnvVar("bar"), LocalFile("~/foo")),
+	Entry("Home-relative local onto LocalFile", LocalFile("~/foo"), LocalFile("/bar/baz"), LocalFile("~/foo")),
+	Entry("Home-relative local onto RemoteFile", LocalFile("~/foo"), makeRemoteFile("https://example.com/bar/baz"), nil),
+	Entry("Home-relative local onto Missing", LocalFile("~/foo"), Missing{}, LocalFile("~/foo")),
+	Entry("Absolute local onto EnvVar", LocalFile("/foo"), EnvVar("bar"), LocalFile("/foo")),
+	Entry("Absolute local onto LocalFile", LocalFile("/foo"), LocalFile("/bar/baz"), LocalFile("/foo")),
+	Entry("Absolute local onto RemoteFile", LocalFile("/foo"), makeRemoteFile("https://example.com/bar/baz"), nil),
+	Entry("Absolute local onto Missing", LocalFile("/foo"), Missing{}, LocalFile("/foo")),
+	Entry("RemoteFile onto EnvVar", makeRemoteFile("https://example.com/foo"), EnvVar("bar"), makeRemoteFile("https://example.com/foo")),
+	Entry("RemoteFile onto LocalFile", makeRemoteFile("https://example.com/foo"), LocalFile(""), makeRemoteFile("https://example.com/foo")),
+	Entry("RemoteFile onto RemoteFile", makeRemoteFile("https://example.com/foo"), RemoteFile{}, makeRemoteFile("https://example.com/foo")),
+	Entry("RemoteFile onto Missing", makeRemoteFile("https://example.com/foo"), Missing{}, makeRemoteFile("https://example.com/foo")),
 )
 
 const ExampleRemoteOrigin = "http://example.com"
 
 var _ = Describe("Fetch", func() {
-	DescribeTable("Local fetching", func(fetchable Fetchable, origin string, expected string) {
+	DescribeTable("LocalFile fetching", func(fetchable Fetchable, origin string, expected string) {
 		os.Setenv("foo", "Value of envvar foo")
 		actual, err := fetchable.Fetch(origin)
 		if expected == "" {
@@ -80,10 +80,10 @@ var _ = Describe("Fetch", func() {
 		Entry("Missing from remote returns error", Missing{}, ExampleRemoteOrigin, ""),
 		Entry("EnvVar from local is allowed", EnvVar("foo"), NullOrigin, "Value of envvar foo"),
 		Entry("EnvVar from remote returns error", EnvVar("foo"), ExampleRemoteOrigin, ""),
-		Entry("Local from local is allowed", Local("./testdata/foo"), NullOrigin, "Content of file 'foo'\n"),
-		Entry("Local from remote returns error", Local("./testdata/foo"), ExampleRemoteOrigin, ""),
+		Entry("Local from local is allowed", LocalFile("./testdata/foo"), NullOrigin, "Content of file 'foo'\n"),
+		Entry("Local from remote returns error", LocalFile("./testdata/foo"), ExampleRemoteOrigin, ""),
 	)
-	Describe("Remote fetching", func() {
+	Describe("RemoteFile fetching", func() {
 		var server *ghttp.Server
 		AfterEach(func() {
 			server.Close()

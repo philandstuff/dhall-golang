@@ -406,7 +406,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 					if err != nil {
 						return nil, err
 					}
-					f = NewRemote(u)
+					f = NewRemoteFile(u)
 				case 2, 3, 4, 5:
 					var file string
 					if importLabel == 2 {
@@ -425,7 +425,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 						}
 						file = path.Join(file, component)
 					}
-					f = Local(file)
+					f = LocalFile(file)
 				case 6:
 					name, err := unwrapString(val[4])
 					if err != nil {
@@ -674,7 +674,7 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 		switch rr := r.(type) {
 		case EnvVar:
 			e.Encode([]interface{}{24, val.Hash, mode, 6, string(rr)})
-		case Local:
+		case LocalFile:
 			if rr.IsAbs() {
 				toEncode := []interface{}{24, val.Hash, mode, AbsoluteImport}
 				for _, component := range rr.PathComponents() {
@@ -700,10 +700,10 @@ func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
 				}
 				e.Encode(toEncode)
 			}
-		case Remote:
+		case RemoteFile:
 			var headers interface{} // unimplemented, leave as nil for now
 			scheme := HttpsImport
-			if rr.IsPlainHttp() {
+			if rr.IsPlainHTTP() {
 				scheme = HttpImport
 			}
 			toEncode := []interface{}{24, val.Hash, mode, scheme, headers, rr.Authority()}

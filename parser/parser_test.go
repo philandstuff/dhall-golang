@@ -154,7 +154,7 @@ baz
 		Entry("bash envvar code import", `env:FOO`, NewEnvVarImport("FOO", Code)),
 		Entry("posix envvar code import", `env:"FOO"`, NewEnvVarImport("FOO", Code)),
 		Entry("posix envvar code import", `env:"foo\nbar\a!"`, NewEnvVarImport("foo\nbar\a!", Code)),
-		Entry("missing", `missing`, NewImport(Missing(struct{}{}), Code)),
+		Entry("missing", `missing`, NewImport(Missing{}, Code)),
 		Entry("local here-path import", `./local`, NewLocalImport("local", Code)),
 		Entry("local parent-path import", `../local`, NewLocalImport("../local", Code)),
 		Entry("local home import", `~/in/home`, NewLocalImport("~/in/home", Code)),
