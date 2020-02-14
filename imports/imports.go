@@ -57,7 +57,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 			expr = TextLit{Suffix: content}
 		} else {
 			// dynamicExpr may contain more imports
-			dynamicExpr, err := parser.Parse(here.Name(), []byte(content))
+			dynamicExpr, err := parser.Parse(here.String(), []byte(content))
 			if err != nil {
 				return nil, err
 			}
