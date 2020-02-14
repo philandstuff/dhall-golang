@@ -126,28 +126,28 @@ type LocalVar struct {
 func (LocalVar) isTerm() {}
 
 type (
-	// A LambdaTerm is a lambda abstraction.
+	// A Lambda is a lambda abstraction.
 	Lambda struct {
 		Label string
 		Type  Term
 		Body  Term
 	}
 
-	// A PiTerm is a function type.
+	// A Pi is a function type.
 	Pi struct {
 		Label string
 		Type  Term
 		Body  Term
 	}
 
-	// An AppTerm is a Term formed by applying a function to an
+	// An App is a Term formed by applying a function to an
 	// argument.
 	App struct {
 		Fn  Term
 		Arg Term
 	}
 
-	// An OpTerm is two Terms combined by an operator.  The OpCode
+	// An Op is two Terms combined by an operator.  The OpCode
 	// determines the type of operator.
 	Op struct {
 		OpCode OpCode
