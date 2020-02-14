@@ -4,7 +4,10 @@
 
 ### Breaking changes
 
- - removed `core.AppValue` from public interface
+ - refactoring of the `core` package
+   - moved `core.Term` and implementations to new package `term`
+   - removed `core.AppValue` from public interface
+   - renamed various types to remove `-Val` and `-Term` suffixes
 
 ### Added
 
