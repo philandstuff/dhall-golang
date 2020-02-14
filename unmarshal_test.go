@@ -198,3 +198,16 @@ var _ = Describe("Decode", func() {
 		})
 	})
 })
+
+var _ = Describe("Unmarshal", func() {
+	It("Parses 1 + 2", func() {
+		var actual uint
+		Unmarshal([]byte("1 + 2"), &actual)
+		Expect(actual).To(Equal(uint(3)))
+	})
+	It("Throws a type error for `1 + -2`", func() {
+		var actual uint
+		err := Unmarshal([]byte("1 + -2"), &actual)
+		Expect(err).To(HaveOccurred())
+	})
+})

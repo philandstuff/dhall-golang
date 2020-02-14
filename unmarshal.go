@@ -25,6 +25,10 @@ func Unmarshal(b []byte, out interface{}) error {
 	if err != nil {
 		return err
 	}
+	_, err = core.TypeOf(term)
+	if err != nil {
+		return err
+	}
 	Decode(core.Eval(term), out)
 	return nil
 }

@@ -9,6 +9,10 @@
    - removed `core.AppValue` from public interface
    - renamed various types to remove `-Val` and `-Term` suffixes
 
+### Changed
+
+ - `dhall.Unmarshal()` now typechecks before evaluating
+
 ### Added
 
   - added `core.ListOf`, `core.OptionalOf`, `core.NoneOf` Value types
