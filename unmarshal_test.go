@@ -202,12 +202,23 @@ var _ = Describe("Decode", func() {
 var _ = Describe("Unmarshal", func() {
 	It("Parses 1 + 2", func() {
 		var actual uint
-		Unmarshal([]byte("1 + 2"), &actual)
+		err := Unmarshal([]byte("1 + 2"), &actual)
+		Expect(err).ToNot(HaveOccurred())
 		Expect(actual).To(Equal(uint(3)))
 	})
 	It("Throws a type error for `1 + -2`", func() {
 		var actual uint
 		err := Unmarshal([]byte("1 + -2"), &actual)
 		Expect(err).To(HaveOccurred())
+	})
+	It("Fetches imports", func() {
+		type Config struct {
+			Port int
+			Name string
+		}
+		var actual Config
+		err := Unmarshal([]byte("./testdata/unmarshal-test.dhall"), &actual)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(actual).To(Equal(Config{Port: 5050, Name: "inetd"}))
 	})
 })

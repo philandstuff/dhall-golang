@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/philandstuff/dhall-golang/core"
+	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
@@ -18,18 +19,23 @@ func isMapEntryType(recordType core.RecordType) bool {
 	return false
 }
 
-// Unmarshal takes dhall input as a byte array and parses it,
-// evaluates it, and unmarshals it into the given variable.
+// Unmarshal takes dhall input as a byte array and parses it, resolves
+// imports, typechecks, evaluates, and unmarshals it into the given
+// variable.
 func Unmarshal(b []byte, out interface{}) error {
 	term, err := parser.Parse("-", b)
 	if err != nil {
 		return err
 	}
-	_, err = core.TypeOf(term)
+	resolved, err := imports.Load(term)
 	if err != nil {
 		return err
 	}
-	Decode(core.Eval(term), out)
+	_, err = core.TypeOf(resolved)
+	if err != nil {
+		return err
+	}
+	Decode(core.Eval(resolved), out)
 	return nil
 }
 
