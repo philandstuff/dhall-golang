@@ -9,9 +9,10 @@
    - removed `core.AppValue` from public interface
    - renamed various types to remove `-Val` and `-Term` suffixes
 
-### Changed
+### Fixed
 
- - `dhall.Unmarshal()` now typechecks before evaluating
+ - `dhall.Unmarshal()` now resolves imports and typechecks before
+   evaluating
 
 ### Added
 
