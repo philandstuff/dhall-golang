@@ -317,10 +317,12 @@ NaturalLiteral ←
       i, err := strconv.ParseInt(string(c.text), 0, 0)
       return NaturalLit(i), err
   }
-  / Digit+ {
+  / [1-9] Digit*{
       i, err := strconv.Atoi(string(c.text))
       return NaturalLit(i), err
   }
+  / '0' Digit+ { return nil, errors.New("Natural literals cannot have leading zeros") } 
+  / '0' { return NaturalLit(0), nil }
 
 IntegerLiteral ←
     '+' n:NaturalLiteral { return IntegerLit(n.(NaturalLit)), nil }

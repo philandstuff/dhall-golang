@@ -27,7 +27,6 @@ var slowTests = []string{
 
 var expectedFailures = []string{
 	// v14.0.0 features
-	"TestParserRejects/unit/NaturalLitLeadingZero",
 	"TestTypeInferenceFails/unit/RecordLitDuplicateFields",
 	"TestNormalization/unit/RecordLitNixLike",
 	"TestNormalization/unit/RecordLitDuplicateFields",
