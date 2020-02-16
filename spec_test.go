@@ -26,13 +26,6 @@ var slowTests = []string{
 }
 
 var expectedFailures = []string{
-	// v14.0.0 features
-	"TestNormalization/unit/RecordLitNixLike",
-	"TestNormalization/unit/RecordLitDottedFields",
-	"TestTypeInference/unit/RecordLitDotted",
-	"TestParserAccepts/unit/RecordLitNixLike",
-	"TestParserAccepts/unit/RecordLitDotted",
-
 	// needs `using`
 	"TestParserAccepts/unit/import/Headers",
 	"TestParserAccepts/unit/import/inlineUsing",

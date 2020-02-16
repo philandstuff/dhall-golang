@@ -686,8 +686,13 @@ NonEmptyRecordLiteral ←
           return content, nil
       }
 
-RecordLiteralEntry ← name:AnyLabelOrSome _ '=' _ expr:Expression {
-    return RecordLit{name.(string): expr.(Term)}, nil
+RecordLiteralEntry ← name:AnyLabelOrSome children:(_ '.' _ AnyLabelOrSome)* _ '=' _ expr:Expression {
+    rest := expr.(Term)
+    for i := len(children.([]interface{}))-1; i>=0; i-- {
+        child := children.([]interface{})[i].([]interface{})[3].(string)
+        rest = RecordLit{child: rest}
+    }
+    return RecordLit{name.(string): rest}, nil
 }
 
 UnionType ← NonEmptyUnionType / EmptyUnionType
