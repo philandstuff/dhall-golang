@@ -649,45 +649,45 @@ MoreRecordType ← _ ',' _ f:RecordTypeEntry {return f, nil}
 NonEmptyRecordType ←
       first:RecordTypeEntry rest:MoreRecordType* {
           fields := rest.([]interface{})
-          content := make(RecordType, len(fields)+1)
-          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Term)
-          for _, field := range(fields) {
-              fieldName := field.([]interface{})[0].(string)
-              if _, ok := content[fieldName]; ok {
-                  return nil, fmt.Errorf("Duplicate field %s in record", fieldName)
+          content := first.(RecordType)
+          for _, field := range fields {
+              for k, v := range field.(RecordType) {
+                  if _, ok := content[k]; ok {
+                      return nil, fmt.Errorf("Duplicate field %s in record", k)
+                  }
+                  content[k] = v
               }
-              content[fieldName] = field.([]interface{})[1].(Term)
           }
           return content, nil
       }
 
 RecordTypeEntry ← name:AnyLabelOrSome _ ':' _1 expr:Expression {
-    return []interface{}{name, expr}, nil
+    return RecordType{name.(string): expr.(Term)}, nil
 }
 
 MoreRecordLiteral ← _ ',' _ f:RecordLiteralEntry {return f, nil}
 NonEmptyRecordLiteral ←
       first:RecordLiteralEntry rest:MoreRecordLiteral* {
           fields := rest.([]interface{})
-          content := make(RecordLit, len(fields)+1)
-          content[first.([]interface{})[0].(string)] = first.([]interface{})[1].(Term)
-          for _, field := range(fields) {
-              fieldName := field.([]interface{})[0].(string)
-              if _, ok := content[fieldName]; ok {
-                  content[fieldName] = Op{
-                      OpCode: RecordMergeOp,
-                      L: content[fieldName],
-                      R: field.([]interface{})[1].(Term),
+          content := first.(RecordLit)
+          for _, field := range fields {
+              for k, v := range field.(RecordLit) {
+                  if _, ok := content[k]; ok {
+                      content[k] = Op{
+                          OpCode: RecordMergeOp,
+                          L: content[k],
+                          R: v,
+                      }
+                  } else {
+                      content[k] = v
                   }
-              } else {
-                  content[fieldName] = field.([]interface{})[1].(Term)
               }
           }
           return content, nil
       }
 
 RecordLiteralEntry ← name:AnyLabelOrSome _ '=' _ expr:Expression {
-    return []interface{}{name, expr}, nil
+    return RecordLit{name.(string): expr.(Term)}, nil
 }
 
 UnionType ← NonEmptyUnionType / EmptyUnionType
@@ -728,7 +728,7 @@ NonEmptyListLiteral ←
           exprs := rest.([]interface{})
           content := make(NonEmptyList, len(exprs)+1)
           content[0] = first.(Term)
-          for i, expr := range(exprs) {
+          for i, expr := range exprs {
               content[i+1] = expr.(Term)
           }
           return content, nil
