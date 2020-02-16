@@ -4,7 +4,7 @@
 
 [Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.2...HEAD
 
-## [1.0.0-rc.2] - 2020-02-09
+## [1.0.0-rc.2] - 2020-02-16
 
 [1.0.0-rc.2]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.1...v1.0.0-rc.2
 
