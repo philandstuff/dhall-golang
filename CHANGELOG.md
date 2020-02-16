@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.2...HEAD
+
+## [1.0.0-rc.2] - 2020-02-09
+
+[1.0.0-rc.2]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.1...v1.0.0-rc.2
+
+Another release candidate.  As promised, the `core` package is still
+in flux and has undergone a huge refactor in this release.  Along with
+that, the godoc has been vastly improved, and a new README has been
+written to replace the previous scrappy development notes.
+
+Also, this brings dhall-golang up to version 14.0.0 of the language
+standard.
+
 ### Breaking changes
 
  - refactoring of the `core` package
@@ -28,8 +42,6 @@
   - added `core.ListOf`, `core.OptionalOf`, `core.NoneOf` Value types
     to represent `List a`, `Optional a` and `None a` Values
     respectively
-
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.1...HEAD
 
 ## [1.0.0-rc.1] - 2020-02-09
 
