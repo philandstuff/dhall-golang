@@ -645,9 +645,6 @@ RecordTypeOrLiteral ←
     / NonEmptyRecordLiteral
     / "" { return RecordType{}, nil }
 
-RecordTypeEntry ← name:AnyLabelOrSome _ ':' _1 expr:Expression {
-    return []interface{}{name, expr}, nil
-}
 MoreRecordType ← _ ',' _ f:RecordTypeEntry {return f, nil}
 NonEmptyRecordType ←
       first:RecordTypeEntry rest:MoreRecordType* {
@@ -664,9 +661,10 @@ NonEmptyRecordType ←
           return content, nil
       }
 
-RecordLiteralEntry ← name:AnyLabelOrSome _ '=' _ expr:Expression {
+RecordTypeEntry ← name:AnyLabelOrSome _ ':' _1 expr:Expression {
     return []interface{}{name, expr}, nil
 }
+
 MoreRecordLiteral ← _ ',' _ f:RecordLiteralEntry {return f, nil}
 NonEmptyRecordLiteral ←
       first:RecordLiteralEntry rest:MoreRecordLiteral* {
@@ -687,6 +685,10 @@ NonEmptyRecordLiteral ←
           }
           return content, nil
       }
+
+RecordLiteralEntry ← name:AnyLabelOrSome _ '=' _ expr:Expression {
+    return []interface{}{name, expr}, nil
+}
 
 UnionType ← NonEmptyUnionType / EmptyUnionType
 
