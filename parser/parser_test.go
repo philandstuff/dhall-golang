@@ -13,9 +13,7 @@ import (
 )
 
 func ParseAndCompare(input string, expected interface{}) {
-	root, err := parser.Parse("test", []byte(input))
-	Expect(err).ToNot(HaveOccurred())
-	Expect(root).To(Equal(expected))
+	Expect(parser.Parse("test", []byte(input))).To(Equal(expected))
 }
 
 func ParseAndFail(input string) {
@@ -254,5 +252,10 @@ baz
 			Entry("annotation without required space", `3 :Natural`),
 			Entry("unannotated list", `[]`),
 		)
+		It("Should reject naturals with leading 0 with a useful error", func() {
+			_, err := parser.Parse("test", []byte("012"))
+			Expect(err).To(MatchError(
+				ContainSubstring("Natural literals cannot have leading zeros")))
+		})
 	})
 })

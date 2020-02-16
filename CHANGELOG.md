@@ -8,6 +8,15 @@
    - moved `core.Term` and implementations to new package `term`
    - removed `core.AppValue` from public interface
    - renamed various types to remove `-Val` and `-Term` suffixes
+ - (from Dhall 14.0.0): decimal Natural literals can no longer have
+   leading 0 digits
+
+### Changed
+
+ - dhall-golang now supports [version 14.0.0][dhall-14.0.0] of the
+   language.
+
+[dhall-14.0.0]: https://github.com/dhall-lang/dhall-lang/releases/tag/v14.0.0
 
 ### Fixed
 
