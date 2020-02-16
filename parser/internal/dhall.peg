@@ -676,9 +676,14 @@ NonEmptyRecordLiteral ←
           for _, field := range(fields) {
               fieldName := field.([]interface{})[0].(string)
               if _, ok := content[fieldName]; ok {
-                  return nil, fmt.Errorf("Duplicate field %s in record", fieldName)
+                  content[fieldName] = Op{
+                      OpCode: RecordMergeOp,
+                      L: content[fieldName],
+                      R: field.([]interface{})[1].(Term),
+                  }
+              } else {
+                  content[fieldName] = field.([]interface{})[1].(Term)
               }
-              content[fieldName] = field.([]interface{})[1].(Term)
           }
           return content, nil
       }
