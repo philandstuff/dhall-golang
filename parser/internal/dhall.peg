@@ -313,14 +313,12 @@ DoubleLiteral ← d:NumericDoubleLiteral
   / NaN { return DoubleLit(math.NaN()), nil }
 
 NaturalLiteral ←
-  "0x" HexDig+ {
+  // Hex or decimal Natural literals
+  ("0x" HexDig+ / [1-9] Digit* ) {
       i, err := strconv.ParseInt(string(c.text), 0, 0)
       return NaturalLit(i), err
   }
-  / [1-9] Digit*{
-      i, err := strconv.Atoi(string(c.text))
-      return NaturalLit(i), err
-  }
+  // Leading zeros are banned
   / '0' Digit+ { return nil, errors.New("Natural literals cannot have leading zeros") } 
   / '0' { return NaturalLit(0), nil }
 
