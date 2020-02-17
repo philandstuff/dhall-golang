@@ -181,8 +181,8 @@ SingleQuoteContinue ←
       Interpolation SingleQuoteContinue
     / EscapedQuotePair SingleQuoteContinue
     / EscapedInterpolation SingleQuoteContinue
-    / SingleQuoteChar SingleQuoteContinue
     / "''"
+    / SingleQuoteChar SingleQuoteContinue
 
 EscapedQuotePair ← "'''" { return []byte("''"), nil }
 

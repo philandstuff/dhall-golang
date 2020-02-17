@@ -115,6 +115,17 @@ baz
 			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
 				"\nbaz\n"},
 		),
+		Entry("Multiple '' end correct", `
+''
+a
+''
+++
+''
+b
+''
+`,
+			Op{TextAppendOp, TextLit{Suffix: "a\n"}, TextLit{Suffix: "b\n"}},
+		),
 	)
 	DescribeTable("simple expressions", ParseAndCompare,
 		Entry("Identifier", `x`, NewVar("x")),
