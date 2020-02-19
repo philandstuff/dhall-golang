@@ -153,24 +153,23 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		return DoubleLit(t)
 	case term.TextLit:
 		var str strings.Builder
-		var newChunks Chunks
-		for _, chunk := range t.Chunks {
-			str.WriteString(chunk.Prefix)
-			normExpr := evalWith(chunk.Expr, e, shouldAlphaNormalize)
-			if text, ok := normExpr.(TextLit); ok {
-				if len(text.Chunks) != 0 {
-					// first chunk gets the rest of str
-					str.WriteString(text.Chunks[0].Prefix)
-					newChunks = append(newChunks,
-						Chunk{Prefix: str.String(), Expr: text.Chunks[0].Expr})
-					newChunks = append(newChunks,
-						text.Chunks[1:]...)
-					str.Reset()
-				}
+		var newChunks chunks
+		for _, chk := range t.Chunks {
+			str.WriteString(chk.Prefix)
+			normExpr := evalWith(chk.Expr, e, shouldAlphaNormalize)
+			if text, ok := normExpr.(PlainTextLit); ok {
+				str.WriteString(string(text))
+			} else if text, ok := normExpr.(interpolatedText); ok {
+				// first chunk gets the rest of str
+				str.WriteString(text.Chunks[0].Prefix)
+				newChunks = append(newChunks,
+					chunk{Prefix: str.String(), Expr: text.Chunks[0].Expr})
+				newChunks = append(newChunks,
+					text.Chunks[1:]...)
+				str.Reset()
 				str.WriteString(text.Suffix)
-
 			} else {
-				newChunks = append(newChunks, Chunk{Prefix: str.String(), Expr: normExpr})
+				newChunks = append(newChunks, chunk{Prefix: str.String(), Expr: normExpr})
 				str.Reset()
 			}
 		}
@@ -182,7 +181,12 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 			return newChunks[0].Expr
 		}
 
-		return TextLit{Chunks: newChunks, Suffix: newSuffix}
+		// Special case: no chunks -> PlainTextLit
+		if len(newChunks) == 0 {
+			return PlainTextLit(newSuffix)
+		}
+
+		return interpolatedText{Chunks: newChunks, Suffix: newSuffix}
 	case term.BoolLit:
 		return BoolLit(t)
 	case term.If:
@@ -425,7 +429,7 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 			sort.Strings(fieldnames)
 			result := make(NonEmptyList, len(fieldnames))
 			for i, k := range fieldnames {
-				result[i] = RecordLit{"mapKey": TextLit{Suffix: k}, "mapValue": record[k]}
+				result[i] = RecordLit{"mapKey": PlainTextLit(k), "mapValue": record[k]}
 			}
 			return result
 		}

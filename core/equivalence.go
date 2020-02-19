@@ -25,7 +25,7 @@ func alphaEquivalentWith(level int, v1 Value, v2 Value) bool {
 		list, listBuild, listFold, listHead, listIndexed,
 		listLength, listLast, listReverse,
 		freeVar, localVar, quoteVar,
-		NaturalLit, IntegerLit, BoolLit:
+		NaturalLit, IntegerLit, BoolLit, PlainTextLit:
 		return v1 == v2
 	case DoubleLit:
 		v2, ok := v2.(DoubleLit)
@@ -94,8 +94,8 @@ func alphaEquivalentWith(level int, v1 Value, v2 Value) bool {
 			}
 		}
 		return true
-	case TextLit:
-		v2, ok := v2.(TextLit)
+	case interpolatedText:
+		v2, ok := v2.(interpolatedText)
 		if !ok {
 			return false
 		}
