@@ -3,9 +3,11 @@ package dhall_test
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -355,11 +357,26 @@ func TestImportFails(t *testing.T) {
 	})
 }
 
+// A DhallCache implementation that only fetches, doesn't save
+type readOnlyCache string
+
+func (cache readOnlyCache) Fetch(hash []byte) term.Term {
+	hash16 := fmt.Sprintf("%x", hash)
+	reader, err := os.Open(path.Join(string(cache), hash16))
+	if err != nil {
+		return nil
+	}
+	expr, _ := binary.DecodeAsCbor(reader)
+	return expr
+}
+
+func (readOnlyCache) Save(hash []byte, term term.Term) {}
+
 func TestImport(t *testing.T) {
 	t.Parallel()
 	cwd, err := os.Getwd()
 	expectNoError(t, err)
-	os.Setenv("XDG_CACHE_HOME", cwd+"/dhall-lang/tests/import/cache")
+	cache := readOnlyCache(cwd + "/dhall-lang/tests/import/cache/dhall")
 	runTestOnFilePairs(t, "dhall-lang/tests/import/success/",
 		"A.dhall", "B.dhall",
 		func(t *testing.T, aPath, bPath string) {
@@ -369,10 +386,10 @@ func TestImport(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			resolvedA, err := imports.Load(parsedA, term.LocalFile(aPath))
+			resolvedA, err := imports.LoadWith(cache, parsedA, term.LocalFile(aPath))
 			expectNoError(t, err)
 
-			resolvedB, err := imports.Load(parsedB, term.LocalFile(bPath))
+			resolvedB, err := imports.LoadWith(cache, parsedB, term.LocalFile(bPath))
 			expectNoError(t, err)
 
 			expectEqualTerms(t, resolvedB, resolvedA)
