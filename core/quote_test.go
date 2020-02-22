@@ -57,13 +57,13 @@ var _ = DescribeTable("Quote",
 			Body: term.Var{"x", 0}}},
 	),
 	Entry(`Natural → Natural`,
-		Pi{Label: "_", Domain: Natural, Range: func(x Value) Value {
+		Pi{Label: "_", Domain: Natural, Codomain: func(x Value) Value {
 			return Natural
 		}},
 		term.Pi{Label: "_", Type: term.Natural, Body: term.Natural},
 	),
 	Entry(`∀(a : Type) → List a`,
-		Pi{Label: "a", Domain: Type, Range: func(x Value) Value {
+		Pi{Label: "a", Domain: Type, Codomain: func(x Value) Value {
 			return ListOf{x}
 		}},
 		term.Pi{Label: "a", Type: term.Type, Body: term.App{term.List, term.Var{"a", 0}}},

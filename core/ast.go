@@ -224,12 +224,12 @@ type (
 	}
 
 	// A Pi is a Value representing a Dhall Pi type.  Domain is the
-	// type of the domain, and Range is a go function which returns
-	// the type of the range, given the value of the domain.
+	// type of the domain, and Codomain is a go function which returns
+	// the type of the codomain, given the value of the domain.
 	Pi struct {
-		Label  string
-		Domain Value
-		Range  func(Value) Value
+		Label    string
+		Domain   Value
+		Codomain func(Value) Value
 	}
 
 	// An app is the Value of a Fn applied to an Arg.  Note that
@@ -259,9 +259,9 @@ func (oper) isValue() {}
 // NewPi returns a new pi Value.
 func NewPi(label string, domain Value, codomain func(Value) Value) Pi {
 	return Pi{
-		Label:  label,
-		Domain: domain,
-		Range:  codomain,
+		Label:    label,
+		Domain:   domain,
+		Codomain: codomain,
 	}
 }
 

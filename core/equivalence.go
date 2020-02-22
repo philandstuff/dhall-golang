@@ -50,8 +50,8 @@ func alphaEquivalentWith(level int, v1 Value, v2 Value) bool {
 		return alphaEquivalentWith(level, v1.Domain, v2.Domain) &&
 			alphaEquivalentWith(
 				level+1,
-				v1.Range(quoteVar{Name: "_", Index: level}),
-				v2.Range(quoteVar{Name: "_", Index: level}),
+				v1.Codomain(quoteVar{Name: "_", Index: level}),
+				v2.Codomain(quoteVar{Name: "_", Index: level}),
 			)
 	case app:
 		v2, ok := v2.(app)

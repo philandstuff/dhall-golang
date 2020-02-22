@@ -166,7 +166,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
 		}
 	case Pi:
-		bodyVal := v.Range(quoteVar{Name: v.Label, Index: ctx[v.Label]})
+		bodyVal := v.Codomain(quoteVar{Name: v.Label, Index: ctx[v.Label]})
 		return term.Pi{
 			Label: v.Label,
 			Type:  quoteWith(ctx, v.Domain),
