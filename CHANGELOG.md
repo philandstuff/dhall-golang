@@ -1,8 +1,31 @@
 # Changelog
 
 ## [Unreleased]
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...HEAD
 
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.2...HEAD
+## [1.0.0-rc.3] - 2020-02-23
+
+[1.0.0-rc.3]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...v1.0.0-rc.3
+
+Another release candidate.  A few more breaking changes, though less
+drastic than rc.2 was.  Things are slowly stabilising.
+
+Thanks to @Duncaen for his contribution to this release.
+
+### Breaking changes
+
+ - core.Pi.Range has been renamed to core.Pi.Codomain (#12)
+ - core.TextLit has been removed and replaced with core.PlainTextLit.
+   There is no longer a (public) interpolated text Value type.
+ - struct tags are now `dhall` not `json` (#15)
+
+### Fixed
+
+ - fixed a parser bug related to single quote strings (#1)
+
+### Changed
+
+ - faster parser by approx 30% (#11)
 
 ## [1.0.0-rc.2] - 2020-02-16
 
