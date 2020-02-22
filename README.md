@@ -63,7 +63,12 @@ vendoring of dependencies is required.
 
 Dhall-golang uses [pigeon][] to generate the parser source file
 `parser/internal/dhall.go` from the PEG grammar at
-`parser/internal/dhall.peg`.  If you change the PEG grammar, you need
+`parser/internal/dhall.peg`.
+
+Note that currently the grammar is generated using a fork of pigeon;
+see https://github.com/mna/pigeon/pull/95 for details.
+
+If you change the PEG grammar, you need
 to first install the pigeon binary if you don't already have it:
 
     # either outside a module directory, or with GO111MODULE=off
