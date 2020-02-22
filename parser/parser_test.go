@@ -59,60 +59,60 @@ var _ = Describe("Expression", func() {
 		Entry("Plus without whitespace", `3 +5`, Apply(NaturalLit(3), IntegerLit(5))),
 	)
 	DescribeTable("double-quoted text literals", ParseAndCompare,
-		Entry("Empty TextLitTerm", `""`, TextLit{}),
-		Entry("Simple TextLitTerm", `"foo"`, TextLit{Suffix: "foo"}),
-		Entry(`TextLitTerm escape "`, `"\""`, TextLit{Suffix: `"`}),
-		Entry(`TextLitTerm escape $`, `"\$"`, TextLit{Suffix: `$`}),
-		Entry(`TextLitTerm escape \`, `"\\"`, TextLit{Suffix: `\`}),
-		Entry(`TextLitTerm escape /`, `"\/"`, TextLit{Suffix: `/`}),
-		Entry(`TextLitTerm escape \b`, `"\b"`, TextLit{Suffix: "\b"}),
-		Entry(`TextLitTerm escape \f`, `"\f"`, TextLit{Suffix: "\f"}),
-		Entry(`TextLitTerm escape \n`, `"\n"`, TextLit{Suffix: "\n"}),
-		Entry(`TextLitTerm escape \r`, `"\r"`, TextLit{Suffix: "\r"}),
-		Entry(`TextLitTerm escape \t`, `"\t"`, TextLit{Suffix: "\t"}),
-		Entry(`TextLitTerm escape \u2200`, `"\u2200"`, TextLit{Suffix: "∀"}),
-		Entry(`TextLitTerm escape \u03bb`, `"\u03bb"`, TextLit{Suffix: "λ"}),
-		Entry(`TextLitTerm escape \u03BB`, `"\u03BB"`, TextLit{Suffix: "λ"}),
-		Entry("Interpolated TextLitTerm", `"foo ${"bar"} baz"`,
-			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
+		Entry("Empty TextLit", `""`, PlainText("")),
+		Entry("Simple TextLit", `"foo"`, PlainText("foo")),
+		Entry(`TextLit escape "`, `"\""`, PlainText(`"`)),
+		Entry(`TextLit escape $`, `"\$"`, PlainText(`$`)),
+		Entry(`TextLit escape \`, `"\\"`, PlainText(`\`)),
+		Entry(`TextLit escape /`, `"\/"`, PlainText(`/`)),
+		Entry(`TextLit escape \b`, `"\b"`, PlainText("\b")),
+		Entry(`TextLit escape \f`, `"\f"`, PlainText("\f")),
+		Entry(`TextLit escape \n`, `"\n"`, PlainText("\n")),
+		Entry(`TextLit escape \r`, `"\r"`, PlainText("\r")),
+		Entry(`TextLit escape \t`, `"\t"`, PlainText("\t")),
+		Entry(`TextLit escape \u2200`, `"\u2200"`, PlainText("∀")),
+		Entry(`TextLit escape \u03bb`, `"\u03bb"`, PlainText("λ")),
+		Entry(`TextLit escape \u03BB`, `"\u03BB"`, PlainText("λ")),
+		Entry("Interpolated TextLit", `"foo ${"bar"} baz"`,
+			TextLit{Chunks{{"foo ", PlainText("bar")}},
 				" baz"},
 		),
 	)
 	DescribeTable("single-quoted text literals", ParseAndCompare,
-		Entry("Empty TextLitTerm", `''
-''`, TextLit{}),
-		Entry("Simple TextLitTerm with no newlines", `''
-foo''`, TextLit{Suffix: "foo"}),
-		Entry("Simple TextLitTerm with newlines", `''
+		Entry("Empty TextLit", `''
+''`, PlainText("")),
+		Entry("Simple TextLit with no newlines", `''
+foo''`, PlainText("foo")),
+		Entry("Simple TextLit with newlines", `''
 foo
-''`, TextLit{Suffix: "foo\n"}),
-		Entry("TextLitTerm with space indent", `''
+''`, PlainText("foo\n")),
+		Entry("TextLit with space indent", `''
   foo
   bar
-  ''`, TextLit{Suffix: "foo\nbar\n"}),
-		Entry("TextLitTerm with tab indent", `''
+  ''`, PlainText("foo\nbar\n")),
+		Entry("TextLit with tab indent", `''
 		foo
 		bar
-		''`, TextLit{Suffix: "foo\nbar\n"}),
-		Entry("TextLitTerm with mixed tab/space indent", `''
+		''`, PlainText("foo\nbar\n")),
+		Entry("TextLit with mixed tab/space indent", `''
 	  foo
 	  bar
-	  ''`, TextLit{Suffix: "foo\nbar\n"}),
-		Entry("TextLitTerm with weird indenting", `''
+	  ''`, PlainText("foo\nbar\n")),
+		Entry("TextLit with weird indenting", `''
 	    foo
 	  	bar
-	  ''`, TextLit{Suffix: "  foo\n\tbar\n"}),
+	  ''`, PlainText("  foo\n\tbar\n")),
 		Entry(`Escape ''`, `''
 '''
-''`, TextLit{Suffix: "''\n"}),
+''`, PlainText("''\n")),
 		Entry(`Escape ${`, `''
 ''${
-''`, TextLit{Suffix: "${\n"}),
+''`, PlainText("${\n")),
 		Entry("Interpolation", `''
 foo ${"bar"}
 baz
 ''`,
-			TextLit{Chunks{Chunk{"foo ", TextLit{Suffix: "bar"}}},
+			TextLit{Chunks{{"foo ", PlainText("bar")}},
 				"\nbaz\n"},
 		),
 		Entry("Multiple '' end correct", `
@@ -124,7 +124,7 @@ a
 b
 ''
 `,
-			Op{TextAppendOp, TextLit{Suffix: "a\n"}, TextLit{Suffix: "b\n"}},
+			Op{TextAppendOp, PlainText("a\n"), PlainText("b\n")},
 		),
 	)
 	DescribeTable("simple expressions", ParseAndCompare,

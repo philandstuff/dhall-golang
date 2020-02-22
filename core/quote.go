@@ -202,7 +202,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		}
 		return l
 	case PlainTextLit:
-		return term.TextLit{Suffix: string(v)}
+		return term.PlainText(string(v))
 	case interpolatedText:
 		var newChunks term.Chunks
 		for _, chunk := range v.Chunks {

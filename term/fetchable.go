@@ -84,7 +84,7 @@ func (e EnvVar) ChainOnto(base Fetchable) (Fetchable, error) {
 // AsLocation returns the EnvVar as a Dhall Term.  This implements the
 // `env:FOO as Location` Dhall feature.
 func (e EnvVar) AsLocation() Term {
-	return Apply(Field{locationType, "Environment"}, TextLit{Suffix: e.String()})
+	return Apply(Field{locationType, "Environment"}, PlainText(e.String()))
 }
 
 // Origin returns NullOrigin, since LocalFiles do not have an origin.
@@ -182,7 +182,7 @@ func (l LocalFile) PathComponents() []string {
 // AsLocation returns the LocalFile as a Dhall Term.  This implements the
 // `./file as Location` Dhall feature.
 func (l LocalFile) AsLocation() Term {
-	return Apply(Field{locationType, "Local"}, TextLit{Suffix: l.String()})
+	return Apply(Field{locationType, "Local"}, PlainText(l.String()))
 }
 
 // NewRemoteFile constructs a RemoteFile from a *url.URL.
@@ -271,7 +271,7 @@ func (r RemoteFile) Query() *string {
 // AsLocation returns the RemoteFile as a Dhall Term.  This implements the
 // `https://example.com/foo/bar as Location` feature.
 func (r RemoteFile) AsLocation() Term {
-	return Apply(Field{locationType, "Remote"}, TextLit{Suffix: r.String()})
+	return Apply(Field{locationType, "Remote"}, PlainText(r.String()))
 }
 
 // Origin returns NullOrigin, since Missing does not have an origin.

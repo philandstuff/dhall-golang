@@ -9,9 +9,9 @@ import (
 )
 
 var _ = Describe("removeLeadingCommonIndent removes leading common indent", func() {
-	DescribeTable("when the TextLitTerm has no interpolations", func(input, expected string) {
-		actual := removeLeadingCommonIndent(TextLit{Suffix: input})
-		Expect(actual).To(Equal(TextLit{Suffix: expected}))
+	DescribeTable("when the TextLit has no interpolations", func(input, expected string) {
+		actual := removeLeadingCommonIndent(PlainText(input))
+		Expect(actual).To(Equal(PlainText(expected)))
 	},
 		Entry("when every line has a 3-space prefix",
 			`   foo
@@ -34,7 +34,7 @@ var _ = Describe("removeLeadingCommonIndent removes leading common indent", func
 
    bar`, "foo\n\nbar"),
 	)
-	DescribeTable("when the TextLitTerm has interpolations", func(input, expected TextLit) {
+	DescribeTable("when the TextLit has interpolations", func(input, expected TextLit) {
 		actual := removeLeadingCommonIndent(input)
 		Expect(actual).To(Equal(expected))
 	},

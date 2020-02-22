@@ -24,7 +24,7 @@ func expectResolves(input, expected Term) {
 }
 
 var importFooAsText = NewEnvVarImport("FOO", RawText)
-var resolvedFooAsText = TextLit{Suffix: "abcd"}
+var resolvedFooAsText = PlainText("abcd")
 
 var _ = Describe("Import resolution", func() {
 	Describe("Environment varibles", func() {
@@ -83,7 +83,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(NewRemoteImport(server.URL()+"/foo.dhall", RawText))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(TextLit{Suffix: "abcd"}))
+			Expect(actual).To(Equal(PlainText("abcd")))
 		})
 		It("Resolves as code", func() {
 			server.RouteToHandler("GET", "/foo.dhall",
@@ -183,7 +183,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(NewLocalImport("./testdata/just_text.txt", RawText))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(TextLit{Suffix: "here is some text\n"}))
+			Expect(actual).To(Equal(PlainText("here is some text\n")))
 		})
 		It("Resolves as code", func() {
 			actual, err := Load(NewLocalImport("./testdata/natural.dhall", Code))
@@ -260,7 +260,7 @@ var _ = Describe("Import resolution", func() {
 		),
 		Entry("Import within TextLit",
 			TextLit{
-				Chunks: []Chunk{
+				Chunks: Chunks{
 					{
 						Prefix: "foo",
 						Expr:   importFooAsText,
@@ -268,7 +268,7 @@ var _ = Describe("Import resolution", func() {
 				Suffix: "baz",
 			},
 			TextLit{
-				Chunks: []Chunk{
+				Chunks: Chunks{
 					{
 						Prefix: "foo",
 						Expr:   resolvedFooAsText,
