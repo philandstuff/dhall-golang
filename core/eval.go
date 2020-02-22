@@ -120,7 +120,7 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		v := Pi{
 			Label:  t.Label,
 			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
-			Range: func(x Value) Value {
+			Codomain: func(x Value) Value {
 				newEnv := env{}
 				for k, v := range e {
 					newEnv[k] = v

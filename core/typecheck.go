@@ -54,6 +54,8 @@ func functionCheck(input Universe, output Universe) Universe {
 	}
 }
 
+// TypeOf typechecks a Term, returning the type in normal form.  If
+// typechecking fails, an error is returned.
 func TypeOf(t term.Term) (Value, error) {
 	v, err := typeWith(context{}, t)
 	if err != nil {
@@ -209,7 +211,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		if !AlphaEquivalent(expectedType, actualType) {
 			return nil, mkTypeError(typeMismatch(Quote(expectedType), Quote(actualType)))
 		}
-		bodyTypeVal := piType.Range(Eval(t.Arg))
+		bodyTypeVal := piType.Codomain(Eval(t.Arg))
 		return bodyTypeVal, nil
 	case term.Lambda:
 		_, err := typeWith(ctx, t.Type)
@@ -225,7 +227,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		pi.Range = func(x Value) Value {
+		pi.Codomain = func(x Value) Value {
 			rebound := term.RebindLocal(freshLocal, Quote(bt))
 			return evalWith(rebound, env{
 				t.Label: []Value{x},
@@ -649,9 +651,9 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			return unionType, nil
 		}
 		return Pi{
-			Label:  t.FieldName,
-			Domain: alternativeType,
-			Range:  func(Value) Value { return unionType },
+			Label:    t.FieldName,
+			Domain:   alternativeType,
+			Codomain: func(Value) Value { return unionType },
 		}, nil
 	case term.Project:
 		recordTypeVal, err := typeWith(ctx, t.Record)
@@ -792,8 +794,8 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 				if !AlphaEquivalent(altType, pi.Domain) {
 					return nil, mkTypeError(handlerInputTypeMismatch(Quote(altType), Quote(pi.Domain)))
 				}
-				outputType := pi.Range(NaturalLit(1))
-				outputType2 := pi.Range(NaturalLit(2))
+				outputType := pi.Codomain(NaturalLit(1))
+				outputType2 := pi.Codomain(NaturalLit(2))
 				if !AlphaEquivalent(outputType, outputType2) {
 					// hacky way of detecting output type depending on input
 					return nil, mkTypeError(disallowedHandlerType)

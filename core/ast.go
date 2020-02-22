@@ -9,7 +9,7 @@ import (
 
 // A Value is a Dhall value in beta-normal form.  You can think of
 // Values as the subset of Dhall which cannot be beta-reduced any
-// further.  Valid Values include 3, "foo" and 5 + x.
+// further.  Valid Values include 3, "foo" and λ(x : Natural) → x.
 //
 // You create a Value by calling Eval() on a Term.  You can convert a
 // Value back to a Term with Quote().
@@ -17,7 +17,7 @@ type Value interface {
 	isValue()
 }
 
-// A Universe is a type of types.
+// A Universe is a Value representing a type of types.
 type Universe int
 
 // These are the valid Universes.
@@ -27,7 +27,8 @@ const (
 	Sort
 )
 
-// Builtin is the type of Dhall's builtin constants.
+// A Builtin is a Value representing one of Dhall's non-Callable
+// builtin constants.
 type Builtin string
 
 // These are the Builtins.
@@ -39,7 +40,7 @@ const (
 	Integer Builtin = "Integer"
 )
 
-// A BoolLit is a Dhall boolean literal.
+// A BoolLit is a Value representing a Dhall boolean literal.
 type BoolLit bool
 
 func (BoolLit) isValue() {}
@@ -140,13 +141,13 @@ func (listIndexed) isValue() {}
 func (listReverse) isValue() {}
 
 type (
-	// OptionalOf is the Value version of `Optional a`
+	// OptionalOf is a Value representing `Optional a`
 	OptionalOf struct{ Type Value }
 
-	// ListOf is the Value version of `List a`
+	// ListOf is a Value representing `List a`
 	ListOf struct{ Type Value }
 
-	// NoneOf is the Value version of `None a`
+	// NoneOf is a Value representing `None a`
 	NoneOf struct{ Type Value }
 )
 
@@ -222,13 +223,13 @@ type (
 		Fn     func(Value) Value
 	}
 
-	// A Pi is the value of a Dhall Pi type.  Domain is the type
-	// of the domain, and Range is a go function which returns the
-	// type of the range, given the value of the domain.
+	// A Pi is a Value representing a Dhall Pi type.  Domain is the
+	// type of the domain, and Codomain is a go function which returns
+	// the type of the codomain, given the value of the domain.
 	Pi struct {
-		Label  string
-		Domain Value
-		Range  func(Value) Value
+		Label    string
+		Domain   Value
+		Codomain func(Value) Value
 	}
 
 	// An app is the Value of a Fn applied to an Arg.  Note that
@@ -256,27 +257,28 @@ func (app) isValue() {}
 func (oper) isValue() {}
 
 // NewPi returns a new pi Value.
-func NewPi(label string, d Value, r func(Value) Value) Pi {
+func NewPi(label string, domain Value, codomain func(Value) Value) Pi {
 	return Pi{
-		Label:  label,
-		Domain: d,
-		Range:  r,
+		Label:    label,
+		Domain:   domain,
+		Codomain: codomain,
 	}
 }
 
 // NewFnType returns a non-dependent function type Value.
-func NewFnType(l string, d Value, r Value) Pi {
-	return NewPi(l, d, func(Value) Value { return r })
+func NewFnType(label string, domain Value, codomain Value) Pi {
+	return NewPi(label, domain, func(Value) Value { return codomain })
 }
 
 type (
-	// A NaturalLit is a literal of type Natural.
+	// A NaturalLit is a literal Value of type Natural.
 	NaturalLit uint
 
 	// An EmptyList is an empty list literal Value of the given type.
 	EmptyList struct{ Type Value }
 
-	// A NonEmptyList is a non-empty list literal Value with the given contents.
+	// A NonEmptyList is a non-empty list literal Value with the given
+	// contents.
 	NonEmptyList []Value
 
 	chunk struct {
@@ -288,7 +290,8 @@ type (
 		Chunks chunks
 		Suffix string
 	}
-	// A PlainTextLit is a literal of type Text, containing no
+
+	// A PlainTextLit is a literal Value of type Text, containing no
 	// interpolations.
 	PlainTextLit string
 
@@ -298,17 +301,19 @@ type (
 		F    Value
 	}
 
-	// A DoubleLit is a literal of type Double.
+	// A DoubleLit is a literal Value of type Double.
 	DoubleLit float64
 
-	// A IntegerLit is a literal of type Integer.
+	// A IntegerLit is a literal Value of type Integer.
 	IntegerLit int
 
 	// Some represents a Value which is present in an Optional type.
 	Some struct{ Val Value }
 
+	// A RecordType is a Value representing a Dhall record type.
 	RecordType map[string]Value
 
+	// A RecordLit is a Value representing a Dhall record literal.
 	RecordLit map[string]Value
 
 	toMap struct {
@@ -329,6 +334,7 @@ type (
 	// no projectType because it cannot be in a normal form so cannot
 	// be a Value
 
+	// A UnionType is a Value representing a Dhall union type.
 	UnionType map[string]Value
 
 	merge struct {
