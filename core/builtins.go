@@ -511,6 +511,7 @@ func (rev listReverse) ArgType() Value {
 	return ListOf{rev.typ}
 }
 
+// These are the builtin Callable Values.
 var (
 	NaturalBuild     Callable = naturalBuild{}
 	NaturalEven      Callable = naturalEven{}

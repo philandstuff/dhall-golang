@@ -54,6 +54,8 @@ func functionCheck(input Universe, output Universe) Universe {
 	}
 }
 
+// TypeOf typechecks a Term, returning the type in normal form.  If
+// typechecking fails, an error is returned.
 func TypeOf(t term.Term) (Value, error) {
 	v, err := typeWith(context{}, t)
 	if err != nil {
