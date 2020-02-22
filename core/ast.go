@@ -304,7 +304,7 @@ type (
 	// A DoubleLit is a literal Value of type Double.
 	DoubleLit float64
 
-	// A IntegerLit is a literal Value of type Integer.
+	// An IntegerLit is a literal Value of type Integer.
 	IntegerLit int
 
 	// Some represents a Value which is present in an Optional type.
