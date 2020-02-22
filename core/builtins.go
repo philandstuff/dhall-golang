@@ -100,7 +100,7 @@ func (naturalOdd) ArgType() Value { return Natural }
 
 func (naturalShow) Call(x Value) Value {
 	if n, ok := x.(NaturalLit); ok {
-		return TextLit{Suffix: fmt.Sprintf("%d", n)}
+		return PlainTextLit(fmt.Sprintf("%d", n))
 	}
 	return nil
 }
@@ -165,7 +165,7 @@ func (integerNegate) ArgType() Value { return Integer }
 
 func (integerShow) Call(x Value) Value {
 	if i, ok := x.(IntegerLit); ok {
-		return TextLit{Suffix: fmt.Sprintf("%+d", i)}
+		return PlainTextLit(fmt.Sprintf("%+d", i))
 	}
 	return nil
 }
@@ -183,7 +183,7 @@ func (integerToDouble) ArgType() Value { return Integer }
 
 func (doubleShow) Call(x Value) Value {
 	if d, ok := x.(DoubleLit); ok {
-		return TextLit{Suffix: d.String()}
+		return PlainTextLit(d.String())
 	}
 	return nil
 }
@@ -271,39 +271,37 @@ func (none) Call(a Value) Value { return NoneOf{a} }
 func (none) ArgType() Value     { return Type }
 
 func (textShow) Call(a0 Value) Value {
-	if t, ok := a0.(TextLit); ok {
-		if t.Chunks == nil || len(t.Chunks) == 0 {
-			var out strings.Builder
-			out.WriteRune('"')
-			for _, r := range t.Suffix {
-				switch r {
-				case '"':
-					out.WriteString(`\"`)
-				case '$':
-					out.WriteString(`\u0024`)
-				case '\\':
-					out.WriteString(`\\`)
-				case '\b':
-					out.WriteString(`\b`)
-				case '\f':
-					out.WriteString(`\f`)
-				case '\n':
-					out.WriteString(`\n`)
-				case '\r':
-					out.WriteString(`\r`)
-				case '\t':
-					out.WriteString(`\t`)
-				default:
-					if r < 0x1f {
-						out.WriteString(fmt.Sprintf(`\u%04x`, r))
-					} else {
-						out.WriteRune(r)
-					}
+	if t, ok := a0.(PlainTextLit); ok {
+		var out strings.Builder
+		out.WriteRune('"')
+		for _, r := range t {
+			switch r {
+			case '"':
+				out.WriteString(`\"`)
+			case '$':
+				out.WriteString(`\u0024`)
+			case '\\':
+				out.WriteString(`\\`)
+			case '\b':
+				out.WriteString(`\b`)
+			case '\f':
+				out.WriteString(`\f`)
+			case '\n':
+				out.WriteString(`\n`)
+			case '\r':
+				out.WriteString(`\r`)
+			case '\t':
+				out.WriteString(`\t`)
+			default:
+				if r < 0x1f {
+					out.WriteString(fmt.Sprintf(`\u%04x`, r))
+				} else {
+					out.WriteRune(r)
 				}
 			}
-			out.WriteRune('"')
-			return TextLit{Suffix: out.String()}
 		}
+		out.WriteRune('"')
+		return PlainTextLit(out.String())
 	}
 	return nil
 }

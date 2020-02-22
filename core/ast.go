@@ -224,7 +224,7 @@ type (
 
 	// A Pi is the value of a Dhall Pi type.  Domain is the type
 	// of the domain, and Range is a go function which returns the
-	// type of the range, given the type of the domain.
+	// type of the range, given the value of the domain.
 	Pi struct {
 		Label  string
 		Domain Value
@@ -279,15 +279,18 @@ type (
 	// A NonEmptyList is a non-empty list literal Value with the given contents.
 	NonEmptyList []Value
 
-	Chunk struct {
+	chunk struct {
 		Prefix string
 		Expr   Value
 	}
-	Chunks  []Chunk
-	TextLit struct {
-		Chunks Chunks
+	chunks           []chunk
+	interpolatedText struct {
+		Chunks chunks
 		Suffix string
 	}
+	// A PlainTextLit is a literal of type Text, containing no
+	// interpolations.
+	PlainTextLit string
 
 	ifVal struct {
 		Cond Value
@@ -342,7 +345,8 @@ func (NaturalLit) isValue() {}
 func (EmptyList) isValue()    {}
 func (NonEmptyList) isValue() {}
 
-func (TextLit) isValue() {}
+func (interpolatedText) isValue() {}
+func (PlainTextLit) isValue()     {}
 
 func (ifVal) isValue() {}
 

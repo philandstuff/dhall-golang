@@ -67,7 +67,7 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		case core.Integer:
 			return core.IntegerLit(val.Int())
 		case core.Text:
-			return core.TextLit{Suffix: val.String()}
+			return core.PlainTextLit(val.String())
 		default:
 			panic("unknown Builtin")
 		}
@@ -230,9 +230,8 @@ func decode(e core.Value, v reflect.Value) {
 			v.SetInt(int64(e))
 		case core.IntegerLit:
 			v.SetInt(int64(e))
-		case core.TextLit:
-			// FIXME: ensure TextLit doesn't have interpolations
-			v.SetString(e.Suffix)
+		case core.PlainTextLit:
+			v.SetString(string(e))
 		default:
 			panic(fmt.Sprintf("Don't know how to decode %v into %v", e, v.Kind()))
 		}

@@ -201,7 +201,9 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			l = append(l, quoteWith(ctx, e))
 		}
 		return l
-	case TextLit:
+	case PlainTextLit:
+		return term.TextLit{Suffix: string(v)}
+	case interpolatedText:
 		var newChunks term.Chunks
 		for _, chunk := range v.Chunks {
 			newChunks = append(newChunks, term.Chunk{
