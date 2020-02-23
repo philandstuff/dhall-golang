@@ -3,7 +3,6 @@ package dhall
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/imports"
@@ -106,10 +105,7 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		for key, typ := range e {
 			structType := val.Type()
 			for i := 0; i < structType.NumField(); i++ {
-				tag := structType.Field(i).Tag.Get("json")
-				if idx := strings.Index(tag, ","); idx != -1 {
-					tag = tag[:idx]
-				}
+				tag := structType.Field(i).Tag.Get("dhall")
 				if key == tag {
 					rec[key] = encode(val.Field(i), typ)
 					continue fields
@@ -187,13 +183,7 @@ func decode(e core.Value, v reflect.Value) {
 		structType := v.Type()
 		for i := 0; i < structType.NumField(); i++ {
 			// FIXME ignores fields in RecordLit not in Struct
-			tag := structType.Field(i).Tag.Get("json")
-			if tag == "-" {
-				continue
-			}
-			if idx := strings.Index(tag, ","); idx != -1 {
-				tag = tag[:idx]
-			}
+			tag := structType.Field(i).Tag.Get("dhall")
 			if tag != "" {
 				decode(e[tag], v.Field(i))
 			} else {
