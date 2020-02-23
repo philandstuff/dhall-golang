@@ -8,9 +8,9 @@ import (
 
 // TaggedMessage is the struct we want to unmarshal from Dhall
 type TaggedMessage struct {
-	Name string `json:"name"`
-	Body string `json:"entity,string"`
-	Time int64  `json:"instant"`
+	Name string `dhall:"name"`
+	Body string `dhall:"entity"`
+	Time int64  `dhall:"instant"`
 }
 
 // dhallTaggedMessage is the Dhall source we want to unmarshal

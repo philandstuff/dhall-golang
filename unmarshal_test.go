@@ -25,7 +25,7 @@ type testStruct struct {
 }
 
 type testTaggedStruct struct {
-	Foo int `json:"baz,string"`
+	Foo int `dhall:"baz"`
 	Bar string
 }
 
