@@ -127,6 +127,7 @@ var g = &grammar{
 						pos:        position{line: 83, col: 16, offset: 1884},
 						val:        "{-",
 						ignoreCase: false,
+						want:       "\"{-\"",
 					},
 					&ruleRefExpr{
 						pos:  position{line: 83, col: 21, offset: 1889},
@@ -145,6 +146,7 @@ var g = &grammar{
 						pos:        position{line: 92, col: 7, offset: 2015},
 						val:        "-}",
 						ignoreCase: false,
+						want:       "\"-}\"",
 					},
 					&seqExpr{
 						pos: position{line: 93, col: 7, offset: 2026},
@@ -180,6 +182,7 @@ var g = &grammar{
 											pos:        position{line: 61, col: 14, offset: 1321},
 											val:        "\r\n",
 											ignoreCase: false,
+											want:       "\"\\r\\n\"",
 										},
 									},
 								},
@@ -213,6 +216,7 @@ var g = &grammar{
 							pos:        position{line: 61, col: 14, offset: 1321},
 							val:        "\r\n",
 							ignoreCase: false,
+							want:       "\"\\r\\n\"",
 						},
 					},
 					&actionExpr{
@@ -225,6 +229,7 @@ var g = &grammar{
 									pos:        position{line: 98, col: 15, offset: 2168},
 									val:        "--",
 									ignoreCase: false,
+									want:       "\"--\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 98, col: 20, offset: 2173},
@@ -252,6 +257,7 @@ var g = &grammar{
 											pos:        position{line: 61, col: 7, offset: 1314},
 											val:        "\n",
 											ignoreCase: false,
+											want:       "\"\\n\"",
 										},
 										&actionExpr{
 											pos: position{line: 61, col: 14, offset: 1321},
@@ -260,6 +266,7 @@ var g = &grammar{
 												pos:        position{line: 61, col: 14, offset: 1321},
 												val:        "\r\n",
 												ignoreCase: false,
+												want:       "\"\\r\\n\"",
 											},
 										},
 									},
@@ -316,6 +323,7 @@ var g = &grammar{
 									pos:        position{line: 134, col: 6, offset: 3183},
 									val:        "\\",
 									ignoreCase: false,
+									want:       "\"\\\\\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 134, col: 11, offset: 3188},
@@ -337,6 +345,7 @@ var g = &grammar{
 													pos:        position{line: 142, col: 8, offset: 3324},
 													val:        "b",
 													ignoreCase: false,
+													want:       "\"b\"",
 												},
 											},
 											&actionExpr{
@@ -346,6 +355,7 @@ var g = &grammar{
 													pos:        position{line: 143, col: 8, offset: 3364},
 													val:        "f",
 													ignoreCase: false,
+													want:       "\"f\"",
 												},
 											},
 											&actionExpr{
@@ -355,6 +365,7 @@ var g = &grammar{
 													pos:        position{line: 144, col: 8, offset: 3404},
 													val:        "n",
 													ignoreCase: false,
+													want:       "\"n\"",
 												},
 											},
 											&actionExpr{
@@ -364,6 +375,7 @@ var g = &grammar{
 													pos:        position{line: 145, col: 8, offset: 3444},
 													val:        "r",
 													ignoreCase: false,
+													want:       "\"r\"",
 												},
 											},
 											&actionExpr{
@@ -373,6 +385,7 @@ var g = &grammar{
 													pos:        position{line: 146, col: 8, offset: 3484},
 													val:        "t",
 													ignoreCase: false,
+													want:       "\"t\"",
 												},
 											},
 											&actionExpr{
@@ -385,6 +398,7 @@ var g = &grammar{
 															pos:        position{line: 147, col: 8, offset: 3524},
 															val:        "u",
 															ignoreCase: false,
+															want:       "\"u\"",
 														},
 														&labeledExpr{
 															pos:   position{line: 147, col: 12, offset: 3528},
@@ -487,6 +501,7 @@ var g = &grammar{
 																					pos:        position{line: 153, col: 9, offset: 3687},
 																					val:        "{",
 																					ignoreCase: false,
+																					want:       "\"{\"",
 																				},
 																				&oneOrMoreExpr{
 																					pos: position{line: 153, col: 13, offset: 3691},
@@ -514,6 +529,7 @@ var g = &grammar{
 																					pos:        position{line: 153, col: 21, offset: 3699},
 																					val:        "}",
 																					ignoreCase: false,
+																					want:       "\"}\"",
 																				},
 																			},
 																		},
@@ -554,6 +570,7 @@ var g = &grammar{
 							pos:        position{line: 163, col: 22, offset: 3897},
 							val:        "\"",
 							ignoreCase: false,
+							want:       "\"\\\"\"",
 						},
 						&labeledExpr{
 							pos:   position{line: 163, col: 26, offset: 3901},
@@ -570,6 +587,7 @@ var g = &grammar{
 							pos:        position{line: 163, col: 51, offset: 3926},
 							val:        "\"",
 							ignoreCase: false,
+							want:       "\"\\\"\"",
 						},
 					},
 				},
@@ -604,6 +622,7 @@ var g = &grammar{
 									pos:        position{line: 187, col: 20, offset: 4623},
 									val:        "'''",
 									ignoreCase: false,
+									want:       "\"'''\"",
 								},
 							},
 							&ruleRefExpr{
@@ -622,6 +641,7 @@ var g = &grammar{
 									pos:        position{line: 191, col: 24, offset: 4783},
 									val:        "''${",
 									ignoreCase: false,
+									want:       "\"''${\"",
 								},
 							},
 							&ruleRefExpr{
@@ -634,6 +654,7 @@ var g = &grammar{
 						pos:        position{line: 184, col: 7, offset: 4554},
 						val:        "''",
 						ignoreCase: false,
+						want:       "\"''\"",
 					},
 					&seqExpr{
 						pos: position{line: 185, col: 7, offset: 4565},
@@ -656,6 +677,7 @@ var g = &grammar{
 											pos:        position{line: 61, col: 14, offset: 1321},
 											val:        "\r\n",
 											ignoreCase: false,
+											want:       "\"\\r\\n\"",
 										},
 									},
 								},
@@ -682,6 +704,7 @@ var g = &grammar{
 							pos:        position{line: 199, col: 22, offset: 4924},
 							val:        "''",
 							ignoreCase: false,
+							want:       "\"''\"",
 						},
 						&choiceExpr{
 							pos: position{line: 61, col: 7, offset: 1314},
@@ -690,6 +713,7 @@ var g = &grammar{
 									pos:        position{line: 61, col: 7, offset: 1314},
 									val:        "\n",
 									ignoreCase: false,
+									want:       "\"\\n\"",
 								},
 								&actionExpr{
 									pos: position{line: 61, col: 14, offset: 1321},
@@ -698,6 +722,7 @@ var g = &grammar{
 										pos:        position{line: 61, col: 14, offset: 1321},
 										val:        "\r\n",
 										ignoreCase: false,
+										want:       "\"\\r\\n\"",
 									},
 								},
 							},
@@ -727,6 +752,7 @@ var g = &grammar{
 							pos:        position{line: 217, col: 17, offset: 5509},
 							val:        "${",
 							ignoreCase: false,
+							want:       "\"${\"",
 						},
 						&labeledExpr{
 							pos:   position{line: 217, col: 22, offset: 5514},
@@ -740,6 +766,7 @@ var g = &grammar{
 							pos:        position{line: 217, col: 43, offset: 5535},
 							val:        "}",
 							ignoreCase: false,
+							want:       "\"}\"",
 						},
 					},
 				},
@@ -779,6 +806,7 @@ var g = &grammar{
 							pos:        position{line: 329, col: 14, offset: 8954},
 							val:        "@",
 							ignoreCase: false,
+							want:       "\"@\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 329, col: 18, offset: 8958},
@@ -803,6 +831,7 @@ var g = &grammar{
 															pos:        position{line: 317, col: 4, offset: 8499},
 															val:        "0x",
 															ignoreCase: false,
+															want:       "\"0x\"",
 														},
 														&oneOrMoreExpr{
 															pos: position{line: 317, col: 9, offset: 8504},
@@ -863,6 +892,7 @@ var g = &grammar{
 													pos:        position{line: 322, col: 5, offset: 8656},
 													val:        "0",
 													ignoreCase: false,
+													want:       "\"0\"",
 												},
 												&oneOrMoreExpr{
 													pos: position{line: 322, col: 9, offset: 8660},
@@ -884,6 +914,7 @@ var g = &grammar{
 											pos:        position{line: 323, col: 5, offset: 8745},
 											val:        "0",
 											ignoreCase: false,
+											want:       "\"0\"",
 										},
 									},
 								},
@@ -929,6 +960,7 @@ var g = &grammar{
 																			pos:        position{line: 223, col: 5, offset: 5717},
 																			val:        "Natural/build",
 																			ignoreCase: false,
+																			want:       "\"Natural/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -938,6 +970,7 @@ var g = &grammar{
 																			pos:        position{line: 224, col: 5, offset: 5766},
 																			val:        "Natural/fold",
 																			ignoreCase: false,
+																			want:       "\"Natural/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -947,6 +980,7 @@ var g = &grammar{
 																			pos:        position{line: 225, col: 5, offset: 5813},
 																			val:        "Natural/isZero",
 																			ignoreCase: false,
+																			want:       "\"Natural/isZero\"",
 																		},
 																	},
 																	&actionExpr{
@@ -956,6 +990,7 @@ var g = &grammar{
 																			pos:        position{line: 226, col: 5, offset: 5864},
 																			val:        "Natural/even",
 																			ignoreCase: false,
+																			want:       "\"Natural/even\"",
 																		},
 																	},
 																	&actionExpr{
@@ -965,6 +1000,7 @@ var g = &grammar{
 																			pos:        position{line: 227, col: 5, offset: 5911},
 																			val:        "Natural/odd",
 																			ignoreCase: false,
+																			want:       "\"Natural/odd\"",
 																		},
 																	},
 																	&actionExpr{
@@ -974,6 +1010,7 @@ var g = &grammar{
 																			pos:        position{line: 228, col: 5, offset: 5956},
 																			val:        "Natural/toInteger",
 																			ignoreCase: false,
+																			want:       "\"Natural/toInteger\"",
 																		},
 																	},
 																	&actionExpr{
@@ -983,6 +1020,7 @@ var g = &grammar{
 																			pos:        position{line: 229, col: 5, offset: 6013},
 																			val:        "Natural/show",
 																			ignoreCase: false,
+																			want:       "\"Natural/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -992,6 +1030,7 @@ var g = &grammar{
 																			pos:        position{line: 230, col: 5, offset: 6060},
 																			val:        "Natural/subtract",
 																			ignoreCase: false,
+																			want:       "\"Natural/subtract\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1001,6 +1040,7 @@ var g = &grammar{
 																			pos:        position{line: 231, col: 5, offset: 6115},
 																			val:        "Integer/clamp",
 																			ignoreCase: false,
+																			want:       "\"Integer/clamp\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1010,6 +1050,7 @@ var g = &grammar{
 																			pos:        position{line: 232, col: 5, offset: 6164},
 																			val:        "Integer/negate",
 																			ignoreCase: false,
+																			want:       "\"Integer/negate\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1019,6 +1060,7 @@ var g = &grammar{
 																			pos:        position{line: 233, col: 5, offset: 6215},
 																			val:        "Integer/toDouble",
 																			ignoreCase: false,
+																			want:       "\"Integer/toDouble\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1028,6 +1070,7 @@ var g = &grammar{
 																			pos:        position{line: 234, col: 5, offset: 6270},
 																			val:        "Integer/show",
 																			ignoreCase: false,
+																			want:       "\"Integer/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1037,6 +1080,7 @@ var g = &grammar{
 																			pos:        position{line: 235, col: 5, offset: 6317},
 																			val:        "Double/show",
 																			ignoreCase: false,
+																			want:       "\"Double/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1046,6 +1090,7 @@ var g = &grammar{
 																			pos:        position{line: 236, col: 5, offset: 6362},
 																			val:        "List/build",
 																			ignoreCase: false,
+																			want:       "\"List/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1055,6 +1100,7 @@ var g = &grammar{
 																			pos:        position{line: 237, col: 5, offset: 6405},
 																			val:        "List/fold",
 																			ignoreCase: false,
+																			want:       "\"List/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1064,6 +1110,7 @@ var g = &grammar{
 																			pos:        position{line: 238, col: 5, offset: 6446},
 																			val:        "List/length",
 																			ignoreCase: false,
+																			want:       "\"List/length\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1073,6 +1120,7 @@ var g = &grammar{
 																			pos:        position{line: 239, col: 5, offset: 6491},
 																			val:        "List/head",
 																			ignoreCase: false,
+																			want:       "\"List/head\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1082,6 +1130,7 @@ var g = &grammar{
 																			pos:        position{line: 240, col: 5, offset: 6532},
 																			val:        "List/last",
 																			ignoreCase: false,
+																			want:       "\"List/last\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1091,6 +1140,7 @@ var g = &grammar{
 																			pos:        position{line: 241, col: 5, offset: 6573},
 																			val:        "List/indexed",
 																			ignoreCase: false,
+																			want:       "\"List/indexed\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1100,6 +1150,7 @@ var g = &grammar{
 																			pos:        position{line: 242, col: 5, offset: 6620},
 																			val:        "List/reverse",
 																			ignoreCase: false,
+																			want:       "\"List/reverse\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1109,6 +1160,7 @@ var g = &grammar{
 																			pos:        position{line: 243, col: 5, offset: 6667},
 																			val:        "Optional/build",
 																			ignoreCase: false,
+																			want:       "\"Optional/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1118,6 +1170,7 @@ var g = &grammar{
 																			pos:        position{line: 244, col: 5, offset: 6718},
 																			val:        "Optional/fold",
 																			ignoreCase: false,
+																			want:       "\"Optional/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1127,6 +1180,7 @@ var g = &grammar{
 																			pos:        position{line: 245, col: 5, offset: 6767},
 																			val:        "Text/show",
 																			ignoreCase: false,
+																			want:       "\"Text/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1136,6 +1190,7 @@ var g = &grammar{
 																			pos:        position{line: 246, col: 5, offset: 6808},
 																			val:        "Bool",
 																			ignoreCase: false,
+																			want:       "\"Bool\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1145,6 +1200,7 @@ var g = &grammar{
 																			pos:        position{line: 247, col: 5, offset: 6840},
 																			val:        "True",
 																			ignoreCase: false,
+																			want:       "\"True\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1154,6 +1210,7 @@ var g = &grammar{
 																			pos:        position{line: 248, col: 5, offset: 6872},
 																			val:        "False",
 																			ignoreCase: false,
+																			want:       "\"False\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1163,6 +1220,7 @@ var g = &grammar{
 																			pos:        position{line: 249, col: 5, offset: 6906},
 																			val:        "Optional",
 																			ignoreCase: false,
+																			want:       "\"Optional\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1172,6 +1230,7 @@ var g = &grammar{
 																			pos:        position{line: 250, col: 5, offset: 6946},
 																			val:        "Natural",
 																			ignoreCase: false,
+																			want:       "\"Natural\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1181,6 +1240,7 @@ var g = &grammar{
 																			pos:        position{line: 251, col: 5, offset: 6984},
 																			val:        "Integer",
 																			ignoreCase: false,
+																			want:       "\"Integer\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1190,6 +1250,7 @@ var g = &grammar{
 																			pos:        position{line: 252, col: 5, offset: 7022},
 																			val:        "Double",
 																			ignoreCase: false,
+																			want:       "\"Double\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1199,6 +1260,7 @@ var g = &grammar{
 																			pos:        position{line: 253, col: 5, offset: 7058},
 																			val:        "Text",
 																			ignoreCase: false,
+																			want:       "\"Text\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1208,6 +1270,7 @@ var g = &grammar{
 																			pos:        position{line: 254, col: 5, offset: 7090},
 																			val:        "List",
 																			ignoreCase: false,
+																			want:       "\"List\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1217,6 +1280,7 @@ var g = &grammar{
 																			pos:        position{line: 255, col: 5, offset: 7122},
 																			val:        "None",
 																			ignoreCase: false,
+																			want:       "\"None\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1226,6 +1290,7 @@ var g = &grammar{
 																			pos:        position{line: 256, col: 5, offset: 7154},
 																			val:        "Type",
 																			ignoreCase: false,
+																			want:       "\"Type\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1235,6 +1300,7 @@ var g = &grammar{
 																			pos:        position{line: 257, col: 5, offset: 7186},
 																			val:        "Kind",
 																			ignoreCase: false,
+																			want:       "\"Kind\"",
 																		},
 																	},
 																	&actionExpr{
@@ -1244,6 +1310,7 @@ var g = &grammar{
 																			pos:        position{line: 258, col: 5, offset: 7218},
 																			val:        "Sort",
 																			ignoreCase: false,
+																			want:       "\"Sort\"",
 																		},
 																	},
 																},
@@ -1275,6 +1342,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 9, offset: 2803},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																		&labeledExpr{
 																			pos:   position{line: 121, col: 13, offset: 2807},
@@ -1298,6 +1366,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 31, offset: 2825},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																	},
 																},
@@ -1324,31 +1393,37 @@ var g = &grammar{
 																									pos:        position{line: 260, col: 6, offset: 7254},
 																									val:        "if",
 																									ignoreCase: false,
+																									want:       "\"if\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 261, col: 8, offset: 7268},
 																									val:        "then",
 																									ignoreCase: false,
+																									want:       "\"then\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 262, col: 8, offset: 7284},
 																									val:        "else",
 																									ignoreCase: false,
+																									want:       "\"else\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 263, col: 7, offset: 7299},
 																									val:        "let",
 																									ignoreCase: false,
+																									want:       "\"let\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 264, col: 6, offset: 7312},
 																									val:        "in",
 																									ignoreCase: false,
+																									want:       "\"in\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 266, col: 9, offset: 7339},
 																									val:        "using",
 																									ignoreCase: false,
+																									want:       "\"using\"",
 																								},
 																								&actionExpr{
 																									pos: position{line: 268, col: 11, offset: 7377},
@@ -1360,6 +1435,7 @@ var g = &grammar{
 																												pos:        position{line: 268, col: 11, offset: 7377},
 																												val:        "missing",
 																												ignoreCase: false,
+																												want:       "\"missing\"",
 																											},
 																											&notExpr{
 																												pos: position{line: 268, col: 21, offset: 7387},
@@ -1379,46 +1455,55 @@ var g = &grammar{
 																									pos:        position{line: 265, col: 6, offset: 7324},
 																									val:        "as",
 																									ignoreCase: false,
+																									want:       "\"as\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 269, col: 8, offset: 7443},
 																									val:        "True",
 																									ignoreCase: false,
+																									want:       "\"True\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 270, col: 9, offset: 7460},
 																									val:        "False",
 																									ignoreCase: false,
+																									want:       "\"False\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 271, col: 12, offset: 7481},
 																									val:        "Infinity",
 																									ignoreCase: false,
+																									want:       "\"Infinity\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 272, col: 7, offset: 7500},
 																									val:        "NaN",
 																									ignoreCase: false,
+																									want:       "\"NaN\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 267, col: 9, offset: 7357},
 																									val:        "merge",
 																									ignoreCase: false,
+																									want:       "\"merge\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 273, col: 8, offset: 7515},
 																									val:        "Some",
 																									ignoreCase: false,
+																									want:       "\"Some\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 274, col: 9, offset: 7532},
 																									val:        "toMap",
 																									ignoreCase: false,
+																									want:       "\"toMap\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 275, col: 10, offset: 7551},
 																									val:        "assert",
 																									ignoreCase: false,
+																									want:       "\"assert\"",
 																								},
 																							},
 																						},
@@ -1451,31 +1536,37 @@ var g = &grammar{
 																										pos:        position{line: 260, col: 6, offset: 7254},
 																										val:        "if",
 																										ignoreCase: false,
+																										want:       "\"if\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 261, col: 8, offset: 7268},
 																										val:        "then",
 																										ignoreCase: false,
+																										want:       "\"then\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 262, col: 8, offset: 7284},
 																										val:        "else",
 																										ignoreCase: false,
+																										want:       "\"else\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 263, col: 7, offset: 7299},
 																										val:        "let",
 																										ignoreCase: false,
+																										want:       "\"let\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 264, col: 6, offset: 7312},
 																										val:        "in",
 																										ignoreCase: false,
+																										want:       "\"in\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 266, col: 9, offset: 7339},
 																										val:        "using",
 																										ignoreCase: false,
+																										want:       "\"using\"",
 																									},
 																									&actionExpr{
 																										pos: position{line: 268, col: 11, offset: 7377},
@@ -1487,6 +1578,7 @@ var g = &grammar{
 																													pos:        position{line: 268, col: 11, offset: 7377},
 																													val:        "missing",
 																													ignoreCase: false,
+																													want:       "\"missing\"",
 																												},
 																												&notExpr{
 																													pos: position{line: 268, col: 21, offset: 7387},
@@ -1506,46 +1598,55 @@ var g = &grammar{
 																										pos:        position{line: 265, col: 6, offset: 7324},
 																										val:        "as",
 																										ignoreCase: false,
+																										want:       "\"as\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 269, col: 8, offset: 7443},
 																										val:        "True",
 																										ignoreCase: false,
+																										want:       "\"True\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 270, col: 9, offset: 7460},
 																										val:        "False",
 																										ignoreCase: false,
+																										want:       "\"False\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 271, col: 12, offset: 7481},
 																										val:        "Infinity",
 																										ignoreCase: false,
+																										want:       "\"Infinity\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 272, col: 7, offset: 7500},
 																										val:        "NaN",
 																										ignoreCase: false,
+																										want:       "\"NaN\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 267, col: 9, offset: 7357},
 																										val:        "merge",
 																										ignoreCase: false,
+																										want:       "\"merge\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 273, col: 8, offset: 7515},
 																										val:        "Some",
 																										ignoreCase: false,
+																										want:       "\"Some\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 274, col: 9, offset: 7532},
 																										val:        "toMap",
 																										ignoreCase: false,
+																										want:       "\"toMap\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 275, col: 10, offset: 7551},
 																										val:        "assert",
 																										ignoreCase: false,
+																										want:       "\"assert\"",
 																									},
 																								},
 																							},
@@ -1600,6 +1701,7 @@ var g = &grammar{
 																	pos:        position{line: 223, col: 5, offset: 5717},
 																	val:        "Natural/build",
 																	ignoreCase: false,
+																	want:       "\"Natural/build\"",
 																},
 															},
 															&actionExpr{
@@ -1609,6 +1711,7 @@ var g = &grammar{
 																	pos:        position{line: 224, col: 5, offset: 5766},
 																	val:        "Natural/fold",
 																	ignoreCase: false,
+																	want:       "\"Natural/fold\"",
 																},
 															},
 															&actionExpr{
@@ -1618,6 +1721,7 @@ var g = &grammar{
 																	pos:        position{line: 225, col: 5, offset: 5813},
 																	val:        "Natural/isZero",
 																	ignoreCase: false,
+																	want:       "\"Natural/isZero\"",
 																},
 															},
 															&actionExpr{
@@ -1627,6 +1731,7 @@ var g = &grammar{
 																	pos:        position{line: 226, col: 5, offset: 5864},
 																	val:        "Natural/even",
 																	ignoreCase: false,
+																	want:       "\"Natural/even\"",
 																},
 															},
 															&actionExpr{
@@ -1636,6 +1741,7 @@ var g = &grammar{
 																	pos:        position{line: 227, col: 5, offset: 5911},
 																	val:        "Natural/odd",
 																	ignoreCase: false,
+																	want:       "\"Natural/odd\"",
 																},
 															},
 															&actionExpr{
@@ -1645,6 +1751,7 @@ var g = &grammar{
 																	pos:        position{line: 228, col: 5, offset: 5956},
 																	val:        "Natural/toInteger",
 																	ignoreCase: false,
+																	want:       "\"Natural/toInteger\"",
 																},
 															},
 															&actionExpr{
@@ -1654,6 +1761,7 @@ var g = &grammar{
 																	pos:        position{line: 229, col: 5, offset: 6013},
 																	val:        "Natural/show",
 																	ignoreCase: false,
+																	want:       "\"Natural/show\"",
 																},
 															},
 															&actionExpr{
@@ -1663,6 +1771,7 @@ var g = &grammar{
 																	pos:        position{line: 230, col: 5, offset: 6060},
 																	val:        "Natural/subtract",
 																	ignoreCase: false,
+																	want:       "\"Natural/subtract\"",
 																},
 															},
 															&actionExpr{
@@ -1672,6 +1781,7 @@ var g = &grammar{
 																	pos:        position{line: 231, col: 5, offset: 6115},
 																	val:        "Integer/clamp",
 																	ignoreCase: false,
+																	want:       "\"Integer/clamp\"",
 																},
 															},
 															&actionExpr{
@@ -1681,6 +1791,7 @@ var g = &grammar{
 																	pos:        position{line: 232, col: 5, offset: 6164},
 																	val:        "Integer/negate",
 																	ignoreCase: false,
+																	want:       "\"Integer/negate\"",
 																},
 															},
 															&actionExpr{
@@ -1690,6 +1801,7 @@ var g = &grammar{
 																	pos:        position{line: 233, col: 5, offset: 6215},
 																	val:        "Integer/toDouble",
 																	ignoreCase: false,
+																	want:       "\"Integer/toDouble\"",
 																},
 															},
 															&actionExpr{
@@ -1699,6 +1811,7 @@ var g = &grammar{
 																	pos:        position{line: 234, col: 5, offset: 6270},
 																	val:        "Integer/show",
 																	ignoreCase: false,
+																	want:       "\"Integer/show\"",
 																},
 															},
 															&actionExpr{
@@ -1708,6 +1821,7 @@ var g = &grammar{
 																	pos:        position{line: 235, col: 5, offset: 6317},
 																	val:        "Double/show",
 																	ignoreCase: false,
+																	want:       "\"Double/show\"",
 																},
 															},
 															&actionExpr{
@@ -1717,6 +1831,7 @@ var g = &grammar{
 																	pos:        position{line: 236, col: 5, offset: 6362},
 																	val:        "List/build",
 																	ignoreCase: false,
+																	want:       "\"List/build\"",
 																},
 															},
 															&actionExpr{
@@ -1726,6 +1841,7 @@ var g = &grammar{
 																	pos:        position{line: 237, col: 5, offset: 6405},
 																	val:        "List/fold",
 																	ignoreCase: false,
+																	want:       "\"List/fold\"",
 																},
 															},
 															&actionExpr{
@@ -1735,6 +1851,7 @@ var g = &grammar{
 																	pos:        position{line: 238, col: 5, offset: 6446},
 																	val:        "List/length",
 																	ignoreCase: false,
+																	want:       "\"List/length\"",
 																},
 															},
 															&actionExpr{
@@ -1744,6 +1861,7 @@ var g = &grammar{
 																	pos:        position{line: 239, col: 5, offset: 6491},
 																	val:        "List/head",
 																	ignoreCase: false,
+																	want:       "\"List/head\"",
 																},
 															},
 															&actionExpr{
@@ -1753,6 +1871,7 @@ var g = &grammar{
 																	pos:        position{line: 240, col: 5, offset: 6532},
 																	val:        "List/last",
 																	ignoreCase: false,
+																	want:       "\"List/last\"",
 																},
 															},
 															&actionExpr{
@@ -1762,6 +1881,7 @@ var g = &grammar{
 																	pos:        position{line: 241, col: 5, offset: 6573},
 																	val:        "List/indexed",
 																	ignoreCase: false,
+																	want:       "\"List/indexed\"",
 																},
 															},
 															&actionExpr{
@@ -1771,6 +1891,7 @@ var g = &grammar{
 																	pos:        position{line: 242, col: 5, offset: 6620},
 																	val:        "List/reverse",
 																	ignoreCase: false,
+																	want:       "\"List/reverse\"",
 																},
 															},
 															&actionExpr{
@@ -1780,6 +1901,7 @@ var g = &grammar{
 																	pos:        position{line: 243, col: 5, offset: 6667},
 																	val:        "Optional/build",
 																	ignoreCase: false,
+																	want:       "\"Optional/build\"",
 																},
 															},
 															&actionExpr{
@@ -1789,6 +1911,7 @@ var g = &grammar{
 																	pos:        position{line: 244, col: 5, offset: 6718},
 																	val:        "Optional/fold",
 																	ignoreCase: false,
+																	want:       "\"Optional/fold\"",
 																},
 															},
 															&actionExpr{
@@ -1798,6 +1921,7 @@ var g = &grammar{
 																	pos:        position{line: 245, col: 5, offset: 6767},
 																	val:        "Text/show",
 																	ignoreCase: false,
+																	want:       "\"Text/show\"",
 																},
 															},
 															&actionExpr{
@@ -1807,6 +1931,7 @@ var g = &grammar{
 																	pos:        position{line: 246, col: 5, offset: 6808},
 																	val:        "Bool",
 																	ignoreCase: false,
+																	want:       "\"Bool\"",
 																},
 															},
 															&actionExpr{
@@ -1816,6 +1941,7 @@ var g = &grammar{
 																	pos:        position{line: 247, col: 5, offset: 6840},
 																	val:        "True",
 																	ignoreCase: false,
+																	want:       "\"True\"",
 																},
 															},
 															&actionExpr{
@@ -1825,6 +1951,7 @@ var g = &grammar{
 																	pos:        position{line: 248, col: 5, offset: 6872},
 																	val:        "False",
 																	ignoreCase: false,
+																	want:       "\"False\"",
 																},
 															},
 															&actionExpr{
@@ -1834,6 +1961,7 @@ var g = &grammar{
 																	pos:        position{line: 249, col: 5, offset: 6906},
 																	val:        "Optional",
 																	ignoreCase: false,
+																	want:       "\"Optional\"",
 																},
 															},
 															&actionExpr{
@@ -1843,6 +1971,7 @@ var g = &grammar{
 																	pos:        position{line: 250, col: 5, offset: 6946},
 																	val:        "Natural",
 																	ignoreCase: false,
+																	want:       "\"Natural\"",
 																},
 															},
 															&actionExpr{
@@ -1852,6 +1981,7 @@ var g = &grammar{
 																	pos:        position{line: 251, col: 5, offset: 6984},
 																	val:        "Integer",
 																	ignoreCase: false,
+																	want:       "\"Integer\"",
 																},
 															},
 															&actionExpr{
@@ -1861,6 +1991,7 @@ var g = &grammar{
 																	pos:        position{line: 252, col: 5, offset: 7022},
 																	val:        "Double",
 																	ignoreCase: false,
+																	want:       "\"Double\"",
 																},
 															},
 															&actionExpr{
@@ -1870,6 +2001,7 @@ var g = &grammar{
 																	pos:        position{line: 253, col: 5, offset: 7058},
 																	val:        "Text",
 																	ignoreCase: false,
+																	want:       "\"Text\"",
 																},
 															},
 															&actionExpr{
@@ -1879,6 +2011,7 @@ var g = &grammar{
 																	pos:        position{line: 254, col: 5, offset: 7090},
 																	val:        "List",
 																	ignoreCase: false,
+																	want:       "\"List\"",
 																},
 															},
 															&actionExpr{
@@ -1888,6 +2021,7 @@ var g = &grammar{
 																	pos:        position{line: 255, col: 5, offset: 7122},
 																	val:        "None",
 																	ignoreCase: false,
+																	want:       "\"None\"",
 																},
 															},
 															&actionExpr{
@@ -1897,6 +2031,7 @@ var g = &grammar{
 																	pos:        position{line: 256, col: 5, offset: 7154},
 																	val:        "Type",
 																	ignoreCase: false,
+																	want:       "\"Type\"",
 																},
 															},
 															&actionExpr{
@@ -1906,6 +2041,7 @@ var g = &grammar{
 																	pos:        position{line: 257, col: 5, offset: 7186},
 																	val:        "Kind",
 																	ignoreCase: false,
+																	want:       "\"Kind\"",
 																},
 															},
 															&actionExpr{
@@ -1915,6 +2051,7 @@ var g = &grammar{
 																	pos:        position{line: 258, col: 5, offset: 7218},
 																	val:        "Sort",
 																	ignoreCase: false,
+																	want:       "\"Sort\"",
 																},
 															},
 														},
@@ -1936,6 +2073,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 9, offset: 2803},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																		&labeledExpr{
 																			pos:   position{line: 121, col: 13, offset: 2807},
@@ -1959,6 +2097,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 31, offset: 2825},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																	},
 																},
@@ -1985,31 +2124,37 @@ var g = &grammar{
 																									pos:        position{line: 260, col: 6, offset: 7254},
 																									val:        "if",
 																									ignoreCase: false,
+																									want:       "\"if\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 261, col: 8, offset: 7268},
 																									val:        "then",
 																									ignoreCase: false,
+																									want:       "\"then\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 262, col: 8, offset: 7284},
 																									val:        "else",
 																									ignoreCase: false,
+																									want:       "\"else\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 263, col: 7, offset: 7299},
 																									val:        "let",
 																									ignoreCase: false,
+																									want:       "\"let\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 264, col: 6, offset: 7312},
 																									val:        "in",
 																									ignoreCase: false,
+																									want:       "\"in\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 266, col: 9, offset: 7339},
 																									val:        "using",
 																									ignoreCase: false,
+																									want:       "\"using\"",
 																								},
 																								&actionExpr{
 																									pos: position{line: 268, col: 11, offset: 7377},
@@ -2021,6 +2166,7 @@ var g = &grammar{
 																												pos:        position{line: 268, col: 11, offset: 7377},
 																												val:        "missing",
 																												ignoreCase: false,
+																												want:       "\"missing\"",
 																											},
 																											&notExpr{
 																												pos: position{line: 268, col: 21, offset: 7387},
@@ -2040,46 +2186,55 @@ var g = &grammar{
 																									pos:        position{line: 265, col: 6, offset: 7324},
 																									val:        "as",
 																									ignoreCase: false,
+																									want:       "\"as\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 269, col: 8, offset: 7443},
 																									val:        "True",
 																									ignoreCase: false,
+																									want:       "\"True\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 270, col: 9, offset: 7460},
 																									val:        "False",
 																									ignoreCase: false,
+																									want:       "\"False\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 271, col: 12, offset: 7481},
 																									val:        "Infinity",
 																									ignoreCase: false,
+																									want:       "\"Infinity\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 272, col: 7, offset: 7500},
 																									val:        "NaN",
 																									ignoreCase: false,
+																									want:       "\"NaN\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 267, col: 9, offset: 7357},
 																									val:        "merge",
 																									ignoreCase: false,
+																									want:       "\"merge\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 273, col: 8, offset: 7515},
 																									val:        "Some",
 																									ignoreCase: false,
+																									want:       "\"Some\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 274, col: 9, offset: 7532},
 																									val:        "toMap",
 																									ignoreCase: false,
+																									want:       "\"toMap\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 275, col: 10, offset: 7551},
 																									val:        "assert",
 																									ignoreCase: false,
+																									want:       "\"assert\"",
 																								},
 																							},
 																						},
@@ -2112,31 +2267,37 @@ var g = &grammar{
 																										pos:        position{line: 260, col: 6, offset: 7254},
 																										val:        "if",
 																										ignoreCase: false,
+																										want:       "\"if\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 261, col: 8, offset: 7268},
 																										val:        "then",
 																										ignoreCase: false,
+																										want:       "\"then\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 262, col: 8, offset: 7284},
 																										val:        "else",
 																										ignoreCase: false,
+																										want:       "\"else\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 263, col: 7, offset: 7299},
 																										val:        "let",
 																										ignoreCase: false,
+																										want:       "\"let\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 264, col: 6, offset: 7312},
 																										val:        "in",
 																										ignoreCase: false,
+																										want:       "\"in\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 266, col: 9, offset: 7339},
 																										val:        "using",
 																										ignoreCase: false,
+																										want:       "\"using\"",
 																									},
 																									&actionExpr{
 																										pos: position{line: 268, col: 11, offset: 7377},
@@ -2148,6 +2309,7 @@ var g = &grammar{
 																													pos:        position{line: 268, col: 11, offset: 7377},
 																													val:        "missing",
 																													ignoreCase: false,
+																													want:       "\"missing\"",
 																												},
 																												&notExpr{
 																													pos: position{line: 268, col: 21, offset: 7387},
@@ -2167,46 +2329,55 @@ var g = &grammar{
 																										pos:        position{line: 265, col: 6, offset: 7324},
 																										val:        "as",
 																										ignoreCase: false,
+																										want:       "\"as\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 269, col: 8, offset: 7443},
 																										val:        "True",
 																										ignoreCase: false,
+																										want:       "\"True\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 270, col: 9, offset: 7460},
 																										val:        "False",
 																										ignoreCase: false,
+																										want:       "\"False\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 271, col: 12, offset: 7481},
 																										val:        "Infinity",
 																										ignoreCase: false,
+																										want:       "\"Infinity\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 272, col: 7, offset: 7500},
 																										val:        "NaN",
 																										ignoreCase: false,
+																										want:       "\"NaN\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 267, col: 9, offset: 7357},
 																										val:        "merge",
 																										ignoreCase: false,
+																										want:       "\"merge\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 273, col: 8, offset: 7515},
 																										val:        "Some",
 																										ignoreCase: false,
+																										want:       "\"Some\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 274, col: 9, offset: 7532},
 																										val:        "toMap",
 																										ignoreCase: false,
+																										want:       "\"toMap\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 275, col: 10, offset: 7551},
 																										val:        "assert",
 																										ignoreCase: false,
+																										want:       "\"assert\"",
 																									},
 																								},
 																							},
@@ -2278,6 +2449,7 @@ var g = &grammar{
 							pos:        position{line: 223, col: 5, offset: 5717},
 							val:        "Natural/build",
 							ignoreCase: false,
+							want:       "\"Natural/build\"",
 						},
 					},
 					&actionExpr{
@@ -2287,6 +2459,7 @@ var g = &grammar{
 							pos:        position{line: 224, col: 5, offset: 5766},
 							val:        "Natural/fold",
 							ignoreCase: false,
+							want:       "\"Natural/fold\"",
 						},
 					},
 					&actionExpr{
@@ -2296,6 +2469,7 @@ var g = &grammar{
 							pos:        position{line: 225, col: 5, offset: 5813},
 							val:        "Natural/isZero",
 							ignoreCase: false,
+							want:       "\"Natural/isZero\"",
 						},
 					},
 					&actionExpr{
@@ -2305,6 +2479,7 @@ var g = &grammar{
 							pos:        position{line: 226, col: 5, offset: 5864},
 							val:        "Natural/even",
 							ignoreCase: false,
+							want:       "\"Natural/even\"",
 						},
 					},
 					&actionExpr{
@@ -2314,6 +2489,7 @@ var g = &grammar{
 							pos:        position{line: 227, col: 5, offset: 5911},
 							val:        "Natural/odd",
 							ignoreCase: false,
+							want:       "\"Natural/odd\"",
 						},
 					},
 					&actionExpr{
@@ -2323,6 +2499,7 @@ var g = &grammar{
 							pos:        position{line: 228, col: 5, offset: 5956},
 							val:        "Natural/toInteger",
 							ignoreCase: false,
+							want:       "\"Natural/toInteger\"",
 						},
 					},
 					&actionExpr{
@@ -2332,6 +2509,7 @@ var g = &grammar{
 							pos:        position{line: 229, col: 5, offset: 6013},
 							val:        "Natural/show",
 							ignoreCase: false,
+							want:       "\"Natural/show\"",
 						},
 					},
 					&actionExpr{
@@ -2341,6 +2519,7 @@ var g = &grammar{
 							pos:        position{line: 230, col: 5, offset: 6060},
 							val:        "Natural/subtract",
 							ignoreCase: false,
+							want:       "\"Natural/subtract\"",
 						},
 					},
 					&actionExpr{
@@ -2350,6 +2529,7 @@ var g = &grammar{
 							pos:        position{line: 231, col: 5, offset: 6115},
 							val:        "Integer/clamp",
 							ignoreCase: false,
+							want:       "\"Integer/clamp\"",
 						},
 					},
 					&actionExpr{
@@ -2359,6 +2539,7 @@ var g = &grammar{
 							pos:        position{line: 232, col: 5, offset: 6164},
 							val:        "Integer/negate",
 							ignoreCase: false,
+							want:       "\"Integer/negate\"",
 						},
 					},
 					&actionExpr{
@@ -2368,6 +2549,7 @@ var g = &grammar{
 							pos:        position{line: 233, col: 5, offset: 6215},
 							val:        "Integer/toDouble",
 							ignoreCase: false,
+							want:       "\"Integer/toDouble\"",
 						},
 					},
 					&actionExpr{
@@ -2377,6 +2559,7 @@ var g = &grammar{
 							pos:        position{line: 234, col: 5, offset: 6270},
 							val:        "Integer/show",
 							ignoreCase: false,
+							want:       "\"Integer/show\"",
 						},
 					},
 					&actionExpr{
@@ -2386,6 +2569,7 @@ var g = &grammar{
 							pos:        position{line: 235, col: 5, offset: 6317},
 							val:        "Double/show",
 							ignoreCase: false,
+							want:       "\"Double/show\"",
 						},
 					},
 					&actionExpr{
@@ -2395,6 +2579,7 @@ var g = &grammar{
 							pos:        position{line: 236, col: 5, offset: 6362},
 							val:        "List/build",
 							ignoreCase: false,
+							want:       "\"List/build\"",
 						},
 					},
 					&actionExpr{
@@ -2404,6 +2589,7 @@ var g = &grammar{
 							pos:        position{line: 237, col: 5, offset: 6405},
 							val:        "List/fold",
 							ignoreCase: false,
+							want:       "\"List/fold\"",
 						},
 					},
 					&actionExpr{
@@ -2413,6 +2599,7 @@ var g = &grammar{
 							pos:        position{line: 238, col: 5, offset: 6446},
 							val:        "List/length",
 							ignoreCase: false,
+							want:       "\"List/length\"",
 						},
 					},
 					&actionExpr{
@@ -2422,6 +2609,7 @@ var g = &grammar{
 							pos:        position{line: 239, col: 5, offset: 6491},
 							val:        "List/head",
 							ignoreCase: false,
+							want:       "\"List/head\"",
 						},
 					},
 					&actionExpr{
@@ -2431,6 +2619,7 @@ var g = &grammar{
 							pos:        position{line: 240, col: 5, offset: 6532},
 							val:        "List/last",
 							ignoreCase: false,
+							want:       "\"List/last\"",
 						},
 					},
 					&actionExpr{
@@ -2440,6 +2629,7 @@ var g = &grammar{
 							pos:        position{line: 241, col: 5, offset: 6573},
 							val:        "List/indexed",
 							ignoreCase: false,
+							want:       "\"List/indexed\"",
 						},
 					},
 					&actionExpr{
@@ -2449,6 +2639,7 @@ var g = &grammar{
 							pos:        position{line: 242, col: 5, offset: 6620},
 							val:        "List/reverse",
 							ignoreCase: false,
+							want:       "\"List/reverse\"",
 						},
 					},
 					&actionExpr{
@@ -2458,6 +2649,7 @@ var g = &grammar{
 							pos:        position{line: 243, col: 5, offset: 6667},
 							val:        "Optional/build",
 							ignoreCase: false,
+							want:       "\"Optional/build\"",
 						},
 					},
 					&actionExpr{
@@ -2467,6 +2659,7 @@ var g = &grammar{
 							pos:        position{line: 244, col: 5, offset: 6718},
 							val:        "Optional/fold",
 							ignoreCase: false,
+							want:       "\"Optional/fold\"",
 						},
 					},
 					&actionExpr{
@@ -2476,6 +2669,7 @@ var g = &grammar{
 							pos:        position{line: 245, col: 5, offset: 6767},
 							val:        "Text/show",
 							ignoreCase: false,
+							want:       "\"Text/show\"",
 						},
 					},
 					&actionExpr{
@@ -2485,6 +2679,7 @@ var g = &grammar{
 							pos:        position{line: 246, col: 5, offset: 6808},
 							val:        "Bool",
 							ignoreCase: false,
+							want:       "\"Bool\"",
 						},
 					},
 					&actionExpr{
@@ -2494,6 +2689,7 @@ var g = &grammar{
 							pos:        position{line: 247, col: 5, offset: 6840},
 							val:        "True",
 							ignoreCase: false,
+							want:       "\"True\"",
 						},
 					},
 					&actionExpr{
@@ -2503,6 +2699,7 @@ var g = &grammar{
 							pos:        position{line: 248, col: 5, offset: 6872},
 							val:        "False",
 							ignoreCase: false,
+							want:       "\"False\"",
 						},
 					},
 					&actionExpr{
@@ -2512,6 +2709,7 @@ var g = &grammar{
 							pos:        position{line: 249, col: 5, offset: 6906},
 							val:        "Optional",
 							ignoreCase: false,
+							want:       "\"Optional\"",
 						},
 					},
 					&actionExpr{
@@ -2521,6 +2719,7 @@ var g = &grammar{
 							pos:        position{line: 250, col: 5, offset: 6946},
 							val:        "Natural",
 							ignoreCase: false,
+							want:       "\"Natural\"",
 						},
 					},
 					&actionExpr{
@@ -2530,6 +2729,7 @@ var g = &grammar{
 							pos:        position{line: 251, col: 5, offset: 6984},
 							val:        "Integer",
 							ignoreCase: false,
+							want:       "\"Integer\"",
 						},
 					},
 					&actionExpr{
@@ -2539,6 +2739,7 @@ var g = &grammar{
 							pos:        position{line: 252, col: 5, offset: 7022},
 							val:        "Double",
 							ignoreCase: false,
+							want:       "\"Double\"",
 						},
 					},
 					&actionExpr{
@@ -2548,6 +2749,7 @@ var g = &grammar{
 							pos:        position{line: 253, col: 5, offset: 7058},
 							val:        "Text",
 							ignoreCase: false,
+							want:       "\"Text\"",
 						},
 					},
 					&actionExpr{
@@ -2557,6 +2759,7 @@ var g = &grammar{
 							pos:        position{line: 254, col: 5, offset: 7090},
 							val:        "List",
 							ignoreCase: false,
+							want:       "\"List\"",
 						},
 					},
 					&actionExpr{
@@ -2566,6 +2769,7 @@ var g = &grammar{
 							pos:        position{line: 255, col: 5, offset: 7122},
 							val:        "None",
 							ignoreCase: false,
+							want:       "\"None\"",
 						},
 					},
 					&actionExpr{
@@ -2575,6 +2779,7 @@ var g = &grammar{
 							pos:        position{line: 256, col: 5, offset: 7154},
 							val:        "Type",
 							ignoreCase: false,
+							want:       "\"Type\"",
 						},
 					},
 					&actionExpr{
@@ -2584,6 +2789,7 @@ var g = &grammar{
 							pos:        position{line: 257, col: 5, offset: 7186},
 							val:        "Kind",
 							ignoreCase: false,
+							want:       "\"Kind\"",
 						},
 					},
 					&actionExpr{
@@ -2593,6 +2799,7 @@ var g = &grammar{
 							pos:        position{line: 258, col: 5, offset: 7218},
 							val:        "Sort",
 							ignoreCase: false,
+							want:       "\"Sort\"",
 						},
 					},
 				},
@@ -2620,6 +2827,7 @@ var g = &grammar{
 											pos:        position{line: 381, col: 10, offset: 10465},
 											val:        "http",
 											ignoreCase: false,
+											want:       "\"http\"",
 										},
 										&zeroOrOneExpr{
 											pos: position{line: 381, col: 17, offset: 10472},
@@ -2627,12 +2835,14 @@ var g = &grammar{
 												pos:        position{line: 381, col: 17, offset: 10472},
 												val:        "s",
 												ignoreCase: false,
+												want:       "\"s\"",
 											},
 										},
 										&litMatcher{
 											pos:        position{line: 383, col: 18, offset: 10497},
 											val:        "://",
 											ignoreCase: false,
+											want:       "\"://\"",
 										},
 										&zeroOrOneExpr{
 											pos: position{line: 387, col: 13, offset: 10642},
@@ -2659,6 +2869,7 @@ var g = &grammar{
 																			pos:        position{line: 411, col: 14, offset: 11187},
 																			val:        "%",
 																			ignoreCase: false,
+																			want:       "\"%\"",
 																		},
 																		&choiceExpr{
 																			pos: position{line: 108, col: 10, offset: 2394},
@@ -2714,6 +2925,7 @@ var g = &grammar{
 														pos:        position{line: 387, col: 23, offset: 10652},
 														val:        "@",
 														ignoreCase: false,
+														want:       "\"@\"",
 													},
 												},
 											},
@@ -2728,6 +2940,7 @@ var g = &grammar{
 															pos:        position{line: 395, col: 13, offset: 10798},
 															val:        "[",
 															ignoreCase: false,
+															want:       "\"[\"",
 														},
 														&actionExpr{
 															pos: position{line: 397, col: 15, offset: 10835},
@@ -2761,6 +2974,7 @@ var g = &grammar{
 																		pos:        position{line: 397, col: 25, offset: 10845},
 																		val:        ":",
 																		ignoreCase: false,
+																		want:       "\":\"",
 																	},
 																	&zeroOrMoreExpr{
 																		pos: position{line: 397, col: 29, offset: 10849},
@@ -2798,6 +3012,7 @@ var g = &grammar{
 															pos:        position{line: 395, col: 29, offset: 10814},
 															val:        "]",
 															ignoreCase: false,
+															want:       "\"]\"",
 														},
 													},
 												},
@@ -2821,6 +3036,7 @@ var g = &grammar{
 																		pos:        position{line: 411, col: 14, offset: 11187},
 																		val:        "%",
 																		ignoreCase: false,
+																		want:       "\"%\"",
 																	},
 																	&choiceExpr{
 																		pos: position{line: 108, col: 10, offset: 2394},
@@ -2883,6 +3099,7 @@ var g = &grammar{
 														pos:        position{line: 387, col: 35, offset: 10664},
 														val:        ":",
 														ignoreCase: false,
+														want:       "\":\"",
 													},
 													&zeroOrMoreExpr{
 														pos: position{line: 393, col: 8, offset: 10776},
@@ -2912,6 +3129,7 @@ var g = &grammar{
 																	pos:        position{line: 362, col: 17, offset: 9693},
 																	val:        "/",
 																	ignoreCase: false,
+																	want:       "\"/\"",
 																},
 																&labeledExpr{
 																	pos:   position{line: 362, col: 21, offset: 9697},
@@ -2945,6 +3163,7 @@ var g = &grammar{
 																	pos:        position{line: 363, col: 17, offset: 9755},
 																	val:        "/\"",
 																	ignoreCase: false,
+																	want:       "\"/\\\"\"",
 																},
 																&labeledExpr{
 																	pos:   position{line: 363, col: 25, offset: 9763},
@@ -2969,6 +3188,7 @@ var g = &grammar{
 																	pos:        position{line: 363, col: 47, offset: 9785},
 																	val:        "\"",
 																	ignoreCase: false,
+																	want:       "\"\\\"\"",
 																},
 															},
 														},
@@ -2980,6 +3200,7 @@ var g = &grammar{
 																pos:        position{line: 385, col: 28, offset: 10613},
 																val:        "/",
 																ignoreCase: false,
+																want:       "\"/\"",
 															},
 															&zeroOrMoreExpr{
 																pos: position{line: 405, col: 11, offset: 11083},
@@ -3001,6 +3222,7 @@ var g = &grammar{
 																					pos:        position{line: 411, col: 14, offset: 11187},
 																					val:        "%",
 																					ignoreCase: false,
+																					want:       "\"%\"",
 																				},
 																				&choiceExpr{
 																					pos: position{line: 108, col: 10, offset: 2394},
@@ -3066,6 +3288,7 @@ var g = &grammar{
 														pos:        position{line: 383, col: 44, offset: 10523},
 														val:        "?",
 														ignoreCase: false,
+														want:       "\"?\"",
 													},
 													&zeroOrMoreExpr{
 														pos: position{line: 409, col: 9, offset: 11155},
@@ -3087,6 +3310,7 @@ var g = &grammar{
 																			pos:        position{line: 411, col: 14, offset: 11187},
 																			val:        "%",
 																			ignoreCase: false,
+																			want:       "\"%\"",
 																		},
 																		&choiceExpr{
 																			pos: position{line: 108, col: 10, offset: 2394},
@@ -3161,6 +3385,7 @@ var g = &grammar{
 											pos:        position{line: 266, col: 9, offset: 7339},
 											val:        "using",
 											ignoreCase: false,
+											want:       "\"using\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 417, col: 40, offset: 11340},
@@ -3194,6 +3419,7 @@ var g = &grammar{
 									pos:        position{line: 268, col: 11, offset: 7377},
 									val:        "missing",
 									ignoreCase: false,
+									want:       "\"missing\"",
 								},
 								&notExpr{
 									pos: position{line: 268, col: 21, offset: 7387},
@@ -3219,6 +3445,7 @@ var g = &grammar{
 									pos:        position{line: 376, col: 14, offset: 10168},
 									val:        "..",
 									ignoreCase: false,
+									want:       "\"..\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 376, col: 19, offset: 10173},
@@ -3244,6 +3471,7 @@ var g = &grammar{
 																		pos:        position{line: 362, col: 17, offset: 9693},
 																		val:        "/",
 																		ignoreCase: false,
+																		want:       "\"/\"",
 																	},
 																	&labeledExpr{
 																		pos:   position{line: 362, col: 21, offset: 9697},
@@ -3277,6 +3505,7 @@ var g = &grammar{
 																		pos:        position{line: 363, col: 17, offset: 9755},
 																		val:        "/\"",
 																		ignoreCase: false,
+																		want:       "\"/\\\"\"",
 																	},
 																	&labeledExpr{
 																		pos:   position{line: 363, col: 25, offset: 9763},
@@ -3301,6 +3530,7 @@ var g = &grammar{
 																		pos:        position{line: 363, col: 47, offset: 9785},
 																		val:        "\"",
 																		ignoreCase: false,
+																		want:       "\"\\\"\"",
 																	},
 																},
 															},
@@ -3324,6 +3554,7 @@ var g = &grammar{
 									pos:        position{line: 377, col: 12, offset: 10248},
 									val:        ".",
 									ignoreCase: false,
+									want:       "\".\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 377, col: 16, offset: 10252},
@@ -3349,6 +3580,7 @@ var g = &grammar{
 																		pos:        position{line: 362, col: 17, offset: 9693},
 																		val:        "/",
 																		ignoreCase: false,
+																		want:       "\"/\"",
 																	},
 																	&labeledExpr{
 																		pos:   position{line: 362, col: 21, offset: 9697},
@@ -3382,6 +3614,7 @@ var g = &grammar{
 																		pos:        position{line: 363, col: 17, offset: 9755},
 																		val:        "/\"",
 																		ignoreCase: false,
+																		want:       "\"/\\\"\"",
 																	},
 																	&labeledExpr{
 																		pos:   position{line: 363, col: 25, offset: 9763},
@@ -3406,6 +3639,7 @@ var g = &grammar{
 																		pos:        position{line: 363, col: 47, offset: 9785},
 																		val:        "\"",
 																		ignoreCase: false,
+																		want:       "\"\\\"\"",
 																	},
 																},
 															},
@@ -3429,6 +3663,7 @@ var g = &grammar{
 									pos:        position{line: 378, col: 12, offset: 10310},
 									val:        "~",
 									ignoreCase: false,
+									want:       "\"~\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 378, col: 16, offset: 10314},
@@ -3454,6 +3689,7 @@ var g = &grammar{
 																		pos:        position{line: 362, col: 17, offset: 9693},
 																		val:        "/",
 																		ignoreCase: false,
+																		want:       "\"/\"",
 																	},
 																	&labeledExpr{
 																		pos:   position{line: 362, col: 21, offset: 9697},
@@ -3487,6 +3723,7 @@ var g = &grammar{
 																		pos:        position{line: 363, col: 17, offset: 9755},
 																		val:        "/\"",
 																		ignoreCase: false,
+																		want:       "\"/\\\"\"",
 																	},
 																	&labeledExpr{
 																		pos:   position{line: 363, col: 25, offset: 9763},
@@ -3511,6 +3748,7 @@ var g = &grammar{
 																		pos:        position{line: 363, col: 47, offset: 9785},
 																		val:        "\"",
 																		ignoreCase: false,
+																		want:       "\"\\\"\"",
 																	},
 																},
 															},
@@ -3551,6 +3789,7 @@ var g = &grammar{
 																pos:        position{line: 362, col: 17, offset: 9693},
 																val:        "/",
 																ignoreCase: false,
+																want:       "\"/\"",
 															},
 															&labeledExpr{
 																pos:   position{line: 362, col: 21, offset: 9697},
@@ -3584,6 +3823,7 @@ var g = &grammar{
 																pos:        position{line: 363, col: 17, offset: 9755},
 																val:        "/\"",
 																ignoreCase: false,
+																want:       "\"/\\\"\"",
 															},
 															&labeledExpr{
 																pos:   position{line: 363, col: 25, offset: 9763},
@@ -3608,6 +3848,7 @@ var g = &grammar{
 																pos:        position{line: 363, col: 47, offset: 9785},
 																val:        "\"",
 																ignoreCase: false,
+																want:       "\"\\\"\"",
 															},
 														},
 													},
@@ -3633,6 +3874,7 @@ var g = &grammar{
 									pos:        position{line: 424, col: 7, offset: 11551},
 									val:        "env:",
 									ignoreCase: false,
+									want:       "\"env:\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 424, col: 14, offset: 11558},
@@ -3678,6 +3920,7 @@ var g = &grammar{
 															pos:        position{line: 430, col: 28, offset: 11754},
 															val:        "\"",
 															ignoreCase: false,
+															want:       "\"\\\"\"",
 														},
 														&labeledExpr{
 															pos:   position{line: 430, col: 32, offset: 11758},
@@ -3700,6 +3943,7 @@ var g = &grammar{
 																						pos:        position{line: 444, col: 7, offset: 12112},
 																						val:        "\\\"",
 																						ignoreCase: false,
+																						want:       "\"\\\\\\\"\"",
 																					},
 																				},
 																				&actionExpr{
@@ -3709,6 +3953,7 @@ var g = &grammar{
 																						pos:        position{line: 445, col: 7, offset: 12152},
 																						val:        "\\\\",
 																						ignoreCase: false,
+																						want:       "\"\\\\\\\\\"",
 																					},
 																				},
 																				&actionExpr{
@@ -3718,6 +3963,7 @@ var g = &grammar{
 																						pos:        position{line: 446, col: 7, offset: 12192},
 																						val:        "\\a",
 																						ignoreCase: false,
+																						want:       "\"\\\\a\"",
 																					},
 																				},
 																				&actionExpr{
@@ -3727,6 +3973,7 @@ var g = &grammar{
 																						pos:        position{line: 447, col: 7, offset: 12232},
 																						val:        "\\b",
 																						ignoreCase: false,
+																						want:       "\"\\\\b\"",
 																					},
 																				},
 																				&actionExpr{
@@ -3736,6 +3983,7 @@ var g = &grammar{
 																						pos:        position{line: 448, col: 7, offset: 12272},
 																						val:        "\\f",
 																						ignoreCase: false,
+																						want:       "\"\\\\f\"",
 																					},
 																				},
 																				&actionExpr{
@@ -3745,6 +3993,7 @@ var g = &grammar{
 																						pos:        position{line: 449, col: 7, offset: 12312},
 																						val:        "\\n",
 																						ignoreCase: false,
+																						want:       "\"\\\\n\"",
 																					},
 																				},
 																				&actionExpr{
@@ -3754,6 +4003,7 @@ var g = &grammar{
 																						pos:        position{line: 450, col: 7, offset: 12352},
 																						val:        "\\r",
 																						ignoreCase: false,
+																						want:       "\"\\\\r\"",
 																					},
 																				},
 																				&actionExpr{
@@ -3763,6 +4013,7 @@ var g = &grammar{
 																						pos:        position{line: 451, col: 7, offset: 12392},
 																						val:        "\\t",
 																						ignoreCase: false,
+																						want:       "\"\\\\t\"",
 																					},
 																				},
 																				&actionExpr{
@@ -3772,6 +4023,7 @@ var g = &grammar{
 																						pos:        position{line: 452, col: 7, offset: 12432},
 																						val:        "\\v",
 																						ignoreCase: false,
+																						want:       "\"\\\\v\"",
 																					},
 																				},
 																				&charClassMatcher{
@@ -3791,6 +4043,7 @@ var g = &grammar{
 															pos:        position{line: 430, col: 66, offset: 11792},
 															val:        "\"",
 															ignoreCase: false,
+															want:       "\"\\\"\"",
 														},
 													},
 												},
@@ -3843,6 +4096,7 @@ var g = &grammar{
 														pos:        position{line: 474, col: 8, offset: 13340},
 														val:        "sha256:",
 														ignoreCase: false,
+														want:       "\"sha256:\"",
 													},
 													&labeledExpr{
 														pos:   position{line: 474, col: 18, offset: 13350},
@@ -5112,6 +5366,7 @@ var g = &grammar{
 									pos:        position{line: 265, col: 6, offset: 7324},
 									val:        "as",
 									ignoreCase: false,
+									want:       "\"as\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 484, col: 30, offset: 13646},
@@ -5121,6 +5376,7 @@ var g = &grammar{
 									pos:        position{line: 287, col: 8, offset: 7738},
 									val:        "Text",
 									ignoreCase: false,
+									want:       "\"Text\"",
 								},
 							},
 						},
@@ -5147,6 +5403,7 @@ var g = &grammar{
 									pos:        position{line: 265, col: 6, offset: 7324},
 									val:        "as",
 									ignoreCase: false,
+									want:       "\"as\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 485, col: 30, offset: 13759},
@@ -5156,6 +5413,7 @@ var g = &grammar{
 									pos:        position{line: 289, col: 12, offset: 7774},
 									val:        "Location",
 									ignoreCase: false,
+									want:       "\"Location\"",
 								},
 							},
 						},
@@ -5188,6 +5446,7 @@ var g = &grammar{
 							pos:        position{line: 263, col: 7, offset: 7299},
 							val:        "let",
 							ignoreCase: false,
+							want:       "\"let\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 489, col: 18, offset: 13966},
@@ -5220,6 +5479,7 @@ var g = &grammar{
 																			pos:        position{line: 223, col: 5, offset: 5717},
 																			val:        "Natural/build",
 																			ignoreCase: false,
+																			want:       "\"Natural/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5229,6 +5489,7 @@ var g = &grammar{
 																			pos:        position{line: 224, col: 5, offset: 5766},
 																			val:        "Natural/fold",
 																			ignoreCase: false,
+																			want:       "\"Natural/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5238,6 +5499,7 @@ var g = &grammar{
 																			pos:        position{line: 225, col: 5, offset: 5813},
 																			val:        "Natural/isZero",
 																			ignoreCase: false,
+																			want:       "\"Natural/isZero\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5247,6 +5509,7 @@ var g = &grammar{
 																			pos:        position{line: 226, col: 5, offset: 5864},
 																			val:        "Natural/even",
 																			ignoreCase: false,
+																			want:       "\"Natural/even\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5256,6 +5519,7 @@ var g = &grammar{
 																			pos:        position{line: 227, col: 5, offset: 5911},
 																			val:        "Natural/odd",
 																			ignoreCase: false,
+																			want:       "\"Natural/odd\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5265,6 +5529,7 @@ var g = &grammar{
 																			pos:        position{line: 228, col: 5, offset: 5956},
 																			val:        "Natural/toInteger",
 																			ignoreCase: false,
+																			want:       "\"Natural/toInteger\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5274,6 +5539,7 @@ var g = &grammar{
 																			pos:        position{line: 229, col: 5, offset: 6013},
 																			val:        "Natural/show",
 																			ignoreCase: false,
+																			want:       "\"Natural/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5283,6 +5549,7 @@ var g = &grammar{
 																			pos:        position{line: 230, col: 5, offset: 6060},
 																			val:        "Natural/subtract",
 																			ignoreCase: false,
+																			want:       "\"Natural/subtract\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5292,6 +5559,7 @@ var g = &grammar{
 																			pos:        position{line: 231, col: 5, offset: 6115},
 																			val:        "Integer/clamp",
 																			ignoreCase: false,
+																			want:       "\"Integer/clamp\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5301,6 +5569,7 @@ var g = &grammar{
 																			pos:        position{line: 232, col: 5, offset: 6164},
 																			val:        "Integer/negate",
 																			ignoreCase: false,
+																			want:       "\"Integer/negate\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5310,6 +5579,7 @@ var g = &grammar{
 																			pos:        position{line: 233, col: 5, offset: 6215},
 																			val:        "Integer/toDouble",
 																			ignoreCase: false,
+																			want:       "\"Integer/toDouble\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5319,6 +5589,7 @@ var g = &grammar{
 																			pos:        position{line: 234, col: 5, offset: 6270},
 																			val:        "Integer/show",
 																			ignoreCase: false,
+																			want:       "\"Integer/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5328,6 +5599,7 @@ var g = &grammar{
 																			pos:        position{line: 235, col: 5, offset: 6317},
 																			val:        "Double/show",
 																			ignoreCase: false,
+																			want:       "\"Double/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5337,6 +5609,7 @@ var g = &grammar{
 																			pos:        position{line: 236, col: 5, offset: 6362},
 																			val:        "List/build",
 																			ignoreCase: false,
+																			want:       "\"List/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5346,6 +5619,7 @@ var g = &grammar{
 																			pos:        position{line: 237, col: 5, offset: 6405},
 																			val:        "List/fold",
 																			ignoreCase: false,
+																			want:       "\"List/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5355,6 +5629,7 @@ var g = &grammar{
 																			pos:        position{line: 238, col: 5, offset: 6446},
 																			val:        "List/length",
 																			ignoreCase: false,
+																			want:       "\"List/length\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5364,6 +5639,7 @@ var g = &grammar{
 																			pos:        position{line: 239, col: 5, offset: 6491},
 																			val:        "List/head",
 																			ignoreCase: false,
+																			want:       "\"List/head\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5373,6 +5649,7 @@ var g = &grammar{
 																			pos:        position{line: 240, col: 5, offset: 6532},
 																			val:        "List/last",
 																			ignoreCase: false,
+																			want:       "\"List/last\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5382,6 +5659,7 @@ var g = &grammar{
 																			pos:        position{line: 241, col: 5, offset: 6573},
 																			val:        "List/indexed",
 																			ignoreCase: false,
+																			want:       "\"List/indexed\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5391,6 +5669,7 @@ var g = &grammar{
 																			pos:        position{line: 242, col: 5, offset: 6620},
 																			val:        "List/reverse",
 																			ignoreCase: false,
+																			want:       "\"List/reverse\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5400,6 +5679,7 @@ var g = &grammar{
 																			pos:        position{line: 243, col: 5, offset: 6667},
 																			val:        "Optional/build",
 																			ignoreCase: false,
+																			want:       "\"Optional/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5409,6 +5689,7 @@ var g = &grammar{
 																			pos:        position{line: 244, col: 5, offset: 6718},
 																			val:        "Optional/fold",
 																			ignoreCase: false,
+																			want:       "\"Optional/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5418,6 +5699,7 @@ var g = &grammar{
 																			pos:        position{line: 245, col: 5, offset: 6767},
 																			val:        "Text/show",
 																			ignoreCase: false,
+																			want:       "\"Text/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5427,6 +5709,7 @@ var g = &grammar{
 																			pos:        position{line: 246, col: 5, offset: 6808},
 																			val:        "Bool",
 																			ignoreCase: false,
+																			want:       "\"Bool\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5436,6 +5719,7 @@ var g = &grammar{
 																			pos:        position{line: 247, col: 5, offset: 6840},
 																			val:        "True",
 																			ignoreCase: false,
+																			want:       "\"True\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5445,6 +5729,7 @@ var g = &grammar{
 																			pos:        position{line: 248, col: 5, offset: 6872},
 																			val:        "False",
 																			ignoreCase: false,
+																			want:       "\"False\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5454,6 +5739,7 @@ var g = &grammar{
 																			pos:        position{line: 249, col: 5, offset: 6906},
 																			val:        "Optional",
 																			ignoreCase: false,
+																			want:       "\"Optional\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5463,6 +5749,7 @@ var g = &grammar{
 																			pos:        position{line: 250, col: 5, offset: 6946},
 																			val:        "Natural",
 																			ignoreCase: false,
+																			want:       "\"Natural\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5472,6 +5759,7 @@ var g = &grammar{
 																			pos:        position{line: 251, col: 5, offset: 6984},
 																			val:        "Integer",
 																			ignoreCase: false,
+																			want:       "\"Integer\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5481,6 +5769,7 @@ var g = &grammar{
 																			pos:        position{line: 252, col: 5, offset: 7022},
 																			val:        "Double",
 																			ignoreCase: false,
+																			want:       "\"Double\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5490,6 +5779,7 @@ var g = &grammar{
 																			pos:        position{line: 253, col: 5, offset: 7058},
 																			val:        "Text",
 																			ignoreCase: false,
+																			want:       "\"Text\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5499,6 +5789,7 @@ var g = &grammar{
 																			pos:        position{line: 254, col: 5, offset: 7090},
 																			val:        "List",
 																			ignoreCase: false,
+																			want:       "\"List\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5508,6 +5799,7 @@ var g = &grammar{
 																			pos:        position{line: 255, col: 5, offset: 7122},
 																			val:        "None",
 																			ignoreCase: false,
+																			want:       "\"None\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5517,6 +5809,7 @@ var g = &grammar{
 																			pos:        position{line: 256, col: 5, offset: 7154},
 																			val:        "Type",
 																			ignoreCase: false,
+																			want:       "\"Type\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5526,6 +5819,7 @@ var g = &grammar{
 																			pos:        position{line: 257, col: 5, offset: 7186},
 																			val:        "Kind",
 																			ignoreCase: false,
+																			want:       "\"Kind\"",
 																		},
 																	},
 																	&actionExpr{
@@ -5535,6 +5829,7 @@ var g = &grammar{
 																			pos:        position{line: 258, col: 5, offset: 7218},
 																			val:        "Sort",
 																			ignoreCase: false,
+																			want:       "\"Sort\"",
 																		},
 																	},
 																},
@@ -5566,6 +5861,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 9, offset: 2803},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																		&labeledExpr{
 																			pos:   position{line: 121, col: 13, offset: 2807},
@@ -5589,6 +5885,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 31, offset: 2825},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																	},
 																},
@@ -5615,31 +5912,37 @@ var g = &grammar{
 																									pos:        position{line: 260, col: 6, offset: 7254},
 																									val:        "if",
 																									ignoreCase: false,
+																									want:       "\"if\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 261, col: 8, offset: 7268},
 																									val:        "then",
 																									ignoreCase: false,
+																									want:       "\"then\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 262, col: 8, offset: 7284},
 																									val:        "else",
 																									ignoreCase: false,
+																									want:       "\"else\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 263, col: 7, offset: 7299},
 																									val:        "let",
 																									ignoreCase: false,
+																									want:       "\"let\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 264, col: 6, offset: 7312},
 																									val:        "in",
 																									ignoreCase: false,
+																									want:       "\"in\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 266, col: 9, offset: 7339},
 																									val:        "using",
 																									ignoreCase: false,
+																									want:       "\"using\"",
 																								},
 																								&actionExpr{
 																									pos: position{line: 268, col: 11, offset: 7377},
@@ -5651,6 +5954,7 @@ var g = &grammar{
 																												pos:        position{line: 268, col: 11, offset: 7377},
 																												val:        "missing",
 																												ignoreCase: false,
+																												want:       "\"missing\"",
 																											},
 																											&notExpr{
 																												pos: position{line: 268, col: 21, offset: 7387},
@@ -5670,46 +5974,55 @@ var g = &grammar{
 																									pos:        position{line: 265, col: 6, offset: 7324},
 																									val:        "as",
 																									ignoreCase: false,
+																									want:       "\"as\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 269, col: 8, offset: 7443},
 																									val:        "True",
 																									ignoreCase: false,
+																									want:       "\"True\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 270, col: 9, offset: 7460},
 																									val:        "False",
 																									ignoreCase: false,
+																									want:       "\"False\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 271, col: 12, offset: 7481},
 																									val:        "Infinity",
 																									ignoreCase: false,
+																									want:       "\"Infinity\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 272, col: 7, offset: 7500},
 																									val:        "NaN",
 																									ignoreCase: false,
+																									want:       "\"NaN\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 267, col: 9, offset: 7357},
 																									val:        "merge",
 																									ignoreCase: false,
+																									want:       "\"merge\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 273, col: 8, offset: 7515},
 																									val:        "Some",
 																									ignoreCase: false,
+																									want:       "\"Some\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 274, col: 9, offset: 7532},
 																									val:        "toMap",
 																									ignoreCase: false,
+																									want:       "\"toMap\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 275, col: 10, offset: 7551},
 																									val:        "assert",
 																									ignoreCase: false,
+																									want:       "\"assert\"",
 																								},
 																							},
 																						},
@@ -5742,31 +6055,37 @@ var g = &grammar{
 																										pos:        position{line: 260, col: 6, offset: 7254},
 																										val:        "if",
 																										ignoreCase: false,
+																										want:       "\"if\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 261, col: 8, offset: 7268},
 																										val:        "then",
 																										ignoreCase: false,
+																										want:       "\"then\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 262, col: 8, offset: 7284},
 																										val:        "else",
 																										ignoreCase: false,
+																										want:       "\"else\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 263, col: 7, offset: 7299},
 																										val:        "let",
 																										ignoreCase: false,
+																										want:       "\"let\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 264, col: 6, offset: 7312},
 																										val:        "in",
 																										ignoreCase: false,
+																										want:       "\"in\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 266, col: 9, offset: 7339},
 																										val:        "using",
 																										ignoreCase: false,
+																										want:       "\"using\"",
 																									},
 																									&actionExpr{
 																										pos: position{line: 268, col: 11, offset: 7377},
@@ -5778,6 +6097,7 @@ var g = &grammar{
 																													pos:        position{line: 268, col: 11, offset: 7377},
 																													val:        "missing",
 																													ignoreCase: false,
+																													want:       "\"missing\"",
 																												},
 																												&notExpr{
 																													pos: position{line: 268, col: 21, offset: 7387},
@@ -5797,46 +6117,55 @@ var g = &grammar{
 																										pos:        position{line: 265, col: 6, offset: 7324},
 																										val:        "as",
 																										ignoreCase: false,
+																										want:       "\"as\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 269, col: 8, offset: 7443},
 																										val:        "True",
 																										ignoreCase: false,
+																										want:       "\"True\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 270, col: 9, offset: 7460},
 																										val:        "False",
 																										ignoreCase: false,
+																										want:       "\"False\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 271, col: 12, offset: 7481},
 																										val:        "Infinity",
 																										ignoreCase: false,
+																										want:       "\"Infinity\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 272, col: 7, offset: 7500},
 																										val:        "NaN",
 																										ignoreCase: false,
+																										want:       "\"NaN\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 267, col: 9, offset: 7357},
 																										val:        "merge",
 																										ignoreCase: false,
+																										want:       "\"merge\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 273, col: 8, offset: 7515},
 																										val:        "Some",
 																										ignoreCase: false,
+																										want:       "\"Some\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 274, col: 9, offset: 7532},
 																										val:        "toMap",
 																										ignoreCase: false,
+																										want:       "\"toMap\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 275, col: 10, offset: 7551},
 																										val:        "assert",
 																										ignoreCase: false,
+																										want:       "\"assert\"",
 																									},
 																								},
 																							},
@@ -5891,6 +6220,7 @@ var g = &grammar{
 																	pos:        position{line: 223, col: 5, offset: 5717},
 																	val:        "Natural/build",
 																	ignoreCase: false,
+																	want:       "\"Natural/build\"",
 																},
 															},
 															&actionExpr{
@@ -5900,6 +6230,7 @@ var g = &grammar{
 																	pos:        position{line: 224, col: 5, offset: 5766},
 																	val:        "Natural/fold",
 																	ignoreCase: false,
+																	want:       "\"Natural/fold\"",
 																},
 															},
 															&actionExpr{
@@ -5909,6 +6240,7 @@ var g = &grammar{
 																	pos:        position{line: 225, col: 5, offset: 5813},
 																	val:        "Natural/isZero",
 																	ignoreCase: false,
+																	want:       "\"Natural/isZero\"",
 																},
 															},
 															&actionExpr{
@@ -5918,6 +6250,7 @@ var g = &grammar{
 																	pos:        position{line: 226, col: 5, offset: 5864},
 																	val:        "Natural/even",
 																	ignoreCase: false,
+																	want:       "\"Natural/even\"",
 																},
 															},
 															&actionExpr{
@@ -5927,6 +6260,7 @@ var g = &grammar{
 																	pos:        position{line: 227, col: 5, offset: 5911},
 																	val:        "Natural/odd",
 																	ignoreCase: false,
+																	want:       "\"Natural/odd\"",
 																},
 															},
 															&actionExpr{
@@ -5936,6 +6270,7 @@ var g = &grammar{
 																	pos:        position{line: 228, col: 5, offset: 5956},
 																	val:        "Natural/toInteger",
 																	ignoreCase: false,
+																	want:       "\"Natural/toInteger\"",
 																},
 															},
 															&actionExpr{
@@ -5945,6 +6280,7 @@ var g = &grammar{
 																	pos:        position{line: 229, col: 5, offset: 6013},
 																	val:        "Natural/show",
 																	ignoreCase: false,
+																	want:       "\"Natural/show\"",
 																},
 															},
 															&actionExpr{
@@ -5954,6 +6290,7 @@ var g = &grammar{
 																	pos:        position{line: 230, col: 5, offset: 6060},
 																	val:        "Natural/subtract",
 																	ignoreCase: false,
+																	want:       "\"Natural/subtract\"",
 																},
 															},
 															&actionExpr{
@@ -5963,6 +6300,7 @@ var g = &grammar{
 																	pos:        position{line: 231, col: 5, offset: 6115},
 																	val:        "Integer/clamp",
 																	ignoreCase: false,
+																	want:       "\"Integer/clamp\"",
 																},
 															},
 															&actionExpr{
@@ -5972,6 +6310,7 @@ var g = &grammar{
 																	pos:        position{line: 232, col: 5, offset: 6164},
 																	val:        "Integer/negate",
 																	ignoreCase: false,
+																	want:       "\"Integer/negate\"",
 																},
 															},
 															&actionExpr{
@@ -5981,6 +6320,7 @@ var g = &grammar{
 																	pos:        position{line: 233, col: 5, offset: 6215},
 																	val:        "Integer/toDouble",
 																	ignoreCase: false,
+																	want:       "\"Integer/toDouble\"",
 																},
 															},
 															&actionExpr{
@@ -5990,6 +6330,7 @@ var g = &grammar{
 																	pos:        position{line: 234, col: 5, offset: 6270},
 																	val:        "Integer/show",
 																	ignoreCase: false,
+																	want:       "\"Integer/show\"",
 																},
 															},
 															&actionExpr{
@@ -5999,6 +6340,7 @@ var g = &grammar{
 																	pos:        position{line: 235, col: 5, offset: 6317},
 																	val:        "Double/show",
 																	ignoreCase: false,
+																	want:       "\"Double/show\"",
 																},
 															},
 															&actionExpr{
@@ -6008,6 +6350,7 @@ var g = &grammar{
 																	pos:        position{line: 236, col: 5, offset: 6362},
 																	val:        "List/build",
 																	ignoreCase: false,
+																	want:       "\"List/build\"",
 																},
 															},
 															&actionExpr{
@@ -6017,6 +6360,7 @@ var g = &grammar{
 																	pos:        position{line: 237, col: 5, offset: 6405},
 																	val:        "List/fold",
 																	ignoreCase: false,
+																	want:       "\"List/fold\"",
 																},
 															},
 															&actionExpr{
@@ -6026,6 +6370,7 @@ var g = &grammar{
 																	pos:        position{line: 238, col: 5, offset: 6446},
 																	val:        "List/length",
 																	ignoreCase: false,
+																	want:       "\"List/length\"",
 																},
 															},
 															&actionExpr{
@@ -6035,6 +6380,7 @@ var g = &grammar{
 																	pos:        position{line: 239, col: 5, offset: 6491},
 																	val:        "List/head",
 																	ignoreCase: false,
+																	want:       "\"List/head\"",
 																},
 															},
 															&actionExpr{
@@ -6044,6 +6390,7 @@ var g = &grammar{
 																	pos:        position{line: 240, col: 5, offset: 6532},
 																	val:        "List/last",
 																	ignoreCase: false,
+																	want:       "\"List/last\"",
 																},
 															},
 															&actionExpr{
@@ -6053,6 +6400,7 @@ var g = &grammar{
 																	pos:        position{line: 241, col: 5, offset: 6573},
 																	val:        "List/indexed",
 																	ignoreCase: false,
+																	want:       "\"List/indexed\"",
 																},
 															},
 															&actionExpr{
@@ -6062,6 +6410,7 @@ var g = &grammar{
 																	pos:        position{line: 242, col: 5, offset: 6620},
 																	val:        "List/reverse",
 																	ignoreCase: false,
+																	want:       "\"List/reverse\"",
 																},
 															},
 															&actionExpr{
@@ -6071,6 +6420,7 @@ var g = &grammar{
 																	pos:        position{line: 243, col: 5, offset: 6667},
 																	val:        "Optional/build",
 																	ignoreCase: false,
+																	want:       "\"Optional/build\"",
 																},
 															},
 															&actionExpr{
@@ -6080,6 +6430,7 @@ var g = &grammar{
 																	pos:        position{line: 244, col: 5, offset: 6718},
 																	val:        "Optional/fold",
 																	ignoreCase: false,
+																	want:       "\"Optional/fold\"",
 																},
 															},
 															&actionExpr{
@@ -6089,6 +6440,7 @@ var g = &grammar{
 																	pos:        position{line: 245, col: 5, offset: 6767},
 																	val:        "Text/show",
 																	ignoreCase: false,
+																	want:       "\"Text/show\"",
 																},
 															},
 															&actionExpr{
@@ -6098,6 +6450,7 @@ var g = &grammar{
 																	pos:        position{line: 246, col: 5, offset: 6808},
 																	val:        "Bool",
 																	ignoreCase: false,
+																	want:       "\"Bool\"",
 																},
 															},
 															&actionExpr{
@@ -6107,6 +6460,7 @@ var g = &grammar{
 																	pos:        position{line: 247, col: 5, offset: 6840},
 																	val:        "True",
 																	ignoreCase: false,
+																	want:       "\"True\"",
 																},
 															},
 															&actionExpr{
@@ -6116,6 +6470,7 @@ var g = &grammar{
 																	pos:        position{line: 248, col: 5, offset: 6872},
 																	val:        "False",
 																	ignoreCase: false,
+																	want:       "\"False\"",
 																},
 															},
 															&actionExpr{
@@ -6125,6 +6480,7 @@ var g = &grammar{
 																	pos:        position{line: 249, col: 5, offset: 6906},
 																	val:        "Optional",
 																	ignoreCase: false,
+																	want:       "\"Optional\"",
 																},
 															},
 															&actionExpr{
@@ -6134,6 +6490,7 @@ var g = &grammar{
 																	pos:        position{line: 250, col: 5, offset: 6946},
 																	val:        "Natural",
 																	ignoreCase: false,
+																	want:       "\"Natural\"",
 																},
 															},
 															&actionExpr{
@@ -6143,6 +6500,7 @@ var g = &grammar{
 																	pos:        position{line: 251, col: 5, offset: 6984},
 																	val:        "Integer",
 																	ignoreCase: false,
+																	want:       "\"Integer\"",
 																},
 															},
 															&actionExpr{
@@ -6152,6 +6510,7 @@ var g = &grammar{
 																	pos:        position{line: 252, col: 5, offset: 7022},
 																	val:        "Double",
 																	ignoreCase: false,
+																	want:       "\"Double\"",
 																},
 															},
 															&actionExpr{
@@ -6161,6 +6520,7 @@ var g = &grammar{
 																	pos:        position{line: 253, col: 5, offset: 7058},
 																	val:        "Text",
 																	ignoreCase: false,
+																	want:       "\"Text\"",
 																},
 															},
 															&actionExpr{
@@ -6170,6 +6530,7 @@ var g = &grammar{
 																	pos:        position{line: 254, col: 5, offset: 7090},
 																	val:        "List",
 																	ignoreCase: false,
+																	want:       "\"List\"",
 																},
 															},
 															&actionExpr{
@@ -6179,6 +6540,7 @@ var g = &grammar{
 																	pos:        position{line: 255, col: 5, offset: 7122},
 																	val:        "None",
 																	ignoreCase: false,
+																	want:       "\"None\"",
 																},
 															},
 															&actionExpr{
@@ -6188,6 +6550,7 @@ var g = &grammar{
 																	pos:        position{line: 256, col: 5, offset: 7154},
 																	val:        "Type",
 																	ignoreCase: false,
+																	want:       "\"Type\"",
 																},
 															},
 															&actionExpr{
@@ -6197,6 +6560,7 @@ var g = &grammar{
 																	pos:        position{line: 257, col: 5, offset: 7186},
 																	val:        "Kind",
 																	ignoreCase: false,
+																	want:       "\"Kind\"",
 																},
 															},
 															&actionExpr{
@@ -6206,6 +6570,7 @@ var g = &grammar{
 																	pos:        position{line: 258, col: 5, offset: 7218},
 																	val:        "Sort",
 																	ignoreCase: false,
+																	want:       "\"Sort\"",
 																},
 															},
 														},
@@ -6227,6 +6592,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 9, offset: 2803},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																		&labeledExpr{
 																			pos:   position{line: 121, col: 13, offset: 2807},
@@ -6250,6 +6616,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 31, offset: 2825},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																	},
 																},
@@ -6276,31 +6643,37 @@ var g = &grammar{
 																									pos:        position{line: 260, col: 6, offset: 7254},
 																									val:        "if",
 																									ignoreCase: false,
+																									want:       "\"if\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 261, col: 8, offset: 7268},
 																									val:        "then",
 																									ignoreCase: false,
+																									want:       "\"then\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 262, col: 8, offset: 7284},
 																									val:        "else",
 																									ignoreCase: false,
+																									want:       "\"else\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 263, col: 7, offset: 7299},
 																									val:        "let",
 																									ignoreCase: false,
+																									want:       "\"let\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 264, col: 6, offset: 7312},
 																									val:        "in",
 																									ignoreCase: false,
+																									want:       "\"in\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 266, col: 9, offset: 7339},
 																									val:        "using",
 																									ignoreCase: false,
+																									want:       "\"using\"",
 																								},
 																								&actionExpr{
 																									pos: position{line: 268, col: 11, offset: 7377},
@@ -6312,6 +6685,7 @@ var g = &grammar{
 																												pos:        position{line: 268, col: 11, offset: 7377},
 																												val:        "missing",
 																												ignoreCase: false,
+																												want:       "\"missing\"",
 																											},
 																											&notExpr{
 																												pos: position{line: 268, col: 21, offset: 7387},
@@ -6331,46 +6705,55 @@ var g = &grammar{
 																									pos:        position{line: 265, col: 6, offset: 7324},
 																									val:        "as",
 																									ignoreCase: false,
+																									want:       "\"as\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 269, col: 8, offset: 7443},
 																									val:        "True",
 																									ignoreCase: false,
+																									want:       "\"True\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 270, col: 9, offset: 7460},
 																									val:        "False",
 																									ignoreCase: false,
+																									want:       "\"False\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 271, col: 12, offset: 7481},
 																									val:        "Infinity",
 																									ignoreCase: false,
+																									want:       "\"Infinity\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 272, col: 7, offset: 7500},
 																									val:        "NaN",
 																									ignoreCase: false,
+																									want:       "\"NaN\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 267, col: 9, offset: 7357},
 																									val:        "merge",
 																									ignoreCase: false,
+																									want:       "\"merge\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 273, col: 8, offset: 7515},
 																									val:        "Some",
 																									ignoreCase: false,
+																									want:       "\"Some\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 274, col: 9, offset: 7532},
 																									val:        "toMap",
 																									ignoreCase: false,
+																									want:       "\"toMap\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 275, col: 10, offset: 7551},
 																									val:        "assert",
 																									ignoreCase: false,
+																									want:       "\"assert\"",
 																								},
 																							},
 																						},
@@ -6403,31 +6786,37 @@ var g = &grammar{
 																										pos:        position{line: 260, col: 6, offset: 7254},
 																										val:        "if",
 																										ignoreCase: false,
+																										want:       "\"if\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 261, col: 8, offset: 7268},
 																										val:        "then",
 																										ignoreCase: false,
+																										want:       "\"then\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 262, col: 8, offset: 7284},
 																										val:        "else",
 																										ignoreCase: false,
+																										want:       "\"else\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 263, col: 7, offset: 7299},
 																										val:        "let",
 																										ignoreCase: false,
+																										want:       "\"let\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 264, col: 6, offset: 7312},
 																										val:        "in",
 																										ignoreCase: false,
+																										want:       "\"in\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 266, col: 9, offset: 7339},
 																										val:        "using",
 																										ignoreCase: false,
+																										want:       "\"using\"",
 																									},
 																									&actionExpr{
 																										pos: position{line: 268, col: 11, offset: 7377},
@@ -6439,6 +6828,7 @@ var g = &grammar{
 																													pos:        position{line: 268, col: 11, offset: 7377},
 																													val:        "missing",
 																													ignoreCase: false,
+																													want:       "\"missing\"",
 																												},
 																												&notExpr{
 																													pos: position{line: 268, col: 21, offset: 7387},
@@ -6458,46 +6848,55 @@ var g = &grammar{
 																										pos:        position{line: 265, col: 6, offset: 7324},
 																										val:        "as",
 																										ignoreCase: false,
+																										want:       "\"as\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 269, col: 8, offset: 7443},
 																										val:        "True",
 																										ignoreCase: false,
+																										want:       "\"True\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 270, col: 9, offset: 7460},
 																										val:        "False",
 																										ignoreCase: false,
+																										want:       "\"False\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 271, col: 12, offset: 7481},
 																										val:        "Infinity",
 																										ignoreCase: false,
+																										want:       "\"Infinity\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 272, col: 7, offset: 7500},
 																										val:        "NaN",
 																										ignoreCase: false,
+																										want:       "\"NaN\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 267, col: 9, offset: 7357},
 																										val:        "merge",
 																										ignoreCase: false,
+																										want:       "\"merge\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 273, col: 8, offset: 7515},
 																										val:        "Some",
 																										ignoreCase: false,
+																										want:       "\"Some\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 274, col: 9, offset: 7532},
 																										val:        "toMap",
 																										ignoreCase: false,
+																										want:       "\"toMap\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 275, col: 10, offset: 7551},
 																										val:        "assert",
 																										ignoreCase: false,
+																										want:       "\"assert\"",
 																									},
 																								},
 																							},
@@ -6565,6 +6964,7 @@ var g = &grammar{
 							pos:        position{line: 490, col: 13, offset: 14024},
 							val:        "=",
 							ignoreCase: false,
+							want:       "\"=\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 490, col: 17, offset: 14028},
@@ -6613,6 +7013,7 @@ var g = &grammar{
 									pos:        position{line: 506, col: 16, offset: 14382},
 									val:        "(",
 									ignoreCase: false,
+									want:       "\"(\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 506, col: 20, offset: 14386},
@@ -6645,6 +7046,7 @@ var g = &grammar{
 																					pos:        position{line: 223, col: 5, offset: 5717},
 																					val:        "Natural/build",
 																					ignoreCase: false,
+																					want:       "\"Natural/build\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6654,6 +7056,7 @@ var g = &grammar{
 																					pos:        position{line: 224, col: 5, offset: 5766},
 																					val:        "Natural/fold",
 																					ignoreCase: false,
+																					want:       "\"Natural/fold\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6663,6 +7066,7 @@ var g = &grammar{
 																					pos:        position{line: 225, col: 5, offset: 5813},
 																					val:        "Natural/isZero",
 																					ignoreCase: false,
+																					want:       "\"Natural/isZero\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6672,6 +7076,7 @@ var g = &grammar{
 																					pos:        position{line: 226, col: 5, offset: 5864},
 																					val:        "Natural/even",
 																					ignoreCase: false,
+																					want:       "\"Natural/even\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6681,6 +7086,7 @@ var g = &grammar{
 																					pos:        position{line: 227, col: 5, offset: 5911},
 																					val:        "Natural/odd",
 																					ignoreCase: false,
+																					want:       "\"Natural/odd\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6690,6 +7096,7 @@ var g = &grammar{
 																					pos:        position{line: 228, col: 5, offset: 5956},
 																					val:        "Natural/toInteger",
 																					ignoreCase: false,
+																					want:       "\"Natural/toInteger\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6699,6 +7106,7 @@ var g = &grammar{
 																					pos:        position{line: 229, col: 5, offset: 6013},
 																					val:        "Natural/show",
 																					ignoreCase: false,
+																					want:       "\"Natural/show\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6708,6 +7116,7 @@ var g = &grammar{
 																					pos:        position{line: 230, col: 5, offset: 6060},
 																					val:        "Natural/subtract",
 																					ignoreCase: false,
+																					want:       "\"Natural/subtract\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6717,6 +7126,7 @@ var g = &grammar{
 																					pos:        position{line: 231, col: 5, offset: 6115},
 																					val:        "Integer/clamp",
 																					ignoreCase: false,
+																					want:       "\"Integer/clamp\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6726,6 +7136,7 @@ var g = &grammar{
 																					pos:        position{line: 232, col: 5, offset: 6164},
 																					val:        "Integer/negate",
 																					ignoreCase: false,
+																					want:       "\"Integer/negate\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6735,6 +7146,7 @@ var g = &grammar{
 																					pos:        position{line: 233, col: 5, offset: 6215},
 																					val:        "Integer/toDouble",
 																					ignoreCase: false,
+																					want:       "\"Integer/toDouble\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6744,6 +7156,7 @@ var g = &grammar{
 																					pos:        position{line: 234, col: 5, offset: 6270},
 																					val:        "Integer/show",
 																					ignoreCase: false,
+																					want:       "\"Integer/show\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6753,6 +7166,7 @@ var g = &grammar{
 																					pos:        position{line: 235, col: 5, offset: 6317},
 																					val:        "Double/show",
 																					ignoreCase: false,
+																					want:       "\"Double/show\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6762,6 +7176,7 @@ var g = &grammar{
 																					pos:        position{line: 236, col: 5, offset: 6362},
 																					val:        "List/build",
 																					ignoreCase: false,
+																					want:       "\"List/build\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6771,6 +7186,7 @@ var g = &grammar{
 																					pos:        position{line: 237, col: 5, offset: 6405},
 																					val:        "List/fold",
 																					ignoreCase: false,
+																					want:       "\"List/fold\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6780,6 +7196,7 @@ var g = &grammar{
 																					pos:        position{line: 238, col: 5, offset: 6446},
 																					val:        "List/length",
 																					ignoreCase: false,
+																					want:       "\"List/length\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6789,6 +7206,7 @@ var g = &grammar{
 																					pos:        position{line: 239, col: 5, offset: 6491},
 																					val:        "List/head",
 																					ignoreCase: false,
+																					want:       "\"List/head\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6798,6 +7216,7 @@ var g = &grammar{
 																					pos:        position{line: 240, col: 5, offset: 6532},
 																					val:        "List/last",
 																					ignoreCase: false,
+																					want:       "\"List/last\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6807,6 +7226,7 @@ var g = &grammar{
 																					pos:        position{line: 241, col: 5, offset: 6573},
 																					val:        "List/indexed",
 																					ignoreCase: false,
+																					want:       "\"List/indexed\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6816,6 +7236,7 @@ var g = &grammar{
 																					pos:        position{line: 242, col: 5, offset: 6620},
 																					val:        "List/reverse",
 																					ignoreCase: false,
+																					want:       "\"List/reverse\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6825,6 +7246,7 @@ var g = &grammar{
 																					pos:        position{line: 243, col: 5, offset: 6667},
 																					val:        "Optional/build",
 																					ignoreCase: false,
+																					want:       "\"Optional/build\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6834,6 +7256,7 @@ var g = &grammar{
 																					pos:        position{line: 244, col: 5, offset: 6718},
 																					val:        "Optional/fold",
 																					ignoreCase: false,
+																					want:       "\"Optional/fold\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6843,6 +7266,7 @@ var g = &grammar{
 																					pos:        position{line: 245, col: 5, offset: 6767},
 																					val:        "Text/show",
 																					ignoreCase: false,
+																					want:       "\"Text/show\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6852,6 +7276,7 @@ var g = &grammar{
 																					pos:        position{line: 246, col: 5, offset: 6808},
 																					val:        "Bool",
 																					ignoreCase: false,
+																					want:       "\"Bool\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6861,6 +7286,7 @@ var g = &grammar{
 																					pos:        position{line: 247, col: 5, offset: 6840},
 																					val:        "True",
 																					ignoreCase: false,
+																					want:       "\"True\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6870,6 +7296,7 @@ var g = &grammar{
 																					pos:        position{line: 248, col: 5, offset: 6872},
 																					val:        "False",
 																					ignoreCase: false,
+																					want:       "\"False\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6879,6 +7306,7 @@ var g = &grammar{
 																					pos:        position{line: 249, col: 5, offset: 6906},
 																					val:        "Optional",
 																					ignoreCase: false,
+																					want:       "\"Optional\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6888,6 +7316,7 @@ var g = &grammar{
 																					pos:        position{line: 250, col: 5, offset: 6946},
 																					val:        "Natural",
 																					ignoreCase: false,
+																					want:       "\"Natural\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6897,6 +7326,7 @@ var g = &grammar{
 																					pos:        position{line: 251, col: 5, offset: 6984},
 																					val:        "Integer",
 																					ignoreCase: false,
+																					want:       "\"Integer\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6906,6 +7336,7 @@ var g = &grammar{
 																					pos:        position{line: 252, col: 5, offset: 7022},
 																					val:        "Double",
 																					ignoreCase: false,
+																					want:       "\"Double\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6915,6 +7346,7 @@ var g = &grammar{
 																					pos:        position{line: 253, col: 5, offset: 7058},
 																					val:        "Text",
 																					ignoreCase: false,
+																					want:       "\"Text\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6924,6 +7356,7 @@ var g = &grammar{
 																					pos:        position{line: 254, col: 5, offset: 7090},
 																					val:        "List",
 																					ignoreCase: false,
+																					want:       "\"List\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6933,6 +7366,7 @@ var g = &grammar{
 																					pos:        position{line: 255, col: 5, offset: 7122},
 																					val:        "None",
 																					ignoreCase: false,
+																					want:       "\"None\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6942,6 +7376,7 @@ var g = &grammar{
 																					pos:        position{line: 256, col: 5, offset: 7154},
 																					val:        "Type",
 																					ignoreCase: false,
+																					want:       "\"Type\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6951,6 +7386,7 @@ var g = &grammar{
 																					pos:        position{line: 257, col: 5, offset: 7186},
 																					val:        "Kind",
 																					ignoreCase: false,
+																					want:       "\"Kind\"",
 																				},
 																			},
 																			&actionExpr{
@@ -6960,6 +7396,7 @@ var g = &grammar{
 																					pos:        position{line: 258, col: 5, offset: 7218},
 																					val:        "Sort",
 																					ignoreCase: false,
+																					want:       "\"Sort\"",
 																				},
 																			},
 																		},
@@ -6991,6 +7428,7 @@ var g = &grammar{
 																					pos:        position{line: 121, col: 9, offset: 2803},
 																					val:        "`",
 																					ignoreCase: false,
+																					want:       "\"`\"",
 																				},
 																				&labeledExpr{
 																					pos:   position{line: 121, col: 13, offset: 2807},
@@ -7014,6 +7452,7 @@ var g = &grammar{
 																					pos:        position{line: 121, col: 31, offset: 2825},
 																					val:        "`",
 																					ignoreCase: false,
+																					want:       "\"`\"",
 																				},
 																			},
 																		},
@@ -7040,31 +7479,37 @@ var g = &grammar{
 																											pos:        position{line: 260, col: 6, offset: 7254},
 																											val:        "if",
 																											ignoreCase: false,
+																											want:       "\"if\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 261, col: 8, offset: 7268},
 																											val:        "then",
 																											ignoreCase: false,
+																											want:       "\"then\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 262, col: 8, offset: 7284},
 																											val:        "else",
 																											ignoreCase: false,
+																											want:       "\"else\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 263, col: 7, offset: 7299},
 																											val:        "let",
 																											ignoreCase: false,
+																											want:       "\"let\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 264, col: 6, offset: 7312},
 																											val:        "in",
 																											ignoreCase: false,
+																											want:       "\"in\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 266, col: 9, offset: 7339},
 																											val:        "using",
 																											ignoreCase: false,
+																											want:       "\"using\"",
 																										},
 																										&actionExpr{
 																											pos: position{line: 268, col: 11, offset: 7377},
@@ -7076,6 +7521,7 @@ var g = &grammar{
 																														pos:        position{line: 268, col: 11, offset: 7377},
 																														val:        "missing",
 																														ignoreCase: false,
+																														want:       "\"missing\"",
 																													},
 																													&notExpr{
 																														pos: position{line: 268, col: 21, offset: 7387},
@@ -7095,46 +7541,55 @@ var g = &grammar{
 																											pos:        position{line: 265, col: 6, offset: 7324},
 																											val:        "as",
 																											ignoreCase: false,
+																											want:       "\"as\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 269, col: 8, offset: 7443},
 																											val:        "True",
 																											ignoreCase: false,
+																											want:       "\"True\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 270, col: 9, offset: 7460},
 																											val:        "False",
 																											ignoreCase: false,
+																											want:       "\"False\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 271, col: 12, offset: 7481},
 																											val:        "Infinity",
 																											ignoreCase: false,
+																											want:       "\"Infinity\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 272, col: 7, offset: 7500},
 																											val:        "NaN",
 																											ignoreCase: false,
+																											want:       "\"NaN\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 267, col: 9, offset: 7357},
 																											val:        "merge",
 																											ignoreCase: false,
+																											want:       "\"merge\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 273, col: 8, offset: 7515},
 																											val:        "Some",
 																											ignoreCase: false,
+																											want:       "\"Some\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 274, col: 9, offset: 7532},
 																											val:        "toMap",
 																											ignoreCase: false,
+																											want:       "\"toMap\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 275, col: 10, offset: 7551},
 																											val:        "assert",
 																											ignoreCase: false,
+																											want:       "\"assert\"",
 																										},
 																									},
 																								},
@@ -7167,31 +7622,37 @@ var g = &grammar{
 																												pos:        position{line: 260, col: 6, offset: 7254},
 																												val:        "if",
 																												ignoreCase: false,
+																												want:       "\"if\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 261, col: 8, offset: 7268},
 																												val:        "then",
 																												ignoreCase: false,
+																												want:       "\"then\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 262, col: 8, offset: 7284},
 																												val:        "else",
 																												ignoreCase: false,
+																												want:       "\"else\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 263, col: 7, offset: 7299},
 																												val:        "let",
 																												ignoreCase: false,
+																												want:       "\"let\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 264, col: 6, offset: 7312},
 																												val:        "in",
 																												ignoreCase: false,
+																												want:       "\"in\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 266, col: 9, offset: 7339},
 																												val:        "using",
 																												ignoreCase: false,
+																												want:       "\"using\"",
 																											},
 																											&actionExpr{
 																												pos: position{line: 268, col: 11, offset: 7377},
@@ -7203,6 +7664,7 @@ var g = &grammar{
 																															pos:        position{line: 268, col: 11, offset: 7377},
 																															val:        "missing",
 																															ignoreCase: false,
+																															want:       "\"missing\"",
 																														},
 																														&notExpr{
 																															pos: position{line: 268, col: 21, offset: 7387},
@@ -7222,46 +7684,55 @@ var g = &grammar{
 																												pos:        position{line: 265, col: 6, offset: 7324},
 																												val:        "as",
 																												ignoreCase: false,
+																												want:       "\"as\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 269, col: 8, offset: 7443},
 																												val:        "True",
 																												ignoreCase: false,
+																												want:       "\"True\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 270, col: 9, offset: 7460},
 																												val:        "False",
 																												ignoreCase: false,
+																												want:       "\"False\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 271, col: 12, offset: 7481},
 																												val:        "Infinity",
 																												ignoreCase: false,
+																												want:       "\"Infinity\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 272, col: 7, offset: 7500},
 																												val:        "NaN",
 																												ignoreCase: false,
+																												want:       "\"NaN\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 267, col: 9, offset: 7357},
 																												val:        "merge",
 																												ignoreCase: false,
+																												want:       "\"merge\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 273, col: 8, offset: 7515},
 																												val:        "Some",
 																												ignoreCase: false,
+																												want:       "\"Some\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 274, col: 9, offset: 7532},
 																												val:        "toMap",
 																												ignoreCase: false,
+																												want:       "\"toMap\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 275, col: 10, offset: 7551},
 																												val:        "assert",
 																												ignoreCase: false,
+																												want:       "\"assert\"",
 																											},
 																										},
 																									},
@@ -7316,6 +7787,7 @@ var g = &grammar{
 																			pos:        position{line: 223, col: 5, offset: 5717},
 																			val:        "Natural/build",
 																			ignoreCase: false,
+																			want:       "\"Natural/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7325,6 +7797,7 @@ var g = &grammar{
 																			pos:        position{line: 224, col: 5, offset: 5766},
 																			val:        "Natural/fold",
 																			ignoreCase: false,
+																			want:       "\"Natural/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7334,6 +7807,7 @@ var g = &grammar{
 																			pos:        position{line: 225, col: 5, offset: 5813},
 																			val:        "Natural/isZero",
 																			ignoreCase: false,
+																			want:       "\"Natural/isZero\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7343,6 +7817,7 @@ var g = &grammar{
 																			pos:        position{line: 226, col: 5, offset: 5864},
 																			val:        "Natural/even",
 																			ignoreCase: false,
+																			want:       "\"Natural/even\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7352,6 +7827,7 @@ var g = &grammar{
 																			pos:        position{line: 227, col: 5, offset: 5911},
 																			val:        "Natural/odd",
 																			ignoreCase: false,
+																			want:       "\"Natural/odd\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7361,6 +7837,7 @@ var g = &grammar{
 																			pos:        position{line: 228, col: 5, offset: 5956},
 																			val:        "Natural/toInteger",
 																			ignoreCase: false,
+																			want:       "\"Natural/toInteger\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7370,6 +7847,7 @@ var g = &grammar{
 																			pos:        position{line: 229, col: 5, offset: 6013},
 																			val:        "Natural/show",
 																			ignoreCase: false,
+																			want:       "\"Natural/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7379,6 +7857,7 @@ var g = &grammar{
 																			pos:        position{line: 230, col: 5, offset: 6060},
 																			val:        "Natural/subtract",
 																			ignoreCase: false,
+																			want:       "\"Natural/subtract\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7388,6 +7867,7 @@ var g = &grammar{
 																			pos:        position{line: 231, col: 5, offset: 6115},
 																			val:        "Integer/clamp",
 																			ignoreCase: false,
+																			want:       "\"Integer/clamp\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7397,6 +7877,7 @@ var g = &grammar{
 																			pos:        position{line: 232, col: 5, offset: 6164},
 																			val:        "Integer/negate",
 																			ignoreCase: false,
+																			want:       "\"Integer/negate\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7406,6 +7887,7 @@ var g = &grammar{
 																			pos:        position{line: 233, col: 5, offset: 6215},
 																			val:        "Integer/toDouble",
 																			ignoreCase: false,
+																			want:       "\"Integer/toDouble\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7415,6 +7897,7 @@ var g = &grammar{
 																			pos:        position{line: 234, col: 5, offset: 6270},
 																			val:        "Integer/show",
 																			ignoreCase: false,
+																			want:       "\"Integer/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7424,6 +7907,7 @@ var g = &grammar{
 																			pos:        position{line: 235, col: 5, offset: 6317},
 																			val:        "Double/show",
 																			ignoreCase: false,
+																			want:       "\"Double/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7433,6 +7917,7 @@ var g = &grammar{
 																			pos:        position{line: 236, col: 5, offset: 6362},
 																			val:        "List/build",
 																			ignoreCase: false,
+																			want:       "\"List/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7442,6 +7927,7 @@ var g = &grammar{
 																			pos:        position{line: 237, col: 5, offset: 6405},
 																			val:        "List/fold",
 																			ignoreCase: false,
+																			want:       "\"List/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7451,6 +7937,7 @@ var g = &grammar{
 																			pos:        position{line: 238, col: 5, offset: 6446},
 																			val:        "List/length",
 																			ignoreCase: false,
+																			want:       "\"List/length\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7460,6 +7947,7 @@ var g = &grammar{
 																			pos:        position{line: 239, col: 5, offset: 6491},
 																			val:        "List/head",
 																			ignoreCase: false,
+																			want:       "\"List/head\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7469,6 +7957,7 @@ var g = &grammar{
 																			pos:        position{line: 240, col: 5, offset: 6532},
 																			val:        "List/last",
 																			ignoreCase: false,
+																			want:       "\"List/last\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7478,6 +7967,7 @@ var g = &grammar{
 																			pos:        position{line: 241, col: 5, offset: 6573},
 																			val:        "List/indexed",
 																			ignoreCase: false,
+																			want:       "\"List/indexed\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7487,6 +7977,7 @@ var g = &grammar{
 																			pos:        position{line: 242, col: 5, offset: 6620},
 																			val:        "List/reverse",
 																			ignoreCase: false,
+																			want:       "\"List/reverse\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7496,6 +7987,7 @@ var g = &grammar{
 																			pos:        position{line: 243, col: 5, offset: 6667},
 																			val:        "Optional/build",
 																			ignoreCase: false,
+																			want:       "\"Optional/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7505,6 +7997,7 @@ var g = &grammar{
 																			pos:        position{line: 244, col: 5, offset: 6718},
 																			val:        "Optional/fold",
 																			ignoreCase: false,
+																			want:       "\"Optional/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7514,6 +8007,7 @@ var g = &grammar{
 																			pos:        position{line: 245, col: 5, offset: 6767},
 																			val:        "Text/show",
 																			ignoreCase: false,
+																			want:       "\"Text/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7523,6 +8017,7 @@ var g = &grammar{
 																			pos:        position{line: 246, col: 5, offset: 6808},
 																			val:        "Bool",
 																			ignoreCase: false,
+																			want:       "\"Bool\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7532,6 +8027,7 @@ var g = &grammar{
 																			pos:        position{line: 247, col: 5, offset: 6840},
 																			val:        "True",
 																			ignoreCase: false,
+																			want:       "\"True\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7541,6 +8037,7 @@ var g = &grammar{
 																			pos:        position{line: 248, col: 5, offset: 6872},
 																			val:        "False",
 																			ignoreCase: false,
+																			want:       "\"False\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7550,6 +8047,7 @@ var g = &grammar{
 																			pos:        position{line: 249, col: 5, offset: 6906},
 																			val:        "Optional",
 																			ignoreCase: false,
+																			want:       "\"Optional\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7559,6 +8057,7 @@ var g = &grammar{
 																			pos:        position{line: 250, col: 5, offset: 6946},
 																			val:        "Natural",
 																			ignoreCase: false,
+																			want:       "\"Natural\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7568,6 +8067,7 @@ var g = &grammar{
 																			pos:        position{line: 251, col: 5, offset: 6984},
 																			val:        "Integer",
 																			ignoreCase: false,
+																			want:       "\"Integer\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7577,6 +8077,7 @@ var g = &grammar{
 																			pos:        position{line: 252, col: 5, offset: 7022},
 																			val:        "Double",
 																			ignoreCase: false,
+																			want:       "\"Double\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7586,6 +8087,7 @@ var g = &grammar{
 																			pos:        position{line: 253, col: 5, offset: 7058},
 																			val:        "Text",
 																			ignoreCase: false,
+																			want:       "\"Text\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7595,6 +8097,7 @@ var g = &grammar{
 																			pos:        position{line: 254, col: 5, offset: 7090},
 																			val:        "List",
 																			ignoreCase: false,
+																			want:       "\"List\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7604,6 +8107,7 @@ var g = &grammar{
 																			pos:        position{line: 255, col: 5, offset: 7122},
 																			val:        "None",
 																			ignoreCase: false,
+																			want:       "\"None\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7613,6 +8117,7 @@ var g = &grammar{
 																			pos:        position{line: 256, col: 5, offset: 7154},
 																			val:        "Type",
 																			ignoreCase: false,
+																			want:       "\"Type\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7622,6 +8127,7 @@ var g = &grammar{
 																			pos:        position{line: 257, col: 5, offset: 7186},
 																			val:        "Kind",
 																			ignoreCase: false,
+																			want:       "\"Kind\"",
 																		},
 																	},
 																	&actionExpr{
@@ -7631,6 +8137,7 @@ var g = &grammar{
 																			pos:        position{line: 258, col: 5, offset: 7218},
 																			val:        "Sort",
 																			ignoreCase: false,
+																			want:       "\"Sort\"",
 																		},
 																	},
 																},
@@ -7652,6 +8159,7 @@ var g = &grammar{
 																					pos:        position{line: 121, col: 9, offset: 2803},
 																					val:        "`",
 																					ignoreCase: false,
+																					want:       "\"`\"",
 																				},
 																				&labeledExpr{
 																					pos:   position{line: 121, col: 13, offset: 2807},
@@ -7675,6 +8183,7 @@ var g = &grammar{
 																					pos:        position{line: 121, col: 31, offset: 2825},
 																					val:        "`",
 																					ignoreCase: false,
+																					want:       "\"`\"",
 																				},
 																			},
 																		},
@@ -7701,31 +8210,37 @@ var g = &grammar{
 																											pos:        position{line: 260, col: 6, offset: 7254},
 																											val:        "if",
 																											ignoreCase: false,
+																											want:       "\"if\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 261, col: 8, offset: 7268},
 																											val:        "then",
 																											ignoreCase: false,
+																											want:       "\"then\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 262, col: 8, offset: 7284},
 																											val:        "else",
 																											ignoreCase: false,
+																											want:       "\"else\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 263, col: 7, offset: 7299},
 																											val:        "let",
 																											ignoreCase: false,
+																											want:       "\"let\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 264, col: 6, offset: 7312},
 																											val:        "in",
 																											ignoreCase: false,
+																											want:       "\"in\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 266, col: 9, offset: 7339},
 																											val:        "using",
 																											ignoreCase: false,
+																											want:       "\"using\"",
 																										},
 																										&actionExpr{
 																											pos: position{line: 268, col: 11, offset: 7377},
@@ -7737,6 +8252,7 @@ var g = &grammar{
 																														pos:        position{line: 268, col: 11, offset: 7377},
 																														val:        "missing",
 																														ignoreCase: false,
+																														want:       "\"missing\"",
 																													},
 																													&notExpr{
 																														pos: position{line: 268, col: 21, offset: 7387},
@@ -7756,46 +8272,55 @@ var g = &grammar{
 																											pos:        position{line: 265, col: 6, offset: 7324},
 																											val:        "as",
 																											ignoreCase: false,
+																											want:       "\"as\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 269, col: 8, offset: 7443},
 																											val:        "True",
 																											ignoreCase: false,
+																											want:       "\"True\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 270, col: 9, offset: 7460},
 																											val:        "False",
 																											ignoreCase: false,
+																											want:       "\"False\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 271, col: 12, offset: 7481},
 																											val:        "Infinity",
 																											ignoreCase: false,
+																											want:       "\"Infinity\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 272, col: 7, offset: 7500},
 																											val:        "NaN",
 																											ignoreCase: false,
+																											want:       "\"NaN\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 267, col: 9, offset: 7357},
 																											val:        "merge",
 																											ignoreCase: false,
+																											want:       "\"merge\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 273, col: 8, offset: 7515},
 																											val:        "Some",
 																											ignoreCase: false,
+																											want:       "\"Some\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 274, col: 9, offset: 7532},
 																											val:        "toMap",
 																											ignoreCase: false,
+																											want:       "\"toMap\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 275, col: 10, offset: 7551},
 																											val:        "assert",
 																											ignoreCase: false,
+																											want:       "\"assert\"",
 																										},
 																									},
 																								},
@@ -7828,31 +8353,37 @@ var g = &grammar{
 																												pos:        position{line: 260, col: 6, offset: 7254},
 																												val:        "if",
 																												ignoreCase: false,
+																												want:       "\"if\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 261, col: 8, offset: 7268},
 																												val:        "then",
 																												ignoreCase: false,
+																												want:       "\"then\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 262, col: 8, offset: 7284},
 																												val:        "else",
 																												ignoreCase: false,
+																												want:       "\"else\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 263, col: 7, offset: 7299},
 																												val:        "let",
 																												ignoreCase: false,
+																												want:       "\"let\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 264, col: 6, offset: 7312},
 																												val:        "in",
 																												ignoreCase: false,
+																												want:       "\"in\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 266, col: 9, offset: 7339},
 																												val:        "using",
 																												ignoreCase: false,
+																												want:       "\"using\"",
 																											},
 																											&actionExpr{
 																												pos: position{line: 268, col: 11, offset: 7377},
@@ -7864,6 +8395,7 @@ var g = &grammar{
 																															pos:        position{line: 268, col: 11, offset: 7377},
 																															val:        "missing",
 																															ignoreCase: false,
+																															want:       "\"missing\"",
 																														},
 																														&notExpr{
 																															pos: position{line: 268, col: 21, offset: 7387},
@@ -7883,46 +8415,55 @@ var g = &grammar{
 																												pos:        position{line: 265, col: 6, offset: 7324},
 																												val:        "as",
 																												ignoreCase: false,
+																												want:       "\"as\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 269, col: 8, offset: 7443},
 																												val:        "True",
 																												ignoreCase: false,
+																												want:       "\"True\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 270, col: 9, offset: 7460},
 																												val:        "False",
 																												ignoreCase: false,
+																												want:       "\"False\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 271, col: 12, offset: 7481},
 																												val:        "Infinity",
 																												ignoreCase: false,
+																												want:       "\"Infinity\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 272, col: 7, offset: 7500},
 																												val:        "NaN",
 																												ignoreCase: false,
+																												want:       "\"NaN\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 267, col: 9, offset: 7357},
 																												val:        "merge",
 																												ignoreCase: false,
+																												want:       "\"merge\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 273, col: 8, offset: 7515},
 																												val:        "Some",
 																												ignoreCase: false,
+																												want:       "\"Some\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 274, col: 9, offset: 7532},
 																												val:        "toMap",
 																												ignoreCase: false,
+																												want:       "\"toMap\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 275, col: 10, offset: 7551},
 																												val:        "assert",
 																												ignoreCase: false,
+																												want:       "\"assert\"",
 																											},
 																										},
 																									},
@@ -7970,6 +8511,7 @@ var g = &grammar{
 									pos:        position{line: 506, col: 47, offset: 14413},
 									val:        ":",
 									ignoreCase: false,
+									want:       "\":\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 506, col: 51, offset: 14417},
@@ -7991,6 +8533,7 @@ var g = &grammar{
 									pos:        position{line: 506, col: 69, offset: 14435},
 									val:        ")",
 									ignoreCase: false,
+									want:       "\")\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 506, col: 73, offset: 14439},
@@ -8003,11 +8546,13 @@ var g = &grammar{
 											pos:        position{line: 297, col: 9, offset: 7960},
 											val:        "->",
 											ignoreCase: false,
+											want:       "\"->\"",
 										},
 										&litMatcher{
 											pos:        position{line: 297, col: 16, offset: 7967},
 											val:        "→",
 											ignoreCase: false,
+											want:       "\"→\"",
 										},
 									},
 								},
@@ -8036,6 +8581,7 @@ var g = &grammar{
 									pos:        position{line: 260, col: 6, offset: 7254},
 									val:        "if",
 									ignoreCase: false,
+									want:       "\"if\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 509, col: 10, offset: 14569},
@@ -8057,6 +8603,7 @@ var g = &grammar{
 									pos:        position{line: 261, col: 8, offset: 7268},
 									val:        "then",
 									ignoreCase: false,
+									want:       "\"then\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 509, col: 36, offset: 14595},
@@ -8078,6 +8625,7 @@ var g = &grammar{
 									pos:        position{line: 262, col: 8, offset: 7284},
 									val:        "else",
 									ignoreCase: false,
+									want:       "\"else\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 509, col: 59, offset: 14618},
@@ -8115,6 +8663,7 @@ var g = &grammar{
 									pos:        position{line: 264, col: 6, offset: 7312},
 									val:        "in",
 									ignoreCase: false,
+									want:       "\"in\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 512, col: 31, offset: 14729},
@@ -8144,11 +8693,13 @@ var g = &grammar{
 											pos:        position{line: 296, col: 10, offset: 7933},
 											val:        "forall",
 											ignoreCase: false,
+											want:       "\"forall\"",
 										},
 										&litMatcher{
 											pos:        position{line: 296, col: 21, offset: 7944},
 											val:        "∀",
 											ignoreCase: false,
+											want:       "\"∀\"",
 										},
 									},
 								},
@@ -8160,6 +8711,7 @@ var g = &grammar{
 									pos:        position{line: 519, col: 16, offset: 14982},
 									val:        "(",
 									ignoreCase: false,
+									want:       "\"(\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 519, col: 20, offset: 14986},
@@ -8192,6 +8744,7 @@ var g = &grammar{
 																					pos:        position{line: 223, col: 5, offset: 5717},
 																					val:        "Natural/build",
 																					ignoreCase: false,
+																					want:       "\"Natural/build\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8201,6 +8754,7 @@ var g = &grammar{
 																					pos:        position{line: 224, col: 5, offset: 5766},
 																					val:        "Natural/fold",
 																					ignoreCase: false,
+																					want:       "\"Natural/fold\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8210,6 +8764,7 @@ var g = &grammar{
 																					pos:        position{line: 225, col: 5, offset: 5813},
 																					val:        "Natural/isZero",
 																					ignoreCase: false,
+																					want:       "\"Natural/isZero\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8219,6 +8774,7 @@ var g = &grammar{
 																					pos:        position{line: 226, col: 5, offset: 5864},
 																					val:        "Natural/even",
 																					ignoreCase: false,
+																					want:       "\"Natural/even\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8228,6 +8784,7 @@ var g = &grammar{
 																					pos:        position{line: 227, col: 5, offset: 5911},
 																					val:        "Natural/odd",
 																					ignoreCase: false,
+																					want:       "\"Natural/odd\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8237,6 +8794,7 @@ var g = &grammar{
 																					pos:        position{line: 228, col: 5, offset: 5956},
 																					val:        "Natural/toInteger",
 																					ignoreCase: false,
+																					want:       "\"Natural/toInteger\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8246,6 +8804,7 @@ var g = &grammar{
 																					pos:        position{line: 229, col: 5, offset: 6013},
 																					val:        "Natural/show",
 																					ignoreCase: false,
+																					want:       "\"Natural/show\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8255,6 +8814,7 @@ var g = &grammar{
 																					pos:        position{line: 230, col: 5, offset: 6060},
 																					val:        "Natural/subtract",
 																					ignoreCase: false,
+																					want:       "\"Natural/subtract\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8264,6 +8824,7 @@ var g = &grammar{
 																					pos:        position{line: 231, col: 5, offset: 6115},
 																					val:        "Integer/clamp",
 																					ignoreCase: false,
+																					want:       "\"Integer/clamp\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8273,6 +8834,7 @@ var g = &grammar{
 																					pos:        position{line: 232, col: 5, offset: 6164},
 																					val:        "Integer/negate",
 																					ignoreCase: false,
+																					want:       "\"Integer/negate\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8282,6 +8844,7 @@ var g = &grammar{
 																					pos:        position{line: 233, col: 5, offset: 6215},
 																					val:        "Integer/toDouble",
 																					ignoreCase: false,
+																					want:       "\"Integer/toDouble\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8291,6 +8854,7 @@ var g = &grammar{
 																					pos:        position{line: 234, col: 5, offset: 6270},
 																					val:        "Integer/show",
 																					ignoreCase: false,
+																					want:       "\"Integer/show\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8300,6 +8864,7 @@ var g = &grammar{
 																					pos:        position{line: 235, col: 5, offset: 6317},
 																					val:        "Double/show",
 																					ignoreCase: false,
+																					want:       "\"Double/show\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8309,6 +8874,7 @@ var g = &grammar{
 																					pos:        position{line: 236, col: 5, offset: 6362},
 																					val:        "List/build",
 																					ignoreCase: false,
+																					want:       "\"List/build\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8318,6 +8884,7 @@ var g = &grammar{
 																					pos:        position{line: 237, col: 5, offset: 6405},
 																					val:        "List/fold",
 																					ignoreCase: false,
+																					want:       "\"List/fold\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8327,6 +8894,7 @@ var g = &grammar{
 																					pos:        position{line: 238, col: 5, offset: 6446},
 																					val:        "List/length",
 																					ignoreCase: false,
+																					want:       "\"List/length\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8336,6 +8904,7 @@ var g = &grammar{
 																					pos:        position{line: 239, col: 5, offset: 6491},
 																					val:        "List/head",
 																					ignoreCase: false,
+																					want:       "\"List/head\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8345,6 +8914,7 @@ var g = &grammar{
 																					pos:        position{line: 240, col: 5, offset: 6532},
 																					val:        "List/last",
 																					ignoreCase: false,
+																					want:       "\"List/last\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8354,6 +8924,7 @@ var g = &grammar{
 																					pos:        position{line: 241, col: 5, offset: 6573},
 																					val:        "List/indexed",
 																					ignoreCase: false,
+																					want:       "\"List/indexed\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8363,6 +8934,7 @@ var g = &grammar{
 																					pos:        position{line: 242, col: 5, offset: 6620},
 																					val:        "List/reverse",
 																					ignoreCase: false,
+																					want:       "\"List/reverse\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8372,6 +8944,7 @@ var g = &grammar{
 																					pos:        position{line: 243, col: 5, offset: 6667},
 																					val:        "Optional/build",
 																					ignoreCase: false,
+																					want:       "\"Optional/build\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8381,6 +8954,7 @@ var g = &grammar{
 																					pos:        position{line: 244, col: 5, offset: 6718},
 																					val:        "Optional/fold",
 																					ignoreCase: false,
+																					want:       "\"Optional/fold\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8390,6 +8964,7 @@ var g = &grammar{
 																					pos:        position{line: 245, col: 5, offset: 6767},
 																					val:        "Text/show",
 																					ignoreCase: false,
+																					want:       "\"Text/show\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8399,6 +8974,7 @@ var g = &grammar{
 																					pos:        position{line: 246, col: 5, offset: 6808},
 																					val:        "Bool",
 																					ignoreCase: false,
+																					want:       "\"Bool\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8408,6 +8984,7 @@ var g = &grammar{
 																					pos:        position{line: 247, col: 5, offset: 6840},
 																					val:        "True",
 																					ignoreCase: false,
+																					want:       "\"True\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8417,6 +8994,7 @@ var g = &grammar{
 																					pos:        position{line: 248, col: 5, offset: 6872},
 																					val:        "False",
 																					ignoreCase: false,
+																					want:       "\"False\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8426,6 +9004,7 @@ var g = &grammar{
 																					pos:        position{line: 249, col: 5, offset: 6906},
 																					val:        "Optional",
 																					ignoreCase: false,
+																					want:       "\"Optional\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8435,6 +9014,7 @@ var g = &grammar{
 																					pos:        position{line: 250, col: 5, offset: 6946},
 																					val:        "Natural",
 																					ignoreCase: false,
+																					want:       "\"Natural\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8444,6 +9024,7 @@ var g = &grammar{
 																					pos:        position{line: 251, col: 5, offset: 6984},
 																					val:        "Integer",
 																					ignoreCase: false,
+																					want:       "\"Integer\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8453,6 +9034,7 @@ var g = &grammar{
 																					pos:        position{line: 252, col: 5, offset: 7022},
 																					val:        "Double",
 																					ignoreCase: false,
+																					want:       "\"Double\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8462,6 +9044,7 @@ var g = &grammar{
 																					pos:        position{line: 253, col: 5, offset: 7058},
 																					val:        "Text",
 																					ignoreCase: false,
+																					want:       "\"Text\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8471,6 +9054,7 @@ var g = &grammar{
 																					pos:        position{line: 254, col: 5, offset: 7090},
 																					val:        "List",
 																					ignoreCase: false,
+																					want:       "\"List\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8480,6 +9064,7 @@ var g = &grammar{
 																					pos:        position{line: 255, col: 5, offset: 7122},
 																					val:        "None",
 																					ignoreCase: false,
+																					want:       "\"None\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8489,6 +9074,7 @@ var g = &grammar{
 																					pos:        position{line: 256, col: 5, offset: 7154},
 																					val:        "Type",
 																					ignoreCase: false,
+																					want:       "\"Type\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8498,6 +9084,7 @@ var g = &grammar{
 																					pos:        position{line: 257, col: 5, offset: 7186},
 																					val:        "Kind",
 																					ignoreCase: false,
+																					want:       "\"Kind\"",
 																				},
 																			},
 																			&actionExpr{
@@ -8507,6 +9094,7 @@ var g = &grammar{
 																					pos:        position{line: 258, col: 5, offset: 7218},
 																					val:        "Sort",
 																					ignoreCase: false,
+																					want:       "\"Sort\"",
 																				},
 																			},
 																		},
@@ -8538,6 +9126,7 @@ var g = &grammar{
 																					pos:        position{line: 121, col: 9, offset: 2803},
 																					val:        "`",
 																					ignoreCase: false,
+																					want:       "\"`\"",
 																				},
 																				&labeledExpr{
 																					pos:   position{line: 121, col: 13, offset: 2807},
@@ -8561,6 +9150,7 @@ var g = &grammar{
 																					pos:        position{line: 121, col: 31, offset: 2825},
 																					val:        "`",
 																					ignoreCase: false,
+																					want:       "\"`\"",
 																				},
 																			},
 																		},
@@ -8587,31 +9177,37 @@ var g = &grammar{
 																											pos:        position{line: 260, col: 6, offset: 7254},
 																											val:        "if",
 																											ignoreCase: false,
+																											want:       "\"if\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 261, col: 8, offset: 7268},
 																											val:        "then",
 																											ignoreCase: false,
+																											want:       "\"then\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 262, col: 8, offset: 7284},
 																											val:        "else",
 																											ignoreCase: false,
+																											want:       "\"else\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 263, col: 7, offset: 7299},
 																											val:        "let",
 																											ignoreCase: false,
+																											want:       "\"let\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 264, col: 6, offset: 7312},
 																											val:        "in",
 																											ignoreCase: false,
+																											want:       "\"in\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 266, col: 9, offset: 7339},
 																											val:        "using",
 																											ignoreCase: false,
+																											want:       "\"using\"",
 																										},
 																										&actionExpr{
 																											pos: position{line: 268, col: 11, offset: 7377},
@@ -8623,6 +9219,7 @@ var g = &grammar{
 																														pos:        position{line: 268, col: 11, offset: 7377},
 																														val:        "missing",
 																														ignoreCase: false,
+																														want:       "\"missing\"",
 																													},
 																													&notExpr{
 																														pos: position{line: 268, col: 21, offset: 7387},
@@ -8642,46 +9239,55 @@ var g = &grammar{
 																											pos:        position{line: 265, col: 6, offset: 7324},
 																											val:        "as",
 																											ignoreCase: false,
+																											want:       "\"as\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 269, col: 8, offset: 7443},
 																											val:        "True",
 																											ignoreCase: false,
+																											want:       "\"True\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 270, col: 9, offset: 7460},
 																											val:        "False",
 																											ignoreCase: false,
+																											want:       "\"False\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 271, col: 12, offset: 7481},
 																											val:        "Infinity",
 																											ignoreCase: false,
+																											want:       "\"Infinity\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 272, col: 7, offset: 7500},
 																											val:        "NaN",
 																											ignoreCase: false,
+																											want:       "\"NaN\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 267, col: 9, offset: 7357},
 																											val:        "merge",
 																											ignoreCase: false,
+																											want:       "\"merge\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 273, col: 8, offset: 7515},
 																											val:        "Some",
 																											ignoreCase: false,
+																											want:       "\"Some\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 274, col: 9, offset: 7532},
 																											val:        "toMap",
 																											ignoreCase: false,
+																											want:       "\"toMap\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 275, col: 10, offset: 7551},
 																											val:        "assert",
 																											ignoreCase: false,
+																											want:       "\"assert\"",
 																										},
 																									},
 																								},
@@ -8714,31 +9320,37 @@ var g = &grammar{
 																												pos:        position{line: 260, col: 6, offset: 7254},
 																												val:        "if",
 																												ignoreCase: false,
+																												want:       "\"if\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 261, col: 8, offset: 7268},
 																												val:        "then",
 																												ignoreCase: false,
+																												want:       "\"then\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 262, col: 8, offset: 7284},
 																												val:        "else",
 																												ignoreCase: false,
+																												want:       "\"else\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 263, col: 7, offset: 7299},
 																												val:        "let",
 																												ignoreCase: false,
+																												want:       "\"let\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 264, col: 6, offset: 7312},
 																												val:        "in",
 																												ignoreCase: false,
+																												want:       "\"in\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 266, col: 9, offset: 7339},
 																												val:        "using",
 																												ignoreCase: false,
+																												want:       "\"using\"",
 																											},
 																											&actionExpr{
 																												pos: position{line: 268, col: 11, offset: 7377},
@@ -8750,6 +9362,7 @@ var g = &grammar{
 																															pos:        position{line: 268, col: 11, offset: 7377},
 																															val:        "missing",
 																															ignoreCase: false,
+																															want:       "\"missing\"",
 																														},
 																														&notExpr{
 																															pos: position{line: 268, col: 21, offset: 7387},
@@ -8769,46 +9382,55 @@ var g = &grammar{
 																												pos:        position{line: 265, col: 6, offset: 7324},
 																												val:        "as",
 																												ignoreCase: false,
+																												want:       "\"as\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 269, col: 8, offset: 7443},
 																												val:        "True",
 																												ignoreCase: false,
+																												want:       "\"True\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 270, col: 9, offset: 7460},
 																												val:        "False",
 																												ignoreCase: false,
+																												want:       "\"False\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 271, col: 12, offset: 7481},
 																												val:        "Infinity",
 																												ignoreCase: false,
+																												want:       "\"Infinity\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 272, col: 7, offset: 7500},
 																												val:        "NaN",
 																												ignoreCase: false,
+																												want:       "\"NaN\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 267, col: 9, offset: 7357},
 																												val:        "merge",
 																												ignoreCase: false,
+																												want:       "\"merge\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 273, col: 8, offset: 7515},
 																												val:        "Some",
 																												ignoreCase: false,
+																												want:       "\"Some\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 274, col: 9, offset: 7532},
 																												val:        "toMap",
 																												ignoreCase: false,
+																												want:       "\"toMap\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 275, col: 10, offset: 7551},
 																												val:        "assert",
 																												ignoreCase: false,
+																												want:       "\"assert\"",
 																											},
 																										},
 																									},
@@ -8863,6 +9485,7 @@ var g = &grammar{
 																			pos:        position{line: 223, col: 5, offset: 5717},
 																			val:        "Natural/build",
 																			ignoreCase: false,
+																			want:       "\"Natural/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8872,6 +9495,7 @@ var g = &grammar{
 																			pos:        position{line: 224, col: 5, offset: 5766},
 																			val:        "Natural/fold",
 																			ignoreCase: false,
+																			want:       "\"Natural/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8881,6 +9505,7 @@ var g = &grammar{
 																			pos:        position{line: 225, col: 5, offset: 5813},
 																			val:        "Natural/isZero",
 																			ignoreCase: false,
+																			want:       "\"Natural/isZero\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8890,6 +9515,7 @@ var g = &grammar{
 																			pos:        position{line: 226, col: 5, offset: 5864},
 																			val:        "Natural/even",
 																			ignoreCase: false,
+																			want:       "\"Natural/even\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8899,6 +9525,7 @@ var g = &grammar{
 																			pos:        position{line: 227, col: 5, offset: 5911},
 																			val:        "Natural/odd",
 																			ignoreCase: false,
+																			want:       "\"Natural/odd\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8908,6 +9535,7 @@ var g = &grammar{
 																			pos:        position{line: 228, col: 5, offset: 5956},
 																			val:        "Natural/toInteger",
 																			ignoreCase: false,
+																			want:       "\"Natural/toInteger\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8917,6 +9545,7 @@ var g = &grammar{
 																			pos:        position{line: 229, col: 5, offset: 6013},
 																			val:        "Natural/show",
 																			ignoreCase: false,
+																			want:       "\"Natural/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8926,6 +9555,7 @@ var g = &grammar{
 																			pos:        position{line: 230, col: 5, offset: 6060},
 																			val:        "Natural/subtract",
 																			ignoreCase: false,
+																			want:       "\"Natural/subtract\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8935,6 +9565,7 @@ var g = &grammar{
 																			pos:        position{line: 231, col: 5, offset: 6115},
 																			val:        "Integer/clamp",
 																			ignoreCase: false,
+																			want:       "\"Integer/clamp\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8944,6 +9575,7 @@ var g = &grammar{
 																			pos:        position{line: 232, col: 5, offset: 6164},
 																			val:        "Integer/negate",
 																			ignoreCase: false,
+																			want:       "\"Integer/negate\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8953,6 +9585,7 @@ var g = &grammar{
 																			pos:        position{line: 233, col: 5, offset: 6215},
 																			val:        "Integer/toDouble",
 																			ignoreCase: false,
+																			want:       "\"Integer/toDouble\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8962,6 +9595,7 @@ var g = &grammar{
 																			pos:        position{line: 234, col: 5, offset: 6270},
 																			val:        "Integer/show",
 																			ignoreCase: false,
+																			want:       "\"Integer/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8971,6 +9605,7 @@ var g = &grammar{
 																			pos:        position{line: 235, col: 5, offset: 6317},
 																			val:        "Double/show",
 																			ignoreCase: false,
+																			want:       "\"Double/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8980,6 +9615,7 @@ var g = &grammar{
 																			pos:        position{line: 236, col: 5, offset: 6362},
 																			val:        "List/build",
 																			ignoreCase: false,
+																			want:       "\"List/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8989,6 +9625,7 @@ var g = &grammar{
 																			pos:        position{line: 237, col: 5, offset: 6405},
 																			val:        "List/fold",
 																			ignoreCase: false,
+																			want:       "\"List/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -8998,6 +9635,7 @@ var g = &grammar{
 																			pos:        position{line: 238, col: 5, offset: 6446},
 																			val:        "List/length",
 																			ignoreCase: false,
+																			want:       "\"List/length\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9007,6 +9645,7 @@ var g = &grammar{
 																			pos:        position{line: 239, col: 5, offset: 6491},
 																			val:        "List/head",
 																			ignoreCase: false,
+																			want:       "\"List/head\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9016,6 +9655,7 @@ var g = &grammar{
 																			pos:        position{line: 240, col: 5, offset: 6532},
 																			val:        "List/last",
 																			ignoreCase: false,
+																			want:       "\"List/last\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9025,6 +9665,7 @@ var g = &grammar{
 																			pos:        position{line: 241, col: 5, offset: 6573},
 																			val:        "List/indexed",
 																			ignoreCase: false,
+																			want:       "\"List/indexed\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9034,6 +9675,7 @@ var g = &grammar{
 																			pos:        position{line: 242, col: 5, offset: 6620},
 																			val:        "List/reverse",
 																			ignoreCase: false,
+																			want:       "\"List/reverse\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9043,6 +9685,7 @@ var g = &grammar{
 																			pos:        position{line: 243, col: 5, offset: 6667},
 																			val:        "Optional/build",
 																			ignoreCase: false,
+																			want:       "\"Optional/build\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9052,6 +9695,7 @@ var g = &grammar{
 																			pos:        position{line: 244, col: 5, offset: 6718},
 																			val:        "Optional/fold",
 																			ignoreCase: false,
+																			want:       "\"Optional/fold\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9061,6 +9705,7 @@ var g = &grammar{
 																			pos:        position{line: 245, col: 5, offset: 6767},
 																			val:        "Text/show",
 																			ignoreCase: false,
+																			want:       "\"Text/show\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9070,6 +9715,7 @@ var g = &grammar{
 																			pos:        position{line: 246, col: 5, offset: 6808},
 																			val:        "Bool",
 																			ignoreCase: false,
+																			want:       "\"Bool\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9079,6 +9725,7 @@ var g = &grammar{
 																			pos:        position{line: 247, col: 5, offset: 6840},
 																			val:        "True",
 																			ignoreCase: false,
+																			want:       "\"True\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9088,6 +9735,7 @@ var g = &grammar{
 																			pos:        position{line: 248, col: 5, offset: 6872},
 																			val:        "False",
 																			ignoreCase: false,
+																			want:       "\"False\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9097,6 +9745,7 @@ var g = &grammar{
 																			pos:        position{line: 249, col: 5, offset: 6906},
 																			val:        "Optional",
 																			ignoreCase: false,
+																			want:       "\"Optional\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9106,6 +9755,7 @@ var g = &grammar{
 																			pos:        position{line: 250, col: 5, offset: 6946},
 																			val:        "Natural",
 																			ignoreCase: false,
+																			want:       "\"Natural\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9115,6 +9765,7 @@ var g = &grammar{
 																			pos:        position{line: 251, col: 5, offset: 6984},
 																			val:        "Integer",
 																			ignoreCase: false,
+																			want:       "\"Integer\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9124,6 +9775,7 @@ var g = &grammar{
 																			pos:        position{line: 252, col: 5, offset: 7022},
 																			val:        "Double",
 																			ignoreCase: false,
+																			want:       "\"Double\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9133,6 +9785,7 @@ var g = &grammar{
 																			pos:        position{line: 253, col: 5, offset: 7058},
 																			val:        "Text",
 																			ignoreCase: false,
+																			want:       "\"Text\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9142,6 +9795,7 @@ var g = &grammar{
 																			pos:        position{line: 254, col: 5, offset: 7090},
 																			val:        "List",
 																			ignoreCase: false,
+																			want:       "\"List\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9151,6 +9805,7 @@ var g = &grammar{
 																			pos:        position{line: 255, col: 5, offset: 7122},
 																			val:        "None",
 																			ignoreCase: false,
+																			want:       "\"None\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9160,6 +9815,7 @@ var g = &grammar{
 																			pos:        position{line: 256, col: 5, offset: 7154},
 																			val:        "Type",
 																			ignoreCase: false,
+																			want:       "\"Type\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9169,6 +9825,7 @@ var g = &grammar{
 																			pos:        position{line: 257, col: 5, offset: 7186},
 																			val:        "Kind",
 																			ignoreCase: false,
+																			want:       "\"Kind\"",
 																		},
 																	},
 																	&actionExpr{
@@ -9178,6 +9835,7 @@ var g = &grammar{
 																			pos:        position{line: 258, col: 5, offset: 7218},
 																			val:        "Sort",
 																			ignoreCase: false,
+																			want:       "\"Sort\"",
 																		},
 																	},
 																},
@@ -9199,6 +9857,7 @@ var g = &grammar{
 																					pos:        position{line: 121, col: 9, offset: 2803},
 																					val:        "`",
 																					ignoreCase: false,
+																					want:       "\"`\"",
 																				},
 																				&labeledExpr{
 																					pos:   position{line: 121, col: 13, offset: 2807},
@@ -9222,6 +9881,7 @@ var g = &grammar{
 																					pos:        position{line: 121, col: 31, offset: 2825},
 																					val:        "`",
 																					ignoreCase: false,
+																					want:       "\"`\"",
 																				},
 																			},
 																		},
@@ -9248,31 +9908,37 @@ var g = &grammar{
 																											pos:        position{line: 260, col: 6, offset: 7254},
 																											val:        "if",
 																											ignoreCase: false,
+																											want:       "\"if\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 261, col: 8, offset: 7268},
 																											val:        "then",
 																											ignoreCase: false,
+																											want:       "\"then\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 262, col: 8, offset: 7284},
 																											val:        "else",
 																											ignoreCase: false,
+																											want:       "\"else\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 263, col: 7, offset: 7299},
 																											val:        "let",
 																											ignoreCase: false,
+																											want:       "\"let\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 264, col: 6, offset: 7312},
 																											val:        "in",
 																											ignoreCase: false,
+																											want:       "\"in\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 266, col: 9, offset: 7339},
 																											val:        "using",
 																											ignoreCase: false,
+																											want:       "\"using\"",
 																										},
 																										&actionExpr{
 																											pos: position{line: 268, col: 11, offset: 7377},
@@ -9284,6 +9950,7 @@ var g = &grammar{
 																														pos:        position{line: 268, col: 11, offset: 7377},
 																														val:        "missing",
 																														ignoreCase: false,
+																														want:       "\"missing\"",
 																													},
 																													&notExpr{
 																														pos: position{line: 268, col: 21, offset: 7387},
@@ -9303,46 +9970,55 @@ var g = &grammar{
 																											pos:        position{line: 265, col: 6, offset: 7324},
 																											val:        "as",
 																											ignoreCase: false,
+																											want:       "\"as\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 269, col: 8, offset: 7443},
 																											val:        "True",
 																											ignoreCase: false,
+																											want:       "\"True\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 270, col: 9, offset: 7460},
 																											val:        "False",
 																											ignoreCase: false,
+																											want:       "\"False\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 271, col: 12, offset: 7481},
 																											val:        "Infinity",
 																											ignoreCase: false,
+																											want:       "\"Infinity\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 272, col: 7, offset: 7500},
 																											val:        "NaN",
 																											ignoreCase: false,
+																											want:       "\"NaN\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 267, col: 9, offset: 7357},
 																											val:        "merge",
 																											ignoreCase: false,
+																											want:       "\"merge\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 273, col: 8, offset: 7515},
 																											val:        "Some",
 																											ignoreCase: false,
+																											want:       "\"Some\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 274, col: 9, offset: 7532},
 																											val:        "toMap",
 																											ignoreCase: false,
+																											want:       "\"toMap\"",
 																										},
 																										&litMatcher{
 																											pos:        position{line: 275, col: 10, offset: 7551},
 																											val:        "assert",
 																											ignoreCase: false,
+																											want:       "\"assert\"",
 																										},
 																									},
 																								},
@@ -9375,31 +10051,37 @@ var g = &grammar{
 																												pos:        position{line: 260, col: 6, offset: 7254},
 																												val:        "if",
 																												ignoreCase: false,
+																												want:       "\"if\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 261, col: 8, offset: 7268},
 																												val:        "then",
 																												ignoreCase: false,
+																												want:       "\"then\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 262, col: 8, offset: 7284},
 																												val:        "else",
 																												ignoreCase: false,
+																												want:       "\"else\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 263, col: 7, offset: 7299},
 																												val:        "let",
 																												ignoreCase: false,
+																												want:       "\"let\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 264, col: 6, offset: 7312},
 																												val:        "in",
 																												ignoreCase: false,
+																												want:       "\"in\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 266, col: 9, offset: 7339},
 																												val:        "using",
 																												ignoreCase: false,
+																												want:       "\"using\"",
 																											},
 																											&actionExpr{
 																												pos: position{line: 268, col: 11, offset: 7377},
@@ -9411,6 +10093,7 @@ var g = &grammar{
 																															pos:        position{line: 268, col: 11, offset: 7377},
 																															val:        "missing",
 																															ignoreCase: false,
+																															want:       "\"missing\"",
 																														},
 																														&notExpr{
 																															pos: position{line: 268, col: 21, offset: 7387},
@@ -9430,46 +10113,55 @@ var g = &grammar{
 																												pos:        position{line: 265, col: 6, offset: 7324},
 																												val:        "as",
 																												ignoreCase: false,
+																												want:       "\"as\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 269, col: 8, offset: 7443},
 																												val:        "True",
 																												ignoreCase: false,
+																												want:       "\"True\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 270, col: 9, offset: 7460},
 																												val:        "False",
 																												ignoreCase: false,
+																												want:       "\"False\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 271, col: 12, offset: 7481},
 																												val:        "Infinity",
 																												ignoreCase: false,
+																												want:       "\"Infinity\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 272, col: 7, offset: 7500},
 																												val:        "NaN",
 																												ignoreCase: false,
+																												want:       "\"NaN\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 267, col: 9, offset: 7357},
 																												val:        "merge",
 																												ignoreCase: false,
+																												want:       "\"merge\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 273, col: 8, offset: 7515},
 																												val:        "Some",
 																												ignoreCase: false,
+																												want:       "\"Some\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 274, col: 9, offset: 7532},
 																												val:        "toMap",
 																												ignoreCase: false,
+																												want:       "\"toMap\"",
 																											},
 																											&litMatcher{
 																												pos:        position{line: 275, col: 10, offset: 7551},
 																												val:        "assert",
 																												ignoreCase: false,
+																												want:       "\"assert\"",
 																											},
 																										},
 																									},
@@ -9517,6 +10209,7 @@ var g = &grammar{
 									pos:        position{line: 519, col: 47, offset: 15013},
 									val:        ":",
 									ignoreCase: false,
+									want:       "\":\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 519, col: 51, offset: 15017},
@@ -9538,6 +10231,7 @@ var g = &grammar{
 									pos:        position{line: 519, col: 69, offset: 15035},
 									val:        ")",
 									ignoreCase: false,
+									want:       "\")\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 519, col: 73, offset: 15039},
@@ -9550,11 +10244,13 @@ var g = &grammar{
 											pos:        position{line: 297, col: 9, offset: 7960},
 											val:        "->",
 											ignoreCase: false,
+											want:       "\"->\"",
 										},
 										&litMatcher{
 											pos:        position{line: 297, col: 16, offset: 7967},
 											val:        "→",
 											ignoreCase: false,
+											want:       "\"→\"",
 										},
 									},
 								},
@@ -9598,11 +10294,13 @@ var g = &grammar{
 											pos:        position{line: 297, col: 9, offset: 7960},
 											val:        "->",
 											ignoreCase: false,
+											want:       "\"->\"",
 										},
 										&litMatcher{
 											pos:        position{line: 297, col: 16, offset: 7967},
 											val:        "→",
 											ignoreCase: false,
+											want:       "\"→\"",
 										},
 									},
 								},
@@ -9631,6 +10329,7 @@ var g = &grammar{
 									pos:        position{line: 267, col: 9, offset: 7357},
 									val:        "merge",
 									ignoreCase: false,
+									want:       "\"merge\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 523, col: 13, offset: 15263},
@@ -9664,6 +10363,7 @@ var g = &grammar{
 									pos:        position{line: 523, col: 59, offset: 15309},
 									val:        ":",
 									ignoreCase: false,
+									want:       "\":\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 523, col: 63, offset: 15313},
@@ -9694,6 +10394,7 @@ var g = &grammar{
 									pos:        position{line: 274, col: 9, offset: 7532},
 									val:        "toMap",
 									ignoreCase: false,
+									want:       "\"toMap\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 527, col: 13, offset: 15461},
@@ -9715,6 +10416,7 @@ var g = &grammar{
 									pos:        position{line: 527, col: 37, offset: 15485},
 									val:        ":",
 									ignoreCase: false,
+									want:       "\":\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 527, col: 41, offset: 15489},
@@ -9741,6 +10443,7 @@ var g = &grammar{
 									pos:        position{line: 275, col: 10, offset: 7551},
 									val:        "assert",
 									ignoreCase: false,
+									want:       "\"assert\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 528, col: 14, offset: 15571},
@@ -9750,6 +10453,7 @@ var g = &grammar{
 									pos:        position{line: 528, col: 16, offset: 15573},
 									val:        ":",
 									ignoreCase: false,
+									want:       "\":\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 528, col: 20, offset: 15577},
@@ -9786,6 +10490,7 @@ var g = &grammar{
 							pos:        position{line: 531, col: 14, offset: 15680},
 							val:        ":",
 							ignoreCase: false,
+							want:       "\":\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 531, col: 18, offset: 15684},
@@ -9857,6 +10562,7 @@ var g = &grammar{
 							pos:        position{line: 539, col: 13, offset: 15908},
 							val:        "[",
 							ignoreCase: false,
+							want:       "\"[\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 539, col: 17, offset: 15912},
@@ -9871,6 +10577,7 @@ var g = &grammar{
 										pos:        position{line: 539, col: 20, offset: 15915},
 										val:        ",",
 										ignoreCase: false,
+										want:       "\",\"",
 									},
 									&ruleRefExpr{
 										pos:  position{line: 539, col: 24, offset: 15919},
@@ -9883,6 +10590,7 @@ var g = &grammar{
 							pos:        position{line: 539, col: 28, offset: 15923},
 							val:        "]",
 							ignoreCase: false,
+							want:       "\"]\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 539, col: 32, offset: 15927},
@@ -9892,6 +10600,7 @@ var g = &grammar{
 							pos:        position{line: 539, col: 34, offset: 15929},
 							val:        ":",
 							ignoreCase: false,
+							want:       "\":\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 539, col: 38, offset: 15933},
@@ -9950,6 +10659,7 @@ var g = &grammar{
 											pos:        position{line: 545, col: 63, offset: 16114},
 											val:        "?",
 											ignoreCase: false,
+											want:       "\"?\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 545, col: 67, offset: 16118},
@@ -10000,6 +10710,7 @@ var g = &grammar{
 											pos:        position{line: 547, col: 63, offset: 16256},
 											val:        "||",
 											ignoreCase: false,
+											want:       "\"||\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 547, col: 68, offset: 16261},
@@ -10050,6 +10761,7 @@ var g = &grammar{
 											pos:        position{line: 549, col: 63, offset: 16393},
 											val:        "+",
 											ignoreCase: false,
+											want:       "\"+\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 549, col: 67, offset: 16397},
@@ -10104,6 +10816,7 @@ var g = &grammar{
 											pos:        position{line: 551, col: 63, offset: 16540},
 											val:        "++",
 											ignoreCase: false,
+											want:       "\"++\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 551, col: 68, offset: 16545},
@@ -10158,6 +10871,7 @@ var g = &grammar{
 											pos:        position{line: 553, col: 63, offset: 16693},
 											val:        "#",
 											ignoreCase: false,
+											want:       "\"#\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 553, col: 67, offset: 16697},
@@ -10212,6 +10926,7 @@ var g = &grammar{
 											pos:        position{line: 555, col: 63, offset: 16838},
 											val:        "&&",
 											ignoreCase: false,
+											want:       "\"&&\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 555, col: 68, offset: 16843},
@@ -10269,11 +10984,13 @@ var g = &grammar{
 													pos:        position{line: 291, col: 11, offset: 7798},
 													val:        "/\\",
 													ignoreCase: false,
+													want:       "\"/\\\\\"",
 												},
 												&litMatcher{
 													pos:        position{line: 291, col: 19, offset: 7806},
 													val:        "∧",
 													ignoreCase: false,
+													want:       "\"∧\"",
 												},
 											},
 										},
@@ -10333,11 +11050,13 @@ var g = &grammar{
 													pos:        position{line: 294, col: 10, offset: 7886},
 													val:        "//",
 													ignoreCase: false,
+													want:       "\"//\"",
 												},
 												&litMatcher{
 													pos:        position{line: 294, col: 17, offset: 7893},
 													val:        "⫽",
 													ignoreCase: false,
+													want:       "\"⫽\"",
 												},
 											},
 										},
@@ -10397,11 +11116,13 @@ var g = &grammar{
 													pos:        position{line: 292, col: 16, offset: 7829},
 													val:        "//\\\\",
 													ignoreCase: false,
+													want:       "\"//\\\\\\\\\"",
 												},
 												&litMatcher{
 													pos:        position{line: 292, col: 27, offset: 7840},
 													val:        "⩓",
 													ignoreCase: false,
+													want:       "\"⩓\"",
 												},
 											},
 										},
@@ -10458,6 +11179,7 @@ var g = &grammar{
 											pos:        position{line: 563, col: 63, offset: 17464},
 											val:        "*",
 											ignoreCase: false,
+											want:       "\"*\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 563, col: 67, offset: 17468},
@@ -10512,6 +11234,7 @@ var g = &grammar{
 											pos:        position{line: 565, col: 63, offset: 17606},
 											val:        "==",
 											ignoreCase: false,
+											want:       "\"==\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 565, col: 68, offset: 17611},
@@ -10566,6 +11289,7 @@ var g = &grammar{
 											pos:        position{line: 567, col: 62, offset: 17748},
 											val:        "!=",
 											ignoreCase: false,
+											want:       "\"!=\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 567, col: 67, offset: 17753},
@@ -10623,11 +11347,13 @@ var g = &grammar{
 													pos:        position{line: 293, col: 14, offset: 7861},
 													val:        "===",
 													ignoreCase: false,
+													want:       "\"===\"",
 												},
 												&litMatcher{
 													pos:        position{line: 293, col: 22, offset: 7869},
 													val:        "≡",
 													ignoreCase: false,
+													want:       "\"≡\"",
 												},
 											},
 										},
@@ -10708,6 +11434,7 @@ var g = &grammar{
 									pos:        position{line: 267, col: 9, offset: 7357},
 									val:        "merge",
 									ignoreCase: false,
+									want:       "\"merge\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 582, col: 14, offset: 18338},
@@ -10746,6 +11473,7 @@ var g = &grammar{
 									pos:        position{line: 273, col: 8, offset: 7515},
 									val:        "Some",
 									ignoreCase: false,
+									want:       "\"Some\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 585, col: 13, offset: 18473},
@@ -10772,6 +11500,7 @@ var g = &grammar{
 									pos:        position{line: 274, col: 9, offset: 7532},
 									val:        "toMap",
 									ignoreCase: false,
+									want:       "\"toMap\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 586, col: 14, offset: 18539},
@@ -10845,6 +11574,7 @@ var g = &grammar{
 											pos:        position{line: 298, col: 12, offset: 7986},
 											val:        "::",
 											ignoreCase: false,
+											want:       "\"::\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 591, col: 59, offset: 18738},
@@ -10895,6 +11625,7 @@ var g = &grammar{
 											pos:        position{line: 598, col: 50, offset: 18942},
 											val:        ".",
 											ignoreCase: false,
+											want:       "\".\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 598, col: 54, offset: 18946},
@@ -10928,6 +11659,7 @@ var g = &grammar{
 									pos:        position{line: 121, col: 9, offset: 2803},
 									val:        "`",
 									ignoreCase: false,
+									want:       "\"`\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 121, col: 13, offset: 2807},
@@ -10951,6 +11683,7 @@ var g = &grammar{
 									pos:        position{line: 121, col: 31, offset: 2825},
 									val:        "`",
 									ignoreCase: false,
+									want:       "\"`\"",
 								},
 							},
 						},
@@ -10977,31 +11710,37 @@ var g = &grammar{
 															pos:        position{line: 260, col: 6, offset: 7254},
 															val:        "if",
 															ignoreCase: false,
+															want:       "\"if\"",
 														},
 														&litMatcher{
 															pos:        position{line: 261, col: 8, offset: 7268},
 															val:        "then",
 															ignoreCase: false,
+															want:       "\"then\"",
 														},
 														&litMatcher{
 															pos:        position{line: 262, col: 8, offset: 7284},
 															val:        "else",
 															ignoreCase: false,
+															want:       "\"else\"",
 														},
 														&litMatcher{
 															pos:        position{line: 263, col: 7, offset: 7299},
 															val:        "let",
 															ignoreCase: false,
+															want:       "\"let\"",
 														},
 														&litMatcher{
 															pos:        position{line: 264, col: 6, offset: 7312},
 															val:        "in",
 															ignoreCase: false,
+															want:       "\"in\"",
 														},
 														&litMatcher{
 															pos:        position{line: 266, col: 9, offset: 7339},
 															val:        "using",
 															ignoreCase: false,
+															want:       "\"using\"",
 														},
 														&actionExpr{
 															pos: position{line: 268, col: 11, offset: 7377},
@@ -11013,6 +11752,7 @@ var g = &grammar{
 																		pos:        position{line: 268, col: 11, offset: 7377},
 																		val:        "missing",
 																		ignoreCase: false,
+																		want:       "\"missing\"",
 																	},
 																	&notExpr{
 																		pos: position{line: 268, col: 21, offset: 7387},
@@ -11032,46 +11772,55 @@ var g = &grammar{
 															pos:        position{line: 265, col: 6, offset: 7324},
 															val:        "as",
 															ignoreCase: false,
+															want:       "\"as\"",
 														},
 														&litMatcher{
 															pos:        position{line: 269, col: 8, offset: 7443},
 															val:        "True",
 															ignoreCase: false,
+															want:       "\"True\"",
 														},
 														&litMatcher{
 															pos:        position{line: 270, col: 9, offset: 7460},
 															val:        "False",
 															ignoreCase: false,
+															want:       "\"False\"",
 														},
 														&litMatcher{
 															pos:        position{line: 271, col: 12, offset: 7481},
 															val:        "Infinity",
 															ignoreCase: false,
+															want:       "\"Infinity\"",
 														},
 														&litMatcher{
 															pos:        position{line: 272, col: 7, offset: 7500},
 															val:        "NaN",
 															ignoreCase: false,
+															want:       "\"NaN\"",
 														},
 														&litMatcher{
 															pos:        position{line: 267, col: 9, offset: 7357},
 															val:        "merge",
 															ignoreCase: false,
+															want:       "\"merge\"",
 														},
 														&litMatcher{
 															pos:        position{line: 273, col: 8, offset: 7515},
 															val:        "Some",
 															ignoreCase: false,
+															want:       "\"Some\"",
 														},
 														&litMatcher{
 															pos:        position{line: 274, col: 9, offset: 7532},
 															val:        "toMap",
 															ignoreCase: false,
+															want:       "\"toMap\"",
 														},
 														&litMatcher{
 															pos:        position{line: 275, col: 10, offset: 7551},
 															val:        "assert",
 															ignoreCase: false,
+															want:       "\"assert\"",
 														},
 													},
 												},
@@ -11104,31 +11853,37 @@ var g = &grammar{
 																pos:        position{line: 260, col: 6, offset: 7254},
 																val:        "if",
 																ignoreCase: false,
+																want:       "\"if\"",
 															},
 															&litMatcher{
 																pos:        position{line: 261, col: 8, offset: 7268},
 																val:        "then",
 																ignoreCase: false,
+																want:       "\"then\"",
 															},
 															&litMatcher{
 																pos:        position{line: 262, col: 8, offset: 7284},
 																val:        "else",
 																ignoreCase: false,
+																want:       "\"else\"",
 															},
 															&litMatcher{
 																pos:        position{line: 263, col: 7, offset: 7299},
 																val:        "let",
 																ignoreCase: false,
+																want:       "\"let\"",
 															},
 															&litMatcher{
 																pos:        position{line: 264, col: 6, offset: 7312},
 																val:        "in",
 																ignoreCase: false,
+																want:       "\"in\"",
 															},
 															&litMatcher{
 																pos:        position{line: 266, col: 9, offset: 7339},
 																val:        "using",
 																ignoreCase: false,
+																want:       "\"using\"",
 															},
 															&actionExpr{
 																pos: position{line: 268, col: 11, offset: 7377},
@@ -11140,6 +11895,7 @@ var g = &grammar{
 																			pos:        position{line: 268, col: 11, offset: 7377},
 																			val:        "missing",
 																			ignoreCase: false,
+																			want:       "\"missing\"",
 																		},
 																		&notExpr{
 																			pos: position{line: 268, col: 21, offset: 7387},
@@ -11159,46 +11915,55 @@ var g = &grammar{
 																pos:        position{line: 265, col: 6, offset: 7324},
 																val:        "as",
 																ignoreCase: false,
+																want:       "\"as\"",
 															},
 															&litMatcher{
 																pos:        position{line: 269, col: 8, offset: 7443},
 																val:        "True",
 																ignoreCase: false,
+																want:       "\"True\"",
 															},
 															&litMatcher{
 																pos:        position{line: 270, col: 9, offset: 7460},
 																val:        "False",
 																ignoreCase: false,
+																want:       "\"False\"",
 															},
 															&litMatcher{
 																pos:        position{line: 271, col: 12, offset: 7481},
 																val:        "Infinity",
 																ignoreCase: false,
+																want:       "\"Infinity\"",
 															},
 															&litMatcher{
 																pos:        position{line: 272, col: 7, offset: 7500},
 																val:        "NaN",
 																ignoreCase: false,
+																want:       "\"NaN\"",
 															},
 															&litMatcher{
 																pos:        position{line: 267, col: 9, offset: 7357},
 																val:        "merge",
 																ignoreCase: false,
+																want:       "\"merge\"",
 															},
 															&litMatcher{
 																pos:        position{line: 273, col: 8, offset: 7515},
 																val:        "Some",
 																ignoreCase: false,
+																want:       "\"Some\"",
 															},
 															&litMatcher{
 																pos:        position{line: 274, col: 9, offset: 7532},
 																val:        "toMap",
 																ignoreCase: false,
+																want:       "\"toMap\"",
 															},
 															&litMatcher{
 																pos:        position{line: 275, col: 10, offset: 7551},
 																val:        "assert",
 																ignoreCase: false,
+																want:       "\"assert\"",
 															},
 														},
 													},
@@ -11253,6 +12018,7 @@ var g = &grammar{
 							pos:        position{line: 619, col: 10, offset: 19559},
 							val:        "{",
 							ignoreCase: false,
+							want:       "\"{\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 619, col: 14, offset: 19563},
@@ -11279,6 +12045,7 @@ var g = &grammar{
 																pos:        position{line: 121, col: 9, offset: 2803},
 																val:        "`",
 																ignoreCase: false,
+																want:       "\"`\"",
 															},
 															&labeledExpr{
 																pos:   position{line: 121, col: 13, offset: 2807},
@@ -11302,6 +12069,7 @@ var g = &grammar{
 																pos:        position{line: 121, col: 31, offset: 2825},
 																val:        "`",
 																ignoreCase: false,
+																want:       "\"`\"",
 															},
 														},
 													},
@@ -11328,31 +12096,37 @@ var g = &grammar{
 																						pos:        position{line: 260, col: 6, offset: 7254},
 																						val:        "if",
 																						ignoreCase: false,
+																						want:       "\"if\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 261, col: 8, offset: 7268},
 																						val:        "then",
 																						ignoreCase: false,
+																						want:       "\"then\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 262, col: 8, offset: 7284},
 																						val:        "else",
 																						ignoreCase: false,
+																						want:       "\"else\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 263, col: 7, offset: 7299},
 																						val:        "let",
 																						ignoreCase: false,
+																						want:       "\"let\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 264, col: 6, offset: 7312},
 																						val:        "in",
 																						ignoreCase: false,
+																						want:       "\"in\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 266, col: 9, offset: 7339},
 																						val:        "using",
 																						ignoreCase: false,
+																						want:       "\"using\"",
 																					},
 																					&actionExpr{
 																						pos: position{line: 268, col: 11, offset: 7377},
@@ -11364,6 +12138,7 @@ var g = &grammar{
 																									pos:        position{line: 268, col: 11, offset: 7377},
 																									val:        "missing",
 																									ignoreCase: false,
+																									want:       "\"missing\"",
 																								},
 																								&notExpr{
 																									pos: position{line: 268, col: 21, offset: 7387},
@@ -11383,46 +12158,55 @@ var g = &grammar{
 																						pos:        position{line: 265, col: 6, offset: 7324},
 																						val:        "as",
 																						ignoreCase: false,
+																						want:       "\"as\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 269, col: 8, offset: 7443},
 																						val:        "True",
 																						ignoreCase: false,
+																						want:       "\"True\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 270, col: 9, offset: 7460},
 																						val:        "False",
 																						ignoreCase: false,
+																						want:       "\"False\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 271, col: 12, offset: 7481},
 																						val:        "Infinity",
 																						ignoreCase: false,
+																						want:       "\"Infinity\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 272, col: 7, offset: 7500},
 																						val:        "NaN",
 																						ignoreCase: false,
+																						want:       "\"NaN\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 267, col: 9, offset: 7357},
 																						val:        "merge",
 																						ignoreCase: false,
+																						want:       "\"merge\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 273, col: 8, offset: 7515},
 																						val:        "Some",
 																						ignoreCase: false,
+																						want:       "\"Some\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 274, col: 9, offset: 7532},
 																						val:        "toMap",
 																						ignoreCase: false,
+																						want:       "\"toMap\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 275, col: 10, offset: 7551},
 																						val:        "assert",
 																						ignoreCase: false,
+																						want:       "\"assert\"",
 																					},
 																				},
 																			},
@@ -11455,31 +12239,37 @@ var g = &grammar{
 																							pos:        position{line: 260, col: 6, offset: 7254},
 																							val:        "if",
 																							ignoreCase: false,
+																							want:       "\"if\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 261, col: 8, offset: 7268},
 																							val:        "then",
 																							ignoreCase: false,
+																							want:       "\"then\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 262, col: 8, offset: 7284},
 																							val:        "else",
 																							ignoreCase: false,
+																							want:       "\"else\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 263, col: 7, offset: 7299},
 																							val:        "let",
 																							ignoreCase: false,
+																							want:       "\"let\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 264, col: 6, offset: 7312},
 																							val:        "in",
 																							ignoreCase: false,
+																							want:       "\"in\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 266, col: 9, offset: 7339},
 																							val:        "using",
 																							ignoreCase: false,
+																							want:       "\"using\"",
 																						},
 																						&actionExpr{
 																							pos: position{line: 268, col: 11, offset: 7377},
@@ -11491,6 +12281,7 @@ var g = &grammar{
 																										pos:        position{line: 268, col: 11, offset: 7377},
 																										val:        "missing",
 																										ignoreCase: false,
+																										want:       "\"missing\"",
 																									},
 																									&notExpr{
 																										pos: position{line: 268, col: 21, offset: 7387},
@@ -11510,46 +12301,55 @@ var g = &grammar{
 																							pos:        position{line: 265, col: 6, offset: 7324},
 																							val:        "as",
 																							ignoreCase: false,
+																							want:       "\"as\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 269, col: 8, offset: 7443},
 																							val:        "True",
 																							ignoreCase: false,
+																							want:       "\"True\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 270, col: 9, offset: 7460},
 																							val:        "False",
 																							ignoreCase: false,
+																							want:       "\"False\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 271, col: 12, offset: 7481},
 																							val:        "Infinity",
 																							ignoreCase: false,
+																							want:       "\"Infinity\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 272, col: 7, offset: 7500},
 																							val:        "NaN",
 																							ignoreCase: false,
+																							want:       "\"NaN\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 267, col: 9, offset: 7357},
 																							val:        "merge",
 																							ignoreCase: false,
+																							want:       "\"merge\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 273, col: 8, offset: 7515},
 																							val:        "Some",
 																							ignoreCase: false,
+																							want:       "\"Some\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 274, col: 9, offset: 7532},
 																							val:        "toMap",
 																							ignoreCase: false,
+																							want:       "\"toMap\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 275, col: 10, offset: 7551},
 																							val:        "assert",
 																							ignoreCase: false,
+																							want:       "\"assert\"",
 																						},
 																					},
 																				},
@@ -11587,6 +12387,7 @@ var g = &grammar{
 														pos:        position{line: 273, col: 8, offset: 7515},
 														val:        "Some",
 														ignoreCase: false,
+														want:       "\"Some\"",
 													},
 												},
 											},
@@ -11604,6 +12405,7 @@ var g = &grammar{
 														pos:        position{line: 619, col: 47, offset: 19596},
 														val:        ",",
 														ignoreCase: false,
+														want:       "\",\"",
 													},
 													&ruleRefExpr{
 														pos:  position{line: 619, col: 51, offset: 19600},
@@ -11622,6 +12424,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 9, offset: 2803},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																		&labeledExpr{
 																			pos:   position{line: 121, col: 13, offset: 2807},
@@ -11645,6 +12448,7 @@ var g = &grammar{
 																			pos:        position{line: 121, col: 31, offset: 2825},
 																			val:        "`",
 																			ignoreCase: false,
+																			want:       "\"`\"",
 																		},
 																	},
 																},
@@ -11671,31 +12475,37 @@ var g = &grammar{
 																									pos:        position{line: 260, col: 6, offset: 7254},
 																									val:        "if",
 																									ignoreCase: false,
+																									want:       "\"if\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 261, col: 8, offset: 7268},
 																									val:        "then",
 																									ignoreCase: false,
+																									want:       "\"then\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 262, col: 8, offset: 7284},
 																									val:        "else",
 																									ignoreCase: false,
+																									want:       "\"else\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 263, col: 7, offset: 7299},
 																									val:        "let",
 																									ignoreCase: false,
+																									want:       "\"let\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 264, col: 6, offset: 7312},
 																									val:        "in",
 																									ignoreCase: false,
+																									want:       "\"in\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 266, col: 9, offset: 7339},
 																									val:        "using",
 																									ignoreCase: false,
+																									want:       "\"using\"",
 																								},
 																								&actionExpr{
 																									pos: position{line: 268, col: 11, offset: 7377},
@@ -11707,6 +12517,7 @@ var g = &grammar{
 																												pos:        position{line: 268, col: 11, offset: 7377},
 																												val:        "missing",
 																												ignoreCase: false,
+																												want:       "\"missing\"",
 																											},
 																											&notExpr{
 																												pos: position{line: 268, col: 21, offset: 7387},
@@ -11726,46 +12537,55 @@ var g = &grammar{
 																									pos:        position{line: 265, col: 6, offset: 7324},
 																									val:        "as",
 																									ignoreCase: false,
+																									want:       "\"as\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 269, col: 8, offset: 7443},
 																									val:        "True",
 																									ignoreCase: false,
+																									want:       "\"True\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 270, col: 9, offset: 7460},
 																									val:        "False",
 																									ignoreCase: false,
+																									want:       "\"False\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 271, col: 12, offset: 7481},
 																									val:        "Infinity",
 																									ignoreCase: false,
+																									want:       "\"Infinity\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 272, col: 7, offset: 7500},
 																									val:        "NaN",
 																									ignoreCase: false,
+																									want:       "\"NaN\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 267, col: 9, offset: 7357},
 																									val:        "merge",
 																									ignoreCase: false,
+																									want:       "\"merge\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 273, col: 8, offset: 7515},
 																									val:        "Some",
 																									ignoreCase: false,
+																									want:       "\"Some\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 274, col: 9, offset: 7532},
 																									val:        "toMap",
 																									ignoreCase: false,
+																									want:       "\"toMap\"",
 																								},
 																								&litMatcher{
 																									pos:        position{line: 275, col: 10, offset: 7551},
 																									val:        "assert",
 																									ignoreCase: false,
+																									want:       "\"assert\"",
 																								},
 																							},
 																						},
@@ -11798,31 +12618,37 @@ var g = &grammar{
 																										pos:        position{line: 260, col: 6, offset: 7254},
 																										val:        "if",
 																										ignoreCase: false,
+																										want:       "\"if\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 261, col: 8, offset: 7268},
 																										val:        "then",
 																										ignoreCase: false,
+																										want:       "\"then\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 262, col: 8, offset: 7284},
 																										val:        "else",
 																										ignoreCase: false,
+																										want:       "\"else\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 263, col: 7, offset: 7299},
 																										val:        "let",
 																										ignoreCase: false,
+																										want:       "\"let\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 264, col: 6, offset: 7312},
 																										val:        "in",
 																										ignoreCase: false,
+																										want:       "\"in\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 266, col: 9, offset: 7339},
 																										val:        "using",
 																										ignoreCase: false,
+																										want:       "\"using\"",
 																									},
 																									&actionExpr{
 																										pos: position{line: 268, col: 11, offset: 7377},
@@ -11834,6 +12660,7 @@ var g = &grammar{
 																													pos:        position{line: 268, col: 11, offset: 7377},
 																													val:        "missing",
 																													ignoreCase: false,
+																													want:       "\"missing\"",
 																												},
 																												&notExpr{
 																													pos: position{line: 268, col: 21, offset: 7387},
@@ -11853,46 +12680,55 @@ var g = &grammar{
 																										pos:        position{line: 265, col: 6, offset: 7324},
 																										val:        "as",
 																										ignoreCase: false,
+																										want:       "\"as\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 269, col: 8, offset: 7443},
 																										val:        "True",
 																										ignoreCase: false,
+																										want:       "\"True\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 270, col: 9, offset: 7460},
 																										val:        "False",
 																										ignoreCase: false,
+																										want:       "\"False\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 271, col: 12, offset: 7481},
 																										val:        "Infinity",
 																										ignoreCase: false,
+																										want:       "\"Infinity\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 272, col: 7, offset: 7500},
 																										val:        "NaN",
 																										ignoreCase: false,
+																										want:       "\"NaN\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 267, col: 9, offset: 7357},
 																										val:        "merge",
 																										ignoreCase: false,
+																										want:       "\"merge\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 273, col: 8, offset: 7515},
 																										val:        "Some",
 																										ignoreCase: false,
+																										want:       "\"Some\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 274, col: 9, offset: 7532},
 																										val:        "toMap",
 																										ignoreCase: false,
+																										want:       "\"toMap\"",
 																									},
 																									&litMatcher{
 																										pos:        position{line: 275, col: 10, offset: 7551},
 																										val:        "assert",
 																										ignoreCase: false,
+																										want:       "\"assert\"",
 																									},
 																								},
 																							},
@@ -11930,6 +12766,7 @@ var g = &grammar{
 																	pos:        position{line: 273, col: 8, offset: 7515},
 																	val:        "Some",
 																	ignoreCase: false,
+																	want:       "\"Some\"",
 																},
 															},
 														},
@@ -11949,6 +12786,7 @@ var g = &grammar{
 							pos:        position{line: 619, col: 76, offset: 19625},
 							val:        "}",
 							ignoreCase: false,
+							want:       "\"}\"",
 						},
 					},
 				},
@@ -11967,6 +12805,7 @@ var g = &grammar{
 							pos:        position{line: 629, col: 16, offset: 19938},
 							val:        "(",
 							ignoreCase: false,
+							want:       "\"(\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 629, col: 20, offset: 19942},
@@ -11988,6 +12827,7 @@ var g = &grammar{
 							pos:        position{line: 629, col: 37, offset: 19959},
 							val:        ")",
 							ignoreCase: false,
+							want:       "\")\"",
 						},
 					},
 				},
@@ -12038,6 +12878,7 @@ var g = &grammar{
 														pos:        position{line: 302, col: 39, offset: 8064},
 														val:        ".",
 														ignoreCase: false,
+														want:       "\".\"",
 													},
 													&oneOrMoreExpr{
 														pos: position{line: 302, col: 43, offset: 8068},
@@ -12058,6 +12899,7 @@ var g = &grammar{
 																	pos:        position{line: 300, col: 12, offset: 8005},
 																	val:        "e",
 																	ignoreCase: true,
+																	want:       "\"e\"i",
 																},
 																&zeroOrOneExpr{
 																	pos: position{line: 300, col: 17, offset: 8010},
@@ -12091,6 +12933,7 @@ var g = &grammar{
 														pos:        position{line: 300, col: 12, offset: 8005},
 														val:        "e",
 														ignoreCase: true,
+														want:       "\"e\"i",
 													},
 													&zeroOrOneExpr{
 														pos: position{line: 300, col: 17, offset: 8010},
@@ -12127,6 +12970,7 @@ var g = &grammar{
 							pos:        position{line: 271, col: 12, offset: 7481},
 							val:        "Infinity",
 							ignoreCase: false,
+							want:       "\"Infinity\"",
 						},
 					},
 					&actionExpr{
@@ -12136,6 +12980,7 @@ var g = &grammar{
 							pos:        position{line: 312, col: 5, offset: 8340},
 							val:        "-Infinity",
 							ignoreCase: false,
+							want:       "\"-Infinity\"",
 						},
 					},
 					&actionExpr{
@@ -12145,6 +12990,7 @@ var g = &grammar{
 							pos:        position{line: 272, col: 7, offset: 7500},
 							val:        "NaN",
 							ignoreCase: false,
+							want:       "\"NaN\"",
 						},
 					},
 					&actionExpr{
@@ -12160,6 +13006,7 @@ var g = &grammar{
 											pos:        position{line: 317, col: 4, offset: 8499},
 											val:        "0x",
 											ignoreCase: false,
+											want:       "\"0x\"",
 										},
 										&oneOrMoreExpr{
 											pos: position{line: 317, col: 9, offset: 8504},
@@ -12220,6 +13067,7 @@ var g = &grammar{
 									pos:        position{line: 322, col: 5, offset: 8656},
 									val:        "0",
 									ignoreCase: false,
+									want:       "\"0\"",
 								},
 								&oneOrMoreExpr{
 									pos: position{line: 322, col: 9, offset: 8660},
@@ -12241,6 +13089,7 @@ var g = &grammar{
 							pos:        position{line: 323, col: 5, offset: 8745},
 							val:        "0",
 							ignoreCase: false,
+							want:       "\"0\"",
 						},
 					},
 					&actionExpr{
@@ -12253,6 +13102,7 @@ var g = &grammar{
 									pos:        position{line: 326, col: 5, offset: 8803},
 									val:        "+",
 									ignoreCase: false,
+									want:       "\"+\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 326, col: 9, offset: 8807},
@@ -12273,6 +13123,7 @@ var g = &grammar{
 																	pos:        position{line: 317, col: 4, offset: 8499},
 																	val:        "0x",
 																	ignoreCase: false,
+																	want:       "\"0x\"",
 																},
 																&oneOrMoreExpr{
 																	pos: position{line: 317, col: 9, offset: 8504},
@@ -12333,6 +13184,7 @@ var g = &grammar{
 															pos:        position{line: 322, col: 5, offset: 8656},
 															val:        "0",
 															ignoreCase: false,
+															want:       "\"0\"",
 														},
 														&oneOrMoreExpr{
 															pos: position{line: 322, col: 9, offset: 8660},
@@ -12354,6 +13206,7 @@ var g = &grammar{
 													pos:        position{line: 323, col: 5, offset: 8745},
 													val:        "0",
 													ignoreCase: false,
+													want:       "\"0\"",
 												},
 											},
 										},
@@ -12372,6 +13225,7 @@ var g = &grammar{
 									pos:        position{line: 327, col: 5, offset: 8871},
 									val:        "-",
 									ignoreCase: false,
+									want:       "\"-\"",
 								},
 								&labeledExpr{
 									pos:   position{line: 327, col: 9, offset: 8875},
@@ -12392,6 +13246,7 @@ var g = &grammar{
 																	pos:        position{line: 317, col: 4, offset: 8499},
 																	val:        "0x",
 																	ignoreCase: false,
+																	want:       "\"0x\"",
 																},
 																&oneOrMoreExpr{
 																	pos: position{line: 317, col: 9, offset: 8504},
@@ -12452,6 +13307,7 @@ var g = &grammar{
 															pos:        position{line: 322, col: 5, offset: 8656},
 															val:        "0",
 															ignoreCase: false,
+															want:       "\"0\"",
 														},
 														&oneOrMoreExpr{
 															pos: position{line: 322, col: 9, offset: 8660},
@@ -12473,6 +13329,7 @@ var g = &grammar{
 													pos:        position{line: 323, col: 5, offset: 8745},
 													val:        "0",
 													ignoreCase: false,
+													want:       "\"0\"",
 												},
 											},
 										},
@@ -12495,6 +13352,7 @@ var g = &grammar{
 									pos:        position{line: 636, col: 7, offset: 20092},
 									val:        "{",
 									ignoreCase: false,
+									want:       "\"{\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 636, col: 11, offset: 20096},
@@ -12509,6 +13367,7 @@ var g = &grammar{
 												pos:        position{line: 636, col: 14, offset: 20099},
 												val:        ",",
 												ignoreCase: false,
+												want:       "\",\"",
 											},
 											&ruleRefExpr{
 												pos:  position{line: 636, col: 18, offset: 20103},
@@ -12533,6 +13392,7 @@ var g = &grammar{
 									pos:        position{line: 636, col: 46, offset: 20131},
 									val:        "}",
 									ignoreCase: false,
+									want:       "\"}\"",
 								},
 							},
 						},
@@ -12547,6 +13407,7 @@ var g = &grammar{
 									pos:        position{line: 637, col: 7, offset: 20159},
 									val:        "<",
 									ignoreCase: false,
+									want:       "\"<\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 637, col: 11, offset: 20163},
@@ -12561,6 +13422,7 @@ var g = &grammar{
 												pos:        position{line: 637, col: 14, offset: 20166},
 												val:        "|",
 												ignoreCase: false,
+												want:       "\"|\"",
 											},
 											&ruleRefExpr{
 												pos:  position{line: 637, col: 18, offset: 20170},
@@ -12585,6 +13447,7 @@ var g = &grammar{
 									pos:        position{line: 637, col: 36, offset: 20188},
 									val:        ">",
 									ignoreCase: false,
+									want:       "\">\"",
 								},
 							},
 						},
@@ -12607,6 +13470,7 @@ var g = &grammar{
 									pos:        position{line: 640, col: 7, offset: 20259},
 									val:        "(",
 									ignoreCase: false,
+									want:       "\"(\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 640, col: 11, offset: 20263},
@@ -12621,6 +13485,7 @@ var g = &grammar{
 												pos:        position{line: 640, col: 14, offset: 20266},
 												val:        "|",
 												ignoreCase: false,
+												want:       "\"|\"",
 											},
 											&ruleRefExpr{
 												pos:  position{line: 640, col: 18, offset: 20270},
@@ -12645,6 +13510,7 @@ var g = &grammar{
 									pos:        position{line: 640, col: 37, offset: 20289},
 									val:        ")",
 									ignoreCase: false,
+									want:       "\")\"",
 								},
 							},
 						},
@@ -12665,6 +13531,7 @@ var g = &grammar{
 							pos:        position{line: 643, col: 7, offset: 20342},
 							val:        "=",
 							ignoreCase: false,
+							want:       "\"=\"",
 						},
 					},
 					&ruleRefExpr{
@@ -12682,6 +13549,7 @@ var g = &grammar{
 							pos:        position{line: 646, col: 7, offset: 20433},
 							val:        "",
 							ignoreCase: false,
+							want:       "\"\"",
 						},
 					},
 				},
@@ -12704,6 +13572,7 @@ var g = &grammar{
 							pos:        position{line: 648, col: 20, offset: 20487},
 							val:        ",",
 							ignoreCase: false,
+							want:       "\",\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 648, col: 24, offset: 20491},
@@ -12778,6 +13647,7 @@ var g = &grammar{
 													pos:        position{line: 121, col: 9, offset: 2803},
 													val:        "`",
 													ignoreCase: false,
+													want:       "\"`\"",
 												},
 												&labeledExpr{
 													pos:   position{line: 121, col: 13, offset: 2807},
@@ -12801,6 +13671,7 @@ var g = &grammar{
 													pos:        position{line: 121, col: 31, offset: 2825},
 													val:        "`",
 													ignoreCase: false,
+													want:       "\"`\"",
 												},
 											},
 										},
@@ -12827,31 +13698,37 @@ var g = &grammar{
 																			pos:        position{line: 260, col: 6, offset: 7254},
 																			val:        "if",
 																			ignoreCase: false,
+																			want:       "\"if\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 261, col: 8, offset: 7268},
 																			val:        "then",
 																			ignoreCase: false,
+																			want:       "\"then\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 262, col: 8, offset: 7284},
 																			val:        "else",
 																			ignoreCase: false,
+																			want:       "\"else\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 263, col: 7, offset: 7299},
 																			val:        "let",
 																			ignoreCase: false,
+																			want:       "\"let\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 264, col: 6, offset: 7312},
 																			val:        "in",
 																			ignoreCase: false,
+																			want:       "\"in\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 266, col: 9, offset: 7339},
 																			val:        "using",
 																			ignoreCase: false,
+																			want:       "\"using\"",
 																		},
 																		&actionExpr{
 																			pos: position{line: 268, col: 11, offset: 7377},
@@ -12863,6 +13740,7 @@ var g = &grammar{
 																						pos:        position{line: 268, col: 11, offset: 7377},
 																						val:        "missing",
 																						ignoreCase: false,
+																						want:       "\"missing\"",
 																					},
 																					&notExpr{
 																						pos: position{line: 268, col: 21, offset: 7387},
@@ -12882,46 +13760,55 @@ var g = &grammar{
 																			pos:        position{line: 265, col: 6, offset: 7324},
 																			val:        "as",
 																			ignoreCase: false,
+																			want:       "\"as\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 269, col: 8, offset: 7443},
 																			val:        "True",
 																			ignoreCase: false,
+																			want:       "\"True\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 270, col: 9, offset: 7460},
 																			val:        "False",
 																			ignoreCase: false,
+																			want:       "\"False\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 271, col: 12, offset: 7481},
 																			val:        "Infinity",
 																			ignoreCase: false,
+																			want:       "\"Infinity\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 272, col: 7, offset: 7500},
 																			val:        "NaN",
 																			ignoreCase: false,
+																			want:       "\"NaN\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 267, col: 9, offset: 7357},
 																			val:        "merge",
 																			ignoreCase: false,
+																			want:       "\"merge\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 273, col: 8, offset: 7515},
 																			val:        "Some",
 																			ignoreCase: false,
+																			want:       "\"Some\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 274, col: 9, offset: 7532},
 																			val:        "toMap",
 																			ignoreCase: false,
+																			want:       "\"toMap\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 275, col: 10, offset: 7551},
 																			val:        "assert",
 																			ignoreCase: false,
+																			want:       "\"assert\"",
 																		},
 																	},
 																},
@@ -12954,31 +13841,37 @@ var g = &grammar{
 																				pos:        position{line: 260, col: 6, offset: 7254},
 																				val:        "if",
 																				ignoreCase: false,
+																				want:       "\"if\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 261, col: 8, offset: 7268},
 																				val:        "then",
 																				ignoreCase: false,
+																				want:       "\"then\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 262, col: 8, offset: 7284},
 																				val:        "else",
 																				ignoreCase: false,
+																				want:       "\"else\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 263, col: 7, offset: 7299},
 																				val:        "let",
 																				ignoreCase: false,
+																				want:       "\"let\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 264, col: 6, offset: 7312},
 																				val:        "in",
 																				ignoreCase: false,
+																				want:       "\"in\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 266, col: 9, offset: 7339},
 																				val:        "using",
 																				ignoreCase: false,
+																				want:       "\"using\"",
 																			},
 																			&actionExpr{
 																				pos: position{line: 268, col: 11, offset: 7377},
@@ -12990,6 +13883,7 @@ var g = &grammar{
 																							pos:        position{line: 268, col: 11, offset: 7377},
 																							val:        "missing",
 																							ignoreCase: false,
+																							want:       "\"missing\"",
 																						},
 																						&notExpr{
 																							pos: position{line: 268, col: 21, offset: 7387},
@@ -13009,46 +13903,55 @@ var g = &grammar{
 																				pos:        position{line: 265, col: 6, offset: 7324},
 																				val:        "as",
 																				ignoreCase: false,
+																				want:       "\"as\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 269, col: 8, offset: 7443},
 																				val:        "True",
 																				ignoreCase: false,
+																				want:       "\"True\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 270, col: 9, offset: 7460},
 																				val:        "False",
 																				ignoreCase: false,
+																				want:       "\"False\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 271, col: 12, offset: 7481},
 																				val:        "Infinity",
 																				ignoreCase: false,
+																				want:       "\"Infinity\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 272, col: 7, offset: 7500},
 																				val:        "NaN",
 																				ignoreCase: false,
+																				want:       "\"NaN\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 267, col: 9, offset: 7357},
 																				val:        "merge",
 																				ignoreCase: false,
+																				want:       "\"merge\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 273, col: 8, offset: 7515},
 																				val:        "Some",
 																				ignoreCase: false,
+																				want:       "\"Some\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 274, col: 9, offset: 7532},
 																				val:        "toMap",
 																				ignoreCase: false,
+																				want:       "\"toMap\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 275, col: 10, offset: 7551},
 																				val:        "assert",
 																				ignoreCase: false,
+																				want:       "\"assert\"",
 																			},
 																		},
 																	},
@@ -13086,6 +13989,7 @@ var g = &grammar{
 											pos:        position{line: 273, col: 8, offset: 7515},
 											val:        "Some",
 											ignoreCase: false,
+											want:       "\"Some\"",
 										},
 									},
 								},
@@ -13099,6 +14003,7 @@ var g = &grammar{
 							pos:        position{line: 664, col: 41, offset: 21065},
 							val:        ":",
 							ignoreCase: false,
+							want:       "\":\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 664, col: 45, offset: 21069},
@@ -13133,6 +14038,7 @@ var g = &grammar{
 							pos:        position{line: 668, col: 23, offset: 21172},
 							val:        ",",
 							ignoreCase: false,
+							want:       "\",\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 668, col: 27, offset: 21176},
@@ -13207,6 +14113,7 @@ var g = &grammar{
 													pos:        position{line: 121, col: 9, offset: 2803},
 													val:        "`",
 													ignoreCase: false,
+													want:       "\"`\"",
 												},
 												&labeledExpr{
 													pos:   position{line: 121, col: 13, offset: 2807},
@@ -13230,6 +14137,7 @@ var g = &grammar{
 													pos:        position{line: 121, col: 31, offset: 2825},
 													val:        "`",
 													ignoreCase: false,
+													want:       "\"`\"",
 												},
 											},
 										},
@@ -13256,31 +14164,37 @@ var g = &grammar{
 																			pos:        position{line: 260, col: 6, offset: 7254},
 																			val:        "if",
 																			ignoreCase: false,
+																			want:       "\"if\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 261, col: 8, offset: 7268},
 																			val:        "then",
 																			ignoreCase: false,
+																			want:       "\"then\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 262, col: 8, offset: 7284},
 																			val:        "else",
 																			ignoreCase: false,
+																			want:       "\"else\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 263, col: 7, offset: 7299},
 																			val:        "let",
 																			ignoreCase: false,
+																			want:       "\"let\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 264, col: 6, offset: 7312},
 																			val:        "in",
 																			ignoreCase: false,
+																			want:       "\"in\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 266, col: 9, offset: 7339},
 																			val:        "using",
 																			ignoreCase: false,
+																			want:       "\"using\"",
 																		},
 																		&actionExpr{
 																			pos: position{line: 268, col: 11, offset: 7377},
@@ -13292,6 +14206,7 @@ var g = &grammar{
 																						pos:        position{line: 268, col: 11, offset: 7377},
 																						val:        "missing",
 																						ignoreCase: false,
+																						want:       "\"missing\"",
 																					},
 																					&notExpr{
 																						pos: position{line: 268, col: 21, offset: 7387},
@@ -13311,46 +14226,55 @@ var g = &grammar{
 																			pos:        position{line: 265, col: 6, offset: 7324},
 																			val:        "as",
 																			ignoreCase: false,
+																			want:       "\"as\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 269, col: 8, offset: 7443},
 																			val:        "True",
 																			ignoreCase: false,
+																			want:       "\"True\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 270, col: 9, offset: 7460},
 																			val:        "False",
 																			ignoreCase: false,
+																			want:       "\"False\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 271, col: 12, offset: 7481},
 																			val:        "Infinity",
 																			ignoreCase: false,
+																			want:       "\"Infinity\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 272, col: 7, offset: 7500},
 																			val:        "NaN",
 																			ignoreCase: false,
+																			want:       "\"NaN\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 267, col: 9, offset: 7357},
 																			val:        "merge",
 																			ignoreCase: false,
+																			want:       "\"merge\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 273, col: 8, offset: 7515},
 																			val:        "Some",
 																			ignoreCase: false,
+																			want:       "\"Some\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 274, col: 9, offset: 7532},
 																			val:        "toMap",
 																			ignoreCase: false,
+																			want:       "\"toMap\"",
 																		},
 																		&litMatcher{
 																			pos:        position{line: 275, col: 10, offset: 7551},
 																			val:        "assert",
 																			ignoreCase: false,
+																			want:       "\"assert\"",
 																		},
 																	},
 																},
@@ -13383,31 +14307,37 @@ var g = &grammar{
 																				pos:        position{line: 260, col: 6, offset: 7254},
 																				val:        "if",
 																				ignoreCase: false,
+																				want:       "\"if\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 261, col: 8, offset: 7268},
 																				val:        "then",
 																				ignoreCase: false,
+																				want:       "\"then\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 262, col: 8, offset: 7284},
 																				val:        "else",
 																				ignoreCase: false,
+																				want:       "\"else\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 263, col: 7, offset: 7299},
 																				val:        "let",
 																				ignoreCase: false,
+																				want:       "\"let\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 264, col: 6, offset: 7312},
 																				val:        "in",
 																				ignoreCase: false,
+																				want:       "\"in\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 266, col: 9, offset: 7339},
 																				val:        "using",
 																				ignoreCase: false,
+																				want:       "\"using\"",
 																			},
 																			&actionExpr{
 																				pos: position{line: 268, col: 11, offset: 7377},
@@ -13419,6 +14349,7 @@ var g = &grammar{
 																							pos:        position{line: 268, col: 11, offset: 7377},
 																							val:        "missing",
 																							ignoreCase: false,
+																							want:       "\"missing\"",
 																						},
 																						&notExpr{
 																							pos: position{line: 268, col: 21, offset: 7387},
@@ -13438,46 +14369,55 @@ var g = &grammar{
 																				pos:        position{line: 265, col: 6, offset: 7324},
 																				val:        "as",
 																				ignoreCase: false,
+																				want:       "\"as\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 269, col: 8, offset: 7443},
 																				val:        "True",
 																				ignoreCase: false,
+																				want:       "\"True\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 270, col: 9, offset: 7460},
 																				val:        "False",
 																				ignoreCase: false,
+																				want:       "\"False\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 271, col: 12, offset: 7481},
 																				val:        "Infinity",
 																				ignoreCase: false,
+																				want:       "\"Infinity\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 272, col: 7, offset: 7500},
 																				val:        "NaN",
 																				ignoreCase: false,
+																				want:       "\"NaN\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 267, col: 9, offset: 7357},
 																				val:        "merge",
 																				ignoreCase: false,
+																				want:       "\"merge\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 273, col: 8, offset: 7515},
 																				val:        "Some",
 																				ignoreCase: false,
+																				want:       "\"Some\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 274, col: 9, offset: 7532},
 																				val:        "toMap",
 																				ignoreCase: false,
+																				want:       "\"toMap\"",
 																			},
 																			&litMatcher{
 																				pos:        position{line: 275, col: 10, offset: 7551},
 																				val:        "assert",
 																				ignoreCase: false,
+																				want:       "\"assert\"",
 																			},
 																		},
 																	},
@@ -13515,6 +14455,7 @@ var g = &grammar{
 											pos:        position{line: 273, col: 8, offset: 7515},
 											val:        "Some",
 											ignoreCase: false,
+											want:       "\"Some\"",
 										},
 									},
 								},
@@ -13536,6 +14477,7 @@ var g = &grammar{
 											pos:        position{line: 689, col: 54, offset: 21909},
 											val:        ".",
 											ignoreCase: false,
+											want:       "\".\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 689, col: 58, offset: 21913},
@@ -13554,6 +14496,7 @@ var g = &grammar{
 																pos:        position{line: 121, col: 9, offset: 2803},
 																val:        "`",
 																ignoreCase: false,
+																want:       "\"`\"",
 															},
 															&labeledExpr{
 																pos:   position{line: 121, col: 13, offset: 2807},
@@ -13577,6 +14520,7 @@ var g = &grammar{
 																pos:        position{line: 121, col: 31, offset: 2825},
 																val:        "`",
 																ignoreCase: false,
+																want:       "\"`\"",
 															},
 														},
 													},
@@ -13603,31 +14547,37 @@ var g = &grammar{
 																						pos:        position{line: 260, col: 6, offset: 7254},
 																						val:        "if",
 																						ignoreCase: false,
+																						want:       "\"if\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 261, col: 8, offset: 7268},
 																						val:        "then",
 																						ignoreCase: false,
+																						want:       "\"then\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 262, col: 8, offset: 7284},
 																						val:        "else",
 																						ignoreCase: false,
+																						want:       "\"else\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 263, col: 7, offset: 7299},
 																						val:        "let",
 																						ignoreCase: false,
+																						want:       "\"let\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 264, col: 6, offset: 7312},
 																						val:        "in",
 																						ignoreCase: false,
+																						want:       "\"in\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 266, col: 9, offset: 7339},
 																						val:        "using",
 																						ignoreCase: false,
+																						want:       "\"using\"",
 																					},
 																					&actionExpr{
 																						pos: position{line: 268, col: 11, offset: 7377},
@@ -13639,6 +14589,7 @@ var g = &grammar{
 																									pos:        position{line: 268, col: 11, offset: 7377},
 																									val:        "missing",
 																									ignoreCase: false,
+																									want:       "\"missing\"",
 																								},
 																								&notExpr{
 																									pos: position{line: 268, col: 21, offset: 7387},
@@ -13658,46 +14609,55 @@ var g = &grammar{
 																						pos:        position{line: 265, col: 6, offset: 7324},
 																						val:        "as",
 																						ignoreCase: false,
+																						want:       "\"as\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 269, col: 8, offset: 7443},
 																						val:        "True",
 																						ignoreCase: false,
+																						want:       "\"True\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 270, col: 9, offset: 7460},
 																						val:        "False",
 																						ignoreCase: false,
+																						want:       "\"False\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 271, col: 12, offset: 7481},
 																						val:        "Infinity",
 																						ignoreCase: false,
+																						want:       "\"Infinity\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 272, col: 7, offset: 7500},
 																						val:        "NaN",
 																						ignoreCase: false,
+																						want:       "\"NaN\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 267, col: 9, offset: 7357},
 																						val:        "merge",
 																						ignoreCase: false,
+																						want:       "\"merge\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 273, col: 8, offset: 7515},
 																						val:        "Some",
 																						ignoreCase: false,
+																						want:       "\"Some\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 274, col: 9, offset: 7532},
 																						val:        "toMap",
 																						ignoreCase: false,
+																						want:       "\"toMap\"",
 																					},
 																					&litMatcher{
 																						pos:        position{line: 275, col: 10, offset: 7551},
 																						val:        "assert",
 																						ignoreCase: false,
+																						want:       "\"assert\"",
 																					},
 																				},
 																			},
@@ -13730,31 +14690,37 @@ var g = &grammar{
 																							pos:        position{line: 260, col: 6, offset: 7254},
 																							val:        "if",
 																							ignoreCase: false,
+																							want:       "\"if\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 261, col: 8, offset: 7268},
 																							val:        "then",
 																							ignoreCase: false,
+																							want:       "\"then\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 262, col: 8, offset: 7284},
 																							val:        "else",
 																							ignoreCase: false,
+																							want:       "\"else\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 263, col: 7, offset: 7299},
 																							val:        "let",
 																							ignoreCase: false,
+																							want:       "\"let\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 264, col: 6, offset: 7312},
 																							val:        "in",
 																							ignoreCase: false,
+																							want:       "\"in\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 266, col: 9, offset: 7339},
 																							val:        "using",
 																							ignoreCase: false,
+																							want:       "\"using\"",
 																						},
 																						&actionExpr{
 																							pos: position{line: 268, col: 11, offset: 7377},
@@ -13766,6 +14732,7 @@ var g = &grammar{
 																										pos:        position{line: 268, col: 11, offset: 7377},
 																										val:        "missing",
 																										ignoreCase: false,
+																										want:       "\"missing\"",
 																									},
 																									&notExpr{
 																										pos: position{line: 268, col: 21, offset: 7387},
@@ -13785,46 +14752,55 @@ var g = &grammar{
 																							pos:        position{line: 265, col: 6, offset: 7324},
 																							val:        "as",
 																							ignoreCase: false,
+																							want:       "\"as\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 269, col: 8, offset: 7443},
 																							val:        "True",
 																							ignoreCase: false,
+																							want:       "\"True\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 270, col: 9, offset: 7460},
 																							val:        "False",
 																							ignoreCase: false,
+																							want:       "\"False\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 271, col: 12, offset: 7481},
 																							val:        "Infinity",
 																							ignoreCase: false,
+																							want:       "\"Infinity\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 272, col: 7, offset: 7500},
 																							val:        "NaN",
 																							ignoreCase: false,
+																							want:       "\"NaN\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 267, col: 9, offset: 7357},
 																							val:        "merge",
 																							ignoreCase: false,
+																							want:       "\"merge\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 273, col: 8, offset: 7515},
 																							val:        "Some",
 																							ignoreCase: false,
+																							want:       "\"Some\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 274, col: 9, offset: 7532},
 																							val:        "toMap",
 																							ignoreCase: false,
+																							want:       "\"toMap\"",
 																						},
 																						&litMatcher{
 																							pos:        position{line: 275, col: 10, offset: 7551},
 																							val:        "assert",
 																							ignoreCase: false,
+																							want:       "\"assert\"",
 																						},
 																					},
 																				},
@@ -13862,6 +14838,7 @@ var g = &grammar{
 														pos:        position{line: 273, col: 8, offset: 7515},
 														val:        "Some",
 														ignoreCase: false,
+														want:       "\"Some\"",
 													},
 												},
 											},
@@ -13878,6 +14855,7 @@ var g = &grammar{
 							pos:        position{line: 689, col: 79, offset: 21934},
 							val:        "=",
 							ignoreCase: false,
+							want:       "\"=\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 689, col: 83, offset: 21938},
@@ -13912,6 +14890,7 @@ var g = &grammar{
 							pos:        position{line: 700, col: 18, offset: 22276},
 							val:        "",
 							ignoreCase: false,
+							want:       "\"\"",
 						},
 					},
 				},
@@ -13950,6 +14929,7 @@ var g = &grammar{
 											pos:        position{line: 702, col: 50, offset: 22359},
 											val:        "|",
 											ignoreCase: false,
+											want:       "\"|\"",
 										},
 										&ruleRefExpr{
 											pos:  position{line: 702, col: 54, offset: 22363},
@@ -13986,6 +14966,7 @@ var g = &grammar{
 											pos:        position{line: 121, col: 9, offset: 2803},
 											val:        "`",
 											ignoreCase: false,
+											want:       "\"`\"",
 										},
 										&labeledExpr{
 											pos:   position{line: 121, col: 13, offset: 2807},
@@ -14009,6 +14990,7 @@ var g = &grammar{
 											pos:        position{line: 121, col: 31, offset: 2825},
 											val:        "`",
 											ignoreCase: false,
+											want:       "\"`\"",
 										},
 									},
 								},
@@ -14035,31 +15017,37 @@ var g = &grammar{
 																	pos:        position{line: 260, col: 6, offset: 7254},
 																	val:        "if",
 																	ignoreCase: false,
+																	want:       "\"if\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 261, col: 8, offset: 7268},
 																	val:        "then",
 																	ignoreCase: false,
+																	want:       "\"then\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 262, col: 8, offset: 7284},
 																	val:        "else",
 																	ignoreCase: false,
+																	want:       "\"else\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 263, col: 7, offset: 7299},
 																	val:        "let",
 																	ignoreCase: false,
+																	want:       "\"let\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 264, col: 6, offset: 7312},
 																	val:        "in",
 																	ignoreCase: false,
+																	want:       "\"in\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 266, col: 9, offset: 7339},
 																	val:        "using",
 																	ignoreCase: false,
+																	want:       "\"using\"",
 																},
 																&actionExpr{
 																	pos: position{line: 268, col: 11, offset: 7377},
@@ -14071,6 +15059,7 @@ var g = &grammar{
 																				pos:        position{line: 268, col: 11, offset: 7377},
 																				val:        "missing",
 																				ignoreCase: false,
+																				want:       "\"missing\"",
 																			},
 																			&notExpr{
 																				pos: position{line: 268, col: 21, offset: 7387},
@@ -14090,46 +15079,55 @@ var g = &grammar{
 																	pos:        position{line: 265, col: 6, offset: 7324},
 																	val:        "as",
 																	ignoreCase: false,
+																	want:       "\"as\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 269, col: 8, offset: 7443},
 																	val:        "True",
 																	ignoreCase: false,
+																	want:       "\"True\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 270, col: 9, offset: 7460},
 																	val:        "False",
 																	ignoreCase: false,
+																	want:       "\"False\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 271, col: 12, offset: 7481},
 																	val:        "Infinity",
 																	ignoreCase: false,
+																	want:       "\"Infinity\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 272, col: 7, offset: 7500},
 																	val:        "NaN",
 																	ignoreCase: false,
+																	want:       "\"NaN\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 267, col: 9, offset: 7357},
 																	val:        "merge",
 																	ignoreCase: false,
+																	want:       "\"merge\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 273, col: 8, offset: 7515},
 																	val:        "Some",
 																	ignoreCase: false,
+																	want:       "\"Some\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 274, col: 9, offset: 7532},
 																	val:        "toMap",
 																	ignoreCase: false,
+																	want:       "\"toMap\"",
 																},
 																&litMatcher{
 																	pos:        position{line: 275, col: 10, offset: 7551},
 																	val:        "assert",
 																	ignoreCase: false,
+																	want:       "\"assert\"",
 																},
 															},
 														},
@@ -14162,31 +15160,37 @@ var g = &grammar{
 																		pos:        position{line: 260, col: 6, offset: 7254},
 																		val:        "if",
 																		ignoreCase: false,
+																		want:       "\"if\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 261, col: 8, offset: 7268},
 																		val:        "then",
 																		ignoreCase: false,
+																		want:       "\"then\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 262, col: 8, offset: 7284},
 																		val:        "else",
 																		ignoreCase: false,
+																		want:       "\"else\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 263, col: 7, offset: 7299},
 																		val:        "let",
 																		ignoreCase: false,
+																		want:       "\"let\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 264, col: 6, offset: 7312},
 																		val:        "in",
 																		ignoreCase: false,
+																		want:       "\"in\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 266, col: 9, offset: 7339},
 																		val:        "using",
 																		ignoreCase: false,
+																		want:       "\"using\"",
 																	},
 																	&actionExpr{
 																		pos: position{line: 268, col: 11, offset: 7377},
@@ -14198,6 +15202,7 @@ var g = &grammar{
 																					pos:        position{line: 268, col: 11, offset: 7377},
 																					val:        "missing",
 																					ignoreCase: false,
+																					want:       "\"missing\"",
 																				},
 																				&notExpr{
 																					pos: position{line: 268, col: 21, offset: 7387},
@@ -14217,46 +15222,55 @@ var g = &grammar{
 																		pos:        position{line: 265, col: 6, offset: 7324},
 																		val:        "as",
 																		ignoreCase: false,
+																		want:       "\"as\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 269, col: 8, offset: 7443},
 																		val:        "True",
 																		ignoreCase: false,
+																		want:       "\"True\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 270, col: 9, offset: 7460},
 																		val:        "False",
 																		ignoreCase: false,
+																		want:       "\"False\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 271, col: 12, offset: 7481},
 																		val:        "Infinity",
 																		ignoreCase: false,
+																		want:       "\"Infinity\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 272, col: 7, offset: 7500},
 																		val:        "NaN",
 																		ignoreCase: false,
+																		want:       "\"NaN\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 267, col: 9, offset: 7357},
 																		val:        "merge",
 																		ignoreCase: false,
+																		want:       "\"merge\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 273, col: 8, offset: 7515},
 																		val:        "Some",
 																		ignoreCase: false,
+																		want:       "\"Some\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 274, col: 9, offset: 7532},
 																		val:        "toMap",
 																		ignoreCase: false,
+																		want:       "\"toMap\"",
 																	},
 																	&litMatcher{
 																		pos:        position{line: 275, col: 10, offset: 7551},
 																		val:        "assert",
 																		ignoreCase: false,
+																		want:       "\"assert\"",
 																	},
 																},
 															},
@@ -14294,6 +15308,7 @@ var g = &grammar{
 									pos:        position{line: 273, col: 8, offset: 7515},
 									val:        "Some",
 									ignoreCase: false,
+									want:       "\"Some\"",
 								},
 							},
 						},
@@ -14311,6 +15326,7 @@ var g = &grammar{
 									pos:        position{line: 727, col: 36, offset: 23245},
 									val:        ":",
 									ignoreCase: false,
+									want:       "\":\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 727, col: 40, offset: 23249},
@@ -14339,6 +15355,7 @@ var g = &grammar{
 							pos:        position{line: 729, col: 12, offset: 23279},
 							val:        ",",
 							ignoreCase: false,
+							want:       "\",\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 729, col: 16, offset: 23283},
@@ -14373,6 +15390,7 @@ var g = &grammar{
 							pos:        position{line: 732, col: 7, offset: 23347},
 							val:        "[",
 							ignoreCase: false,
+							want:       "\"[\"",
 						},
 						&ruleRefExpr{
 							pos:  position{line: 732, col: 11, offset: 23351},
@@ -14387,6 +15405,7 @@ var g = &grammar{
 										pos:        position{line: 732, col: 14, offset: 23354},
 										val:        ",",
 										ignoreCase: false,
+										want:       "\",\"",
 									},
 									&ruleRefExpr{
 										pos:  position{line: 732, col: 18, offset: 23358},
@@ -14422,6 +15441,7 @@ var g = &grammar{
 							pos:        position{line: 732, col: 56, offset: 23396},
 							val:        "]",
 							ignoreCase: false,
+							want:       "\"]\"",
 						},
 					},
 				},
@@ -20734,20 +21754,7 @@ type litMatcher struct {
 	pos        position
 	val        string
 	ignoreCase bool
-	wantCache  string
-}
-
-func (lit *litMatcher) want() string {
-	if lit.wantCache != "" {
-		return lit.wantCache
-	}
-	ignoreCase := ""
-	if lit.ignoreCase {
-		ignoreCase = "i"
-	}
-	val := string(strconv.AppendQuote([]byte{}, lit.val)) + ignoreCase // wrap 'lit.val' with double quotes
-	lit.wantCache = val
-	return val
+	want       string
 }
 
 type charClassMatcher struct {
@@ -21347,13 +22354,13 @@ func (p *parser) parseLitMatcher(lit *litMatcher) (interface{}, bool) {
 			cur = unicode.ToLower(cur)
 		}
 		if cur != want {
-			p.failAt(false, start.position, lit.want())
+			p.failAt(false, start.position, lit.want)
 			p.restore(start)
 			return nil, false
 		}
 		p.read()
 	}
-	p.failAt(true, start.position, lit.want())
+	p.failAt(true, start.position, lit.want)
 	return p.sliceFrom(start), true
 }
 
