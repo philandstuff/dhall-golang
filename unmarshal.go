@@ -48,6 +48,9 @@ func Decode(e core.Value, out interface{}) {
 // encode converts a reflect.Value to a core.Value with the given
 // Dhall type
 func encode(val reflect.Value, typ core.Value) core.Value {
+	if val.Kind() == reflect.Ptr {
+		return encode(val.Elem(), typ)
+	}
 	switch e := typ.(type) {
 	case core.Builtin:
 		switch typ {
@@ -207,6 +210,9 @@ func decode(e core.Value, v reflect.Value) {
 			decode(expr, slice.Index(i))
 		}
 		v.Set(slice)
+	case reflect.Ptr:
+		v.Set(reflect.New(v.Type().Elem()))
+		decode(e, v.Elem())
 	case reflect.Uint, reflect.Uint8, reflect.Uint16,
 		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		v.SetUint(uint64(e.(core.NaturalLit)))
