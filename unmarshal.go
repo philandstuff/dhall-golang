@@ -48,51 +48,65 @@ func Decode(e core.Value, out interface{}) {
 // encode converts a reflect.Value to a core.Value with the given
 // Dhall type
 func encode(val reflect.Value, typ core.Value) core.Value {
-	if val.Kind() == reflect.Ptr {
-		return encode(val.Elem(), typ)
-	}
-	switch e := typ.(type) {
-	case core.Builtin:
-		switch typ {
-		case core.Double:
-			return core.DoubleLit(val.Float())
-		case core.Bool:
+	switch val.Kind() {
+	case reflect.Bool:
+		if typ == core.Bool {
 			return core.BoolLit(val.Bool())
-		case core.Natural:
-			switch val.Kind() {
-			case reflect.Uint, reflect.Uint8, reflect.Uint16,
-				reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-				return core.NaturalLit(val.Uint())
-			default:
-				return core.NaturalLit(val.Int())
-			}
-		case core.Integer:
-			return core.IntegerLit(val.Int())
-		case core.Text:
-			return core.PlainTextLit(val.String())
-		default:
-			panic("unknown Builtin")
 		}
-	case core.ListOf:
-		if val.Kind() == reflect.Map {
-			mapEntryType := e.Type.(core.RecordType)
-			if !isMapEntryType(mapEntryType) {
-				panic("Can't unmarshal golang map into given Dhall type")
+	case reflect.Int, reflect.Int8, reflect.Int16,
+		reflect.Int32, reflect.Int64:
+		if typ == core.Integer {
+			return core.IntegerLit(val.Int())
+		}
+		if typ == core.Natural {
+			return core.NaturalLit(val.Int())
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16,
+		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		if typ == core.Natural {
+			return core.NaturalLit(val.Uint())
+		}
+	case reflect.Float32, reflect.Float64:
+		if typ == core.Double {
+			return core.DoubleLit(val.Float())
+		}
+		// no Complex32 or Complex64
+		// no Array
+		// no Chan
+	case reflect.Func: // not implemented
+		// no Interface
+	case reflect.Map:
+		listOf, ok := typ.(core.ListOf)
+		if !ok {
+			panic("foo")
+		}
+		mapEntryType, ok := listOf.Type.(core.RecordType)
+		if !ok {
+			panic("foo")
+		}
+		if !isMapEntryType(mapEntryType) {
+			panic("Can't unmarshal golang map into given Dhall type")
+		}
+		if val.Len() == 0 {
+			return core.EmptyList{Type: mapEntryType}
+		}
+		l := make(core.NonEmptyList, val.Len())
+		iter := val.MapRange()
+		i := 0
+		for iter.Next() {
+			l[i] = core.RecordLit{
+				"mapKey":   encode(iter.Key(), mapEntryType["mapKey"]),
+				"mapValue": encode(iter.Value(), mapEntryType["mapValue"]),
 			}
-			if val.Len() == 0 {
-				return core.EmptyList{Type: e.Type}
-			}
-			l := make(core.NonEmptyList, val.Len())
-			iter := val.MapRange()
-			i := 0
-			for iter.Next() {
-				l[i] = core.RecordLit{
-					"mapKey":   encode(iter.Key(), mapEntryType["mapKey"]),
-					"mapValue": encode(iter.Value(), mapEntryType["mapValue"]),
-				}
-				i++
-			}
-			return l
+			i++
+		}
+		return l
+	case reflect.Ptr:
+		return encode(val.Elem(), typ)
+	case reflect.Slice:
+		e, ok := typ.(core.ListOf)
+		if !ok {
+			panic("foo")
 		}
 		if val.Len() == 0 {
 			return core.EmptyList{Type: e.Type}
@@ -102,7 +116,15 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 			l[i] = encode(val.Index(i), e.Type)
 		}
 		return l
-	case core.RecordType:
+	case reflect.String:
+		if typ == core.Text {
+			return core.PlainTextLit(val.String())
+		}
+	case reflect.Struct:
+		e, ok := typ.(core.RecordType)
+		if !ok {
+			panic("foo")
+		}
 		rec := core.RecordLit{}
 	fields:
 		for key, typ := range e {
@@ -117,9 +139,9 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 			rec[key] = encode(val.FieldByName(key), typ)
 		}
 		return rec
-	default:
-		panic("Don't know what to do with val")
+		// no UnsafePointer
 	}
+	panic(fmt.Sprintf("Can't encode %v as %v", val, typ))
 }
 
 // dhallShim takes a Callable and wraps it so that it can be passed
