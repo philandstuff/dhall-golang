@@ -162,25 +162,23 @@ func dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) 
 	}
 }
 
-// flattenOptional(e) returns:
-// nil                if e is None T
-// flattenOptional(x) if e is Some x
-// e                  otherwise
-// note that there may be options buried deeper in e; we just strip any outer
-// Optional layers.
-func flattenOptional(e core.Value) core.Value {
+// flattenSome(e) returns:
+//
+//  flattenSome(x) if e is Some x
+//  e              otherwise
+//
+// note that there may be Somes buried deeper in e; we just strip any outer
+// Some layers.
+func flattenSome(e core.Value) core.Value {
 	if some, ok := e.(core.Some); ok {
-		return flattenOptional(some.Val)
-	}
-	if _, ok := e.(core.NoneOf); ok {
-		return nil
+		return flattenSome(some.Val)
 	}
 	return e
 }
 
 func decode(e core.Value, v reflect.Value) {
-	e = flattenOptional(e)
-	if e == nil {
+	e = flattenSome(e)
+	if _, ok := e.(core.NoneOf); ok {
 		// TODO: should we fail if a None doesn't match the type?
 		// (similar to EmptyList below)
 		return
