@@ -34,15 +34,14 @@ func Unmarshal(b []byte, out interface{}) error {
 	if err != nil {
 		return err
 	}
-	Decode(core.Eval(resolved), out)
-	return nil
+	return Decode(core.Eval(resolved), out)
 }
 
 // Decode takes a core.Value and unmarshals it into the given
 // variable.
-func Decode(e core.Value, out interface{}) {
+func Decode(e core.Value, out interface{}) error {
 	v := reflect.ValueOf(out)
-	decode(e, v.Elem())
+	return decode(e, v.Elem())
 }
 
 // encode converts a reflect.Value to a core.Value with the given
@@ -157,7 +156,11 @@ func dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) 
 			expr = fn.Call(dhallArg)
 		}
 		ptr := reflect.New(out)
-		decode(expr, ptr.Elem())
+		err := decode(expr, ptr.Elem())
+		if err != nil {
+			// if the func was well-typed, this shouldn't happen
+			panic(err)
+		}
 		return []reflect.Value{ptr.Elem()}
 	}
 }
@@ -176,39 +179,39 @@ func flattenSome(e core.Value) core.Value {
 	return e
 }
 
-func decode(e core.Value, v reflect.Value) {
+func decode(e core.Value, v reflect.Value) error {
 	e = flattenSome(e)
 	if _, ok := e.(core.NoneOf); ok {
 		// TODO: should we fail if a None doesn't match the type?
 		// (similar to EmptyList below)
-		return
+		return nil
 	}
 	switch v.Kind() {
 	case reflect.Bool:
 		if e, ok := e.(core.BoolLit); ok {
 			v.SetBool(bool(e))
-			return
+			return nil
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16,
 		reflect.Int32, reflect.Int64:
 		if e, ok := e.(core.IntegerLit); ok {
 			v.SetInt(int64(e))
-			return
+			return nil
 		}
 		if e, ok := e.(core.NaturalLit); ok {
 			v.SetInt(int64(e))
-			return
+			return nil
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16,
 		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		if e, ok := e.(core.NaturalLit); ok {
 			v.SetUint(uint64(e))
-			return
+			return nil
 		}
 	case reflect.Float32, reflect.Float64:
 		if e, ok := e.(core.DoubleLit); ok {
 			v.SetFloat(float64(e))
-			return
+			return nil
 		}
 	case reflect.Func:
 		if e, ok := e.(core.Callable); ok {
@@ -216,7 +219,7 @@ func decode(e core.Value, v reflect.Value) {
 			returnType := fnType.Out(0)
 			fn := reflect.MakeFunc(fnType, dhallShim(returnType, e))
 			v.Set(fn)
-			return
+			return nil
 		}
 	case reflect.Map:
 		// initialise with new (non-nil) value
@@ -224,7 +227,7 @@ func decode(e core.Value, v reflect.Value) {
 		if _, ok := e.(core.EmptyList); ok {
 			// TODO: should this fail if type mismatches?
 			// it should at least be a mapKey/mapValue type
-			return
+			return nil
 		}
 		if e, ok := e.(core.NonEmptyList); ok {
 			recordLit := e[0].(core.RecordLit)
@@ -236,33 +239,41 @@ func decode(e core.Value, v reflect.Value) {
 				entry := r.(core.RecordLit)
 				key := reflect.New(v.Type().Key()).Elem()
 				val := reflect.New(v.Type().Elem()).Elem()
-				decode(entry["mapKey"], key)
-				decode(entry["mapValue"], val)
+				err := decode(entry["mapKey"], key)
+				if err != nil {
+					return err
+				}
+				err = decode(entry["mapValue"], val)
+				if err != nil {
+					return err
+				}
 				v.SetMapIndex(key, val)
 			}
-			return
+			return nil
 		}
 	case reflect.Ptr:
 		v.Set(reflect.New(v.Type().Elem()))
-		decode(e, v.Elem())
-		return
+		return decode(e, v.Elem())
 	case reflect.Slice:
 		if _, ok := e.(core.EmptyList); ok {
 			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
-			return
+			return nil
 		}
 		if e, ok := e.(core.NonEmptyList); ok {
 			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 			for i, expr := range e {
-				decode(expr, slice.Index(i))
+				err := decode(expr, slice.Index(i))
+				if err != nil {
+					return err
+				}
 			}
 			v.Set(slice)
-			return
+			return nil
 		}
 	case reflect.String:
 		if e, ok := e.(core.PlainTextLit); ok {
 			v.SetString(string(e))
-			return
+			return nil
 		}
 	case reflect.Struct:
 		if e, ok := e.(core.RecordLit); ok {
@@ -270,14 +281,18 @@ func decode(e core.Value, v reflect.Value) {
 			for i := 0; i < structType.NumField(); i++ {
 				// FIXME ignores fields in RecordLit not in Struct
 				tag := structType.Field(i).Tag.Get("dhall")
+				var err error
 				if tag != "" {
-					decode(e[tag], v.Field(i))
+					err = decode(e[tag], v.Field(i))
 				} else {
-					decode(e[structType.Field(i).Name], v.Field(i))
+					err = decode(e[structType.Field(i).Name], v.Field(i))
+				}
+				if err != nil {
+					return err
 				}
 			}
-			return
+			return nil
 		}
 	}
-	panic(fmt.Sprintf("Don't know how to decode %v into %v", e, v.Kind()))
+	return fmt.Errorf("Don't know how to decode %v into %v", e, v.Kind())
 }

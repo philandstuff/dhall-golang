@@ -13,7 +13,8 @@ import (
 )
 
 func DecodeAndCompare(input core.Value, ptr interface{}, expected interface{}) {
-	Decode(input, ptr)
+	err := Decode(input, ptr)
+	Expect(err).ToNot(HaveOccurred())
 	// use reflect to dereference a pointer of unknown type
 	Expect(reflect.ValueOf(ptr).Elem().Interface()).
 		To(Equal(expected))
@@ -127,7 +128,8 @@ var _ = Describe("Decode", func() {
 					[]reflect.Type{arg.Type()},
 					[]reflect.Type{arg.Type()},
 					false))
-			Decode(id, fnPtr.Interface())
+			err := Decode(id, fnPtr.Interface())
+			Expect(err).ToNot(HaveOccurred())
 			fnVal := fnPtr.Elem()
 			result := fnVal.Call([]reflect.Value{arg})
 			Expect(result[0].Interface()).To(Equal(arg.Interface()))
@@ -171,7 +173,8 @@ var _ = Describe("Decode", func() {
 					term.NaturalLit(1),
 				),
 			})
-			Decode(dhallFn, &fn)
+			err := Decode(dhallFn, &fn)
+			Expect(err).ToNot(HaveOccurred())
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(3)).To(Equal(uint(4)))
 		})
@@ -187,19 +190,24 @@ var _ = Describe("Decode", func() {
 						term.NewVar("x"), term.NewVar("y")),
 				},
 			})
-			Decode(dhallFn, &fn)
+			err := Decode(dhallFn, &fn)
+			Expect(err).ToNot(HaveOccurred())
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(3, 4)).To(Equal(uint(7)))
 		})
 		It("Decodes the Natural/subtract builtin as a function", func() {
 			var fn func(int, int) uint
-			Decode(core.NaturalSubtract, &fn)
+			err := Decode(core.NaturalSubtract, &fn)
+			Expect(err).ToNot(HaveOccurred())
+
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(1, 3)).To(Equal(uint(2)))
 		})
 		It("Decodes the Natural/subtract builtin as a curried function", func() {
 			var fn func(int) func(int) uint
-			Decode(core.NaturalSubtract, &fn)
+			err := Decode(core.NaturalSubtract, &fn)
+			Expect(err).ToNot(HaveOccurred())
+
 			Expect(fn).ToNot(BeNil())
 			Expect(fn(1)(3)).To(Equal(uint(2)))
 		})

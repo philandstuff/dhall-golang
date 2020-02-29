@@ -3,6 +3,10 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...HEAD
 
+### Breaking changes
+
+ - dhall.Decode() now returns an error instead of panicking
+
 ## [1.0.0-rc.3] - 2020-02-23
 
 [1.0.0-rc.3]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...v1.0.0-rc.3
