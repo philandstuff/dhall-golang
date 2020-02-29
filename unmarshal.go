@@ -46,28 +46,28 @@ func Decode(e core.Value, out interface{}) error {
 
 // encode converts a reflect.Value to a core.Value with the given
 // Dhall type
-func encode(val reflect.Value, typ core.Value) core.Value {
+func encode(val reflect.Value, typ core.Value) (core.Value, error) {
 	switch val.Kind() {
 	case reflect.Bool:
 		if typ == core.Bool {
-			return core.BoolLit(val.Bool())
+			return core.BoolLit(val.Bool()), nil
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16,
 		reflect.Int32, reflect.Int64:
 		if typ == core.Integer {
-			return core.IntegerLit(val.Int())
+			return core.IntegerLit(val.Int()), nil
 		}
 		if typ == core.Natural {
-			return core.NaturalLit(val.Int())
+			return core.NaturalLit(val.Int()), nil
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16,
 		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		if typ == core.Natural {
-			return core.NaturalLit(val.Uint())
+			return core.NaturalLit(val.Uint()), nil
 		}
 	case reflect.Float32, reflect.Float64:
 		if typ == core.Double {
-			return core.DoubleLit(val.Float())
+			return core.DoubleLit(val.Float()), nil
 		}
 		// no Complex32 or Complex64
 		// no Array
@@ -87,19 +87,27 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 			panic("Can't encode golang map into given Dhall type")
 		}
 		if val.Len() == 0 {
-			return core.EmptyList{Type: mapEntryType}
+			return core.EmptyList{Type: mapEntryType}, nil
 		}
 		l := make(core.NonEmptyList, val.Len())
 		iter := val.MapRange()
 		i := 0
 		for iter.Next() {
+			key, err := encode(iter.Key(), mapEntryType["mapKey"])
+			if err != nil {
+				return nil, err
+			}
+			val, err := encode(iter.Value(), mapEntryType["mapValue"])
+			if err != nil {
+				return nil, err
+			}
 			l[i] = core.RecordLit{
-				"mapKey":   encode(iter.Key(), mapEntryType["mapKey"]),
-				"mapValue": encode(iter.Value(), mapEntryType["mapValue"]),
+				"mapKey":   key,
+				"mapValue": val,
 			}
 			i++
 		}
-		return l
+		return l, nil
 	case reflect.Ptr:
 		return encode(val.Elem(), typ)
 	case reflect.Slice:
@@ -108,16 +116,17 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 			panic("foo")
 		}
 		if val.Len() == 0 {
-			return core.EmptyList{Type: e.Type}
+			return core.EmptyList{Type: e.Type}, nil
 		}
 		l := make(core.NonEmptyList, val.Len())
-		for i := 0; i < val.Len(); i++ {
-			l[i] = encode(val.Index(i), e.Type)
+		var err error
+		for i := 0; i < val.Len() && err == nil; i++ {
+			l[i], err = encode(val.Index(i), e.Type)
 		}
-		return l
+		return l, err
 	case reflect.String:
 		if typ == core.Text {
-			return core.PlainTextLit(val.String())
+			return core.PlainTextLit(val.String()), nil
 		}
 	case reflect.Struct:
 		e, ok := typ.(core.RecordType)
@@ -127,20 +136,27 @@ func encode(val reflect.Value, typ core.Value) core.Value {
 		rec := core.RecordLit{}
 	fields:
 		for key, typ := range e {
+			var err error
 			structType := val.Type()
 			for i := 0; i < structType.NumField(); i++ {
 				tag := structType.Field(i).Tag.Get("dhall")
 				if key == tag {
-					rec[key] = encode(val.Field(i), typ)
+					rec[key], err = encode(val.Field(i), typ)
+					if err != nil {
+						return nil, err
+					}
 					continue fields
 				}
 			}
-			rec[key] = encode(val.FieldByName(key), typ)
+			rec[key], err = encode(val.FieldByName(key), typ)
+			if err != nil {
+				return nil, err
+			}
 		}
-		return rec
+		return rec, nil
 		// no UnsafePointer
 	}
-	panic(fmt.Sprintf("Can't encode %v as %v", val, typ))
+	return nil, fmt.Errorf("Can't encode %v as %v", val, typ)
 }
 
 // dhallShim takes a Callable and wraps it so that it can be passed
@@ -152,7 +168,11 @@ func dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) 
 		var expr core.Value = dhallFunc
 		for _, arg := range args {
 			fn := expr.(core.Callable)
-			dhallArg := encode(arg, fn.ArgType())
+			dhallArg, err := encode(arg, fn.ArgType())
+			if err != nil {
+				// if the func was well-typed, this shouldn't happen
+				panic(err)
+			}
 			expr = fn.Call(dhallArg)
 		}
 		ptr := reflect.New(out)
