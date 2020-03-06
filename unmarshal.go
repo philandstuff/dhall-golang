@@ -1,6 +1,7 @@
 package dhall
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/philandstuff/dhall-golang/parser"
 )
 
-func isMapEntryType(recordType core.RecordType) bool {
+func isMapEntryType(recordType map[string]core.Value) bool {
 	if _, ok := recordType["mapKey"]; ok {
 		if _, ok := recordType["mapValue"]; ok {
 			return len(recordType) == 2
@@ -250,10 +251,12 @@ func decode(e core.Value, v reflect.Value) error {
 			return nil
 		}
 		if e, ok := e.(core.NonEmptyList); ok {
-			recordLit := e[0].(core.RecordLit)
-			// TODO: use isMapEntryType() here?
-			if len(recordLit) != 2 {
-				panic("can only unmarshal `List {mapKey : T, mapValue : U}` into go map")
+			recordLit, ok := e[0].(core.RecordLit)
+			if !ok {
+				break
+			}
+			if !isMapEntryType(recordLit) {
+				return errors.New("can only unmarshal `List {mapKey : T, mapValue : U}` into go map")
 			}
 			for _, r := range e {
 				entry := r.(core.RecordLit)
