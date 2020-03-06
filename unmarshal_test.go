@@ -13,19 +13,20 @@ import (
 )
 
 func DecodeAndCompare(input core.Value, ptr interface{}, expected interface{}) {
-	Decode(input, ptr)
+	err := Decode(input, ptr)
+	Expect(err).ToNot(HaveOccurred())
 	// use reflect to dereference a pointer of unknown type
 	Expect(reflect.ValueOf(ptr).Elem().Interface()).
 		To(Equal(expected))
 }
 
 type testStruct struct {
-	Foo int
+	Foo uint
 	Bar string
 }
 
 type testTaggedStruct struct {
-	Foo int `dhall:"baz"`
+	Foo uint `dhall:"baz"`
 	Bar string
 }
 
@@ -127,20 +128,20 @@ var _ = Describe("Decode", func() {
 					[]reflect.Type{arg.Type()},
 					[]reflect.Type{arg.Type()},
 					false))
-			Decode(id, fnPtr.Interface())
+			err := Decode(id, fnPtr.Interface())
+			Expect(err).ToNot(HaveOccurred())
 			fnVal := fnPtr.Elem()
 			result := fnVal.Call([]reflect.Value{arg})
 			Expect(result[0].Interface()).To(Equal(arg.Interface()))
 		},
 		Entry("Bool into bool", term.Bool, true),
-		Entry("Natural into int", term.Natural, 1),
 		Entry("Natural into uint", term.Natural, uint(1)),
-		Entry("Natural into int64", term.Natural, int64(1)),
-		Entry("Integer into int", term.Integer, 1),
+		Entry("Natural into uint64", term.Natural, uint64(1)),
+		Entry("Integer into int", term.Integer, int(1)),
 		Entry("Integer into int64", term.Integer, int64(1)),
 		Entry("Text into string", term.Text, "foo"),
-		Entry("List Natural into []int",
-			term.Apply(term.List, term.Natural), []int{1, 2, 3}),
+		Entry("List Natural into []uint",
+			term.Apply(term.List, term.Natural), []uint{1, 2, 3}),
 		XEntry("Optional Natural into int",
 			term.Apply(term.Optional, term.Natural), 1),
 		Entry("record into struct",
@@ -158,12 +159,12 @@ var _ = Describe("Decode", func() {
 		Entry("map into map",
 			term.Apply(term.List,
 				term.RecordType{"mapKey": term.Text, "mapValue": term.Natural}),
-			map[string]int{"foo": 1, "bar": 2},
+			map[string]uint{"foo": 1, "bar": 2},
 		),
 	)
 	Describe("Function types", func() {
-		It("Decodes the int successor function", func() {
-			var fn func(int) int
+		It("Decodes the Natural successor function", func() {
+			var fn func(uint) uint
 			dhallFn := core.Eval(term.Lambda{
 				Label: "x",
 				Type:  term.Natural,
@@ -172,12 +173,13 @@ var _ = Describe("Decode", func() {
 					term.NaturalLit(1),
 				),
 			})
-			Decode(dhallFn, &fn)
+			err := Decode(dhallFn, &fn)
+			Expect(err).ToNot(HaveOccurred())
 			Expect(fn).ToNot(BeNil())
-			Expect(fn(3)).To(Equal(4))
+			Expect(fn(uint(3))).To(Equal(uint(4)))
 		})
 		It("Decodes the natural sum function", func() {
-			var fn func(int, int) int
+			var fn func(uint, uint) uint
 			dhallFn := core.Eval(term.Lambda{
 				Label: "x",
 				Type:  term.Natural,
@@ -188,21 +190,26 @@ var _ = Describe("Decode", func() {
 						term.NewVar("x"), term.NewVar("y")),
 				},
 			})
-			Decode(dhallFn, &fn)
+			err := Decode(dhallFn, &fn)
+			Expect(err).ToNot(HaveOccurred())
 			Expect(fn).ToNot(BeNil())
-			Expect(fn(3, 4)).To(Equal(7))
+			Expect(fn(3, 4)).To(Equal(uint(7)))
 		})
 		It("Decodes the Natural/subtract builtin as a function", func() {
-			var fn func(int, int) int
-			Decode(core.NaturalSubtract, &fn)
+			var fn func(uint, uint) uint
+			err := Decode(core.NaturalSubtract, &fn)
+			Expect(err).ToNot(HaveOccurred())
+
 			Expect(fn).ToNot(BeNil())
-			Expect(fn(1, 3)).To(Equal(2))
+			Expect(fn(uint(1), uint(3))).To(Equal(uint(2)))
 		})
 		It("Decodes the Natural/subtract builtin as a curried function", func() {
-			var fn func(int) func(int) int
-			Decode(core.NaturalSubtract, &fn)
+			var fn func(uint) func(uint) uint
+			err := Decode(core.NaturalSubtract, &fn)
+			Expect(err).ToNot(HaveOccurred())
+
 			Expect(fn).ToNot(BeNil())
-			Expect(fn(1)(3)).To(Equal(2))
+			Expect(fn(uint(1))(uint(3))).To(Equal(uint(2)))
 		})
 	})
 })
