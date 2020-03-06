@@ -222,7 +222,13 @@ var _ = Describe("Decode", func() {
 			Expect(fn(uint(1))(uint(3))).To(Equal(uint(2)))
 		})
 	})
+	// TODO expected errors
 })
+
+func ExpectUnmarshalError(source string, targetVar interface{}) {
+	err := Unmarshal([]byte(source), targetVar)
+	Expect(err).To(HaveOccurred())
+}
 
 var _ = Describe("Unmarshal", func() {
 	It("Parses 1 + 2", func() {
@@ -245,5 +251,50 @@ var _ = Describe("Unmarshal", func() {
 		err := Unmarshal([]byte("./testdata/unmarshal-test.dhall"), &actual)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(actual).To(Equal(Config{Port: 5050, Name: "inetd"}))
+	})
+	Context("Unmarshalling functions", func() {
+		DescribeTable("Expected successes",
+			func(source string, targetVar interface{}, testInput interface{}, expectedOutput interface{}) {
+				err := Unmarshal([]byte(source), targetVar)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(reflect.ValueOf(targetVar).Elem().Call([]reflect.Value{reflect.ValueOf(testInput)})[0].Interface()).
+					To(Equal(expectedOutput))
+			},
+			Entry("Natural identity", `
+				λ(x : Natural) → x
+			`, new(func(uint) uint), uint(37), uint(37)),
+			Entry("Can return Natural as int", `
+				λ(x : Natural) → x
+			`, new(func(uint) int), uint(37), int(37)),
+			Entry("Natural successor", `
+				λ(x : Natural) → x + 1
+			`, new(func(uint) uint), uint(37), uint(38)),
+			Entry("Natural/even", `
+				Natural/even
+			`, new(func(uint) bool), uint(2), true),
+			Entry("Natural/show", `
+				Natural/show
+			`, new(func(uint) string), uint(37), "37"),
+			Entry("Text greet", `
+				λ(x : Text) → "Hello, " ++ x ++ "!"
+			`, new(func(string) string), "Brian", "Hello, Brian!"),
+		)
+		DescribeTable("Expected type errors", ExpectUnmarshalError,
+			Entry("Incompatible output parameter type", `
+				λ(x : Natural) → x
+			`, new(func(uint) string)),
+			Entry("No output parameters", `
+				λ(x : Natural) → x
+			`, new(func(uint))),
+			Entry("Multiple output parameters", `
+				λ(x : Natural) → x
+			`, new(func(uint) (uint, error))),
+			Entry("No input parameters", `
+				λ(x : Natural) → x
+			`, new(func() uint)),
+			Entry("Incompatible input parameter type", `
+				λ(x : Natural) → x
+			`, new(func(string) uint)),
+		)
 	})
 })
