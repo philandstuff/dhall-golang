@@ -58,9 +58,6 @@ func encode(val reflect.Value, typ core.Value) (core.Value, error) {
 		if typ == core.Integer {
 			return core.IntegerLit(val.Int()), nil
 		}
-		if typ == core.Natural {
-			return core.NaturalLit(val.Int()), nil
-		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16,
 		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		if typ == core.Natural {

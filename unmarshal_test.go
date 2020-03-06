@@ -159,12 +159,12 @@ var _ = Describe("Decode", func() {
 		Entry("map into map",
 			term.Apply(term.List,
 				term.RecordType{"mapKey": term.Text, "mapValue": term.Natural}),
-			map[string]int{"foo": 1, "bar": 2},
+			map[string]uint{"foo": 1, "bar": 2},
 		),
 	)
 	Describe("Function types", func() {
-		It("Decodes the int successor function", func() {
-			var fn func(int) uint
+		It("Decodes the Natural successor function", func() {
+			var fn func(uint) uint
 			dhallFn := core.Eval(term.Lambda{
 				Label: "x",
 				Type:  term.Natural,
@@ -176,10 +176,10 @@ var _ = Describe("Decode", func() {
 			err := Decode(dhallFn, &fn)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fn).ToNot(BeNil())
-			Expect(fn(3)).To(Equal(uint(4)))
+			Expect(fn(uint(3))).To(Equal(uint(4)))
 		})
 		It("Decodes the natural sum function", func() {
-			var fn func(int, int) uint
+			var fn func(uint, uint) uint
 			dhallFn := core.Eval(term.Lambda{
 				Label: "x",
 				Type:  term.Natural,
@@ -196,20 +196,20 @@ var _ = Describe("Decode", func() {
 			Expect(fn(3, 4)).To(Equal(uint(7)))
 		})
 		It("Decodes the Natural/subtract builtin as a function", func() {
-			var fn func(int, int) uint
+			var fn func(uint, uint) uint
 			err := Decode(core.NaturalSubtract, &fn)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(fn).ToNot(BeNil())
-			Expect(fn(1, 3)).To(Equal(uint(2)))
+			Expect(fn(uint(1), uint(3))).To(Equal(uint(2)))
 		})
 		It("Decodes the Natural/subtract builtin as a curried function", func() {
-			var fn func(int) func(int) uint
+			var fn func(uint) func(uint) uint
 			err := Decode(core.NaturalSubtract, &fn)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(fn).ToNot(BeNil())
-			Expect(fn(1)(3)).To(Equal(uint(2)))
+			Expect(fn(uint(1))(uint(3))).To(Equal(uint(2)))
 		})
 	})
 })
