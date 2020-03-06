@@ -7,6 +7,10 @@
 
  - dhall.Decode() now returns an error instead of panicking
 
+### Changed
+
+ - better encoding of Optional types
+
 ## [1.0.0-rc.3] - 2020-02-23
 
 [1.0.0-rc.3]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...v1.0.0-rc.3
