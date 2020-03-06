@@ -77,14 +77,14 @@ func encode(val reflect.Value, typ core.Value) (core.Value, error) {
 	case reflect.Map:
 		listOf, ok := typ.(core.ListOf)
 		if !ok {
-			panic("foo")
+			break
 		}
 		mapEntryType, ok := listOf.Type.(core.RecordType)
 		if !ok {
-			panic("foo")
+			break
 		}
 		if !isMapEntryType(mapEntryType) {
-			panic("Can't encode golang map into given Dhall type")
+			break
 		}
 		if val.Len() == 0 {
 			return core.EmptyList{Type: mapEntryType}, nil
@@ -113,7 +113,7 @@ func encode(val reflect.Value, typ core.Value) (core.Value, error) {
 	case reflect.Slice:
 		e, ok := typ.(core.ListOf)
 		if !ok {
-			panic("foo")
+			break
 		}
 		if val.Len() == 0 {
 			return core.EmptyList{Type: e.Type}, nil
@@ -131,7 +131,7 @@ func encode(val reflect.Value, typ core.Value) (core.Value, error) {
 	case reflect.Struct:
 		e, ok := typ.(core.RecordType)
 		if !ok {
-			panic("foo")
+			break
 		}
 		rec := core.RecordLit{}
 	fields:
