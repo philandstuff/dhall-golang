@@ -48,6 +48,20 @@ func Decode(e core.Value, out interface{}) error {
 // encode converts a reflect.Value to a core.Value with the given
 // Dhall type
 func encode(val reflect.Value, typ core.Value) (core.Value, error) {
+	if opt, ok := typ.(core.OptionalOf); ok {
+		switch val.Kind() {
+		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+			reflect.Ptr, reflect.Slice:
+			if val.IsNil() {
+				return core.NoneOf{Type: typ}, nil
+			}
+		}
+		dhallVal, err := encode(val, opt.Type)
+		if err != nil {
+			return nil, err
+		}
+		return core.Some{Val: dhallVal}, nil
+	}
 	switch val.Kind() {
 	case reflect.Bool:
 		if typ == core.Bool {
