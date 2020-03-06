@@ -1,19 +1,24 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.4...HEAD
+
+## [1.0.0-rc.4] - 2020-03-06
+[1.0.0-rc.4]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...v1.0.0-rc.4
 
 ### Breaking changes
 
- - dhall.Decode() now returns an error instead of panicking
+ - dhall.Decode() now returns an error instead of panicking (#18)
 
 ### Changed
 
- - better encoding of Optional types
+ - regenerate parser from mna/pigeon master (#16)
+ - support for unmarshalling into pointer types (#17)
+ - better encoding of Optional types (#19)
 
 ## [1.0.0-rc.3] - 2020-02-23
 
-[1.0.0-rc.3]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...v1.0.0-rc.3
+[1.0.0-rc.3]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.2...v1.0.0-rc.3
 
 Another release candidate.  A few more breaking changes, though less
 drastic than rc.2 was.  Things are slowly stabilising.
