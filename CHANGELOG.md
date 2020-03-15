@@ -1,7 +1,12 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.4...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0...HEAD
+
+## [1.0.0] - 2020-03-15
+[1.0.0]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.4...v1.0.0
+
+No changes from 1.0.0-rc.4.
 
 ## [1.0.0-rc.4] - 2020-03-06
 [1.0.0-rc.4]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.3...v1.0.0-rc.4
