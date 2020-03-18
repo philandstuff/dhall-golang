@@ -197,6 +197,13 @@ func dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) 
 	}
 }
 
+func mkTestVal(t reflect.Type) reflect.Value {
+	if t.Kind() == reflect.Ptr {
+		return reflect.New(t.Elem())
+	}
+	return reflect.Zero(t)
+}
+
 // flattenSome(e) returns:
 //
 //  flattenSome(x) if e is Some x
@@ -218,6 +225,7 @@ func decode(e core.Value, v reflect.Value) error {
 		// (similar to EmptyList below)
 		return nil
 	}
+types:
 	switch v.Kind() {
 	case reflect.Bool:
 		if e, ok := e.(core.BoolLit); ok {
@@ -246,13 +254,35 @@ func decode(e core.Value, v reflect.Value) error {
 			return nil
 		}
 	case reflect.Func:
-		if e, ok := e.(core.Callable); ok {
-			fnType := v.Type()
-			returnType := fnType.Out(0)
-			fn := reflect.MakeFunc(fnType, dhallShim(returnType, e))
-			v.Set(fn)
-			return nil
+		fnType := v.Type()
+		if fnType.NumIn() == 0 {
+			return fmt.Errorf("You must decode into a function type with at least one input parameter, not %v", fnType)
 		}
+		if fnType.NumOut() != 1 {
+			return fmt.Errorf("You must decode into a function type with exactly one output parameter, not %v", fnType)
+		}
+		returnType := fnType.Out(0)
+
+		result := e
+		for i := 0; i < fnType.NumIn(); i++ {
+			callable, ok := result.(core.Callable)
+			if !ok {
+				break types
+			}
+			testValue := mkTestVal(fnType.In(i))
+			testDhallVal, err := encode(testValue, callable.ArgType())
+			if err != nil {
+				return err
+			}
+			result = callable.Call(testDhallVal)
+		}
+		err := decode(result, reflect.New(fnType.Out(0)).Elem())
+		if err != nil {
+			return err
+		}
+		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e.(core.Callable)))
+		v.Set(fn)
+		return nil
 	case reflect.Map:
 		// initialise with new (non-nil) value
 		v.Set(reflect.MakeMap(v.Type()))
