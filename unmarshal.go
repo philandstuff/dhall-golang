@@ -8,6 +8,7 @@ import (
 	"github.com/philandstuff/dhall-golang/core"
 	"github.com/philandstuff/dhall-golang/imports"
 	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/philandstuff/dhall-golang/term"
 )
 
 func isMapEntryType(recordType map[string]core.Value) bool {
@@ -27,6 +28,21 @@ func Unmarshal(b []byte, out interface{}) error {
 	if err != nil {
 		return err
 	}
+	return unmarshalTerm(term, out)
+}
+
+// UnmarshalFile takes dhall input from a file and parses it, resolves
+// imports, typechecks, evaluates, and unmarshals it into the given
+// variable.
+func UnmarshalFile(filename string, out interface{}) error {
+	term, err := parser.ParseFile(filename)
+	if err != nil {
+		return err
+	}
+	return unmarshalTerm(term, out)
+}
+
+func unmarshalTerm(term term.Term, out interface{}) error {
 	resolved, err := imports.Load(term)
 	if err != nil {
 		return err
