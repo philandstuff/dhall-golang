@@ -40,7 +40,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(NewEnvVarImport("FOO", Code))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+			Expect(actual).To(Equal(NaturalLit(3)))
 		})
 		It("Fails to resolve code with free variables", func() {
 			os.Setenv("FOO", "x")
@@ -92,7 +92,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(NewRemoteImport(server.URL()+"/foo.dhall", Code))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+			Expect(actual).To(Equal(NaturalLit(3)))
 		})
 		It("Fails to resolve code with free variables", func() {
 			server.RouteToHandler("GET", "/foo.dhall",
@@ -132,7 +132,7 @@ var _ = Describe("Import resolution", func() {
 					actual, err := Load(NewRemoteImport(server.URL()+"/same-origin.dhall", Code))
 
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+					Expect(actual).To(Equal(NaturalLit(3)))
 				})
 			})
 			Context("when remote import fetches different origin", func() {
@@ -154,7 +154,7 @@ var _ = Describe("Import resolution", func() {
 					actual, err := Load(NewRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code))
 
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+					Expect(actual).To(Equal(NaturalLit(3)))
 				})
 				It("allows if Access-Control-Allow-Origin matches the Origin header", func() {
 					otherOrigin := ghttp.NewServer()
@@ -165,7 +165,7 @@ var _ = Describe("Import resolution", func() {
 					actual, err := Load(NewRemoteImport(otherOrigin.URL()+"/other-origin.dhall", Code))
 
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+					Expect(actual).To(Equal(NaturalLit(3)))
 				})
 			})
 			Context("when local import fetches remote", func() {
@@ -173,7 +173,7 @@ var _ = Describe("Import resolution", func() {
 					actual, err := Load(NewRemoteImport(server.URL()+"/no-cors.dhall", Code))
 
 					Expect(err).ToNot(HaveOccurred())
-					Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+					Expect(actual).To(Equal(NaturalLit(3)))
 				})
 			})
 		})
@@ -189,7 +189,7 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(NewLocalImport("./testdata/natural.dhall", Code))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(Annot{Expr: NaturalLit(3), Annotation: Natural}))
+			Expect(actual).To(Equal(NaturalLit(3)))
 		})
 		It("Fails to resolve code with free variables", func() {
 			_, err := Load(NewLocalImport("./testdata/free_variable.dhall", Code))

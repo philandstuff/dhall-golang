@@ -74,6 +74,10 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 				return nil, err
 			}
 		}
+
+		// evaluate expression
+		expr = core.Quote(core.Eval(expr))
+
 		// check hash, if supplied
 		if e.Hash != nil {
 			actualHash, err := binary.SemanticHash(expr)
