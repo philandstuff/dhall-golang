@@ -277,11 +277,11 @@ assert ← "assert"
 Keyword ←
     If / Then / Else
   / Let / In
-  / Using / Missing / As
-  / True / False
+  / Using / Missing
+  / assert / As
   / Infinity / NaN
   / Merge / Some / toMap
-  / assert
+  / Forall
 
 Optional ← "Optional"
 Text ← "Text"

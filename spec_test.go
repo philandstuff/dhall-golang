@@ -32,6 +32,7 @@ var expectedFailures = []string{
 	"TestParserAccepts/unit/import/Headers",
 	"TestParserAccepts/unit/import/inlineUsing",
 	"TestParserAccepts/unit/import/parenthesizeUsing",
+	"TestParserAccepts/usingToMap",
 	"TestTypeInferenceFails/customHeadersUsingBoundVariable",
 	"TestImport/customHeadersA.dhall",
 	"TestImport/headerForwardingA.dhall",
@@ -62,6 +63,26 @@ var expectedFailures = []string{
 	"TestTypeInferenceFails/unit/RecordProjectionDuplicateFields.dhall",
 	"TestTypeInferenceFails/unit/UnionTypeDuplicateVariants",
 	"TestTypeInferenceFails/unit/README", // FIXME, shouldn't need excluding
+
+	// We respect RFC3986, but the dhall standard does not
+	"TestImport/unit/asLocation/RemoteCanonicalize4",
+
+	// We don't cache the same URL within the same run
+	// Also, there are rate limits on csrng.net
+	"TestTypeInference/CacheImports",
+
+	// Haven't implemented record puns yet
+	"TestNormalization/unit/RecordLitAllSugars",
+	"TestNormalization/unit/RecordLitPun",
+	"TestParserAccepts/unit/RecordLitPun",
+	"TestTypeInference/unit/RecordLitPun",
+
+	// Haven't implemented `with` yet
+	"TestNormalization/With",
+	"TestNormalization/unit/With",
+	"TestParserAccepts/unit/With",
+	"TestTypeInference/unit/With",
+	"TestTypeInferenceFails/unit/With",
 }
 
 func pass(t *testing.T) {
@@ -373,6 +394,8 @@ func (cache readOnlyCache) Fetch(hash []byte) term.Term {
 func (readOnlyCache) Save(hash []byte, term term.Term) {}
 
 func TestImport(t *testing.T) {
+	// this envvar is used by import tests
+	os.Setenv("DHALL_TEST_VAR", "6 * 7")
 	t.Parallel()
 	cwd, err := os.Getwd()
 	expectNoError(t, err)

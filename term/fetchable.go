@@ -84,7 +84,7 @@ func (e EnvVar) ChainOnto(base Fetchable) (Fetchable, error) {
 // AsLocation returns the EnvVar as a Dhall Term.  This implements the
 // `env:FOO as Location` Dhall feature.
 func (e EnvVar) AsLocation() Term {
-	return Apply(Field{locationType, "Environment"}, PlainText(e.String()))
+	return Apply(Field{locationType, "Environment"}, PlainText(string(e)))
 }
 
 // Origin returns NullOrigin, since LocalFiles do not have an origin.
@@ -185,9 +185,14 @@ func (l LocalFile) AsLocation() Term {
 	return Apply(Field{locationType, "Local"}, PlainText(l.String()))
 }
 
+var nullRelativeReference = &url.URL{}
+
 // NewRemoteFile constructs a RemoteFile from a *url.URL.
 func NewRemoteFile(u *url.URL) RemoteFile {
-	return RemoteFile{url: u}
+	canonicalized := u.ResolveReference(nullRelativeReference)
+	// ResolveReference doesn't preserve ForceQuery
+	canonicalized.ForceQuery = u.ForceQuery
+	return RemoteFile{url: canonicalized}
 }
 
 var client http.Client
