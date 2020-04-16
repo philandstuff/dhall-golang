@@ -503,6 +503,18 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		if lit, ok := record.(RecordLit); ok {
 			return lit[t.FieldName]
 		}
+		if union, ok := record.(UnionType); ok {
+			if union[t.FieldName] == nil {
+				return unionVal{
+					Type:        union,
+					Alternative: t.FieldName,
+				}
+			}
+			return unionConstructor{
+				Type:        union,
+				Alternative: t.FieldName,
+			}
+		}
 		return field{
 			Record:    record,
 			FieldName: t.FieldName,
@@ -585,36 +597,30 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		return result
 	case term.Merge:
 		handlerVal := evalWith(t.Handler, e, shouldAlphaNormalize)
-		unionVal := evalWith(t.Union, e, shouldAlphaNormalize)
+		union := evalWith(t.Union, e, shouldAlphaNormalize)
 		if handlers, ok := handlerVal.(RecordLit); ok {
-			// TODO: test tricky Field inputs
-			if union, ok := unionVal.(app); ok {
-				if field, ok := union.Fn.(field); ok {
-					return apply(
-						handlers[field.FieldName],
-						union.Arg,
-					)
+			if unionLit, ok := union.(unionVal); ok {
+				if unionLit.Val == nil {
+					// empty union alternative
+					return handlers[unionLit.Alternative]
 				}
+				return apply(handlers[unionLit.Alternative], unionLit.Val)
 			}
-			if union, ok := unionVal.(field); ok {
-				// empty union alternative
-				return handlers[union.FieldName]
-			}
-			if some, ok := unionVal.(Some); ok {
+			if some, ok := union.(Some); ok {
 				// Treating Optional as < Some a | None >
 				return apply(
 					handlers["Some"],
 					some.Val,
 				)
 			}
-			if _, ok := unionVal.(NoneOf); ok {
+			if _, ok := union.(NoneOf); ok {
 				// Treating Optional as < Some a | None >
 				return handlers["None"]
 			}
 		}
 		output := merge{
 			Handler: handlerVal,
-			Union:   unionVal,
+			Union:   union,
 		}
 		if t.Annotation != nil {
 			output.Annotation = evalWith(t.Annotation, e, shouldAlphaNormalize)

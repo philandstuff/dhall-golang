@@ -217,6 +217,32 @@ func alphaEquivalentWith(level int, v1 Value, v2 Value) bool {
 			}
 		}
 		return true
+	case unionConstructor:
+		v2, ok := v2.(unionConstructor)
+		if !ok {
+			return false
+		}
+		if v1.Alternative != v2.Alternative {
+			return false
+		}
+		return alphaEquivalentWith(level, v1.Type, v2.Type)
+	case unionVal:
+		v2, ok := v2.(unionVal)
+		if !ok {
+			return false
+		}
+		if v1.Alternative != v2.Alternative {
+			return false
+		}
+		if v1.Val != nil {
+			if v2.Val == nil {
+				return false
+			}
+			if !alphaEquivalentWith(level, v1.Val, v2.Val) {
+				return false
+			}
+		}
+		return alphaEquivalentWith(level, v1.Type, v2.Type)
 	case merge:
 		v2, ok := v2.(merge)
 		if !ok {

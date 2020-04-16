@@ -210,8 +210,21 @@ func (l lambda) ArgType() Value {
 	return l.Domain
 }
 
+func (u unionConstructor) Call(v Value) Value {
+	return unionVal{
+		Type:        u.Type,
+		Alternative: u.Alternative,
+		Val:         v,
+	}
+}
+
+func (u unionConstructor) ArgType() Value {
+	return u.Type[u.Alternative]
+}
+
 var (
 	_ Callable = lambda{}
+	_ Callable = unionConstructor{}
 )
 
 type (
@@ -337,6 +350,17 @@ type (
 	// A UnionType is a Value representing a Dhall union type.
 	UnionType map[string]Value
 
+	unionConstructor struct {
+		Type        UnionType
+		Alternative string
+	}
+
+	unionVal struct {
+		Type        UnionType
+		Alternative string
+		Val         Value // nil for empty alternatives
+	}
+
 	merge struct {
 		Handler    Value
 		Union      Value
@@ -377,11 +401,13 @@ func (d DoubleLit) String() string {
 
 func (Some) isValue() {}
 
-func (RecordType) isValue() {}
-func (RecordLit) isValue()  {}
-func (toMap) isValue()      {}
-func (field) isValue()      {}
-func (project) isValue()    {}
-func (UnionType) isValue()  {}
-func (merge) isValue()      {}
-func (assert) isValue()     {}
+func (RecordType) isValue()       {}
+func (RecordLit) isValue()        {}
+func (toMap) isValue()            {}
+func (field) isValue()            {}
+func (project) isValue()          {}
+func (UnionType) isValue()        {}
+func (unionConstructor) isValue() {}
+func (unionVal) isValue()         {}
+func (merge) isValue()            {}
+func (assert) isValue()           {}

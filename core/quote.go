@@ -265,6 +265,23 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			result[k] = quoteWith(ctx, v)
 		}
 		return result
+	case unionConstructor:
+		return term.Field{
+			Record:    quoteWith(ctx, v.Type),
+			FieldName: v.Alternative,
+		}
+	case unionVal:
+		var result term.Term = term.Field{
+			Record:    quoteWith(ctx, v.Type),
+			FieldName: v.Alternative,
+		}
+		if v.Val != nil {
+			result = term.App{
+				Fn:  result,
+				Arg: quoteWith(ctx, v.Val),
+			}
+		}
+		return result
 	case merge:
 		result := term.Merge{
 			Handler: quoteWith(ctx, v.Handler),
