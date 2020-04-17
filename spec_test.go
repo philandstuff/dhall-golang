@@ -76,13 +76,6 @@ var expectedFailures = []string{
 	"TestNormalization/unit/RecordLitPun",
 	"TestParserAccepts/unit/RecordLitPun",
 	"TestTypeInference/unit/RecordLitPun",
-
-	// Haven't implemented `with` yet
-	"TestNormalization/With",
-	"TestNormalization/unit/With",
-	"TestParserAccepts/unit/With",
-	"TestTypeInference/unit/With",
-	"TestTypeInferenceFails/unit/With",
 }
 
 func pass(t *testing.T) {

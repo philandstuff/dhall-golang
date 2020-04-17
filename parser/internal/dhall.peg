@@ -52,6 +52,21 @@ func parseCodepoint(codepointText string) ([]byte, error) {
     return []byte(string([]rune{r})), nil
 }
 
+func desugarWith(record Term, path []string, value Term) Term {
+    if len(path) == 1 {
+       return Op{
+           OpCode: RightBiasedRecordMergeOp,
+           L: record,
+           R: RecordLit{path[0]: value},
+       }
+    }
+    return Op{
+        OpCode: RightBiasedRecordMergeOp,
+        L: record,
+        R: RecordLit{path[0]: desugarWith(Field{record, path[0]}, path[1:], value)},
+    }
+}
+
 }
 
 DhallFile ← e:CompleteExpression EOF { return e, nil }
@@ -273,6 +288,7 @@ NaN ← "NaN"
 Some ← "Some"
 toMap ← "toMap"
 assert ← "assert"
+with ← "with"
 
 Keyword ←
     If / Then / Else
@@ -282,6 +298,7 @@ Keyword ←
   / Infinity / NaN
   / Merge / Some / toMap
   / Forall
+  / with
 
 Optional ← "Optional"
 Text ← "Text"
@@ -564,10 +581,31 @@ TimesExpression        ← first:EqualExpression        rest:(_ '*' _ e:EqualExp
   {return parseOperator(TimesOp, first, rest), nil}
 EqualExpression        ← first:NotEqualExpression     rest:(_ "==" _ e:NotEqualExpression)*
   {return parseOperator(EqOp, first, rest), nil}
-NotEqualExpression     ← first:EquivalentExpression  rest:(_ "!=" _ e:EquivalentExpression)*
+NotEqualExpression     ← first:EquivalentExpression   rest:(_ "!=" _ e:EquivalentExpression)*
   {return parseOperator(NeOp, first, rest), nil}
-EquivalentExpression     ← first:ApplicationExpression  rest:(_ Equivalent _ e:ApplicationExpression)*
+EquivalentExpression   ← first:WithExpression         rest:(_ Equivalent _ e:WithExpression)*
   {return parseOperator(EquivOp, first, rest), nil}
+WithExpression         ← first:ApplicationExpression  rest:(_1 with _1 FieldPath _ '=' _ e:ApplicationExpression)*
+  {
+    out := first.(Term)
+    if rest == nil { return out, nil }
+    for _, b := range rest.([]interface{}) {
+        path := b.([]interface{})[3].([]string)
+        value := b.([]interface{})[7].(Term)
+        out = desugarWith(out, path, value)
+    }
+    return out, nil
+  }
+
+FieldPath ← first:AnyLabelOrSome rest:(_ '.' _ AnyLabelOrSome)* {
+  out := []string{first.(string)}
+  if rest == nil { return out, nil }
+  for _, b := range rest.([]interface{}) {
+    nextField := b.([]interface{})[3].(string)
+    out = append(out, nextField)
+  }
+  return out, nil
+}
 
 ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression)* {
           e := f.(Term)
