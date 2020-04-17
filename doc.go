@@ -24,7 +24,7 @@ handling skipped for brevity):
  dhallBytes, err := ioutil.ReadFile("foo.dhall")
  err = dhall.Unmarshal(dhallBytes, &m)
 
-This version supports Dhall standard 14.0.0, except that it doesn't
+This version supports Dhall standard 15.0.0, except that it doesn't
 support `using` directives.
 */
 package dhall
