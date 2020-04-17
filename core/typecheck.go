@@ -665,7 +665,13 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			return nil, mkTypeError(cantProject)
 		}
 		result := make(RecordType, len(t.FieldNames))
+		seen := make(map[string]bool)
 		for _, name := range t.FieldNames {
+			if seen[name] {
+				return nil, mkTypeError(duplicateProjectedField(name))
+			}
+			seen[name] = true
+
 			var ok bool
 			result[name], ok = recordType[name]
 			if !ok {
@@ -1010,6 +1016,10 @@ func cantNaturalOp(opCode term.OpCode) typeMessage {
 		panic(fmt.Sprintf("unknown natural opcode %d", opCode))
 	}
 	return staticTypeMessage{fmt.Sprintf("❰%s❱ only works on ❰Natural❱s", opStr)}
+}
+
+func duplicateProjectedField(name string) typeMessage {
+	return staticTypeMessage{fmt.Sprintf("Duplicate field ❰%s❱ in projection expression")}
 }
 
 var (

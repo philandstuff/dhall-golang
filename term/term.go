@@ -266,14 +266,10 @@ type (
 		Body     Term
 	}
 
-	// no LetValue, since normalization removes all lets
-
 	Annot struct {
 		Expr       Term
 		Annotation Term
 	}
-
-	// no AnnotValue either
 )
 
 func (Let) isTerm()   {}
@@ -592,4 +588,75 @@ func (op Op) String() string {
 		buf.WriteRune(')')
 	}
 	return buf.String()
+}
+
+func (e EmptyList) String() string {
+	return fmt.Sprintf("[] : (%v)", e.Type)
+}
+
+func (r RecordType) String() string {
+	if len(r) == 0 {
+		return "{}"
+	}
+	var buf strings.Builder
+	first := true
+	buf.WriteString("{ ")
+	for name, typ := range r {
+		if !first {
+			buf.WriteString(", ")
+		}
+		buf.WriteString(name)
+		buf.WriteString(" : ")
+		buf.WriteString(fmt.Sprintf("%v", typ))
+		first = false
+	}
+	buf.WriteString("}")
+	return buf.String()
+}
+
+func (r RecordLit) String() string {
+	if len(r) == 0 {
+		return "{=}"
+	}
+	var buf strings.Builder
+	first := true
+	buf.WriteString("{ ")
+	for name, typ := range r {
+		if !first {
+			buf.WriteString(", ")
+		}
+		buf.WriteString(name)
+		buf.WriteString(" = ")
+		buf.WriteString(fmt.Sprintf("%v", typ))
+		first = false
+	}
+	buf.WriteString("}")
+	return buf.String()
+}
+
+func (u UnionType) String() string {
+	if len(u) == 0 {
+		return "<>"
+	}
+	var buf strings.Builder
+	first := true
+	buf.WriteString("< ")
+	for name, typ := range u {
+		if !first {
+			buf.WriteString(" | ")
+		}
+		buf.WriteString(name)
+		buf.WriteString(" : ")
+		buf.WriteString(fmt.Sprintf("%v", typ))
+		first = false
+	}
+	buf.WriteString(" >")
+	return buf.String()
+}
+
+func (m Merge) String() string {
+	if m.Annotation != nil {
+		return fmt.Sprintf("merge (%s) (%s) : (%s)", m.Handler, m.Union, m.Annotation)
+	}
+	return fmt.Sprintf("merge (%s) (%s)", m.Handler, m.Union)
 }
