@@ -1019,7 +1019,7 @@ func cantNaturalOp(opCode term.OpCode) typeMessage {
 }
 
 func duplicateProjectedField(name string) typeMessage {
-	return staticTypeMessage{fmt.Sprintf("Duplicate field ❰%s❱ in projection expression")}
+	return staticTypeMessage{fmt.Sprintf("Duplicate field ❰%s❱ in projection expression", name)}
 }
 
 var (
