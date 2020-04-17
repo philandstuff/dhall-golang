@@ -1,7 +1,34 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v2.0.0...HEAD
+
+## [2.0.0] - 2020-04-17
+[1.0.0]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0...v2.0.0
+
+This brings dhall-golang up to version 15.0.0 of the Dhall standard.
+As the standard had breaking changes, this release is a major version
+bump.
+
+### Breaking changes
+
+ - added `with` keyword (technically breaking since you can no longer
+   use `with` as an identifier)
+
+### Added
+
+ - added record puns (ie `{ x }` is now shorthand for `{ x = x }`)
+ - added UnmarshalFile function (#25)
+
+### Changed
+
+ - Unmarshal() and Decode() will check a Dhall function matches the
+   given Go type before decoding (#23)
+ - imports are now evaluated at import time (#27)
+
+### Fixed
+
+ - fixed bug in evaluation of `merge` (3171f34)
 
 ## [1.0.0] - 2020-03-15
 [1.0.0]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0-rc.4...v1.0.0
