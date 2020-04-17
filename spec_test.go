@@ -59,8 +59,6 @@ var expectedFailures = []string{
 	// in dhall-golang, duplicate fields & alternatives are a parse error, not a
 	// type error
 	"TestTypeInferenceFails/unit/RecordTypeDuplicateFields.dhall",
-	"TestTypeInferenceFails/unit/RecordLitDuplicateFields.dhall",
-	"TestTypeInferenceFails/unit/RecordProjectionDuplicateFields.dhall",
 	"TestTypeInferenceFails/unit/UnionTypeDuplicateVariants",
 	"TestTypeInferenceFails/unit/README", // FIXME, shouldn't need excluding
 
