@@ -724,14 +724,24 @@ NonEmptyRecordLiteral ←
           return content, nil
       }
 
-RecordLiteralEntry ← name:AnyLabelOrSome children:(_ '.' _ AnyLabelOrSome)* _ '=' _ expr:Expression {
+RecordLiteralEntry ← name:AnyLabelOrSome val:(RecordLiteralNormalEntry / RecordLiteralPunnedEntry) {
+    if _, ok := val.([]byte); ok {
+        // punned entry
+        return RecordLit{name.(string): Var{Name: name.(string)}}, nil
+    }
+    return RecordLit{name.(string): val.(Term)}, nil
+}
+
+RecordLiteralNormalEntry ← children:(_ '.' _ AnyLabelOrSome)* _ '=' _ expr:Expression {
     rest := expr.(Term)
     for i := len(children.([]interface{}))-1; i>=0; i-- {
         child := children.([]interface{})[i].([]interface{})[3].(string)
         rest = RecordLit{child: rest}
     }
-    return RecordLit{name.(string): rest}, nil
+    return rest, nil
 }
+
+RecordLiteralPunnedEntry ← ""
 
 UnionType ← NonEmptyUnionType / EmptyUnionType
 

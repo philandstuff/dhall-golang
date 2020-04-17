@@ -70,12 +70,6 @@ var expectedFailures = []string{
 	// We don't cache the same URL within the same run
 	// Also, there are rate limits on csrng.net
 	"TestTypeInference/CacheImports",
-
-	// Haven't implemented record puns yet
-	"TestNormalization/unit/RecordLitAllSugars",
-	"TestNormalization/unit/RecordLitPun",
-	"TestParserAccepts/unit/RecordLitPun",
-	"TestTypeInference/unit/RecordLitPun",
 }
 
 func pass(t *testing.T) {
