@@ -231,7 +231,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			rebound := term.RebindLocal(freshLocal, Quote(bt))
 			return evalWith(rebound, env{
 				t.Label: []Value{x},
-			}, false)
+			})
 		}
 		_, err = typeWith(ctx, Quote(pi))
 		if err != nil {

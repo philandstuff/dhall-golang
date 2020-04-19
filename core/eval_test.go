@@ -11,11 +11,11 @@ var _ = Describe("Eval", func() {
 		Expect(Eval(term.Type)).To(Equal(Type))
 	})
 	It("Bound variable", func() {
-		Expect(evalWith(term.Var{Name: "foo"}, env{"foo": []Value{Type}}, false)).
+		Expect(evalWith(term.Var{Name: "foo"}, env{"foo": []Value{Type}})).
 			To(Equal(Type))
 	})
 	It("Free variable", func() {
-		Expect(evalWith(term.Var{Name: "foo"}, env{}, false)).
+		Expect(evalWith(term.Var{Name: "foo"}, env{})).
 			To(Equal(freeVar{Name: "foo"}))
 	})
 	It("Lambda id function", func() {
@@ -24,13 +24,6 @@ var _ = Describe("Eval", func() {
 			To(Equal(Type))
 		Expect(f.Label).
 			To(Equal("x"))
-	})
-	It("Lambda id function with alpha normalization", func() {
-		f := AlphaBetaEval(term.NewLambda("x", term.Type, term.Var{Name: "x"})).(lambda)
-		Expect(f.Call(Type)).
-			To(Equal(Type))
-		Expect(f.Label).
-			To(Equal("_"))
 	})
 	Describe("application", func() {
 		It("To neutral", func() {
