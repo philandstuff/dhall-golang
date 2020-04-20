@@ -5,16 +5,15 @@ import (
 	"crypto/sha256"
 
 	"github.com/philandstuff/dhall-golang/core"
-	"github.com/philandstuff/dhall-golang/term"
 )
 
-// SemanticHash returns the semantic hash of an expression.
+// SemanticHash returns the semantic hash of an evaluated expression.
 // The semantic hash is defined as the multihash-encoded sha256 sum of the CBOR
 // representation of the fully alpha-beta-normalized expression.
-func SemanticHash(e term.Term) ([]byte, error) {
-	norm := core.AlphaBetaEval(e)
+func SemanticHash(e core.Value) ([]byte, error) {
+	norm := core.QuoteAlphaNormal(e)
 	var buf bytes.Buffer
-	err := EncodeAsCbor(&buf, core.Quote(norm))
+	err := EncodeAsCbor(&buf, norm)
 	if err != nil {
 		return nil, err
 	}

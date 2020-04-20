@@ -318,8 +318,8 @@ func TestAlphaNormalization(t *testing.T) {
 			parsedB, err := parser.ParseFile(bPath)
 			expectNoError(t, err)
 
-			normA := core.Quote(core.AlphaBetaEval(parsedA))
-			normB := core.Quote(core.AlphaBetaEval(parsedB))
+			normA := core.QuoteAlphaNormal(core.Eval(parsedA))
+			normB := core.QuoteAlphaNormal(core.Eval(parsedB))
 
 			expectEqualTerms(t, normB, normA)
 		})
@@ -419,7 +419,7 @@ func TestSemanticHash(t *testing.T) {
 				expectNoError(t, err)
 			}
 
-			actualHash, err := binary.SemanticHash(resolvedA)
+			actualHash, err := binary.SemanticHash(core.Eval(resolvedA))
 			expectNoError(t, err)
 
 			expectedHashStr, err := ioutil.ReadFile(bPath)

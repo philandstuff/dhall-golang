@@ -8,7 +8,13 @@ import (
 
 // Quote takes the Value v and turns it back into a Term.
 func Quote(v Value) term.Term {
-	return quoteWith(quoteContext{}, v)
+	return quoteWith(quoteContext{}, false, v)
+}
+
+// QuoteAlphaNormal takes the Value v and turns it back into a Term,
+// in alpha-normal form: ie all labels are changed to `_`.
+func QuoteAlphaNormal(v Value) term.Term {
+	return quoteWith(quoteContext{}, true, v)
 }
 
 // a quoteContext records how many binders of each variable name we have passed
@@ -23,7 +29,7 @@ func (q quoteContext) extend(name string) quoteContext {
 	return newCtx
 }
 
-func quoteWith(ctx quoteContext, v Value) term.Term {
+func quoteWith(ctx quoteContext, shouldAlphaNormalize bool, v Value) term.Term {
 	switch v := v.(type) {
 	case Universe:
 		return term.Universe(v)
@@ -38,15 +44,15 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		if v.n == nil {
 			return result
 		}
-		result = term.App{result, quoteWith(ctx, v.n)}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.n)}
 		if v.typ == nil {
 			return result
 		}
-		result = term.App{result, quoteWith(ctx, v.typ)}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
 		if v.succ == nil {
 			return result
 		}
-		return term.App{result, quoteWith(ctx, v.succ)}
+		return term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.succ)}
 	case naturalIsZero:
 		return term.NaturalIsZero
 	case naturalOdd:
@@ -55,7 +61,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		return term.NaturalShow
 	case naturalSubtract:
 		if v.a != nil {
-			return term.App{term.NaturalSubtract, quoteWith(ctx, v.a)}
+			return term.App{term.NaturalSubtract, quoteWith(ctx, shouldAlphaNormalize, v.a)}
 		}
 		return term.NaturalSubtract
 	case integerClamp:
@@ -74,7 +80,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		return term.Optional
 	case optionalBuild:
 		if v.typ != nil {
-			return term.App{term.OptionalBuild, quoteWith(ctx, v.typ)}
+			return term.App{term.OptionalBuild, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
 		}
 		return term.OptionalBuild
 	case optionalFold:
@@ -82,19 +88,19 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		if v.typ1 == nil {
 			return result
 		}
-		result = term.App{result, quoteWith(ctx, v.typ1)}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.typ1)}
 		if v.opt == nil {
 			return result
 		}
-		result = term.App{result, quoteWith(ctx, v.opt)}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.opt)}
 		if v.typ2 == nil {
 			return result
 		}
-		result = term.App{result, quoteWith(ctx, v.typ2)}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.typ2)}
 		if v.some == nil {
 			return result
 		}
-		return term.App{result, quoteWith(ctx, v.some)}
+		return term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.some)}
 	case none:
 		return term.None
 	case textShow:
@@ -103,7 +109,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		return term.List
 	case listBuild:
 		if v.typ != nil {
-			return term.App{term.ListBuild, quoteWith(ctx, v.typ)}
+			return term.App{term.ListBuild, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
 		}
 		return term.ListBuild
 	case listFold:
@@ -111,42 +117,42 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		if v.typ1 == nil {
 			return result
 		}
-		result = term.App{result, quoteWith(ctx, v.typ1)}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.typ1)}
 		if v.list == nil {
 			return result
 		}
-		result = term.App{result, quoteWith(ctx, v.list)}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.list)}
 		if v.typ2 == nil {
 			return result
 		}
-		result = term.App{result, quoteWith(ctx, v.typ2)}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.typ2)}
 		if v.cons == nil {
 			return result
 		}
-		return term.App{result, quoteWith(ctx, v.cons)}
+		return term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.cons)}
 	case listHead:
 		if v.typ != nil {
-			return term.App{term.ListHead, quoteWith(ctx, v.typ)}
+			return term.App{term.ListHead, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
 		}
 		return term.ListHead
 	case listIndexed:
 		if v.typ != nil {
-			return term.App{term.ListIndexed, quoteWith(ctx, v.typ)}
+			return term.App{term.ListIndexed, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
 		}
 		return term.ListIndexed
 	case listLength:
 		if v.typ != nil {
-			return term.App{term.ListLength, quoteWith(ctx, v.typ)}
+			return term.App{term.ListLength, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
 		}
 		return term.ListLength
 	case listLast:
 		if v.typ != nil {
-			return term.App{term.ListLast, quoteWith(ctx, v.typ)}
+			return term.App{term.ListLast, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
 		}
 		return term.ListLast
 	case listReverse:
 		if v.typ != nil {
-			return term.App{term.ListReverse, quoteWith(ctx, v.typ)}
+			return term.App{term.ListReverse, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
 		}
 		return term.ListReverse
 	case freeVar:
@@ -159,29 +165,37 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 			Index: ctx[v.Name] - v.Index - 1,
 		}
 	case lambda:
-		bodyVal := v.Call(quoteVar{Name: v.Label, Index: ctx[v.Label]})
+		label := v.Label
+		if shouldAlphaNormalize {
+			label = "_"
+		}
+		bodyVal := v.Call(quoteVar{Name: label, Index: ctx[label]})
 		return term.Lambda{
-			Label: v.Label,
-			Type:  quoteWith(ctx, v.Domain),
-			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
+			Label: label,
+			Type:  quoteWith(ctx, shouldAlphaNormalize, v.Domain),
+			Body:  quoteWith(ctx.extend(label), shouldAlphaNormalize, bodyVal),
 		}
 	case Pi:
-		bodyVal := v.Codomain(quoteVar{Name: v.Label, Index: ctx[v.Label]})
+		label := v.Label
+		if shouldAlphaNormalize {
+			label = "_"
+		}
+		bodyVal := v.Codomain(quoteVar{Name: label, Index: ctx[label]})
 		return term.Pi{
-			Label: v.Label,
-			Type:  quoteWith(ctx, v.Domain),
-			Body:  quoteWith(ctx.extend(v.Label), bodyVal),
+			Label: label,
+			Type:  quoteWith(ctx, shouldAlphaNormalize, v.Domain),
+			Body:  quoteWith(ctx.extend(label), shouldAlphaNormalize, bodyVal),
 		}
 	case app:
 		return term.App{
-			Fn:  quoteWith(ctx, v.Fn),
-			Arg: quoteWith(ctx, v.Arg),
+			Fn:  quoteWith(ctx, shouldAlphaNormalize, v.Fn),
+			Arg: quoteWith(ctx, shouldAlphaNormalize, v.Arg),
 		}
 	case oper:
 		return term.Op{
 			OpCode: v.OpCode,
-			L:      quoteWith(ctx, v.L),
-			R:      quoteWith(ctx, v.R),
+			L:      quoteWith(ctx, shouldAlphaNormalize, v.L),
+			R:      quoteWith(ctx, shouldAlphaNormalize, v.R),
 		}
 	case NaturalLit:
 		return term.NaturalLit(v)
@@ -192,13 +206,13 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 	case BoolLit:
 		return term.BoolLit(v)
 	case ListOf:
-		return term.Apply(term.List, quoteWith(ctx, v.Type))
+		return term.Apply(term.List, quoteWith(ctx, shouldAlphaNormalize, v.Type))
 	case EmptyList:
-		return term.EmptyList{Type: quoteWith(ctx, v.Type)}
+		return term.EmptyList{Type: quoteWith(ctx, shouldAlphaNormalize, v.Type)}
 	case NonEmptyList:
 		l := term.NonEmptyList{}
 		for _, e := range v {
-			l = append(l, quoteWith(ctx, e))
+			l = append(l, quoteWith(ctx, shouldAlphaNormalize, e))
 		}
 		return l
 	case PlainTextLit:
@@ -208,7 +222,7 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		for _, chunk := range v.Chunks {
 			newChunks = append(newChunks, term.Chunk{
 				Prefix: chunk.Prefix,
-				Expr:   quoteWith(ctx, chunk.Expr),
+				Expr:   quoteWith(ctx, shouldAlphaNormalize, chunk.Expr),
 			})
 		}
 		return term.TextLit{
@@ -217,42 +231,42 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 		}
 	case ifVal:
 		return term.If{
-			Cond: quoteWith(ctx, v.Cond),
-			T:    quoteWith(ctx, v.T),
-			F:    quoteWith(ctx, v.F),
+			Cond: quoteWith(ctx, shouldAlphaNormalize, v.Cond),
+			T:    quoteWith(ctx, shouldAlphaNormalize, v.T),
+			F:    quoteWith(ctx, shouldAlphaNormalize, v.F),
 		}
 	case OptionalOf:
-		return term.Apply(term.Optional, quoteWith(ctx, v.Type))
+		return term.Apply(term.Optional, quoteWith(ctx, shouldAlphaNormalize, v.Type))
 	case Some:
-		return term.Some{Val: quoteWith(ctx, v.Val)}
+		return term.Some{Val: quoteWith(ctx, shouldAlphaNormalize, v.Val)}
 	case NoneOf:
-		return term.Apply(term.None, quoteWith(ctx, v.Type))
+		return term.Apply(term.None, quoteWith(ctx, shouldAlphaNormalize, v.Type))
 	case RecordType:
 		rt := term.RecordType{}
 		for k, v := range v {
-			rt[k] = quoteWith(ctx, v)
+			rt[k] = quoteWith(ctx, shouldAlphaNormalize, v)
 		}
 		return rt
 	case RecordLit:
 		rt := term.RecordLit{}
 		for k, v := range v {
-			rt[k] = quoteWith(ctx, v)
+			rt[k] = quoteWith(ctx, shouldAlphaNormalize, v)
 		}
 		return rt
 	case toMap:
-		result := term.ToMap{Record: quoteWith(ctx, v.Record)}
+		result := term.ToMap{Record: quoteWith(ctx, shouldAlphaNormalize, v.Record)}
 		if v.Type != nil {
-			result.Type = quoteWith(ctx, v.Type)
+			result.Type = quoteWith(ctx, shouldAlphaNormalize, v.Type)
 		}
 		return result
 	case field:
 		return term.Field{
-			Record:    quoteWith(ctx, v.Record),
+			Record:    quoteWith(ctx, shouldAlphaNormalize, v.Record),
 			FieldName: v.FieldName,
 		}
 	case project:
 		return term.Project{
-			Record:     quoteWith(ctx, v.Record),
+			Record:     quoteWith(ctx, shouldAlphaNormalize, v.Record),
 			FieldNames: v.FieldNames,
 		}
 	case UnionType:
@@ -262,37 +276,37 @@ func quoteWith(ctx quoteContext, v Value) term.Term {
 				result[k] = nil
 				continue
 			}
-			result[k] = quoteWith(ctx, v)
+			result[k] = quoteWith(ctx, shouldAlphaNormalize, v)
 		}
 		return result
 	case unionConstructor:
 		return term.Field{
-			Record:    quoteWith(ctx, v.Type),
+			Record:    quoteWith(ctx, shouldAlphaNormalize, v.Type),
 			FieldName: v.Alternative,
 		}
 	case unionVal:
 		var result term.Term = term.Field{
-			Record:    quoteWith(ctx, v.Type),
+			Record:    quoteWith(ctx, shouldAlphaNormalize, v.Type),
 			FieldName: v.Alternative,
 		}
 		if v.Val != nil {
 			result = term.App{
 				Fn:  result,
-				Arg: quoteWith(ctx, v.Val),
+				Arg: quoteWith(ctx, shouldAlphaNormalize, v.Val),
 			}
 		}
 		return result
 	case merge:
 		result := term.Merge{
-			Handler: quoteWith(ctx, v.Handler),
-			Union:   quoteWith(ctx, v.Union),
+			Handler: quoteWith(ctx, shouldAlphaNormalize, v.Handler),
+			Union:   quoteWith(ctx, shouldAlphaNormalize, v.Union),
 		}
 		if v.Annotation != nil {
-			result.Annotation = quoteWith(ctx, v.Annotation)
+			result.Annotation = quoteWith(ctx, shouldAlphaNormalize, v.Annotation)
 		}
 		return result
 	case assert:
-		return term.Assert{Annotation: quoteWith(ctx, v.Annotation)}
+		return term.Assert{Annotation: quoteWith(ctx, shouldAlphaNormalize, v.Annotation)}
 	}
 	panic(fmt.Sprintf("unknown Value type %#v", v))
 }

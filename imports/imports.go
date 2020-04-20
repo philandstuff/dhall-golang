@@ -76,11 +76,12 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 		}
 
 		// evaluate expression
-		expr = core.Quote(core.Eval(expr))
+		exprVal := core.Eval(expr)
+		expr = core.Quote(exprVal)
 
 		// check hash, if supplied
 		if e.Hash != nil {
-			actualHash, err := binary.SemanticHash(expr)
+			actualHash, err := binary.SemanticHash(exprVal)
 			if err != nil {
 				return nil, err
 			}
@@ -88,7 +89,7 @@ func LoadWith(cache DhallCache, e Term, ancestors ...Fetchable) (Term, error) {
 				return nil, fmt.Errorf("Failed integrity check: expected %x but saw %x", e.Hash, actualHash)
 			}
 			// store in cache
-			cache.Save(actualHash, expr)
+			cache.Save(actualHash, core.QuoteAlphaNormal(exprVal))
 		}
 		return expr, nil
 	case Lambda:

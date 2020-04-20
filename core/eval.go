@@ -13,15 +13,10 @@ type env map[string][]Value
 
 // Eval normalizes Term to a Value.
 func Eval(t term.Term) Value {
-	return evalWith(t, env{}, false)
+	return evalWith(t, env{})
 }
 
-// AlphaBetaEval alpha-beta-normalizes Term to a Value.
-func AlphaBetaEval(t term.Term) Value {
-	return evalWith(t, env{}, true)
-}
-
-func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
+func evalWith(t term.Term, e env) Value {
 	switch t := t.(type) {
 	case term.Universe:
 		return Universe(t)
@@ -100,41 +95,33 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 	case term.LocalVar:
 		return localVar(t)
 	case term.Lambda:
-		v := lambda{
+		return lambda{
 			Label:  t.Label,
-			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
+			Domain: evalWith(t.Type, e),
 			Fn: func(x Value) Value {
 				newEnv := env{}
 				for k, v := range e {
 					newEnv[k] = v
 				}
 				newEnv[t.Label] = append([]Value{x}, newEnv[t.Label]...)
-				return evalWith(t.Body, newEnv, shouldAlphaNormalize)
+				return evalWith(t.Body, newEnv)
 			},
 		}
-		if shouldAlphaNormalize {
-			v.Label = "_"
-		}
-		return v
 	case term.Pi:
-		v := Pi{
+		return Pi{
 			Label:  t.Label,
-			Domain: evalWith(t.Type, e, shouldAlphaNormalize),
+			Domain: evalWith(t.Type, e),
 			Codomain: func(x Value) Value {
 				newEnv := env{}
 				for k, v := range e {
 					newEnv[k] = v
 				}
 				newEnv[t.Label] = append([]Value{x}, newEnv[t.Label]...)
-				return evalWith(t.Body, newEnv, shouldAlphaNormalize)
+				return evalWith(t.Body, newEnv)
 			}}
-		if shouldAlphaNormalize {
-			v.Label = "_"
-		}
-		return v
 	case term.App:
-		fn := evalWith(t.Fn, e, shouldAlphaNormalize)
-		arg := evalWith(t.Arg, e, shouldAlphaNormalize)
+		fn := evalWith(t.Fn, e)
+		arg := evalWith(t.Arg, e)
 		return apply(fn, arg)
 	case term.Let:
 		newEnv := env{}
@@ -143,12 +130,12 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		}
 
 		for _, b := range t.Bindings {
-			val := evalWith(b.Value, newEnv, shouldAlphaNormalize)
+			val := evalWith(b.Value, newEnv)
 			newEnv[b.Variable] = append([]Value{val}, newEnv[b.Variable]...)
 		}
-		return evalWith(t.Body, newEnv, shouldAlphaNormalize)
+		return evalWith(t.Body, newEnv)
 	case term.Annot:
-		return evalWith(t.Expr, e, shouldAlphaNormalize)
+		return evalWith(t.Expr, e)
 	case term.DoubleLit:
 		return DoubleLit(t)
 	case term.TextLit:
@@ -156,7 +143,7 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		var newChunks chunks
 		for _, chk := range t.Chunks {
 			str.WriteString(chk.Prefix)
-			normExpr := evalWith(chk.Expr, e, shouldAlphaNormalize)
+			normExpr := evalWith(chk.Expr, e)
 			if text, ok := normExpr.(PlainTextLit); ok {
 				str.WriteString(string(text))
 			} else if text, ok := normExpr.(interpolatedText); ok {
@@ -190,15 +177,15 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 	case term.BoolLit:
 		return BoolLit(t)
 	case term.If:
-		condVal := evalWith(t.Cond, e, shouldAlphaNormalize)
+		condVal := evalWith(t.Cond, e)
 		if condVal == True {
-			return evalWith(t.T, e, shouldAlphaNormalize)
+			return evalWith(t.T, e)
 		}
 		if condVal == False {
-			return evalWith(t.F, e, shouldAlphaNormalize)
+			return evalWith(t.F, e)
 		}
-		tVal := evalWith(t.T, e, shouldAlphaNormalize)
-		fVal := evalWith(t.F, e, shouldAlphaNormalize)
+		tVal := evalWith(t.T, e)
+		fVal := evalWith(t.F, e)
 		if tVal == True && fVal == False {
 			return condVal
 		}
@@ -207,8 +194,8 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		}
 		return ifVal{
 			Cond: condVal,
-			T:    evalWith(t.T, e, shouldAlphaNormalize),
-			F:    evalWith(t.F, e, shouldAlphaNormalize),
+			T:    evalWith(t.T, e),
+			F:    evalWith(t.F, e),
 		}
 	case term.NaturalLit:
 		return NaturalLit(t)
@@ -220,7 +207,7 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		case term.TextAppendOp:
 			return evalWith(
 				term.TextLit{Chunks: term.Chunks{{Expr: t.L}, {Expr: t.R}}},
-				e, shouldAlphaNormalize)
+				e)
 		case term.CompleteOp:
 			return evalWith(
 				term.Annot{
@@ -231,10 +218,10 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 					},
 					Annotation: term.Field{t.L, "Type"},
 				},
-				e, shouldAlphaNormalize)
+				e)
 		}
-		l := evalWith(t.L, e, shouldAlphaNormalize)
-		r := evalWith(t.R, e, shouldAlphaNormalize)
+		l := evalWith(t.L, e)
+		r := evalWith(t.R, e)
 		switch t.OpCode {
 		case term.OrOp, term.AndOp, term.EqOp, term.NeOp:
 			lb, lok := l.(BoolLit)
@@ -394,33 +381,33 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		}
 		return oper{OpCode: t.OpCode, L: l, R: r}
 	case term.EmptyList:
-		return EmptyList{Type: evalWith(t.Type, e, shouldAlphaNormalize)}
+		return EmptyList{Type: evalWith(t.Type, e)}
 	case term.NonEmptyList:
 		result := make([]Value, len(t))
 		for i, t := range t {
-			result[i] = evalWith(t, e, shouldAlphaNormalize)
+			result[i] = evalWith(t, e)
 		}
 		return NonEmptyList(result)
 	case term.Some:
-		return Some{evalWith(t.Val, e, shouldAlphaNormalize)}
+		return Some{evalWith(t.Val, e)}
 	case term.RecordType:
 		newRT := RecordType{}
 		for k, v := range t {
-			newRT[k] = evalWith(v, e, shouldAlphaNormalize)
+			newRT[k] = evalWith(v, e)
 		}
 		return newRT
 	case term.RecordLit:
 		newRT := RecordLit{}
 		for k, v := range t {
-			newRT[k] = evalWith(v, e, shouldAlphaNormalize)
+			newRT[k] = evalWith(v, e)
 		}
 		return newRT
 	case term.ToMap:
-		recordVal := evalWith(t.Record, e, shouldAlphaNormalize)
+		recordVal := evalWith(t.Record, e)
 		record, ok := recordVal.(RecordLit)
 		if ok {
 			if len(record) == 0 {
-				return EmptyList{Type: evalWith(t.Type, e, shouldAlphaNormalize)}
+				return EmptyList{Type: evalWith(t.Type, e)}
 			}
 			fieldnames := []string{}
 			for k := range record {
@@ -435,10 +422,10 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 		}
 		return toMap{
 			Record: record,
-			Type:   evalWith(t.Type, e, shouldAlphaNormalize),
+			Type:   evalWith(t.Type, e),
 		}
 	case term.Field:
-		record := evalWith(t.Record, e, shouldAlphaNormalize)
+		record := evalWith(t.Record, e)
 		for { // simplifications
 			if proj, ok := record.(project); ok {
 				record = proj.Record
@@ -520,7 +507,7 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 			FieldName: t.FieldName,
 		}
 	case term.Project:
-		record := evalWith(t.Record, e, shouldAlphaNormalize)
+		record := evalWith(t.Record, e)
 		fieldNames := t.FieldNames
 		sort.Strings(fieldNames)
 		// simplifications
@@ -574,7 +561,7 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 	case term.ProjectType:
 		// if `t` typechecks, `t.Selector` has to eval to a
 		// RecordTypeVal, so this is safe
-		s := evalWith(t.Selector, e, shouldAlphaNormalize).(RecordType)
+		s := evalWith(t.Selector, e).(RecordType)
 		fieldNames := make([]string, 0, len(s))
 		for fieldName := range s {
 			fieldNames = append(fieldNames, fieldName)
@@ -584,7 +571,7 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 				Record:     t.Record,
 				FieldNames: fieldNames,
 			},
-			e, shouldAlphaNormalize)
+			e)
 	case term.UnionType:
 		result := make(UnionType, len(t))
 		for k, v := range t {
@@ -592,12 +579,12 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 				result[k] = nil
 				continue
 			}
-			result[k] = evalWith(v, e, shouldAlphaNormalize)
+			result[k] = evalWith(v, e)
 		}
 		return result
 	case term.Merge:
-		handlerVal := evalWith(t.Handler, e, shouldAlphaNormalize)
-		union := evalWith(t.Union, e, shouldAlphaNormalize)
+		handlerVal := evalWith(t.Handler, e)
+		union := evalWith(t.Union, e)
 		if handlers, ok := handlerVal.(RecordLit); ok {
 			if unionLit, ok := union.(unionVal); ok {
 				if unionLit.Val == nil {
@@ -623,11 +610,11 @@ func evalWith(t term.Term, e env, shouldAlphaNormalize bool) Value {
 			Union:   union,
 		}
 		if t.Annotation != nil {
-			output.Annotation = evalWith(t.Annotation, e, shouldAlphaNormalize)
+			output.Annotation = evalWith(t.Annotation, e)
 		}
 		return output
 	case term.Assert:
-		return assert{Annotation: evalWith(t.Annotation, e, shouldAlphaNormalize)}
+		return assert{Annotation: evalWith(t.Annotation, e)}
 	default:
 		panic(fmt.Sprint("unknown term type", t))
 	}

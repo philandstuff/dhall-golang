@@ -72,3 +72,31 @@ var _ = DescribeTable("Quote",
 		EmptyList{Type: ListOf{Type: Natural}},
 		term.EmptyList{Type: term.App{Fn: term.List, Arg: term.Natural}}),
 )
+
+var _ = DescribeTable("QuoteAlphaNormal",
+	func(v Value, expected term.Term) {
+		Expect(QuoteAlphaNormal(v)).
+			To(Equal(expected))
+	},
+	Entry("Type", Type, term.Type),
+	Entry("Kind", Kind, term.Kind),
+	Entry("Sort", Sort, term.Sort),
+	Entry(`λ(x : Natural) → x`,
+		lambda{Label: "x", Domain: Natural, Fn: func(x Value) Value {
+			return x
+		}},
+		term.Lambda{Label: "_", Type: term.Natural, Body: term.Var{"_", 0}},
+	),
+	Entry(`λ(x : Natural) → λ(y : Natural) → x`,
+		lambda{Label: "x", Domain: Natural, Fn: func(x Value) Value {
+			return lambda{
+				Label:  "y",
+				Domain: Natural,
+				Fn:     func(y Value) Value { return x },
+			}
+		}},
+		term.Lambda{Label: "_", Type: term.Natural, Body: term.Lambda{
+			Label: "_", Type: term.Natural,
+			Body: term.Var{"_", 1}}},
+	),
+)

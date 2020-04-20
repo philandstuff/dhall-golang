@@ -27,10 +27,10 @@ func main() {
 	}
 	fmt.Fprint(os.Stderr, inferredType)
 	fmt.Fprintln(os.Stderr)
-	fmt.Println(core.AlphaBetaEval(resolvedExpr))
+	fmt.Println(core.Eval(resolvedExpr))
 
 	var buf = new(bytes.Buffer)
-	binary.EncodeAsCbor(buf, core.Quote(core.AlphaBetaEval(resolvedExpr)))
+	binary.EncodeAsCbor(buf, core.QuoteAlphaNormal(core.Eval(resolvedExpr)))
 	final, err := binary.DecodeAsCbor(buf)
 	if err != nil {
 		log.Fatalf("failed to decode: %v", err)
