@@ -1,7 +1,11 @@
 package imports
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"fmt"
+	"hash"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -18,30 +22,45 @@ type DhallCache interface {
 	Save(hash []byte, term term.Term)
 }
 
-// StandardCache is the standard DhallCache implementation.
-type StandardCache struct{}
-
-func dhallCacheDir() (string, error) {
-	cacheDir, err := os.UserCacheDir()
-	if err != nil {
-		return "", err
-	}
-	return path.Join(cacheDir, "dhall"), nil
+// A LocalCache is a cache for normalized Dhall expressions, stored in
+// binary form.
+//
+// Note that a LocalCache has a shared hash.Hash instance, and as such
+// is not safe for concurrent use across goroutines.
+type LocalCache struct {
+	path string
+	hash hash.Hash
 }
 
-// Fetch searches the standard Dhall cache location for a term at the
-// index given by hash.  If the hash isn't in the cache, returns nil.
-func (StandardCache) Fetch(hash []byte) term.Term {
+// FIXME: we might want to move the hash.Hash implementation to a
+// context?
+
+// NewLocalCache creates a new LocalCache, with the cache store at the
+// given path.
+func NewLocalCache(path string) LocalCache {
+	return LocalCache{path, sha256.New()}
+}
+
+// Fetch searches the LocalCache for a term at the index given by
+// hash.  If the hash isn't in the cache, returns nil.
+func (l LocalCache) Fetch(hash []byte) term.Term {
 	// FIXME: don't swallow these errors, maybe?
 	hash16 := fmt.Sprintf("%x", hash)
-	dir, err := dhallCacheDir()
+
+	reader, err := os.Open(path.Join(l.path, hash16))
 	if err != nil {
 		return nil
 	}
-	reader, err := os.Open(path.Join(dir, hash16))
-	if err != nil {
+
+	defer l.hash.Reset()
+	io.Copy(l.hash, reader)
+	if bytes.Compare(hash[2:], l.hash.Sum(nil)) != 0 {
+		log.Printf("warning: invalid cache entry for %x, ignoring\n", hash)
 		return nil
 	}
+
+	reader.Seek(0, io.SeekStart)
+
 	expr, err := binary.DecodeAsCbor(reader)
 	if err != nil {
 		log.Println(err)
@@ -50,21 +69,34 @@ func (StandardCache) Fetch(hash []byte) term.Term {
 	return expr
 }
 
-// Save saves the given Term to the standard Dhall cache at the given
-// hash.
-func (StandardCache) Save(hash []byte, e term.Term) {
+// Save saves the given Term to the LocalCache at the given hash.
+func (l LocalCache) Save(hash []byte, e term.Term) {
 	hash16 := fmt.Sprintf("%x", hash)
-	dir, err := dhallCacheDir()
-	if err != nil {
-		return
-	}
-	file, err := os.Create(path.Join(dir, hash16))
+	file, err := os.Create(path.Join(l.path, hash16))
 	if err != nil {
 		return
 	}
 	defer file.Close()
 	// ignores returned error
 	binary.EncodeAsCbor(file, e)
+}
+
+// StandardCache is the standard DhallCache implementation.  It is a
+// LocalCache in the standard Dhall cache directory.
+func StandardCache() (DhallCache, error) {
+	cacheDir, err := dhallCacheDir()
+	if err != nil {
+		return nil, err
+	}
+	return NewLocalCache(cacheDir), nil
+}
+
+func dhallCacheDir() (string, error) {
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+	return path.Join(cacheDir, "dhall"), nil
 }
 
 // NoCache is a DhallCache which doesn't do any caching.  It might be
