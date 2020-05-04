@@ -13,7 +13,11 @@ import (
 
 // Load takes a Term and resolves all imports
 func Load(e Term, ancestors ...Fetchable) (Term, error) {
-	return LoadWith(StandardCache{}, e, ancestors...)
+	cache, err := StandardCache()
+	if err != nil {
+		return nil, err
+	}
+	return LoadWith(cache, e, ancestors...)
 }
 
 // LoadWith takes a Term and resolves all imports, using cache for

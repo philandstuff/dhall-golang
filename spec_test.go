@@ -3,11 +3,9 @@ package dhall_test
 import (
 	"bytes"
 	"encoding/hex"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -363,17 +361,11 @@ func TestImportFails(t *testing.T) {
 	})
 }
 
-// A DhallCache implementation that only fetches, doesn't save
-type readOnlyCache string
+// readOnlyCache wraps a DhallCache to only fetches and not save
+type readOnlyCache struct{ cache imports.DhallCache }
 
 func (cache readOnlyCache) Fetch(hash []byte) term.Term {
-	hash16 := fmt.Sprintf("%x", hash)
-	reader, err := os.Open(path.Join(string(cache), hash16))
-	if err != nil {
-		return nil
-	}
-	expr, _ := binary.DecodeAsCbor(reader)
-	return expr
+	return cache.cache.Fetch(hash)
 }
 
 func (readOnlyCache) Save(hash []byte, term term.Term) {}
@@ -384,7 +376,7 @@ func TestImport(t *testing.T) {
 	t.Parallel()
 	cwd, err := os.Getwd()
 	expectNoError(t, err)
-	cache := readOnlyCache(cwd + "/dhall-lang/tests/import/cache/dhall")
+	cache := readOnlyCache{imports.NewLocalCache(cwd + "/dhall-lang/tests/import/cache/dhall")}
 	runTestOnFilePairs(t, "dhall-lang/tests/import/success/",
 		"A.dhall", "B.dhall",
 		func(t *testing.T, aPath, bPath string) {
