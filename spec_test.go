@@ -64,8 +64,14 @@ var expectedFailures = []string{
 	"TestImport/unit/asLocation/RemoteCanonicalize4",
 
 	// We don't cache the same URL within the same run
-	// Also, there are rate limits on csrng.net
 	"TestTypeInference/CacheImports",
+
+	// We don't encode doubles as half-precision :(
+	"TestParserAccepts/unit/DoubleLit16bit",
+	"TestParserAccepts/unit/DoubleLitExponentNoDot",
+	"TestParserAccepts/unit/DoubleLitSecretelyInt",
+	"TestSemanticHash/prelude/Natural/toDouble/0A",
+	"TestSemanticHash/prelude/Integer/toDouble",
 }
 
 func pass(t *testing.T) {

@@ -542,6 +542,7 @@ Expression ←
           return Pi{Label:label.(string), Type:t.(Term), Body: body.(Term)}, nil
       }
     / o:OperatorExpression _ Arrow _ e:Expression { return NewAnonPi(o.(Term),e.(Term)), nil }
+    / WithExpression
     / Merge _1 h:ImportExpression _1 u:ImportExpression _ ':' _1 a:ApplicationExpression {
           return Merge{Handler:h.(Term), Union:u.(Term), Annotation:a.(Term)}, nil
       }
@@ -562,8 +563,36 @@ EmptyList ← '[' _ (',' _)? ']' _ ':' _1 a:ApplicationExpression {
           return EmptyList{a.(Term)},nil
 }
 
-OperatorExpression ← ImportAltExpression
+WithExpression ←
+  first:ImportExpression rest:(_1 with _1 WithClause)+
+  {
+    out := first.(Term)
+    if rest == nil { return out, nil }
+    for _, b := range rest.([]interface{}) {
+        withClause := b.([]interface{})[3].([]interface{})
+        path := withClause[0].([]string)
+        value := withClause[4].(Term)
+        out = desugarWith(out, path, value)
+    }
+    return out, nil
+  }
 
+WithClause ← FieldPath _ '=' _ OperatorExpression
+
+FieldPath ← first:AnyLabelOrSome rest:(_ '.' _ AnyLabelOrSome)* {
+  out := []string{first.(string)}
+  if rest == nil { return out, nil }
+  for _, b := range rest.([]interface{}) {
+    nextField := b.([]interface{})[3].(string)
+    out = append(out, nextField)
+  }
+  return out, nil
+}
+
+OperatorExpression ← EquivalentExpression
+
+EquivalentExpression   ← first:ImportAltExpression    rest:(_ Equivalent _ e:ImportAltExpression)*
+  {return parseOperator(EquivOp, first, rest), nil}
 ImportAltExpression    ← first:OrExpression           rest:(_ "?" _1 OrExpression)*
   {return parseOperator(ImportAltOp, first, rest), nil}
 OrExpression           ← first:PlusExpression         rest:(_ "||" _ PlusExpression)*
@@ -586,33 +615,10 @@ TimesExpression        ← first:EqualExpression        rest:(_ '*' _ e:EqualExp
   {return parseOperator(TimesOp, first, rest), nil}
 EqualExpression        ← first:NotEqualExpression     rest:(_ "==" _ e:NotEqualExpression)*
   {return parseOperator(EqOp, first, rest), nil}
-NotEqualExpression     ← first:EquivalentExpression   rest:(_ "!=" _ e:EquivalentExpression)*
+NotEqualExpression     ← first:ApplicationExpression  rest:(_ "!=" _ e:ApplicationExpression)*
   {return parseOperator(NeOp, first, rest), nil}
-EquivalentExpression   ← first:WithExpression         rest:(_ Equivalent _ e:WithExpression)*
-  {return parseOperator(EquivOp, first, rest), nil}
-WithExpression         ← first:ApplicationExpression  rest:(_1 with _1 FieldPath _ '=' _ e:ApplicationExpression)*
-  {
-    out := first.(Term)
-    if rest == nil { return out, nil }
-    for _, b := range rest.([]interface{}) {
-        path := b.([]interface{})[3].([]string)
-        value := b.([]interface{})[7].(Term)
-        out = desugarWith(out, path, value)
-    }
-    return out, nil
-  }
 
-FieldPath ← first:AnyLabelOrSome rest:(_ '.' _ AnyLabelOrSome)* {
-  out := []string{first.(string)}
-  if rest == nil { return out, nil }
-  for _, b := range rest.([]interface{}) {
-    nextField := b.([]interface{})[3].(string)
-    out = append(out, nextField)
-  }
-  return out, nil
-}
-
-ApplicationExpression ← f:FirstApplicationExpression rest:(_1 ImportExpression)* {
+ApplicationExpression ← f:FirstApplicationExpression  rest:(_1 ImportExpression)* {
           e := f.(Term)
           if rest == nil { return e, nil }
           for _, arg := range rest.([]interface{}) {
