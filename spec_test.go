@@ -66,12 +66,8 @@ var expectedFailures = []string{
 	// We don't cache the same URL within the same run
 	"TestTypeInference/CacheImports",
 
-	// We don't encode doubles as half-precision :(
-	"TestParserAccepts/unit/DoubleLit16bit",
-	"TestParserAccepts/unit/DoubleLitExponentNoDot",
-	"TestParserAccepts/unit/DoubleLitSecretelyInt",
-	"TestSemanticHash/prelude/Natural/toDouble/0A",
-	"TestSemanticHash/prelude/Integer/toDouble",
+	// self-describing cbor https://github.com/fxamacker/cbor/issues/227
+	"TestBinaryDecode/unit/SelfDescribe",
 }
 
 func pass(t *testing.T) {

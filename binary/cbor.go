@@ -4,15 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"net/url"
 	"path"
 
+	"github.com/fxamacker/cbor/v2"
 	. "github.com/philandstuff/dhall-golang/term"
-	"github.com/ugorji/go/codec"
 )
-
-var cbor = newCborHandle()
 
 var nameToBuiltin = map[string]Term{
 	"Type": Type,
@@ -502,283 +499,26 @@ func decode(decodedCbor interface{}) (Term, error) {
 	return nil, fmt.Errorf("unimplemented while decoding %+v", decodedCbor)
 }
 
-// a marker type for CBOR-encoding purposes
-type cborBox struct{ content Term }
-
-var _ codec.Selfer = &cborBox{}
-
-func box(expr Term) *cborBox { return &cborBox{content: expr} }
-
-func (b *cborBox) CodecEncodeSelf(e *codec.Encoder) {
-	switch val := b.content.(type) {
-	case Var:
-		if val.Name == "_" {
-			e.Encode(val.Index)
-		} else {
-			e.Encode([]interface{}{val.Name, val.Index})
-		}
-	case Universe:
-		switch val {
-		case Type:
-			e.Encode("Type")
-		case Kind:
-			e.Encode("Kind")
-		case Sort:
-			e.Encode("Sort")
-		default:
-			panic(fmt.Sprintf("unknown type %d\n", val))
-		}
-	case Builtin:
-		e.Encode(string(val))
-	case App:
-		fn := val.Fn
-		args := []interface{}{box(val.Arg)}
-		for true {
-			parentapp, ok := fn.(App)
-			if !ok {
-				break
-			}
-			fn = parentapp.Fn
-			args = append([]interface{}{box(parentapp.Arg)}, args...)
-		}
-		e.Encode(append([]interface{}{0, box(fn)}, args...))
-
-	case Lambda:
-		if val.Label == "_" {
-			e.Encode([]interface{}{1, box(val.Type), box(val.Body)})
-		} else {
-			e.Encode([]interface{}{1, val.Label, box(val.Type), box(val.Body)})
-		}
-	case Pi:
-		if val.Label == "_" {
-			e.Encode([]interface{}{2, box(val.Type), box(val.Body)})
-		} else {
-			e.Encode([]interface{}{2, val.Label, box(val.Type), box(val.Body)})
-		}
-	case Op:
-		e.Encode([]interface{}{3, val.OpCode, box(val.L), box(val.R)})
-	case EmptyList:
-		if app, ok := val.Type.(App); ok {
-			if app.Fn == List {
-				e.Encode([]interface{}{4, box(app.Arg)})
-				break
-			}
-		}
-		e.Encode([]interface{}{28, box(val.Type)})
-	case NonEmptyList:
-		output := make([]interface{}, len(val)+2)
-		output[0] = 4
-		output[1] = nil
-		for i, item := range val {
-			output[i+2] = box(item)
-		}
-		e.Encode(output)
-	case Some:
-		e.Encode([]interface{}{5, nil, box(val.Val)})
-	case Merge:
-		if val.Annotation != nil {
-			e.Encode([]interface{}{6, box(val.Handler), box(val.Union), box(val.Annotation)})
-		} else {
-			e.Encode([]interface{}{6, box(val.Handler), box(val.Union)})
-		}
-	case RecordType:
-		items := make(map[string]*cborBox)
-		for k, v := range val {
-			items[k] = box(v)
-		}
-		// we rely on the EncodeOptions having Canonical set
-		// so that we get sorted keys in our map
-		e.Encode([]interface{}{7, items})
-	case RecordLit:
-		items := make(map[string]*cborBox)
-		for k, v := range val {
-			items[k] = box(v)
-		}
-		// we rely on the EncodeOptions having Canonical set
-		// so that we get sorted keys in our map
-		e.Encode([]interface{}{8, items})
-	case ToMap:
-		if val.Type != nil {
-			e.Encode([]interface{}{27, box(val.Record), box(val.Type)})
-		} else {
-			e.Encode([]interface{}{27, box(val.Record)})
-		}
-	case Field:
-		e.Encode([]interface{}{9, box(val.Record), val.FieldName})
-	case Project:
-		output := make([]interface{}, len(val.FieldNames)+2)
-		output[0] = 10
-		output[1] = box(val.Record)
-		for i, name := range val.FieldNames {
-			output[i+2] = name
-		}
-		e.Encode(output)
-	case ProjectType:
-		e.Encode([]interface{}{
-			10,
-			box(val.Record),
-			[]interface{}{
-				box(val.Selector),
-			}})
-	case UnionType:
-		items := make(map[string]*cborBox)
-		for k, v := range val {
-			items[k] = box(v)
-		}
-		// we rely on the EncodeOptions having Canonical set
-		// so that we get sorted keys in our map
-		e.Encode([]interface{}{11, items})
-	case BoolLit:
-		e.Encode(bool(val))
-	case If:
-		e.Encode([]interface{}{14, box(val.Cond), box(val.T), box(val.F)})
-	case NaturalLit:
-		e.Encode(append([]interface{}{15}, int(val)))
-	case IntegerLit:
-		e.Encode(append([]interface{}{16}, int(val)))
-	case DoubleLit:
-		// special-case values to encode as float16
-		if float64(val) == 0.0 { // 0.0
-			if math.Signbit(float64(val)) {
-				e.Encode(codec.Raw([]byte{0xf9, 0x80, 0x00}))
-			} else {
-				e.Encode(codec.Raw([]byte{0xf9, 0x00, 0x00}))
-			}
-		} else if math.IsNaN(float64(val)) { // NaN
-			e.Encode(codec.Raw([]byte{0xf9, 0x7e, 0x00}))
-		} else if math.IsInf(float64(val), 1) { // Infinity
-			e.Encode(codec.Raw([]byte{0xf9, 0x7c, 0x00}))
-		} else if math.IsInf(float64(val), -1) { // -Infinity
-			e.Encode(codec.Raw([]byte{0xf9, 0xfc, 0x00}))
-		} else {
-			single := float32(val)
-			if float64(single) == float64(val) {
-				e.Encode(single)
-			} else {
-				e.Encode(float64(val))
-			}
-		}
-	case TextLit:
-		output := []interface{}{18}
-		for _, chunk := range val.Chunks {
-			output = append(output, chunk.Prefix, box(chunk.Expr))
-		}
-		output = append(output, val.Suffix)
-		e.Encode(output)
-	case Assert:
-		e.Encode([]interface{}{19, box(val.Annotation)})
-	case Import:
-		r := val.Fetchable
-		// we have crafted the ImportMode constants to match the expected CBOR values
-		mode := val.ImportMode
-		switch rr := r.(type) {
-		case EnvVar:
-			e.Encode([]interface{}{24, val.Hash, mode, 6, string(rr)})
-		case LocalFile:
-			if rr.IsAbs() {
-				toEncode := []interface{}{24, val.Hash, mode, AbsoluteImport}
-				for _, component := range rr.PathComponents() {
-					toEncode = append(toEncode, component)
-				}
-				e.Encode(toEncode)
-			} else if rr.IsRelativeToParent() {
-				toEncode := []interface{}{24, val.Hash, mode, ParentImport}
-				for _, component := range rr.PathComponents() {
-					toEncode = append(toEncode, component)
-				}
-				e.Encode(toEncode)
-			} else if rr.IsRelativeToHome() {
-				toEncode := []interface{}{24, val.Hash, mode, HomeImport}
-				for _, component := range rr.PathComponents() {
-					toEncode = append(toEncode, component)
-				}
-				e.Encode(toEncode)
-			} else {
-				toEncode := []interface{}{24, val.Hash, mode, HereImport}
-				for _, component := range rr.PathComponents() {
-					toEncode = append(toEncode, component)
-				}
-				e.Encode(toEncode)
-			}
-		case RemoteFile:
-			var headers interface{} // unimplemented, leave as nil for now
-			scheme := HttpsImport
-			if rr.IsPlainHTTP() {
-				scheme = HttpImport
-			}
-			toEncode := []interface{}{24, val.Hash, mode, scheme, headers, rr.Authority()}
-			for _, component := range rr.PathComponents() {
-				toEncode = append(toEncode, component)
-			}
-			toEncode = append(toEncode, rr.Query())
-			e.Encode(toEncode)
-		case Missing:
-			e.Encode([]interface{}{24, nil, mode, 7})
-		default:
-			panic("can't happen")
-		}
-	case Let:
-		output := []interface{}{25}
-		// flatten multiple lets into one
-		for {
-			for _, binding := range val.Bindings {
-				output = append(output, binding.Variable)
-				output = append(output, box(binding.Annotation))
-				output = append(output, box(binding.Value))
-			}
-			// there's probably a nicer way to do this...
-			nextLet, ok := val.Body.(Let)
-			if !ok {
-				break
-			}
-			val = nextLet
-		}
-		output = append(output, box(val.Body))
-		e.Encode(output)
-	case Annot:
-		e.Encode([]interface{}{26, box(val.Expr), box(val.Annotation)})
-	default:
-		e.Encode(b.content)
-	}
-}
-
-func (b *cborBox) CodecDecodeSelf(d *codec.Decoder) {
-	var raw interface{}
-	d.MustDecode(&raw)
-	expr, err := decode(raw)
-	if err != nil {
-		panic(err)
-	}
-	b.content = expr
-}
-
 // EncodeAsCbor encodes a Term as CBOR and writes it to the io.Writer
 func EncodeAsCbor(w io.Writer, e Term) error {
-	enc := codec.NewEncoder(w, cbor)
-	return enc.Encode(box(e))
+	em, err := cbor.CanonicalEncOptions().EncMode()
+	if err != nil {
+		return err
+	}
+	return em.NewEncoder(w).Encode(e)
 }
 
 // DecodeAsCbor decodes CBOR from the io.Reader and returns the resulting Expr
 func DecodeAsCbor(r io.Reader) (Term, error) {
-	var b cborBox
-	dec := codec.NewDecoder(r, cbor)
-	err := dec.Decode(&b)
-	return b.content, err
+	var b interface{}
+	dm, err := cbor.DecOptions{}.DecMode()
+	if err != nil {
+		return nil, err
+	}
+	dec := dm.NewDecoder(r)
+	err = dec.Decode(&b)
+	if err != nil {
+		return nil, err
+	}
+	return decode(b)
 }
-
-func newCborHandle() *codec.CborHandle {
-	var h codec.CborHandle
-	h.Canonical = true
-	h.SkipUnexpectedTags = true
-	h.Raw = true
-	return &h
-}
-
-const (
-	HttpImport     = 0
-	HttpsImport    = 1
-	AbsoluteImport = 2
-	HereImport     = 3
-	ParentImport   = 4
-	HomeImport     = 5
-)
