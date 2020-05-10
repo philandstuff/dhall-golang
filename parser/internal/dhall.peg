@@ -1,3 +1,13 @@
+// Grammar for Dhall.
+//
+// Please run `go generate ./parser` from the project root after
+// editing this file!
+//
+// This is based on dhall-lang/standard/dhall.abnf.
+// However there are some differences.  For example, in some cases
+// we use uppercase rule names because some rule names in lowercase
+// are invalid Go identifiers (such as `if` and `else`).
+
 {
 package internal
 
@@ -71,7 +81,7 @@ func desugarWith(record Term, path []string, value Term) Term {
 
 DhallFile ← e:CompleteExpression EOF { return e, nil }
 
-CompleteExpression ← _ e:Expression _ { return e, nil }
+EOF ← !.
 
 EOL ← "\n" / "\r\n" { return []byte{'\n'}, nil }
 
@@ -136,8 +146,8 @@ QuotedLabel ← QuotedLabelChar+ { return string(c.text), nil }
 Label ← '`' label:QuotedLabel '`' { return label, nil }
       / label:SimpleLabel { return label, nil }
 
-NonreservedLabel ← &(Reserved SimpleLabelNextChar) label:Label { return label, nil }
-                / !Reserved label:Label { return label, nil }
+NonreservedLabel ← &(builtin SimpleLabelNextChar) label:Label { return label, nil }
+                / !builtin label:Label { return label, nil }
 
 AnyLabel ← Label
 
@@ -233,44 +243,6 @@ Interpolation ← "${" e:CompleteExpression "}" { return e, nil }
 
 TextLiteral ← DoubleQuoteLiteral / SingleQuoteLiteral
 
-Reserved ←
-    "Natural/build" { return NaturalBuild, nil }
-  / "Natural/fold" { return NaturalFold, nil }
-  / "Natural/isZero" { return NaturalIsZero, nil }
-  / "Natural/even" { return NaturalEven, nil }
-  / "Natural/odd" { return NaturalOdd, nil }
-  / "Natural/toInteger" { return NaturalToInteger, nil }
-  / "Natural/show" { return NaturalShow, nil }
-  / "Natural/subtract" { return NaturalSubtract, nil }
-  / "Integer/clamp" { return IntegerClamp, nil }
-  / "Integer/negate" { return IntegerNegate, nil }
-  / "Integer/toDouble" { return IntegerToDouble, nil }
-  / "Integer/show" { return IntegerShow, nil }
-  / "Double/show" { return DoubleShow, nil }
-  / "List/build" { return ListBuild, nil }
-  / "List/fold" { return ListFold, nil }
-  / "List/length" { return ListLength, nil }
-  / "List/head" { return ListHead, nil }
-  / "List/last" { return ListLast, nil }
-  / "List/indexed" { return ListIndexed, nil }
-  / "List/reverse" { return ListReverse, nil }
-  / "Optional/build" { return OptionalBuild, nil }
-  / "Optional/fold" { return OptionalFold, nil }
-  / "Text/show" { return TextShow, nil }
-  / "Bool" { return Bool, nil }
-  / "True" { return True, nil }
-  / "False" { return False, nil }
-  / "Optional" { return Optional, nil }
-  / "Natural" { return Natural, nil }
-  / "Integer" { return Integer, nil }
-  / "Double" { return Double, nil }
-  / "Text" { return Text, nil }
-  / "List" { return List, nil }
-  / "None" { return None, nil }
-  / "Type" { return Type, nil }
-  / "Kind" { return Kind, nil }
-  / "Sort" { return Sort, nil }
-
 If ← "if"
 Then ← "then"
 Else ← "else"
@@ -280,13 +252,12 @@ As ← "as"
 Using ← "using"
 Merge ← "merge"
 Missing ← "missing" !SimpleLabelNextChar { return Missing{}, nil }
-True ← "True"
-False ← "False"
 Infinity ← "Infinity"
 NaN ← "NaN"
 Some ← "Some"
 toMap ← "toMap"
 assert ← "assert"
+Forall ← "forall" / '∀'
 with ← "with"
 
 Keyword ←
@@ -299,6 +270,44 @@ Keyword ←
   / Forall
   / with
 
+builtin ←
+    "Natural/fold" { return NaturalFold, nil }
+  / "Natural/build" { return NaturalBuild, nil }
+  / "Natural/isZero" { return NaturalIsZero, nil }
+  / "Natural/even" { return NaturalEven, nil }
+  / "Natural/odd" { return NaturalOdd, nil }
+  / "Natural/toInteger" { return NaturalToInteger, nil }
+  / "Natural/show" { return NaturalShow, nil }
+  / "Integer/toDouble" { return IntegerToDouble, nil }
+  / "Integer/show" { return IntegerShow, nil }
+  / "Integer/negate" { return IntegerNegate, nil }
+  / "Integer/clamp" { return IntegerClamp, nil }
+  / "Natural/subtract" { return NaturalSubtract, nil }
+  / "Double/show" { return DoubleShow, nil }
+  / "List/build" { return ListBuild, nil }
+  / "List/fold" { return ListFold, nil }
+  / "List/length" { return ListLength, nil }
+  / "List/head" { return ListHead, nil }
+  / "List/last" { return ListLast, nil }
+  / "List/indexed" { return ListIndexed, nil }
+  / "List/reverse" { return ListReverse, nil }
+  / "Optional/fold" { return OptionalFold, nil }
+  / "Optional/build" { return OptionalBuild, nil }
+  / "Text/show" { return TextShow, nil }
+  / "Bool" { return Bool, nil }
+  / "True" { return True, nil }
+  / "False" { return False, nil }
+  / "Optional" { return Optional, nil }
+  / "None" { return None, nil }
+  / "Natural" { return Natural, nil }
+  / "Integer" { return Integer, nil }
+  / "Double" { return Double, nil }
+  / "Text" { return Text, nil }
+  / "List" { return List, nil }
+  / "Type" { return Type, nil }
+  / "Kind" { return Kind, nil }
+  / "Sort" { return Sort, nil }
+
 Text ← "Text"
 Location ← "Location"
 
@@ -307,7 +316,6 @@ CombineTypes ← "//\\\\" / '⩓'
 Equivalent ← "===" / '≡'
 Prefer ← "//" / '⫽'
 Lambda ← '\\' / 'λ'
-Forall ← "forall" / '∀'
 Arrow ← "->" / '→'
 Complete ← "::"
 
@@ -322,8 +330,8 @@ NumericDoubleLiteral ← [+-]? Digit+ ( "." Digit+ Exponent? / Exponent) {
 }
 
 DoubleLiteral ← d:NumericDoubleLiteral
-  / Infinity { return DoubleLit(math.Inf(1)), nil }
   / "-" Infinity { return DoubleLit(math.Inf(-1)), nil }
+  / Infinity { return DoubleLit(math.Inf(1)), nil }
   / NaN { return DoubleLit(math.NaN()), nil }
 
 NaturalLiteral ←
@@ -340,6 +348,8 @@ IntegerLiteral ←
     '+' n:NaturalLiteral { return IntegerLit(n.(NaturalLit)), nil }
   / '-' n:NaturalLiteral { return IntegerLit(-(n.(NaturalLit))), nil }
 
+Identifier ← Variable / builtin
+
 DeBruijn ← _ '@' _ index:NaturalLiteral { return int(index.(NaturalLit)), nil }
 
 Variable ← name:NonreservedLabel index:DeBruijn? {
@@ -349,8 +359,6 @@ Variable ← name:NonreservedLabel index:DeBruijn? {
         return Var{Name:name.(string)}, nil
     }
 }
-
-Identifier ← Variable / Reserved
 
 PathCharacter ←
      '\x21'
@@ -784,4 +792,4 @@ NonEmptyListLiteral ←
           return content, nil
       }
 
-EOF ← !.
+CompleteExpression ← _ e:Expression _ { return e, nil }
