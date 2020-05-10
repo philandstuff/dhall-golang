@@ -233,7 +233,6 @@ Interpolation ← "${" e:CompleteExpression "}" { return e, nil }
 
 TextLiteral ← DoubleQuoteLiteral / SingleQuoteLiteral
 
-// reserved identifiers from semantics.md, only required for negative lookahed rules
 Reserved ←
     "Natural/build" { return NaturalBuild, nil }
   / "Natural/fold" { return NaturalFold, nil }
@@ -300,9 +299,7 @@ Keyword ←
   / Forall
   / with
 
-Optional ← "Optional"
 Text ← "Text"
-List ← "List"
 Location ← "Location"
 
 Combine ← "/\\" / '∧'
