@@ -710,11 +710,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		}
 		return result, nil
 	case term.UnionType:
-		if len(t) == 0 {
-			return Type, nil
-		}
-		var c Universe
-		first := true
+		universe := Type
 		for _, typ := range t {
 			if typ == nil {
 				// empty alternative
@@ -724,25 +720,15 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			if first {
-				var ok bool
-				c, ok = k.(Universe)
-				if !ok {
-					return nil, mkTypeError(invalidAlternativeType)
-				}
-			} else {
-				if !AlphaEquivalent(c, k) {
-					return nil, mkTypeError(alternativeAnnotationMismatch)
-				}
+			u, ok := k.(Universe)
+			if !ok {
+				return nil, mkTypeError(invalidAlternativeType)
 			}
-			if c == Sort {
-				if Eval(typ) != Kind {
-					return nil, mkTypeError(invalidAlternativeType)
-				}
+			if u > universe {
+				universe = u
 			}
-			first = false
 		}
-		return c, nil
+		return universe, nil
 	case term.Merge:
 		handlerTypeVal, err := typeWith(ctx, t.Handler)
 		if err != nil {

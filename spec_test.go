@@ -64,8 +64,10 @@ var expectedFailures = []string{
 	"TestImport/unit/asLocation/RemoteCanonicalize4",
 
 	// We don't cache the same URL within the same run
-	// Also, there are rate limits on csrng.net
 	"TestTypeInference/CacheImports",
+
+	// self-describing cbor https://github.com/fxamacker/cbor/issues/227
+	"TestBinaryDecode/unit/SelfDescribe",
 }
 
 func pass(t *testing.T) {
