@@ -3,9 +3,9 @@ package dhall_test
 import (
 	"reflect"
 
-	. "github.com/philandstuff/dhall-golang"
-	"github.com/philandstuff/dhall-golang/core"
-	"github.com/philandstuff/dhall-golang/term"
+	. "github.com/philandstuff/dhall-golang/v3"
+	"github.com/philandstuff/dhall-golang/v3/core"
+	"github.com/philandstuff/dhall-golang/v3/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

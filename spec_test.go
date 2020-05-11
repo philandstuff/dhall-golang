@@ -12,11 +12,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/philandstuff/dhall-golang/binary"
-	"github.com/philandstuff/dhall-golang/core"
-	"github.com/philandstuff/dhall-golang/imports"
-	"github.com/philandstuff/dhall-golang/parser"
-	"github.com/philandstuff/dhall-golang/term"
+	"github.com/philandstuff/dhall-golang/v3/binary"
+	"github.com/philandstuff/dhall-golang/v3/core"
+	"github.com/philandstuff/dhall-golang/v3/imports"
+	"github.com/philandstuff/dhall-golang/v3/parser"
+	"github.com/philandstuff/dhall-golang/v3/term"
 	"github.com/pkg/errors"
 )
 

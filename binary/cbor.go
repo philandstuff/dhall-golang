@@ -8,7 +8,7 @@ import (
 	"path"
 
 	"github.com/fxamacker/cbor/v2"
-	. "github.com/philandstuff/dhall-golang/term"
+	. "github.com/philandstuff/dhall-golang/v3/term"
 )
 
 var nameToBuiltin = map[string]Term{

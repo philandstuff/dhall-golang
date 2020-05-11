@@ -10,9 +10,9 @@ import (
 	"github.com/leanovate/gopter/gen"
 	"github.com/leanovate/gopter/prop"
 
-	"github.com/philandstuff/dhall-golang/core"
-	"github.com/philandstuff/dhall-golang/parser"
-	"github.com/philandstuff/dhall-golang/term"
+	"github.com/philandstuff/dhall-golang/v3/core"
+	"github.com/philandstuff/dhall-golang/v3/parser"
+	"github.com/philandstuff/dhall-golang/v3/term"
 )
 
 var (

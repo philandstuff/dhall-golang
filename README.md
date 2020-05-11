@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/philandstuff/dhall-golang"
+	"github.com/philandstuff/dhall-golang/v3"
 )
 
 // Config can be a fairly arbitrary Go datatype.  You would put your
