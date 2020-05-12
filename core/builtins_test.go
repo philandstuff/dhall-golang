@@ -3,8 +3,8 @@ package core_test
 import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"github.com/philandstuff/dhall-golang/core"
-	"github.com/philandstuff/dhall-golang/parser"
+	"github.com/philandstuff/dhall-golang/v3/core"
+	"github.com/philandstuff/dhall-golang/v3/parser"
 )
 
 var _ = DescribeTable("ArgType of builtins", func(src, typ string) {

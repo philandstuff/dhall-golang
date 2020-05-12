@@ -1,10 +1,33 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v3.0.0...HEAD
+
+## [3.0.0] - 2020-05-11
+[3.0.0]: https://github.com/philandstuff/dhall-golang/compare/v2.0.0...v3.0.0
+
+This brings dhall-golang up to version 16.0.0 of the Dhall standard.
+As the standard had breaking changes, this release is a major version
+bump.
+
+### Breaking changes
+
+ * Language changes:
+     * [Adjust precedence of `===` and `with`](https://github.com/dhall-lang/dhall-lang/pull/954)
+     * [Update encoding of floating point values to RFC7049bis](https://github.com/dhall-lang/dhall-lang/pull/958)
+
+### New features
+
+ * Language features:
+     * [Allow unions with mixed kinds](https://github.com/dhall-lang/dhall-lang/pull/957)
+
+### Bug fixes
+
+ * We now save fully-alpha-normalized expressions to the cache (#31)
+ * We now check the hash of expressions fetched from the cache (#32)
 
 ## [2.0.0] - 2020-04-17
-[1.0.0]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0...v2.0.0
+[2.0.0]: https://github.com/philandstuff/dhall-golang/compare/v1.0.0...v2.0.0
 
 This brings dhall-golang up to version 15.0.0 of the Dhall standard.
 As the standard had breaking changes, this release is a major version
