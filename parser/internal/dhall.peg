@@ -402,9 +402,9 @@ AbsolutePath ← p:Path { return LocalFile(path.Join("/", p.(string))), nil }
 
 Scheme ← "http" 's'?
 
-HttpRaw ← Scheme "://" Authority UrlPath ( '?' Query )? { return url.ParseRequestURI(string(c.text)) }
+HttpRaw ← Scheme "://" Authority path_abempty ( '?' Query )? { return url.ParseRequestURI(string(c.text)) }
 
-UrlPath ← (PathComponent / '/' Segment)*
+path_abempty ← ('/' Segment)*
 
 Authority ← (Userinfo '@')? Host (':' Port)?
 
