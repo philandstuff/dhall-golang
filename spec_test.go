@@ -65,9 +65,6 @@ var expectedFailures = []string{
 
 	// We don't cache the same URL within the same run
 	"TestTypeInference/CacheImports",
-
-	// self-describing cbor https://github.com/fxamacker/cbor/issues/227
-	"TestBinaryDecode/unit/SelfDescribe",
 }
 
 func pass(t *testing.T) {

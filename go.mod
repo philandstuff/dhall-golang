@@ -1,7 +1,7 @@
 module github.com/philandstuff/dhall-golang
 
 require (
-	github.com/fxamacker/cbor/v2 v2.2.0
+	github.com/fxamacker/cbor/v2 v2.2.1-0.20200511212021-28e39be4a84f
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/leanovate/gopter v0.2.5-0.20190402064358-634a59d12406
 	github.com/onsi/ginkgo v1.7.0
