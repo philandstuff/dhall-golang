@@ -634,6 +634,10 @@ func (r RecordLit) String() string {
 	return buf.String()
 }
 
+func (f Field) String() string {
+	return fmt.Sprintf("(%v).%s", f.Record, f.FieldName)
+}
+
 func (u UnionType) String() string {
 	if len(u) == 0 {
 		return "<>"
