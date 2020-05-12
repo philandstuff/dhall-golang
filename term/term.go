@@ -10,6 +10,7 @@ package term
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 )
 
@@ -598,16 +599,23 @@ func (r RecordType) String() string {
 	if len(r) == 0 {
 		return "{}"
 	}
+	// get keys in sorted order
+	var sortedKeys []string
+	for k := range r {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
 	var buf strings.Builder
 	first := true
 	buf.WriteString("{ ")
-	for name, typ := range r {
+	for _, name := range sortedKeys {
 		if !first {
 			buf.WriteString(", ")
 		}
 		buf.WriteString(name)
 		buf.WriteString(" : ")
-		buf.WriteString(fmt.Sprintf("%v", typ))
+		buf.WriteString(fmt.Sprintf("%v", r[name]))
 		first = false
 	}
 	buf.WriteString("}")
@@ -618,16 +626,23 @@ func (r RecordLit) String() string {
 	if len(r) == 0 {
 		return "{=}"
 	}
+	// get keys in sorted order
+	var sortedKeys []string
+	for k := range r {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
 	var buf strings.Builder
 	first := true
 	buf.WriteString("{ ")
-	for name, typ := range r {
+	for _, name := range sortedKeys {
 		if !first {
 			buf.WriteString(", ")
 		}
 		buf.WriteString(name)
 		buf.WriteString(" = ")
-		buf.WriteString(fmt.Sprintf("%v", typ))
+		buf.WriteString(fmt.Sprintf("%v", r[name]))
 		first = false
 	}
 	buf.WriteString("}")
@@ -645,13 +660,21 @@ func (u UnionType) String() string {
 	var buf strings.Builder
 	first := true
 	buf.WriteString("< ")
-	for name, typ := range u {
+
+	// get keys in sorted order
+	var sortedKeys []string
+	for k := range u {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
+	for _, name := range sortedKeys {
 		if !first {
 			buf.WriteString(" | ")
 		}
 		buf.WriteString(name)
 		buf.WriteString(" : ")
-		buf.WriteString(fmt.Sprintf("%v", typ))
+		buf.WriteString(fmt.Sprintf("%v", u[name]))
 		first = false
 	}
 	buf.WriteString(" >")
