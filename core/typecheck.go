@@ -481,7 +481,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			err = assertTypeIs(ctx, Quote(lType), Type, incomparableExpression)
+			err = assertTypeIs(ctx, Quote(rType), Type, incomparableExpression)
 			if err != nil {
 				return nil, err
 			}
