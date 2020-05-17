@@ -55,6 +55,8 @@ vendoring of dependencies is required.
 
 ### Running the tests
 
+    git submodule update --init --recursive
+
     go test ./...
 
     go test -short ./... # skips long-running tests
