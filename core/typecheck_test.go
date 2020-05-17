@@ -99,4 +99,12 @@ var _ = Describe("TypeOf", func() {
 		Entry(`Natural Natural -- Fn of AppTerm isn't of function type`,
 			term.Apply(term.Natural, term.Natural)),
 	)
+	DescribeTable("Detailed expected failures",
+		func(t term.Term, msg string) {
+			_, err := TypeOf(t)
+			Ω(err).Should(MatchError(msg))
+		},
+		Entry(`2 === Type`,
+			term.Equivalent(term.NaturalLit(2), term.Type), "Incomparable expression"),
+	)
 })
