@@ -273,7 +273,7 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			}
 
 			if binding.Annotation != nil {
-				_, err := typeWith(ctx, binding.Value)
+				_, err := typeWith(ctx, binding.Annotation)
 				if err != nil {
 					return nil, err
 				}
