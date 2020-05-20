@@ -370,6 +370,46 @@ func PlainText(content string) TextLit {
 
 func (TextLit) isTerm() {}
 
+func (t TextLit) String() string {
+	var out strings.Builder
+	out.WriteString(`"`)
+	for _, chunk := range t.Chunks {
+		for _, r := range chunk.Prefix {
+			switch r {
+			case '"':
+				out.WriteString(`\"`)
+			case '$':
+				out.WriteString(`\u0024`)
+			case '\\':
+				out.WriteString(`\\`)
+			case '\b':
+				out.WriteString(`\b`)
+			case '\f':
+				out.WriteString(`\f`)
+			case '\n':
+				out.WriteString(`\n`)
+			case '\r':
+				out.WriteString(`\r`)
+			case '\t':
+				out.WriteString(`\t`)
+			default:
+				if r < 0x1f {
+					out.WriteString(fmt.Sprintf(`\u%04x`, r))
+				} else {
+					out.WriteRune(r)
+				}
+			}
+		}
+		out.WriteString("${")
+		out.WriteString(fmt.Sprint(chunk.Expr))
+		out.WriteString("}")
+	}
+	// TODO: properly deserialise string here
+	out.WriteString(t.Suffix)
+	out.WriteString(`"`)
+	return out.String()
+}
+
 func (If) isTerm() {}
 
 func (DoubleLit) isTerm()  {}
