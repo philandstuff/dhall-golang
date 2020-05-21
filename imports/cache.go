@@ -84,14 +84,16 @@ func (l LocalCache) Save(hash []byte, e term.Term) {
 // StandardCache is the standard DhallCache implementation.  It is a
 // LocalCache in the standard Dhall cache directory.
 func StandardCache() (DhallCache, error) {
-	cacheDir, err := dhallCacheDir()
+	cacheDir, err := DhallCacheDir()
 	if err != nil {
 		return nil, err
 	}
 	return NewLocalCache(cacheDir), nil
 }
 
-func dhallCacheDir() (string, error) {
+// DhallCacheDir returns the path to the Dhall cache directory, as
+// specified in the Dhall standard.
+func DhallCacheDir() (string, error) {
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
 		return "", err
