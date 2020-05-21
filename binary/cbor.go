@@ -511,7 +511,7 @@ func EncodeAsCbor(w io.Writer, e Term) error {
 // DecodeAsCbor decodes CBOR from the io.Reader and returns the resulting Expr
 func DecodeAsCbor(r io.Reader) (Term, error) {
 	var b interface{}
-	dm, err := cbor.DecOptions{}.DecMode()
+	dm, err := cbor.DecOptions{MaxNestedLevels: 64}.DecMode()
 	if err != nil {
 		return nil, err
 	}
