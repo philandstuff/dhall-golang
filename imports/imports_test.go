@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime"
 
 	. "github.com/philandstuff/dhall-golang/v3/imports"
 	. "github.com/philandstuff/dhall-golang/v3/internal"
@@ -183,7 +184,11 @@ var _ = Describe("Import resolution", func() {
 			actual, err := Load(NewLocalImport("./testdata/just_text.txt", RawText))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(PlainText("here is some text\n")))
+			if runtime.GOOS == "windows" {
+				Expect(actual).To(Equal(PlainText("here is some text\r\n")))
+			} else {
+				Expect(actual).To(Equal(PlainText("here is some text\n")))
+			}
 		})
 		It("Resolves as code", func() {
 			actual, err := Load(NewLocalImport("./testdata/natural.dhall", Code))
