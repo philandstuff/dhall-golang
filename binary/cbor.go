@@ -50,9 +50,6 @@ var nameToBuiltin = map[string]Term{
 	"List/last":    ListLast,
 	"List/indexed": ListIndexed,
 	"List/reverse": ListReverse,
-
-	"Optional/build": OptionalBuild,
-	"Optional/fold":  OptionalFold,
 }
 
 func unwrapUint(i interface{}) (uint, error) {
@@ -107,7 +104,7 @@ func decode(decodedCbor interface{}) (Term, error) {
 		// _@n
 		return Var{Name: "_", Index: int(val)}, nil
 	case string:
-		// Type, Double, Optional/fold
+		// Type, Double, List/fold
 		if builtin, ok := nameToBuiltin[val]; ok {
 			return builtin, nil
 		}

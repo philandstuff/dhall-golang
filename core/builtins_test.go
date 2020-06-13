@@ -49,15 +49,6 @@ var _ = DescribeTable("ArgType of builtins", func(src, typ string) {
 	Entry("List/reverse arg 1", `List/reverse`, `Type`),
 	Entry("List/reverse arg 2", `List/reverse Natural`, `List Natural`),
 
-	Entry("Optional/build arg 1", `Optional/build`, `Type`),
-	Entry("Optional/build arg 2", `Optional/build Natural`,
-		`∀(optional : Type) → ∀(just : Natural → optional) → ∀(nothing : optional) → optional`),
-	Entry("Optional/fold arg 1", `Optional/fold`, `Type`),
-	Entry("Optional/fold arg 2", `Optional/fold Natural`, `Optional Natural`),
-	Entry("Optional/fold arg 3", `Optional/fold Natural (Some 2)`, `Type`),
-	Entry("Optional/fold arg 4", `Optional/fold Natural (Some 2) Text`, `Natural → Text`),
-	Entry("Optional/fold arg 5", `Optional/fold Natural (Some 2) Text (λ(x : Natural) → "some")`, `Text`),
-
 	Entry("Integer/show", `Integer/show`, `Integer`),
 	Entry("Integer/toDouble", `Integer/toDouble`, `Integer`),
 	Entry("Integer/negate", `Integer/negate`, `Integer`),

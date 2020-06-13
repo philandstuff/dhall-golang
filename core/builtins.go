@@ -193,80 +193,6 @@ func (doubleShow) ArgType() Value { return Double }
 func (optional) Call(x Value) Value { return OptionalOf{x} }
 func (optional) ArgType() Value     { return Type }
 
-func (build optionalBuild) Call(x Value) Value {
-	if build.typ == nil {
-		return optionalBuild{typ: x}
-	}
-	var some Value = lambda{
-		Label:  "a",
-		Domain: build.typ,
-		Fn: func(a Value) Value {
-			return Some{a}
-		},
-	}
-	return apply(x, OptionalOf{build.typ}, some, NoneOf{build.typ})
-}
-
-func (build optionalBuild) ArgType() Value {
-	if build.typ == nil {
-		return Type
-	}
-	return NewPi("optional", Type, func(optional Value) Value {
-		return NewFnType("just", NewFnType("_", build.typ, optional),
-			NewFnType("nothing", optional,
-				optional))
-	})
-}
-
-func (fold optionalFold) Call(x Value) Value {
-	if fold.typ1 == nil {
-		return optionalFold{typ1: x}
-	}
-	if fold.opt == nil {
-		return optionalFold{typ1: fold.typ1, opt: x}
-	}
-	if fold.typ2 == nil {
-		return optionalFold{
-			typ1: fold.typ1,
-			opt:  fold.opt,
-			typ2: x,
-		}
-	}
-	if fold.some == nil {
-		return optionalFold{
-			typ1: fold.typ1,
-			opt:  fold.opt,
-			typ2: fold.typ2,
-			some: x,
-		}
-	}
-	none := x
-	if s, ok := fold.opt.(Some); ok {
-		return apply(fold.some, s.Val)
-	}
-	if _, ok := fold.opt.(NoneOf); ok {
-		return none
-	}
-	return nil
-}
-
-func (fold optionalFold) ArgType() Value {
-	if fold.typ1 == nil {
-		return Type
-	}
-	if fold.opt == nil {
-		return OptionalOf{fold.typ1}
-	}
-	if fold.typ2 == nil {
-		return Type
-	}
-	if fold.some == nil {
-		return NewFnType("_", fold.typ1, fold.typ2)
-	}
-	// none
-	return fold.typ2
-}
-
 func (none) Call(a Value) Value { return NoneOf{a} }
 func (none) ArgType() Value     { return Type }
 
@@ -527,10 +453,8 @@ var (
 	IntegerToDouble  Callable = integerToDouble{}
 	DoubleShow       Callable = doubleShow{}
 
-	Optional      Callable = optional{}
-	OptionalBuild Callable = optionalBuild{}
-	OptionalFold  Callable = optionalFold{}
-	None          Callable = none{}
+	Optional Callable = optional{}
+	None     Callable = none{}
 
 	TextShow Callable = textShow{}
 

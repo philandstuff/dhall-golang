@@ -44,10 +44,6 @@ var expectedFailures = []string{
 	"TestBinaryDecode/unit/IntegerBigPositive",
 	"TestBinaryDecode/unit/NaturalBig",
 
-	// needs quoted paths in URLs
-	"TestParserAccepts/unit/import/quotedPaths",     // needs.. quoted paths
-	"TestParserAccepts/unit/import/urls/quotedPath", // needs quotedPaths
-
 	// urgh IEEE floating point; NaN != NaN :(
 	"TestTypeInference/unit/AssertNaNA",
 

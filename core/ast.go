@@ -76,16 +76,8 @@ type (
 
 	doubleShow struct{}
 
-	optional      struct{}
-	optionalBuild struct{ typ Value }
-	optionalFold  struct {
-		typ1 Value
-		opt  Value
-		typ2 Value
-		some Value
-		// none Value
-	}
-	none struct{}
+	optional struct{}
+	none     struct{}
 
 	textShow struct{}
 
@@ -124,10 +116,8 @@ func (integerToDouble) isValue() {}
 
 func (doubleShow) isValue() {}
 
-func (optional) isValue()      {}
-func (optionalBuild) isValue() {}
-func (optionalFold) isValue()  {}
-func (none) isValue()          {}
+func (optional) isValue() {}
+func (none) isValue()     {}
 
 func (textShow) isValue() {}
 
