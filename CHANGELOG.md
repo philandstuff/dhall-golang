@@ -1,7 +1,34 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v4.0.0...HEAD
+
+## [4.0.0] - 2020-06-16
+[4.0.0]: https://github.com/philandstuff/dhall-golang/compare/v3.0.0...v4.0.0
+
+This brings dhall-golang up to version 17.0.0 of the Dhall standard.
+Again the standard had breaking changes, so this release is a major
+version bump.
+
+Thanks to @lisael for their contributions to this release.
+
+### Breaking changes
+
+ * Language changes:
+   * [Remove Optional/build and Optional/fold](https://github.com/dhall-lang/dhall-lang/pull/1014)
+
+### Added
+
+ * Language changes:
+   * [Allow quoted labels to be empty](https://github.com/dhall-lang/dhall-lang/pull/980)
+
+### Fixed
+
+ * Fix potential stack overflow in typechecker (#40)
+    * When typechecking certain pathological expressions, the
+      typechecker would get into an infinite loop until it exhausted
+      the stack.
+ * Fix error messages when `x === y` fails to typecheck (#39)
 
 ## [3.0.0] - 2020-05-11
 [3.0.0]: https://github.com/philandstuff/dhall-golang/compare/v2.0.0...v3.0.0
