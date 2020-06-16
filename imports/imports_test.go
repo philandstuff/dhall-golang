@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	. "github.com/philandstuff/dhall-golang/v3/imports"
-	. "github.com/philandstuff/dhall-golang/v3/internal"
-	. "github.com/philandstuff/dhall-golang/v3/term"
+	. "github.com/philandstuff/dhall-golang/v4/imports"
+	. "github.com/philandstuff/dhall-golang/v4/internal"
+	. "github.com/philandstuff/dhall-golang/v4/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

@@ -3,7 +3,7 @@ package core
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/philandstuff/dhall-golang/v3/term"
+	"github.com/philandstuff/dhall-golang/v4/term"
 )
 
 var _ = Describe("Eval", func() {
