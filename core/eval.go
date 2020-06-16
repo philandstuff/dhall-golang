@@ -58,10 +58,6 @@ func evalWith(t term.Term, e env) Value {
 			return DoubleShow
 		case term.Optional:
 			return Optional
-		case term.OptionalBuild:
-			return OptionalBuild
-		case term.OptionalFold:
-			return OptionalFold
 		case term.None:
 			return None
 		case term.Text:

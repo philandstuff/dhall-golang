@@ -76,9 +76,6 @@ const (
 	ListLast    Builtin = "List/last"
 	ListIndexed Builtin = "List/indexed"
 	ListReverse Builtin = "List/reverse"
-
-	OptionalBuild Builtin = "Optional/build"
-	OptionalFold  Builtin = "Optional/fold"
 )
 
 // A BoolLit is a Dhall boolean literal.

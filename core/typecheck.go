@@ -158,26 +158,6 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			return NewFnType("_", Natural, NewFnType("_", Natural, Natural)), nil
 		case term.None:
 			return NewPi("A", Type, func(A Value) Value { return OptionalOf{A} }), nil
-		case term.OptionalBuild:
-			return NewPi("a", Type, func(a Value) Value {
-				return NewFnType("_",
-					NewPi("optional", Type, func(optional Value) Value {
-						return NewFnType("just",
-							NewFnType("_", a, optional),
-							NewFnType("nothing", optional, optional))
-					}),
-					OptionalOf{a})
-			}), nil
-		case term.OptionalFold:
-			return NewPi("a", Type, func(a Value) Value {
-				return NewFnType("_",
-					OptionalOf{a},
-					NewPi("optional", Type, func(optional Value) Value {
-						return NewFnType("just",
-							NewFnType("_", a, optional),
-							NewFnType("nothing", optional, optional))
-					}))
-			}), nil
 		case term.TextShow:
 			return NewFnType("_", Text, Text), nil
 		default:

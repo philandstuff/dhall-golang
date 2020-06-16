@@ -141,7 +141,7 @@ SimpleLabel ← Keyword SimpleLabelNextChar+ { return string(c.text), nil }
           }
 
 QuotedLabelChar ← [\x20-\x5f\x61-\x7e]
-QuotedLabel ← QuotedLabelChar+ { return string(c.text), nil }
+QuotedLabel ← QuotedLabelChar* { return string(c.text), nil }
 
 Label ← '`' label:QuotedLabel '`' { return label, nil }
       / label:SimpleLabel { return label, nil }
@@ -291,8 +291,6 @@ builtin ←
   / "List/last" { return ListLast, nil }
   / "List/indexed" { return ListIndexed, nil }
   / "List/reverse" { return ListReverse, nil }
-  / "Optional/fold" { return OptionalFold, nil }
-  / "Optional/build" { return OptionalBuild, nil }
   / "Text/show" { return TextShow, nil }
   / "Bool" { return Bool, nil }
   / "True" { return True, nil }
@@ -402,9 +400,9 @@ AbsolutePath ← p:Path { return LocalFile(path.Join("/", p.(string))), nil }
 
 Scheme ← "http" 's'?
 
-HttpRaw ← Scheme "://" Authority UrlPath ( '?' Query )? { return url.ParseRequestURI(string(c.text)) }
+HttpRaw ← Scheme "://" Authority PathAbEmpty ( '?' Query )? { return url.ParseRequestURI(string(c.text)) }
 
-UrlPath ← (PathComponent / '/' Segment)*
+PathAbEmpty ← ('/' Segment)*
 
 Authority ← (Userinfo '@')? Host (':' Port)?
 

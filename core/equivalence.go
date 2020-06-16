@@ -20,7 +20,7 @@ func alphaEquivalentWith(level int, v1 Value, v2 Value) bool {
 		naturalSubtract, naturalToInteger,
 		integerShow, integerClamp, integerNegate, integerToDouble,
 		doubleShow,
-		optional, optionalBuild, optionalFold, none,
+		optional, none,
 		textShow,
 		list, listBuild, listFold, listHead, listIndexed,
 		listLength, listLast, listReverse,

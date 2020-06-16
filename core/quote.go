@@ -78,29 +78,6 @@ func quoteWith(ctx quoteContext, shouldAlphaNormalize bool, v Value) term.Term {
 		return term.DoubleShow
 	case optional:
 		return term.Optional
-	case optionalBuild:
-		if v.typ != nil {
-			return term.App{term.OptionalBuild, quoteWith(ctx, shouldAlphaNormalize, v.typ)}
-		}
-		return term.OptionalBuild
-	case optionalFold:
-		var result term.Term = term.OptionalFold
-		if v.typ1 == nil {
-			return result
-		}
-		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.typ1)}
-		if v.opt == nil {
-			return result
-		}
-		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.opt)}
-		if v.typ2 == nil {
-			return result
-		}
-		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.typ2)}
-		if v.some == nil {
-			return result
-		}
-		return term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.some)}
 	case none:
 		return term.None
 	case textShow:
