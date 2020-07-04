@@ -38,4 +38,14 @@ var _ = Describe("Eval", func() {
 				To(Equal(Type))
 		})
 	})
+	Describe("toMap", func() {
+		It("Evaluates with missing type and abstract value", func() {
+			Expect(Eval(term.ToMap{
+				Record: term.Var{Name: "x"},
+			})).
+				To(Equal(toMap{
+					Record: freeVar{Name: "x"},
+				}))
+		})
+	})
 })
