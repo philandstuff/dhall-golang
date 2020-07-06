@@ -416,10 +416,11 @@ func evalWith(t term.Term, e env) Value {
 			}
 			return result
 		}
-		return toMap{
-			Record: record,
-			Type:   evalWith(t.Type, e),
+		toMapVal := toMap{Record: recordVal}
+		if t.Type != nil {
+			toMapVal.Type = evalWith(t.Type, e)
 		}
+		return toMapVal
 	case term.Field:
 		record := evalWith(t.Record, e)
 		for { // simplifications
