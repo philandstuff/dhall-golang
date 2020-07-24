@@ -295,6 +295,9 @@ var _ = Describe("Unmarshal", func() {
 			Entry("Incompatible input parameter type", `
 				λ(x : Natural) → x
 			`, new(func(string) uint)),
+			Entry("Unmarshalling into unregistered interface type", `
+				5
+			`, new(interface{ f(int) int })),
 		)
 	})
 })

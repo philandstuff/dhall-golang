@@ -226,8 +226,8 @@ func alphaEquivalentWith(level int, v1 Value, v2 Value) bool {
 			return false
 		}
 		return alphaEquivalentWith(level, v1.Type, v2.Type)
-	case unionVal:
-		v2, ok := v2.(unionVal)
+	case UnionVal:
+		v2, ok := v2.(UnionVal)
 		if !ok {
 			return false
 		}

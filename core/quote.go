@@ -261,7 +261,7 @@ func quoteWith(ctx quoteContext, shouldAlphaNormalize bool, v Value) term.Term {
 			Record:    quoteWith(ctx, shouldAlphaNormalize, v.Type),
 			FieldName: v.Alternative,
 		}
-	case unionVal:
+	case UnionVal:
 		var result term.Term = term.Field{
 			Record:    quoteWith(ctx, shouldAlphaNormalize, v.Type),
 			FieldName: v.Alternative,
