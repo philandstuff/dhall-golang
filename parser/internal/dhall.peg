@@ -663,7 +663,8 @@ SelectorExpression ← e:PrimitiveExpression ls:(_ '.' _ Selector)* {
 
 Selector ← AnyLabel / Labels / TypeSelector
 
-Labels ← '{' _ optclauses:( AnyLabelOrSome _ (',' _ AnyLabelOrSome _ )* )? '}' {
+Labels ←
+    '{' _ ( ',' _ )? optclauses:( AnyLabelOrSome _ (',' _ AnyLabelOrSome _ )* (',' _)? )? '}' {
     if optclauses == nil { return []string{}, nil }
     clauses := optclauses.([]interface{})
     labels := []string{clauses[0].(string)}
@@ -687,14 +688,16 @@ PrimitiveExpression ←
     / '(' _ ('|' _)? e:Expression _ ')' { return e, nil }
 
 RecordTypeOrLiteral ←
-      '=' { return RecordLit{}, nil }
+      EmptyRecordLiteral
     / NonEmptyRecordType
     / NonEmptyRecordLiteral
     / "" { return RecordType{}, nil }
 
+EmptyRecordLiteral ← '=' ( _ ',' )? { return RecordLit{}, nil }
+
 MoreRecordType ← _ ',' _ f:RecordTypeEntry {return f, nil}
 NonEmptyRecordType ←
-      first:RecordTypeEntry rest:MoreRecordType* {
+      first:RecordTypeEntry rest:MoreRecordType* (',' _)? {
           fields := rest.([]interface{})
           content := first.(RecordType)
           for _, field := range fields {
@@ -714,7 +717,7 @@ RecordTypeEntry ← name:AnyLabelOrSome _ ':' _1 expr:Expression {
 
 MoreRecordLiteral ← _ ',' _ f:RecordLiteralEntry {return f, nil}
 NonEmptyRecordLiteral ←
-      first:RecordLiteralEntry rest:MoreRecordLiteral* {
+      first:RecordLiteralEntry rest:MoreRecordLiteral* (',' _)? {
           fields := rest.([]interface{})
           content := first.(RecordLit)
           for _, field := range fields {
@@ -756,7 +759,7 @@ UnionType ← NonEmptyUnionType / EmptyUnionType
 
 EmptyUnionType ← "" { return UnionType{}, nil }
 
-NonEmptyUnionType ← first:UnionTypeEntry rest:(_ '|' _ UnionTypeEntry)* {
+NonEmptyUnionType ← first:UnionTypeEntry rest:(_ '|' _ UnionTypeEntry)* (_ '|')? {
     alternatives := make(UnionType)
     first2 := first.([]interface{})
     if first2[1] == nil {
@@ -786,7 +789,7 @@ UnionTypeEntry ← AnyLabelOrSome (_ ':' _1 Expression)?
 MoreList ← ',' _ e:Expression _ {return e, nil}
 
 NonEmptyListLiteral ←
-      '[' _ (',' _)? first:Expression _ rest:MoreList* ']' {
+      '[' _ (',' _)? first:Expression _ rest:MoreList* (',' _)? ']' {
           exprs := rest.([]interface{})
           content := make(NonEmptyList, len(exprs)+1)
           content[0] = first.(Term)

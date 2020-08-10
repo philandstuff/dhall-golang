@@ -61,6 +61,10 @@ var expectedFailures = []string{
 
 	// We don't cache the same URL within the same run
 	"TestTypeInference/CacheImports",
+
+	// We alpha-normalize due to the enforced caching in the prelude
+	// import
+	"TestNormalization/remoteSystems",
 }
 
 func pass(t *testing.T) {
