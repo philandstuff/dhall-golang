@@ -1,7 +1,22 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v4.1.0...HEAD
+
+## [4.1.0] - 2020-08-10
+[4.1.0]: https://github.com/philandstuff/dhall-golang/compare/v4.0.0...v4.1.0
+
+This brings dhall-golang up to version 17.1.0 of the Dhall standard.
+
+### Added
+
+ * Language changes
+   * Allow trailing delmiters (such as trailing commas in lists,
+     trailing pipes in unions)
+
+### Fixed
+
+ * Fix potential panic when typechecking `toMap` expressions (#49)
 
 ## [4.0.0] - 2020-06-16
 [4.0.0]: https://github.com/philandstuff/dhall-golang/compare/v3.0.0...v4.0.0
