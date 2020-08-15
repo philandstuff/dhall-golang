@@ -62,21 +62,6 @@ func parseCodepoint(codepointText string) ([]byte, error) {
     return []byte(string([]rune{r})), nil
 }
 
-func desugarWith(record Term, path []string, value Term) Term {
-    if len(path) == 1 {
-       return Op{
-           OpCode: RightBiasedRecordMergeOp,
-           L: record,
-           R: RecordLit{path[0]: value},
-       }
-    }
-    return Op{
-        OpCode: RightBiasedRecordMergeOp,
-        L: record,
-        R: RecordLit{path[0]: desugarWith(Field{record, path[0]}, path[1:], value)},
-    }
-}
-
 }
 
 DhallFile ← e:CompleteExpression EOF { return e, nil }
@@ -570,7 +555,7 @@ WithExpression ←
         withClause := b.([]interface{})[3].([]interface{})
         path := withClause[0].([]string)
         value := withClause[4].(Term)
-        out = desugarWith(out, path, value)
+        out = With{out, path, value}
     }
     return out, nil
   }

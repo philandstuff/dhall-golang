@@ -612,6 +612,8 @@ func evalWith(t term.Term, e env) Value {
 		return output
 	case term.Assert:
 		return assert{Annotation: evalWith(t.Annotation, e)}
+	case term.With:
+		return evalWith(t.Desugar(), e)
 	default:
 		panic(fmt.Sprint("unknown term type", t))
 	}

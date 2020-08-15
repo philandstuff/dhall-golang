@@ -803,6 +803,8 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			return nil, mkTypeError(assertionFailed(Quote(oper.L), Quote(oper.R)))
 		}
 		return oper, nil
+	case term.With:
+		return typeWith(ctx, t.Desugar())
 	}
 	return nil, mkTypeError(unhandledTypeCase)
 }

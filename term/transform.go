@@ -138,6 +138,12 @@ func TransformSubexprs(t Term, f func(Term) Term) Term {
 		return result
 	case Assert:
 		return Assert{Annotation: f(t.Annotation)}
+	case With:
+		return With{
+			Record: f(t.Record),
+			Path:   t.Path,
+			Value:  f(t.Value),
+		}
 	case Import:
 		return t
 	default:
@@ -356,6 +362,20 @@ func MaybeTransformSubexprs(t Term, f func(Term) (Term, error)) (Term, error) {
 	case Assert:
 		annotation, err := f(t.Annotation)
 		return Assert{Annotation: annotation}, err
+	case With:
+		record, err := f(t.Record)
+		if err != nil {
+			return nil, err
+		}
+		value, err := f(t.Value)
+		if err != nil {
+			return nil, err
+		}
+		return With{
+			Record: record,
+			Path:   t.Path,
+			Value:  value,
+		}, nil
 	case Import:
 		return t, nil
 	default:
