@@ -10,7 +10,6 @@ import (
 	. "github.com/philandstuff/dhall-golang/v4/term"
 
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 )
@@ -48,13 +47,13 @@ var _ = Describe("Import resolution", func() {
 
 			Expect(err).To(HaveOccurred())
 		})
-		XIt("Performs import chaining", func() {
+		It("Performs import chaining", func() {
 			os.Setenv("CHAIN1", "env:CHAIN2")
 			os.Setenv("CHAIN2", "2 + 2")
 			actual, err := Load(NewEnvVarImport("CHAIN1", Code))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(NaturalPlus(NaturalLit(2), NaturalLit(2))))
+			Expect(actual).To(Equal(NaturalLit(4)))
 		})
 		It("Rejects import cycles", func() {
 			result := make(chan error)
@@ -196,11 +195,11 @@ var _ = Describe("Import resolution", func() {
 
 			Expect(err).To(HaveOccurred())
 		})
-		XIt("Performs import chaining", func() {
+		It("Performs import chaining", func() {
 			actual, err := Load(NewLocalImport("./testdata/chain1.dhall", Code))
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actual).To(Equal(NaturalPlus(NaturalLit(2), NaturalLit(2))))
+			Expect(actual).To(Equal(NaturalLit(4)))
 		})
 		It("Rejects import cycles", func() {
 			result := make(chan error)
@@ -213,109 +212,4 @@ var _ = Describe("Import resolution", func() {
 			Eventually(result).Should(Receive())
 		})
 	})
-	DescribeTable("Other subexpressions", expectResolves,
-		Entry("Literal expression", NaturalLit(3), NaturalLit(3)),
-		Entry("Simple import", importFooAsText, resolvedFooAsText),
-		Entry("Import within lambda type",
-			Lambda{Type: importFooAsText},
-			Lambda{Type: resolvedFooAsText},
-		),
-		Entry("Import within lambda body",
-			Lambda{Body: importFooAsText},
-			Lambda{Body: resolvedFooAsText},
-		),
-		Entry("Import within pi type",
-			Pi{Type: importFooAsText},
-			Pi{Type: resolvedFooAsText},
-		),
-		Entry("Import within pi body",
-			Pi{Body: importFooAsText},
-			Pi{Body: resolvedFooAsText},
-		),
-		Entry("Import within app fn",
-			App{Fn: importFooAsText},
-			App{Fn: resolvedFooAsText},
-		),
-		Entry("Import within app arg",
-			App{Arg: importFooAsText},
-			App{Arg: resolvedFooAsText},
-		),
-		Entry("Import within let binding value",
-			NewLet(Natural, Binding{Value: importFooAsText}),
-			NewLet(Natural, Binding{Value: resolvedFooAsText}),
-		),
-		Entry("Import within let body",
-			NewLet(importFooAsText, Binding{}),
-			NewLet(resolvedFooAsText, Binding{}),
-		),
-		Entry("Import within annotated expression",
-			Annot{importFooAsText, Text},
-			Annot{resolvedFooAsText, Text},
-		),
-		Entry("Import within annotation",
-			// these don't typecheck but we're just
-			// checking the imports here
-			Annot{Natural, importFooAsText},
-			Annot{Natural, resolvedFooAsText},
-		),
-		Entry("Import within TextLit",
-			TextLit{
-				Chunks: Chunks{
-					{
-						Prefix: "foo",
-						Expr:   importFooAsText,
-					}},
-				Suffix: "baz",
-			},
-			TextLit{
-				Chunks: Chunks{
-					{
-						Prefix: "foo",
-						Expr:   resolvedFooAsText,
-					},
-				},
-				Suffix: "baz",
-			},
-		),
-		Entry("Import within if condition",
-			If{Cond: importFooAsText},
-			If{Cond: resolvedFooAsText},
-		),
-		Entry("Import within if true branch",
-			If{T: importFooAsText},
-			If{T: resolvedFooAsText},
-		),
-		Entry("Import within if false branch",
-			If{F: importFooAsText},
-			If{F: resolvedFooAsText},
-		),
-		Entry("Import within Operator (left side)",
-			Op{L: importFooAsText},
-			Op{L: resolvedFooAsText},
-		),
-		Entry("Import within natural plus (right side)",
-			Op{R: importFooAsText},
-			Op{R: resolvedFooAsText},
-		),
-		Entry("Import within empty list type",
-			EmptyList{Type: importFooAsText},
-			EmptyList{Type: resolvedFooAsText},
-		),
-		Entry("Import within list",
-			NewList(importFooAsText),
-			NewList(resolvedFooAsText),
-		),
-		Entry("Import within record type",
-			RecordType{"foo": importFooAsText},
-			RecordType{"foo": resolvedFooAsText},
-		),
-		Entry("Import within record literal",
-			RecordLit{"foo": importFooAsText},
-			RecordLit{"foo": resolvedFooAsText},
-		),
-		Entry("Import within field extract",
-			Field{Record: importFooAsText},
-			Field{Record: resolvedFooAsText},
-		),
-	)
 })
