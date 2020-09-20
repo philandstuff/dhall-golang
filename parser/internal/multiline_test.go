@@ -1,7 +1,7 @@
 package internal
 
 import (
-	. "github.com/philandstuff/dhall-golang/v4/term"
+	. "github.com/philandstuff/dhall-golang/v5/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

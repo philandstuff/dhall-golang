@@ -346,6 +346,12 @@ type (
 	}
 
 	Assert struct{ Annotation Term }
+
+	With struct {
+		Record Term
+		Path   []string
+		Value  Term
+	}
 )
 
 func (NaturalLit) isTerm() {}
@@ -439,6 +445,7 @@ func (ProjectType) isTerm() {}
 func (UnionType) isTerm()   {}
 func (Merge) isTerm()       {}
 func (Assert) isTerm()      {}
+func (With) isTerm()        {}
 
 type (
 	// An Import is an import Term.

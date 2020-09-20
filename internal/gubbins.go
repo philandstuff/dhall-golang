@@ -10,7 +10,7 @@ package internal
 import (
 	"net/url"
 
-	"github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/term"
 )
 
 func NewImport(fetchable term.Fetchable, mode term.ImportMode) term.Import {

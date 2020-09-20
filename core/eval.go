@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/term"
 )
 
 type env map[string][]Value
@@ -612,8 +612,48 @@ func evalWith(t term.Term, e env) Value {
 		return output
 	case term.Assert:
 		return assert{Annotation: evalWith(t.Annotation, e)}
+	case term.With:
+		record := evalWith(t.Record, e)
+		value := evalWith(t.Value, e)
+		output := record
+		here := record
+		var recordLit RecordLit
+		depth := 0
+		for _, component := range t.Path {
+			var ok bool
+			recordLit, ok = here.(RecordLit)
+			if !ok {
+				break
+			}
+			here = recordLit[component]
+			depth = depth + 1
+		}
+		desugared := desugarWith(here, t.Path[depth:], value)
+		if depth == 0 {
+			return desugared
+		}
+		recordLit[t.Path[depth-1]] = desugared
+		return output
 	default:
 		panic(fmt.Sprint("unknown term type", t))
+	}
+}
+
+// desugarWith converts a `r with a.b...c = v` term to the equivalent,
+// defined by desugar-with() in the Dhall standard.  Note that path
+// may be of length 0, in which case value is returned.
+func desugarWith(abstractRecord Value, path []string, value Value) Value {
+	if len(path) == 0 {
+		return value
+	}
+	return oper{
+		OpCode: term.RightBiasedRecordMergeOp,
+		L:      abstractRecord,
+		R: RecordLit{path[0]: desugarWith(
+			field{abstractRecord, path[0]},
+			path[1:],
+			value,
+		)},
 	}
 }
 

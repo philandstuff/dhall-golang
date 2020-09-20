@@ -8,7 +8,7 @@ import (
 	"path"
 
 	"github.com/fxamacker/cbor/v2"
-	. "github.com/philandstuff/dhall-golang/v4/term"
+	. "github.com/philandstuff/dhall-golang/v5/term"
 )
 
 var nameToBuiltin = map[string]Term{
@@ -490,6 +490,20 @@ func decode(decodedCbor interface{}) (Term, error) {
 					return nil, err
 				}
 				return EmptyList{Type: t}, nil
+			case 29: // with
+				r, err := decode(val[1])
+				if err != nil {
+					return nil, err
+				}
+				path, ok := val[2].([]string)
+				if !ok {
+					return nil, fmt.Errorf("couldn't interpret %v as []string", val[2])
+				}
+				v, err := decode(val[3])
+				if err != nil {
+					return nil, err
+				}
+				return With{r, path, v}, nil
 			}
 		}
 	}

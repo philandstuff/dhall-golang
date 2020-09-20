@@ -29,7 +29,7 @@ import (
 "unicode"
 "unicode/utf8"
 )
-import . "github.com/philandstuff/dhall-golang/v4/term"
+import . "github.com/philandstuff/dhall-golang/v5/term"
 
 // Helper function for parsing all the operator parsing blocks
 // see OrExpression for an example of how this is used
@@ -60,21 +60,6 @@ func parseCodepoint(codepointText string) ([]byte, error) {
         return nil, fmt.Errorf("%s is not a valid unicode code point", codepointText)
     }
     return []byte(string([]rune{r})), nil
-}
-
-func desugarWith(record Term, path []string, value Term) Term {
-    if len(path) == 1 {
-       return Op{
-           OpCode: RightBiasedRecordMergeOp,
-           L: record,
-           R: RecordLit{path[0]: value},
-       }
-    }
-    return Op{
-        OpCode: RightBiasedRecordMergeOp,
-        L: record,
-        R: RecordLit{path[0]: desugarWith(Field{record, path[0]}, path[1:], value)},
-    }
 }
 
 }
@@ -570,7 +555,7 @@ WithExpression ←
         withClause := b.([]interface{})[3].([]interface{})
         path := withClause[0].([]string)
         value := withClause[4].(Term)
-        out = desugarWith(out, path, value)
+        out = With{out, path, value}
     }
     return out, nil
   }

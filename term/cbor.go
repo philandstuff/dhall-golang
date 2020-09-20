@@ -230,6 +230,11 @@ func (a Assert) MarshalCBOR() ([]byte, error) {
 	return em.Marshal([]interface{}{19, a.Annotation})
 }
 
+// MarshalCBOR implements cbor.Marshaler.
+func (w With) MarshalCBOR() ([]byte, error) {
+	return em.Marshal([]interface{}{29, w.Record, w.Path, w.Value})
+}
+
 const (
 	httpImport     = 0
 	httpsImport    = 1

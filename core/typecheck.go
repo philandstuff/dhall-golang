@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 
-	"github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/term"
 )
 
 type context map[string][]Value
@@ -803,6 +803,31 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			return nil, mkTypeError(assertionFailed(Quote(oper.L), Quote(oper.R)))
 		}
 		return oper, nil
+	case term.With:
+		recordType, err := typeWith(ctx, t.Record)
+		if err != nil {
+			return nil, err
+		}
+		valueType, err := typeWith(ctx, t.Value)
+		if err != nil {
+			return nil, err
+		}
+		here, ok := recordType.(RecordType)
+		if !ok {
+			return nil, mkTypeError(cantProject)
+		}
+		for _, component := range t.Path[0 : len(t.Path)-1] {
+			next, ok := here[component]
+			if !ok {
+				return nil, mkTypeError(missingField)
+			}
+			here, ok = next.(RecordType)
+			if !ok {
+				return nil, mkTypeError(cantProject)
+			}
+		}
+		here[t.Path[len(t.Path)-1]] = valueType
+		return recordType, nil
 	}
 	return nil, mkTypeError(unhandledTypeCase)
 }

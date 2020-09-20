@@ -3,7 +3,7 @@ package internal
 import (
 	"strings"
 
-	"github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/term"
 )
 
 // removeLeadingCommonIndent removes the common leading indent from a

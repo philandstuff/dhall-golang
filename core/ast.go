@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/term"
 )
 
 // A Value is a Dhall value in beta-normal form.  You can think of

@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/philandstuff/dhall-golang/v4/internal"
-	. "github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/internal"
+	. "github.com/philandstuff/dhall-golang/v5/term"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

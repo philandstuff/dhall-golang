@@ -1,7 +1,21 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v4.1.0...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v5.0.0...HEAD
+
+## [5.0.0] - 2020-09-20
+[5.0.0]: https://github.com/philandstuff/dhall-golang/compare/v4.1.0...v5.1.0
+
+This brings dhall-golang up to version 18.0.0 of the Dhall standard.
+
+### Changed
+
+ * Language changes
+   * Enable `with` optimizations
+
+This implements the newly-possible `with` optimizations such that
+deeply-nested `with` expressions do not experience pathological
+slowdown.
 
 ## [4.1.0] - 2020-08-10
 [4.1.0]: https://github.com/philandstuff/dhall-golang/compare/v4.0.0...v4.1.0

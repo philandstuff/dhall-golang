@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/philandstuff/dhall-golang/v4/core"
-	"github.com/philandstuff/dhall-golang/v4/imports"
-	"github.com/philandstuff/dhall-golang/v4/parser"
-	"github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/core"
+	"github.com/philandstuff/dhall-golang/v5/imports"
+	"github.com/philandstuff/dhall-golang/v5/parser"
+	"github.com/philandstuff/dhall-golang/v5/term"
 )
 
 func isMapEntryType(recordType map[string]core.Value) bool {
