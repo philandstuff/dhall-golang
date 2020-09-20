@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/philandstuff/dhall-golang/v4/binary"
-	"github.com/philandstuff/dhall-golang/v4/core"
-	"github.com/philandstuff/dhall-golang/v4/parser"
-	"github.com/philandstuff/dhall-golang/v4/term"
-	. "github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/binary"
+	"github.com/philandstuff/dhall-golang/v5/core"
+	"github.com/philandstuff/dhall-golang/v5/parser"
+	"github.com/philandstuff/dhall-golang/v5/term"
+	. "github.com/philandstuff/dhall-golang/v5/term"
 )
 
 // Load takes a Term and resolves all imports

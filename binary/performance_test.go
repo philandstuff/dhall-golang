@@ -7,11 +7,11 @@ import (
 	"path"
 	"testing"
 
-	"github.com/philandstuff/dhall-golang/v4/binary"
-	"github.com/philandstuff/dhall-golang/v4/core"
-	"github.com/philandstuff/dhall-golang/v4/imports"
-	"github.com/philandstuff/dhall-golang/v4/internal"
-	"github.com/philandstuff/dhall-golang/v4/term"
+	"github.com/philandstuff/dhall-golang/v5/binary"
+	"github.com/philandstuff/dhall-golang/v5/core"
+	"github.com/philandstuff/dhall-golang/v5/imports"
+	"github.com/philandstuff/dhall-golang/v5/internal"
+	"github.com/philandstuff/dhall-golang/v5/term"
 )
 
 func BenchmarkDecodeLargeExpression(b *testing.B) {

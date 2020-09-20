@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	. "github.com/philandstuff/dhall-golang/v4/core"
-	"github.com/philandstuff/dhall-golang/v4/parser"
+	. "github.com/philandstuff/dhall-golang/v5/core"
+	"github.com/philandstuff/dhall-golang/v5/parser"
 )
 
 func parseAndTypecheckTest(source string, expectedTypeSource string) {

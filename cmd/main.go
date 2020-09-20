@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/philandstuff/dhall-golang/v4/binary"
-	"github.com/philandstuff/dhall-golang/v4/core"
-	"github.com/philandstuff/dhall-golang/v4/imports"
-	"github.com/philandstuff/dhall-golang/v4/parser"
+	"github.com/philandstuff/dhall-golang/v5/binary"
+	"github.com/philandstuff/dhall-golang/v5/core"
+	"github.com/philandstuff/dhall-golang/v5/imports"
+	"github.com/philandstuff/dhall-golang/v5/parser"
 )
 
 func main() {
