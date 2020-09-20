@@ -20,6 +20,34 @@ func isMapEntryType(recordType map[string]core.Value) bool {
 	return false
 }
 
+var JSONType core.Value = mkJSONType()
+
+var identity core.Value = core.Eval(term.NewLambda("_", term.Type, term.NewVar("_")))
+
+// we use identity in a non-type-safe way here, but rely on being able
+// inspect the type at runtime in a dynamic language way
+var jsonConstructors core.Value = core.RecordLit{
+	"array":   identity,
+	"bool":    identity,
+	"double":  identity,
+	"integer": identity,
+	"null":    core.NoneOf{}, // the Type doesn't matter here
+	"object":  identity,
+	"string":  identity,
+}
+
+func mkJSONType() core.Value {
+	term, err := parser.ParseFile("./dhall-lang/Prelude/JSON/Type.dhall")
+	if err != nil {
+		panic(err)
+	}
+	_, err = core.TypeOf(term)
+	if err != nil {
+		panic(err)
+	}
+	return core.Eval(term)
+}
+
 // Unmarshal takes dhall input as a byte array and parses it, resolves
 // imports, typechecks, evaluates, and unmarshals it into the given
 // variable.
@@ -241,6 +269,17 @@ func decode(e core.Value, v reflect.Value) error {
 		// (similar to EmptyList below)
 		return nil
 	}
+	if c, ok := e.(core.Callable); ok {
+		if c.ArgType() == core.Type {
+			t, err := core.TypeOf(core.Quote(e))
+			if err != nil {
+				return err
+			}
+			if core.AlphaEquivalent(t, JSONType) {
+				return decodeJSON(e, v)
+			}
+		}
+	}
 types:
 	switch v.Kind() {
 	case reflect.Bool:
@@ -375,4 +414,20 @@ types:
 		}
 	}
 	return fmt.Errorf("Don't know how to decode %v into %v", e, v.Kind())
+}
+
+// decodeJSON decodes values of Prelude's JSON Type
+func decodeJSON(e core.Value, v reflect.Value) error {
+	e1, ok := e.(core.Callable)
+	if !ok {
+		return errors.New("haven't thought this through yet")
+	}
+	// the value we pass in doesn't matter here
+	val1 := e1.Call(core.Type)
+	e2, ok := val1.(core.Callable)
+	if !ok {
+		return errors.New("haven't thought this through yet")
+	}
+	val := e2.Call(jsonConstructors)
+	return decode(val, v)
 }

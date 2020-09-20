@@ -20,6 +20,14 @@ func DecodeAndCompare(input core.Value, ptr interface{}, expected interface{}) {
 		To(Equal(expected))
 }
 
+func UnmarshalAndCompare(input string, ptr interface{}, expected interface{}) {
+	err := Unmarshal([]byte(input), ptr)
+	Expect(err).ToNot(HaveOccurred())
+	// use reflect to dereference a pointer of unknown type
+	Expect(reflect.ValueOf(ptr).Elem().Interface()).
+		To(Equal(expected))
+}
+
 type testStruct struct {
 	Foo uint
 	Bar string
@@ -297,4 +305,48 @@ var _ = Describe("Unmarshal", func() {
 			`, new(func(string) uint)),
 		)
 	})
+	DescribeTable("Dhall JSON types into Go", UnmarshalAndCompare,
+		Entry("unmarshals JSON.null into pointer",
+			`./dhall-lang/Prelude/JSON/null.dhall`,
+			new(*string),
+			(*string)(nil)),
+		Entry("unmarshals JSON.string into string",
+			`./dhall-lang/Prelude/JSON/string.dhall "foobar"`,
+			new(string),
+			"foobar"),
+		Entry("unmarshals JSON.double into float64",
+			`./dhall-lang/Prelude/JSON/double.dhall 5.5`,
+			new(float64),
+			float64(5.5)),
+		Entry("unmarshals JSON.integer into int",
+			`./dhall-lang/Prelude/JSON/integer.dhall +10`,
+			new(int),
+			10),
+		Entry("unmarshals JSON.natural into int",
+			`./dhall-lang/Prelude/JSON/natural.dhall 5`,
+			new(int),
+			5),
+		Entry("unmarshals JSON.object into map",
+			`./dhall-lang/Prelude/JSON/object.dhall (toMap {foo = ./dhall-lang/Prelude/JSON/string.dhall "bar"})`,
+			new(map[string]string),
+			map[string]string{"foo": "bar"}),
+		// this test shows a use case for decoding into interface{}
+		XEntry("unmarshals complex JSON.object into map[string]interface{}",
+			`./dhall-lang/Prelude/JSON/object.dhall (toMap {foo = ./dhall-lang/Prelude/JSON/string.dhall "bar", baz = ./dhall-lang/Prelude/JSON/object.dhall (toMap { number = ./dhall-lang/Prelude/JSON/natural.dhall 3})})`,
+			new(map[string]interface{}),
+			map[string]interface{}{"foo": "bar", "baz": map[string]interface{}{"number": 3}}),
+		Entry("unmarshals JSON.array into slice",
+			`./dhall-lang/Prelude/JSON/array.dhall [./dhall-lang/Prelude/JSON/string.dhall "bar"]`,
+			new([]string),
+			[]string{"bar"}),
+		// this test shows a use case for decoding into interface{}
+		XEntry("unmarshals complex JSON.array into []interface{}",
+			`./dhall-lang/Prelude/JSON/array.dhall [./dhall-lang/Prelude/JSON/string.dhall "bar", ./dhall-lang/Prelude/JSON/object.dhall (toMap { number = ./dhall-lang/Prelude/JSON/natural.dhall 3})]`,
+			new([]interface{}),
+			[]interface{}{"bar", map[string]interface{}{"number": 3}}),
+		Entry("unmarshals JSON.bool into bool",
+			`./dhall-lang/Prelude/JSON/bool.dhall True`,
+			new(bool),
+			true),
+	)
 })
