@@ -3,6 +3,7 @@ package dhall
 import (
 	"errors"
 	"fmt"
+	"io"
 	"reflect"
 
 	"github.com/philandstuff/dhall-golang/v5/core"
@@ -53,6 +54,17 @@ func mkJSONType() core.Value {
 // variable.
 func Unmarshal(b []byte, out interface{}) error {
 	term, err := parser.Parse("-", b)
+	if err != nil {
+		return err
+	}
+	return unmarshalTerm(term, out)
+}
+
+// UnmarshalReader takes dhall input as a byte array and parses it, resolves
+// imports, typechecks, evaluates, and unmarshals it into the given
+// variable.
+func UnmarshalReader(filename string, r io.Reader, out interface{}) error {
+	term, err := parser.ParseReader(filename, r)
 	if err != nil {
 		return err
 	}

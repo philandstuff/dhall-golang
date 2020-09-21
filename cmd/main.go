@@ -10,20 +10,42 @@ import (
 	"github.com/philandstuff/dhall-golang/v5/core"
 	"github.com/philandstuff/dhall-golang/v5/imports"
 	"github.com/philandstuff/dhall-golang/v5/parser"
+	"github.com/urfave/cli/v2" // imports as package "cli"
 )
 
 func main() {
+	app := &cli.App{
+		Name:  "dhall-golang",
+		Usage: "Dhall implemented in Go",
+		Commands: []*cli.Command{
+			{
+				Name:   "json",
+				Usage:  "output Dhall code as JSON",
+				Action: cmdJSON,
+			},
+		},
+		Action: cmdDebug,
+	}
+
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// cmdDebug is the original scrappy debug command
+func cmdDebug(c *cli.Context) error {
 	expr, err := parser.ParseReader("-", os.Stdin)
 	if err != nil {
-		log.Fatalf("Parse error: %v", err)
+		return err
 	}
 	resolvedExpr, err := imports.Load(expr)
 	if err != nil {
-		log.Fatalf("Import resolve error: %v", err)
+		return err
 	}
 	inferredType, err := core.TypeOf(resolvedExpr)
 	if err != nil {
-		log.Fatalf("Type error: %v", err)
+		return err
 	}
 	fmt.Fprint(os.Stderr, inferredType)
 	fmt.Fprintln(os.Stderr)
@@ -33,7 +55,8 @@ func main() {
 	binary.EncodeAsCbor(buf, core.QuoteAlphaNormal(core.Eval(resolvedExpr)))
 	final, err := binary.DecodeAsCbor(buf)
 	if err != nil {
-		log.Fatalf("failed to decode: %v", err)
+		return err
 	}
 	fmt.Printf("decoded as %+v\n", final)
+	return nil
 }
