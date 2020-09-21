@@ -230,6 +230,30 @@ var _ = Describe("Decode", func() {
 			Expect(fn(uint(1))(uint(3))).To(Equal(uint(2)))
 		})
 	})
+	DescribeTable("Types into interface{}", DecodeAndCompare,
+		Entry("unmarshals DoubleLit into float64",
+			core.DoubleLit(3.5), new(interface{}), float64(3.5)),
+		Entry("unmarshals True into bool",
+			core.True, new(interface{}), true),
+		Entry("unmarshals NaturalLit into int",
+			core.NaturalLit(5), new(interface{}), int(5)),
+		Entry("unmarshals IntegerLit into int",
+			core.IntegerLit(5), new(interface{}), int(5)),
+		Entry("unmarshals TextLit into string",
+			core.PlainTextLit("lalala"), new(interface{}), "lalala"),
+		Entry("unmarshals List Integer into []interface{}",
+			core.NonEmptyList{core.IntegerLit(5)},
+			new(interface{}),
+			[]interface{}{5}),
+		Entry("unmarshals List Bool into []interface{}",
+			core.NonEmptyList{core.True, core.False},
+			new(interface{}),
+			[]interface{}{true, false}),
+		Entry("unmarshals empty List Bool into []interface{}",
+			core.EmptyList{core.Bool},
+			new(interface{}),
+			[]interface{}{}),
+	)
 	// TODO expected errors
 })
 

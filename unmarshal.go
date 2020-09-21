@@ -292,34 +292,95 @@ func decode(e core.Value, v reflect.Value) error {
 			}
 		}
 	}
-types:
-	switch v.Kind() {
-	case reflect.Bool:
-		if e, ok := e.(core.BoolLit); ok {
+	switch e := e.(type) {
+	case core.BoolLit:
+		switch v.Kind() {
+		case reflect.Bool:
 			v.SetBool(bool(e))
 			return nil
-		}
-	case reflect.Int, reflect.Int8, reflect.Int16,
-		reflect.Int32, reflect.Int64:
-		if e, ok := e.(core.IntegerLit); ok {
-			v.SetInt(int64(e))
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(bool(e)))
 			return nil
 		}
-		if e, ok := e.(core.NaturalLit); ok {
+	case core.NaturalLit:
+		switch v.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16,
+			reflect.Int32, reflect.Int64:
 			v.SetInt(int64(e))
 			return nil
-		}
-	case reflect.Uint, reflect.Uint8, reflect.Uint16,
-		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		if e, ok := e.(core.NaturalLit); ok {
+		case reflect.Uint, reflect.Uint8, reflect.Uint16,
+			reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 			v.SetUint(uint64(e))
 			return nil
-		}
-	case reflect.Float32, reflect.Float64:
-		if e, ok := e.(core.DoubleLit); ok {
-			v.SetFloat(float64(e))
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(int(e)))
 			return nil
 		}
+	case core.IntegerLit:
+		switch v.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16,
+			reflect.Int32, reflect.Int64:
+			v.SetInt(int64(e))
+			return nil
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(int(e)))
+			return nil
+		}
+	case core.DoubleLit:
+		switch v.Kind() {
+		case reflect.Float32, reflect.Float64:
+			v.SetFloat(float64(e))
+			return nil
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(float64(e)))
+			return nil
+		}
+	case core.PlainTextLit:
+		switch v.Kind() {
+		case reflect.String:
+			v.SetString(string(e))
+			return nil
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(string(e)))
+			return nil
+		}
+	case core.EmptyList:
+		switch v.Kind() {
+		case reflect.Slice:
+			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
+			return nil
+		case reflect.Interface:
+			var i []interface{}
+			v.Set(reflect.MakeSlice(reflect.TypeOf(i), 0, 0))
+			return nil
+		}
+	case core.NonEmptyList:
+		switch v.Kind() {
+		case reflect.Slice:
+			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
+			for i, expr := range e {
+				err := decode(expr, slice.Index(i))
+				if err != nil {
+					return err
+				}
+			}
+			v.Set(slice)
+			return nil
+		case reflect.Interface:
+			var i []interface{}
+			slice := reflect.MakeSlice(reflect.TypeOf(i), len(e), len(e))
+			for i, expr := range e {
+				err := decode(expr, slice.Index(i))
+				if err != nil {
+					return err
+				}
+			}
+			v.Set(slice)
+			return nil
+		}
+	}
+types:
+	switch v.Kind() {
 	case reflect.Func:
 		fnType := v.Type()
 		if fnType.NumIn() == 0 {
@@ -385,27 +446,6 @@ types:
 	case reflect.Ptr:
 		v.Set(reflect.New(v.Type().Elem()))
 		return decode(e, v.Elem())
-	case reflect.Slice:
-		if _, ok := e.(core.EmptyList); ok {
-			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
-			return nil
-		}
-		if e, ok := e.(core.NonEmptyList); ok {
-			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
-			for i, expr := range e {
-				err := decode(expr, slice.Index(i))
-				if err != nil {
-					return err
-				}
-			}
-			v.Set(slice)
-			return nil
-		}
-	case reflect.String:
-		if e, ok := e.(core.PlainTextLit); ok {
-			v.SetString(string(e))
-			return nil
-		}
 	case reflect.Struct:
 		if e, ok := e.(core.RecordLit); ok {
 			structType := v.Type()
