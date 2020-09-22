@@ -819,7 +819,8 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		for _, component := range t.Path[0 : len(t.Path)-1] {
 			next, ok := here[component]
 			if !ok {
-				return nil, mkTypeError(missingField)
+				next = RecordType{}
+				here[component] = next
 			}
 			here, ok = next.(RecordType)
 			if !ok {
