@@ -334,6 +334,12 @@ type (
 		FieldNames []string
 	}
 
+	with struct {
+		Record Value
+		Path   []string
+		Value  Value
+	}
+
 	// no projectType because it cannot be in a normal form so cannot
 	// be a Value
 
@@ -396,6 +402,7 @@ func (RecordLit) isValue()        {}
 func (toMap) isValue()            {}
 func (field) isValue()            {}
 func (project) isValue()          {}
+func (with) isValue()             {}
 func (UnionType) isValue()        {}
 func (unionConstructor) isValue() {}
 func (unionVal) isValue()         {}

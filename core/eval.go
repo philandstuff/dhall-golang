@@ -625,35 +625,20 @@ func evalWith(t term.Term, e env) Value {
 			if !ok {
 				break
 			}
-			here = recordLit[component]
+			here, ok = recordLit[component]
+			if !ok {
+				recordLit[component] = RecordLit{}
+				here = recordLit[component]
+			}
 			depth = depth + 1
 		}
-		desugared := desugarWith(here, t.Path[depth:], value)
 		if depth == 0 {
-			return desugared
+			return with{Record: record, Path: t.Path, Value: value}
 		}
-		recordLit[t.Path[depth-1]] = desugared
+		recordLit[t.Path[depth-1]] = value
 		return output
 	default:
 		panic(fmt.Sprint("unknown term type", t))
-	}
-}
-
-// desugarWith converts a `r with a.b...c = v` term to the equivalent,
-// defined by desugar-with() in the Dhall standard.  Note that path
-// may be of length 0, in which case value is returned.
-func desugarWith(abstractRecord Value, path []string, value Value) Value {
-	if len(path) == 0 {
-		return value
-	}
-	return oper{
-		OpCode: term.RightBiasedRecordMergeOp,
-		L:      abstractRecord,
-		R: RecordLit{path[0]: desugarWith(
-			field{abstractRecord, path[0]},
-			path[1:],
-			value,
-		)},
 	}
 }
 

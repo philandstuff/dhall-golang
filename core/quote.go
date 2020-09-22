@@ -246,6 +246,12 @@ func quoteWith(ctx quoteContext, shouldAlphaNormalize bool, v Value) term.Term {
 			Record:     quoteWith(ctx, shouldAlphaNormalize, v.Record),
 			FieldNames: v.FieldNames,
 		}
+	case with:
+		return term.With{
+			Record: quoteWith(ctx, shouldAlphaNormalize, v.Record),
+			Path:   v.Path,
+			Value:  quoteWith(ctx, shouldAlphaNormalize, v.Value),
+		}
 	case UnionType:
 		result := term.UnionType{}
 		for k, v := range v {
