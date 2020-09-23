@@ -23,6 +23,11 @@ func main() {
 				Usage:  "output Dhall code as JSON",
 				Action: cmdJSON,
 			},
+			{
+				Name:   "yaml",
+				Usage:  "output Dhall code as YAML",
+				Action: cmdYAML,
+			},
 		},
 		Action: cmdDebug,
 	}
