@@ -292,6 +292,11 @@ func decode(e core.Value, v reflect.Value) error {
 			}
 		}
 	}
+	if v.Kind() == reflect.Ptr {
+		v.Set(reflect.New(v.Type().Elem()))
+		return decode(e, v.Elem())
+	}
+types:
 	switch e := e.(type) {
 	case core.BoolLit:
 		switch v.Kind() {
@@ -349,7 +354,14 @@ func decode(e core.Value, v reflect.Value) error {
 		case reflect.Slice:
 			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
 			return nil
+		case reflect.Map:
+			// initialise with new (non-nil) value
+			v.Set(reflect.MakeMap(v.Type()))
+			// TODO: should this fail if type mismatches?
+			// it should at least be a mapKey/mapValue type
+			return nil
 		case reflect.Interface:
+			// TODO: make map type if the EmptyList is of Map type
 			var i []interface{}
 			v.Set(reflect.MakeSlice(reflect.TypeOf(i), 0, 0))
 			return nil
@@ -366,60 +378,9 @@ func decode(e core.Value, v reflect.Value) error {
 			}
 			v.Set(slice)
 			return nil
-		case reflect.Interface:
-			var i []interface{}
-			slice := reflect.MakeSlice(reflect.TypeOf(i), len(e), len(e))
-			for i, expr := range e {
-				err := decode(expr, slice.Index(i))
-				if err != nil {
-					return err
-				}
-			}
-			v.Set(slice)
-			return nil
-		}
-	}
-types:
-	switch v.Kind() {
-	case reflect.Func:
-		fnType := v.Type()
-		if fnType.NumIn() == 0 {
-			return fmt.Errorf("You must decode into a function type with at least one input parameter, not %v", fnType)
-		}
-		if fnType.NumOut() != 1 {
-			return fmt.Errorf("You must decode into a function type with exactly one output parameter, not %v", fnType)
-		}
-		returnType := fnType.Out(0)
-
-		result := e
-		for i := 0; i < fnType.NumIn(); i++ {
-			callable, ok := result.(core.Callable)
-			if !ok {
-				break types
-			}
-			testValue := mkTestVal(fnType.In(i))
-			testDhallVal, err := encode(testValue, callable.ArgType())
-			if err != nil {
-				return err
-			}
-			result = callable.Call(testDhallVal)
-		}
-		err := decode(result, reflect.New(fnType.Out(0)).Elem())
-		if err != nil {
-			return err
-		}
-		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e.(core.Callable)))
-		v.Set(fn)
-		return nil
-	case reflect.Map:
-		// initialise with new (non-nil) value
-		v.Set(reflect.MakeMap(v.Type()))
-		if _, ok := e.(core.EmptyList); ok {
-			// TODO: should this fail if type mismatches?
-			// it should at least be a mapKey/mapValue type
-			return nil
-		}
-		if e, ok := e.(core.NonEmptyList); ok {
+		case reflect.Map:
+			// initialise with new (non-nil) value
+			v.Set(reflect.MakeMap(v.Type()))
 			recordLit, ok := e[0].(core.RecordLit)
 			if !ok {
 				break
@@ -442,12 +403,21 @@ types:
 				v.SetMapIndex(key, val)
 			}
 			return nil
+		case reflect.Interface:
+			// TODO: unmarshal into map type if appropriate
+			var i []interface{}
+			slice := reflect.MakeSlice(reflect.TypeOf(i), len(e), len(e))
+			for i, expr := range e {
+				err := decode(expr, slice.Index(i))
+				if err != nil {
+					return err
+				}
+			}
+			v.Set(slice)
+			return nil
 		}
-	case reflect.Ptr:
-		v.Set(reflect.New(v.Type().Elem()))
-		return decode(e, v.Elem())
-	case reflect.Struct:
-		if e, ok := e.(core.RecordLit); ok {
+	case core.RecordLit:
+		if v.Kind() == reflect.Struct {
 			structType := v.Type()
 			for i := 0; i < structType.NumField(); i++ {
 				// FIXME ignores fields in RecordLit not in Struct
@@ -462,6 +432,38 @@ types:
 					return err
 				}
 			}
+			return nil
+		}
+	case core.Callable:
+		if v.Kind() == reflect.Func {
+			fnType := v.Type()
+			if fnType.NumIn() == 0 {
+				return fmt.Errorf("You must decode into a function type with at least one input parameter, not %v", fnType)
+			}
+			if fnType.NumOut() != 1 {
+				return fmt.Errorf("You must decode into a function type with exactly one output parameter, not %v", fnType)
+			}
+			returnType := fnType.Out(0)
+
+			var result core.Value = e
+			for i := 0; i < fnType.NumIn(); i++ {
+				callable, ok := result.(core.Callable)
+				if !ok {
+					break types
+				}
+				testValue := mkTestVal(fnType.In(i))
+				testDhallVal, err := encode(testValue, callable.ArgType())
+				if err != nil {
+					return err
+				}
+				result = callable.Call(testDhallVal)
+			}
+			err := decode(result, reflect.New(fnType.Out(0)).Elem())
+			if err != nil {
+				return err
+			}
+			fn := reflect.MakeFunc(fnType, dhallShim(returnType, e.(core.Callable)))
+			v.Set(fn)
 			return nil
 		}
 	}
