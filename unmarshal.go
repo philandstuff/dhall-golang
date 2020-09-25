@@ -361,37 +361,30 @@ types:
 			// it should at least be a mapKey/mapValue type
 			return nil
 		case reflect.Interface:
-			// TODO: make map type if the EmptyList is of Map type
+			recordType, ok := e.Type.(core.RecordType)
+			if ok && isMapEntryType(recordType) {
+				var m map[interface{}]interface{}
+				v.Set(reflect.MakeMap(reflect.TypeOf(m)))
+				return nil
+			}
 			var i []interface{}
 			v.Set(reflect.MakeSlice(reflect.TypeOf(i), 0, 0))
 			return nil
 		}
 	case core.NonEmptyList:
-		switch v.Kind() {
-		case reflect.Slice:
-			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
-			for i, expr := range e {
-				err := decode(expr, slice.Index(i))
-				if err != nil {
-					return err
-				}
+		recordLit, ok := e[0].(core.RecordLit)
+		if ok && isMapEntryType(recordLit) &&
+			(v.Kind() == reflect.Map || v.Kind() == reflect.Interface) {
+			var m map[interface{}]interface{}
+			mapType := reflect.TypeOf(m)
+			if v.Kind() == reflect.Map {
+				mapType = v.Type()
 			}
-			v.Set(slice)
-			return nil
-		case reflect.Map:
-			// initialise with new (non-nil) value
-			v.Set(reflect.MakeMap(v.Type()))
-			recordLit, ok := e[0].(core.RecordLit)
-			if !ok {
-				break
-			}
-			if !isMapEntryType(recordLit) {
-				return errors.New("can only unmarshal `List {mapKey : T, mapValue : U}` into go map")
-			}
+			newMap := reflect.MakeMap(mapType)
 			for _, r := range e {
 				entry := r.(core.RecordLit)
-				key := reflect.New(v.Type().Key()).Elem()
-				val := reflect.New(v.Type().Elem()).Elem()
+				key := reflect.New(mapType.Key()).Elem()
+				val := reflect.New(mapType.Elem()).Elem()
 				err := decode(entry["mapKey"], key)
 				if err != nil {
 					return err
@@ -400,13 +393,18 @@ types:
 				if err != nil {
 					return err
 				}
-				v.SetMapIndex(key, val)
+				newMap.SetMapIndex(key, val)
 			}
+			v.Set(newMap)
 			return nil
-		case reflect.Interface:
-			// TODO: unmarshal into map type if appropriate
-			var i []interface{}
-			slice := reflect.MakeSlice(reflect.TypeOf(i), len(e), len(e))
+		}
+		if v.Kind() == reflect.Slice || v.Kind() == reflect.Interface {
+			var s []interface{}
+			sliceType := reflect.TypeOf(s)
+			if v.Kind() == reflect.Slice {
+				sliceType = v.Type()
+			}
+			slice := reflect.MakeSlice(sliceType, len(e), len(e))
 			for i, expr := range e {
 				err := decode(expr, slice.Index(i))
 				if err != nil {
@@ -432,6 +430,24 @@ types:
 					return err
 				}
 			}
+			return nil
+		}
+		if v.Kind() == reflect.Interface {
+			// decode into a map[string]interface{}
+			var m map[string]interface{}
+			mapType := reflect.TypeOf(m)
+			newMap := reflect.MakeMap(mapType)
+			for k, v := range e {
+				key := reflect.New(reflect.TypeOf(k)).Elem()
+				val := reflect.New(mapType.Elem()).Elem()
+				key.SetString(k)
+				err := decode(v, val)
+				if err != nil {
+					return err
+				}
+				newMap.SetMapIndex(key, val)
+			}
+			v.Set(newMap)
 			return nil
 		}
 	case core.Callable:
