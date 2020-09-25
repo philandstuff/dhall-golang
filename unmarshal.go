@@ -363,8 +363,14 @@ types:
 		case reflect.Interface:
 			recordType, ok := e.Type.(core.RecordType)
 			if ok && isMapEntryType(recordType) {
-				var m map[interface{}]interface{}
-				v.Set(reflect.MakeMap(reflect.TypeOf(m)))
+				mapType := reflect.TypeOf(map[interface{}]interface{}{})
+				if recordType["mapKey"] == core.Text {
+					// special case for Text keys, since this is such
+					// a common use case and map[string]interface{} is
+					// more ergonomic than map[interface{}]interface{}
+					mapType = reflect.TypeOf(map[string]interface{}{})
+				}
+				v.Set(reflect.MakeMap(mapType))
 				return nil
 			}
 			var i []interface{}
@@ -375,10 +381,14 @@ types:
 		recordLit, ok := e[0].(core.RecordLit)
 		if ok && isMapEntryType(recordLit) &&
 			(v.Kind() == reflect.Map || v.Kind() == reflect.Interface) {
-			var m map[interface{}]interface{}
-			mapType := reflect.TypeOf(m)
+			mapType := reflect.TypeOf(map[interface{}]interface{}{})
 			if v.Kind() == reflect.Map {
 				mapType = v.Type()
+			} else if _, ok := recordLit["mapKey"].(core.PlainTextLit); ok {
+				// special case for Text keys, since this is such a
+				// common use case and map[string]interface{} is more
+				// ergonomic than map[interface{}]interface{}
+				mapType = reflect.TypeOf(map[string]interface{}{})
 			}
 			newMap := reflect.MakeMap(mapType)
 			for _, r := range e {
