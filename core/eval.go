@@ -615,31 +615,33 @@ func evalWith(t term.Term, e env) Value {
 	case term.With:
 		record := evalWith(t.Record, e)
 		value := evalWith(t.Value, e)
-		output := record
-		here := record
-		var recordLit RecordLit
-		depth := 0
-		for _, component := range t.Path {
-			var ok bool
-			recordLit, ok = here.(RecordLit)
-			if !ok {
-				break
-			}
-			here, ok = recordLit[component]
-			if !ok {
-				recordLit[component] = RecordLit{}
-				here = recordLit[component]
-			}
-			depth = depth + 1
-		}
-		if depth == 0 {
-			return with{Record: record, Path: t.Path, Value: value}
-		}
-		recordLit[t.Path[depth-1]] = value
-		return output
+
+		return withRule(record, t.Path, value)
 	default:
 		panic(fmt.Sprint("unknown term type", t))
 	}
+}
+
+// withRule implements evaluation of `with` expressions.  It was too
+// hard to express using for loops, so I finally did actual functional
+// style
+//
+// withRule may modify its parameters, you have been warned
+func withRule(record Value, path []string, value Value) Value {
+	recordLit, ok := record.(RecordLit)
+	if !ok {
+		return with{Record: record, Path: path, Value: value}
+	}
+	if len(path) == 1 {
+		recordLit[path[0]] = value
+		return recordLit
+	}
+	var subrecord Value = RecordLit{}
+	if recordLit[path[0]] != nil {
+		subrecord = recordLit[path[0]]
+	}
+	recordLit[path[0]] = withRule(subrecord, path[1:], value)
+	return recordLit
 }
 
 func apply(fn Value, args ...Value) Value {
