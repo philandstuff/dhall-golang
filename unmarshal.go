@@ -20,29 +20,68 @@ func isMapEntryType(recordType map[string]core.Value) bool {
 	return false
 }
 
+// A DecodeIfaceFunc is a function for decoding into an interface type
+type DecodeIfaceFunc func(*Decoder, core.Value) (interface{}, error)
+
+// A Decoder is responsible for decoding Dhall source into Go data.
+type Decoder struct {
+	interfaces map[string]map[string]DecodeIfaceFunc
+}
+
+// NewDecoder returns a new Decoder.
+func NewDecoder() *Decoder {
+	return &Decoder{
+		interfaces: make(map[string]map[string]DecodeIfaceFunc),
+	}
+}
+
+// RegisterIface registers the given interface decoding function with
+// the Decoder.
+func (d *Decoder) RegisterIface(target interface{}, decodeFunc DecodeIfaceFunc) {
+	ifaceType := reflect.ValueOf(target).Elem().Type()
+	if _, ok := d.interfaces[ifaceType.PkgPath()]; !ok {
+		d.interfaces[ifaceType.PkgPath()] = make(map[string]DecodeIfaceFunc)
+	}
+	d.interfaces[ifaceType.PkgPath()][ifaceType.Name()] = decodeFunc
+}
+
 // Unmarshal takes dhall input as a byte array and parses it, resolves
 // imports, typechecks, evaluates, and unmarshals it into the given
 // variable.
 func Unmarshal(b []byte, out interface{}) error {
+	return NewDecoder().Unmarshal(b, out)
+}
+
+// Unmarshal takes dhall input as a byte array and parses it, resolves
+// imports, typechecks, evaluates, and unmarshals it into the given
+// variable.
+func (d *Decoder) Unmarshal(b []byte, out interface{}) error {
 	term, err := parser.Parse("-", b)
 	if err != nil {
 		return err
 	}
-	return unmarshalTerm(term, out)
+	return d.unmarshalTerm(term, out)
 }
 
 // UnmarshalFile takes dhall input from a file and parses it, resolves
 // imports, typechecks, evaluates, and unmarshals it into the given
 // variable.
 func UnmarshalFile(filename string, out interface{}) error {
+	return NewDecoder().UnmarshalFile(filename, out)
+}
+
+// UnmarshalFile takes dhall input from a file and parses it, resolves
+// imports, typechecks, evaluates, and unmarshals it into the given
+// variable.
+func (d *Decoder) UnmarshalFile(filename string, out interface{}) error {
 	term, err := parser.ParseFile(filename)
 	if err != nil {
 		return err
 	}
-	return unmarshalTerm(term, out)
+	return d.unmarshalTerm(term, out)
 }
 
-func unmarshalTerm(term term.Term, out interface{}) error {
+func (d *Decoder) unmarshalTerm(term term.Term, out interface{}) error {
 	resolved, err := imports.Load(term)
 	if err != nil {
 		return err
@@ -51,14 +90,20 @@ func unmarshalTerm(term term.Term, out interface{}) error {
 	if err != nil {
 		return err
 	}
-	return Decode(core.Eval(resolved), out)
+	return d.Decode(core.Eval(resolved), out)
 }
 
 // Decode takes a core.Value and unmarshals it into the given
 // variable.
 func Decode(e core.Value, out interface{}) error {
+	return NewDecoder().Decode(e, out)
+}
+
+// Decode takes a core.Value and unmarshals it into the given
+// variable.
+func (d *Decoder) Decode(e core.Value, out interface{}) error {
 	v := reflect.ValueOf(out)
-	return decode(e, v.Elem())
+	return d.decode(e, v.Elem())
 }
 
 // encode converts a reflect.Value to a core.Value with the given
@@ -191,7 +236,7 @@ func encode(val reflect.Value, typ core.Value) (core.Value, error) {
 // to reflect.MakeFunc().  This means it converts reflect.Value inputs
 // to core.Value inputs, and converts core.Value outputs to
 // reflect.Value outputs.
-func dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) []reflect.Value {
+func (d *Decoder) dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
 		var expr core.Value = dhallFunc
 		for _, arg := range args {
@@ -204,7 +249,7 @@ func dhallShim(out reflect.Type, dhallFunc core.Callable) func([]reflect.Value) 
 			expr = fn.Call(dhallArg)
 		}
 		ptr := reflect.New(out)
-		err := decode(expr, ptr.Elem())
+		err := d.decode(expr, ptr.Elem())
 		if err != nil {
 			// if the func was well-typed, this shouldn't happen
 			panic(err)
@@ -234,7 +279,7 @@ func flattenSome(e core.Value) core.Value {
 	return e
 }
 
-func decode(e core.Value, v reflect.Value) error {
+func (d *Decoder) decode(e core.Value, v reflect.Value) error {
 	e = flattenSome(e)
 	if _, ok := e.(core.NoneOf); ok {
 		// TODO: should we fail if a None doesn't match the type?
@@ -292,11 +337,11 @@ types:
 			}
 			result = callable.Call(testDhallVal)
 		}
-		err := decode(result, reflect.New(fnType.Out(0)).Elem())
+		err := d.decode(result, reflect.New(fnType.Out(0)).Elem())
 		if err != nil {
 			return err
 		}
-		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e.(core.Callable)))
+		fn := reflect.MakeFunc(fnType, d.dhallShim(returnType, e.(core.Callable)))
 		v.Set(fn)
 		return nil
 	case reflect.Map:
@@ -319,11 +364,11 @@ types:
 				entry := r.(core.RecordLit)
 				key := reflect.New(v.Type().Key()).Elem()
 				val := reflect.New(v.Type().Elem()).Elem()
-				err := decode(entry["mapKey"], key)
+				err := d.decode(entry["mapKey"], key)
 				if err != nil {
 					return err
 				}
-				err = decode(entry["mapValue"], val)
+				err = d.decode(entry["mapValue"], val)
 				if err != nil {
 					return err
 				}
@@ -333,7 +378,7 @@ types:
 		}
 	case reflect.Ptr:
 		v.Set(reflect.New(v.Type().Elem()))
-		return decode(e, v.Elem())
+		return d.decode(e, v.Elem())
 	case reflect.Slice:
 		if _, ok := e.(core.EmptyList); ok {
 			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
@@ -342,7 +387,7 @@ types:
 		if e, ok := e.(core.NonEmptyList); ok {
 			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
 			for i, expr := range e {
-				err := decode(expr, slice.Index(i))
+				err := d.decode(expr, slice.Index(i))
 				if err != nil {
 					return err
 				}
@@ -363,14 +408,28 @@ types:
 				tag := structType.Field(i).Tag.Get("dhall")
 				var err error
 				if tag != "" {
-					err = decode(e[tag], v.Field(i))
+					err = d.decode(e[tag], v.Field(i))
 				} else {
-					err = decode(e[structType.Field(i).Name], v.Field(i))
+					err = d.decode(e[structType.Field(i).Name], v.Field(i))
 				}
 				if err != nil {
 					return err
 				}
 			}
+			return nil
+		}
+	case reflect.Interface:
+		ifaceType := v.Type()
+		if decodeFunc, ok := d.interfaces[ifaceType.PkgPath()][ifaceType.Name()]; ok {
+			decoded, err := decodeFunc(d, e)
+			if err != nil {
+				return err
+			}
+			decodedValue := reflect.ValueOf(decoded)
+			if !decodedValue.Type().AssignableTo(ifaceType) {
+				return fmt.Errorf("%+v is not assignable to %+v", decodedValue, ifaceType)
+			}
+			v.Set(decodedValue)
 			return nil
 		}
 	}

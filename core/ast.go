@@ -201,7 +201,7 @@ func (l lambda) ArgType() Value {
 }
 
 func (u unionConstructor) Call(v Value) Value {
-	return unionVal{
+	return UnionVal{
 		Type:        u.Type,
 		Alternative: u.Alternative,
 		Val:         v,
@@ -345,7 +345,8 @@ type (
 		Alternative string
 	}
 
-	unionVal struct {
+	// A UnionVal is a Value representing a Dhall union value
+	UnionVal struct {
 		Type        UnionType
 		Alternative string
 		Val         Value // nil for empty alternatives
@@ -398,6 +399,6 @@ func (field) isValue()            {}
 func (project) isValue()          {}
 func (UnionType) isValue()        {}
 func (unionConstructor) isValue() {}
-func (unionVal) isValue()         {}
+func (UnionVal) isValue()         {}
 func (merge) isValue()            {}
 func (assert) isValue()           {}

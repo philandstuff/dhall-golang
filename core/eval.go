@@ -489,7 +489,7 @@ func evalWith(t term.Term, e env) Value {
 		}
 		if union, ok := record.(UnionType); ok {
 			if union[t.FieldName] == nil {
-				return unionVal{
+				return UnionVal{
 					Type:        union,
 					Alternative: t.FieldName,
 				}
@@ -583,7 +583,7 @@ func evalWith(t term.Term, e env) Value {
 		handlerVal := evalWith(t.Handler, e)
 		union := evalWith(t.Union, e)
 		if handlers, ok := handlerVal.(RecordLit); ok {
-			if unionLit, ok := union.(unionVal); ok {
+			if unionLit, ok := union.(UnionVal); ok {
 				if unionLit.Val == nil {
 					// empty union alternative
 					return handlers[unionLit.Alternative]
