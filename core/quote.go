@@ -82,6 +82,17 @@ func quoteWith(ctx quoteContext, shouldAlphaNormalize bool, v Value) term.Term {
 		return term.None
 	case textShow:
 		return term.TextShow
+	case textReplace:
+		var result term.Term = term.TextReplace
+		if v.needle == nil {
+			return result
+		}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.needle)}
+		if v.replacement == nil {
+			return result
+		}
+		result = term.App{result, quoteWith(ctx, shouldAlphaNormalize, v.replacement)}
+		return result
 	case list:
 		return term.List
 	case listBuild:

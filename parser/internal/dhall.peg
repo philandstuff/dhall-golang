@@ -277,6 +277,7 @@ builtin ←
   / "List/indexed" { return ListIndexed, nil }
   / "List/reverse" { return ListReverse, nil }
   / "Text/show" { return TextShow, nil }
+  / "Text/replace" { return TextReplace, nil }
   / "Bool" { return Bool, nil }
   / "True" { return True, nil }
   / "False" { return False, nil }

@@ -234,6 +234,49 @@ func (textShow) Call(a0 Value) Value {
 
 func (textShow) ArgType() Value { return Text }
 
+func (r textReplace) Call(a Value) Value {
+	if r.needle == nil {
+		return textReplace{needle: a}
+	}
+	if r.replacement == nil {
+		return textReplace{needle: r.needle, replacement: a}
+	}
+	needle, ok := r.needle.(PlainTextLit)
+	if !ok {
+		return nil
+	}
+	if needle == "" {
+		return a
+	}
+	haystack, ok := a.(PlainTextLit)
+	if !ok {
+		return nil
+	}
+	if !strings.Contains(string(haystack), string(needle)) {
+		return haystack
+	}
+	if replacement, ok := r.replacement.(PlainTextLit); ok {
+		return PlainTextLit(strings.ReplaceAll(string(haystack), string(needle), string(replacement)))
+	}
+	if replacement, ok := r.replacement.(interpolatedText); ok {
+		_ = replacement
+		// TODO
+	}
+	strs := strings.Split(string(haystack), string(needle))
+	result := interpolatedText{
+		Chunks: make(chunks, len(strs)-1),
+		Suffix: strs[len(strs)-1]}
+	for i, str := range strs[0 : len(strs)-1] {
+		result.Chunks[i] = chunk{
+			Prefix: str,
+			Expr:   r.replacement,
+		}
+	}
+	return result
+}
+
+func (textReplace) ArgType() Value { return Text }
+
 func (list) Call(x Value) Value { return ListOf{x} }
 func (list) ArgType() Value     { return Type }
 
@@ -456,7 +499,8 @@ var (
 	Optional Callable = optional{}
 	None     Callable = none{}
 
-	TextShow Callable = textShow{}
+	TextShow    Callable = textShow{}
+	TextReplace Callable = textReplace{}
 
 	List        Callable = list{}
 	ListBuild   Callable = listBuild{}

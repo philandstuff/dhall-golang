@@ -79,7 +79,12 @@ type (
 	optional struct{}
 	none     struct{}
 
-	textShow struct{}
+	textShow    struct{}
+	textReplace struct {
+		needle      Value
+		replacement Value
+		// haystack Value
+	}
 
 	list      struct{}
 	listBuild struct {
@@ -119,7 +124,8 @@ func (doubleShow) isValue() {}
 func (optional) isValue() {}
 func (none) isValue()     {}
 
-func (textShow) isValue() {}
+func (textShow) isValue()    {}
+func (textReplace) isValue() {}
 
 func (list) isValue()        {}
 func (listBuild) isValue()   {}

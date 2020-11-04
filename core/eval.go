@@ -64,6 +64,8 @@ func evalWith(t term.Term, e env) Value {
 			return Text
 		case term.TextShow:
 			return TextShow
+		case term.TextReplace:
+			return TextReplace
 		case term.List:
 			return List
 		case term.ListBuild:
