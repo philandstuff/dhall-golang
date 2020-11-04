@@ -1,10 +1,53 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v5.0.0...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v6.0.0...HEAD
+
+## [6.0.0] - 2020-10-04
+[6.0.0]: https://github.com/philandstuff/dhall-golang/compare/v5.0.0...v6.0.0
+
+This brings dhall-golang up to version 19.0.0 of the Dhall standard.
+
+### Added
+
+ * From Dhall 19.0.0: add `Text/replace` builtin
+ * Add `dhall-golang json` command
+
+The new `dhall-golang json` command takes some Dhall and outputs it as
+JSON, similar to dhall-haskell's `dhall json`.  One key difference is
+that it also supports Prelude.JSON types.  For example, the following
+command:
+
+    dhall-golang json <<EOF
+    let JSON = https://prelude.dhall-lang.org/JSON/package.dhall
+
+    in  { x = JSON.natural 4
+        , y =
+            JSON.array
+              [ JSON.string "foo", JSON.natural 4, JSON.null, JSON.bool True ]
+        }
+    EOF
+
+will output:
+
+    {
+      "x": 4,
+      "y": [
+        "foo",
+        4,
+        null,
+        true
+      ]
+    }
+
+### Changed
+
+ * From Dhall 19.0.0: implement `with` as first-class expression
+ * Allow unmarshalling Dhall values into `interface{}`; dhall-golang
+   will select appropriate Go types for Dhall values when doing this.
 
 ## [5.0.0] - 2020-09-20
-[5.0.0]: https://github.com/philandstuff/dhall-golang/compare/v4.1.0...v5.1.0
+[5.0.0]: https://github.com/philandstuff/dhall-golang/compare/v4.1.0...v5.0.0
 
 This brings dhall-golang up to version 18.0.0 of the Dhall standard.
 
