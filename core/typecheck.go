@@ -160,6 +160,10 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 			return NewPi("A", Type, func(A Value) Value { return OptionalOf{A} }), nil
 		case term.TextShow:
 			return NewFnType("_", Text, Text), nil
+		case term.TextReplace:
+			return NewFnType("needle", Text,
+				NewFnType("replacement", Text,
+					NewFnType("haystack", Text, Text))), nil
 		default:
 			return nil, mkTypeError(unhandledTypeCase)
 		}
@@ -819,7 +823,8 @@ func typeWith(ctx context, t term.Term) (Value, error) {
 		for _, component := range t.Path[0 : len(t.Path)-1] {
 			next, ok := here[component]
 			if !ok {
-				return nil, mkTypeError(missingField)
+				next = RecordType{}
+				here[component] = next
 			}
 			here, ok = next.(RecordType)
 			if !ok {

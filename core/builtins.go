@@ -234,6 +234,36 @@ func (textShow) Call(a0 Value) Value {
 
 func (textShow) ArgType() Value { return Text }
 
+func (r textReplace) Call(a Value) Value {
+	if r.needle == nil {
+		return textReplace{needle: a}
+	}
+	if r.replacement == nil {
+		return textReplace{needle: r.needle, replacement: a}
+	}
+	needle, ok := r.needle.(PlainTextLit)
+	if !ok {
+		return nil
+	}
+	if needle == "" {
+		return a
+	}
+	haystack, ok := a.(PlainTextLit)
+	if !ok {
+		return nil
+	}
+	text := &textValBuilder{}
+	strs := strings.Split(string(haystack), string(needle))
+	text.appendStr(strs[0])
+	for _, s := range strs[1:] {
+		text.appendValue(r.replacement)
+		text.appendStr(s)
+	}
+	return text.value()
+}
+
+func (textReplace) ArgType() Value { return Text }
+
 func (list) Call(x Value) Value { return ListOf{x} }
 func (list) ArgType() Value     { return Type }
 
@@ -456,7 +486,8 @@ var (
 	Optional Callable = optional{}
 	None     Callable = none{}
 
-	TextShow Callable = textShow{}
+	TextShow    Callable = textShow{}
+	TextReplace Callable = textReplace{}
 
 	List        Callable = list{}
 	ListBuild   Callable = listBuild{}

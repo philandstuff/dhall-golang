@@ -41,7 +41,8 @@ var nameToBuiltin = map[string]Term{
 
 	"Double/show": DoubleShow,
 
-	"Text/show": TextShow,
+	"Text/show":    TextShow,
+	"Text/replace": TextReplace,
 
 	"List/build":   ListBuild,
 	"List/fold":    ListFold,

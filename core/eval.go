@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/philandstuff/dhall-golang/v5/term"
 )
@@ -64,6 +63,8 @@ func evalWith(t term.Term, e env) Value {
 			return Text
 		case term.TextShow:
 			return TextShow
+		case term.TextReplace:
+			return TextReplace
 		case term.List:
 			return List
 		case term.ListBuild:
@@ -135,41 +136,15 @@ func evalWith(t term.Term, e env) Value {
 	case term.DoubleLit:
 		return DoubleLit(t)
 	case term.TextLit:
-		var str strings.Builder
-		var newChunks chunks
+		text := &textValBuilder{}
 		for _, chk := range t.Chunks {
-			str.WriteString(chk.Prefix)
+			text.appendStr(chk.Prefix)
 			normExpr := evalWith(chk.Expr, e)
-			if text, ok := normExpr.(PlainTextLit); ok {
-				str.WriteString(string(text))
-			} else if text, ok := normExpr.(interpolatedText); ok {
-				// first chunk gets the rest of str
-				str.WriteString(text.Chunks[0].Prefix)
-				newChunks = append(newChunks,
-					chunk{Prefix: str.String(), Expr: text.Chunks[0].Expr})
-				newChunks = append(newChunks,
-					text.Chunks[1:]...)
-				str.Reset()
-				str.WriteString(text.Suffix)
-			} else {
-				newChunks = append(newChunks, chunk{Prefix: str.String(), Expr: normExpr})
-				str.Reset()
-			}
+			text.appendValue(normExpr)
 		}
-		str.WriteString(t.Suffix)
-		newSuffix := str.String()
+		text.appendStr(t.Suffix)
 
-		// Special case: "${<expr>}" → <expr>
-		if len(newChunks) == 1 && newChunks[0].Prefix == "" && newSuffix == "" {
-			return newChunks[0].Expr
-		}
-
-		// Special case: no chunks -> PlainTextLit
-		if len(newChunks) == 0 {
-			return PlainTextLit(newSuffix)
-		}
-
-		return interpolatedText{Chunks: newChunks, Suffix: newSuffix}
+		return text.value()
 	case term.BoolLit:
 		return BoolLit(t)
 	case term.If:
@@ -615,46 +590,33 @@ func evalWith(t term.Term, e env) Value {
 	case term.With:
 		record := evalWith(t.Record, e)
 		value := evalWith(t.Value, e)
-		output := record
-		here := record
-		var recordLit RecordLit
-		depth := 0
-		for _, component := range t.Path {
-			var ok bool
-			recordLit, ok = here.(RecordLit)
-			if !ok {
-				break
-			}
-			here = recordLit[component]
-			depth = depth + 1
-		}
-		desugared := desugarWith(here, t.Path[depth:], value)
-		if depth == 0 {
-			return desugared
-		}
-		recordLit[t.Path[depth-1]] = desugared
-		return output
+
+		return withRule(record, t.Path, value)
 	default:
 		panic(fmt.Sprint("unknown term type", t))
 	}
 }
 
-// desugarWith converts a `r with a.b...c = v` term to the equivalent,
-// defined by desugar-with() in the Dhall standard.  Note that path
-// may be of length 0, in which case value is returned.
-func desugarWith(abstractRecord Value, path []string, value Value) Value {
-	if len(path) == 0 {
-		return value
+// withRule implements evaluation of `with` expressions.  It was too
+// hard to express using for loops, so I finally did actual functional
+// style
+//
+// withRule may modify its parameters, you have been warned
+func withRule(record Value, path []string, value Value) Value {
+	recordLit, ok := record.(RecordLit)
+	if !ok {
+		return with{Record: record, Path: path, Value: value}
 	}
-	return oper{
-		OpCode: term.RightBiasedRecordMergeOp,
-		L:      abstractRecord,
-		R: RecordLit{path[0]: desugarWith(
-			field{abstractRecord, path[0]},
-			path[1:],
-			value,
-		)},
+	if len(path) == 1 {
+		recordLit[path[0]] = value
+		return recordLit
 	}
+	var subrecord Value = RecordLit{}
+	if recordLit[path[0]] != nil {
+		subrecord = recordLit[path[0]]
+	}
+	recordLit[path[0]] = withRule(subrecord, path[1:], value)
+	return recordLit
 }
 
 func apply(fn Value, args ...Value) Value {

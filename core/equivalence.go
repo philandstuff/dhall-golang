@@ -21,7 +21,7 @@ func alphaEquivalentWith(level int, v1 Value, v2 Value) bool {
 		integerShow, integerClamp, integerNegate, integerToDouble,
 		doubleShow,
 		optional, none,
-		textShow,
+		textShow, textReplace,
 		list, listBuild, listFold, listHead, listIndexed,
 		listLength, listLast, listReverse,
 		freeVar, localVar, quoteVar,
@@ -197,6 +197,21 @@ func alphaEquivalentWith(level int, v1 Value, v2 Value) bool {
 			}
 		}
 		return alphaEquivalentWith(level, v1.Record, v2.Record)
+	case with:
+		v2, ok := v2.(with)
+		if !ok {
+			return false
+		}
+		if len(v1.Path) != len(v2.Path) {
+			return false
+		}
+		for i := range v1.Path {
+			if v1.Path[i] != v2.Path[i] {
+				return false
+			}
+		}
+		return alphaEquivalentWith(level, v1.Record, v2.Record) &&
+			alphaEquivalentWith(level, v1.Value, v2.Value)
 	case UnionType:
 		v2, ok := v2.(UnionType)
 		if !ok {

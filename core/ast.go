@@ -79,7 +79,12 @@ type (
 	optional struct{}
 	none     struct{}
 
-	textShow struct{}
+	textShow    struct{}
+	textReplace struct {
+		needle      Value
+		replacement Value
+		// haystack Value
+	}
 
 	list      struct{}
 	listBuild struct {
@@ -119,7 +124,8 @@ func (doubleShow) isValue() {}
 func (optional) isValue() {}
 func (none) isValue()     {}
 
-func (textShow) isValue() {}
+func (textShow) isValue()    {}
+func (textReplace) isValue() {}
 
 func (list) isValue()        {}
 func (listBuild) isValue()   {}
@@ -334,6 +340,12 @@ type (
 		FieldNames []string
 	}
 
+	with struct {
+		Record Value
+		Path   []string
+		Value  Value
+	}
+
 	// no projectType because it cannot be in a normal form so cannot
 	// be a Value
 
@@ -396,6 +408,7 @@ func (RecordLit) isValue()        {}
 func (toMap) isValue()            {}
 func (field) isValue()            {}
 func (project) isValue()          {}
+func (with) isValue()             {}
 func (UnionType) isValue()        {}
 func (unionConstructor) isValue() {}
 func (unionVal) isValue()         {}

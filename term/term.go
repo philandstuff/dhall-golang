@@ -67,7 +67,8 @@ const (
 
 	DoubleShow Builtin = "Double/show"
 
-	TextShow Builtin = "Text/show"
+	TextShow    Builtin = "Text/show"
+	TextReplace Builtin = "Text/replace"
 
 	ListBuild   Builtin = "List/build"
 	ListFold    Builtin = "List/fold"
