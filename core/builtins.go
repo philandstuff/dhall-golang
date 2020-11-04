@@ -252,27 +252,14 @@ func (r textReplace) Call(a Value) Value {
 	if !ok {
 		return nil
 	}
-	if !strings.Contains(string(haystack), string(needle)) {
-		return haystack
-	}
-	if replacement, ok := r.replacement.(PlainTextLit); ok {
-		return PlainTextLit(strings.ReplaceAll(string(haystack), string(needle), string(replacement)))
-	}
-	if replacement, ok := r.replacement.(interpolatedText); ok {
-		_ = replacement
-		// TODO
-	}
+	text := &textValBuilder{}
 	strs := strings.Split(string(haystack), string(needle))
-	result := interpolatedText{
-		Chunks: make(chunks, len(strs)-1),
-		Suffix: strs[len(strs)-1]}
-	for i, str := range strs[0 : len(strs)-1] {
-		result.Chunks[i] = chunk{
-			Prefix: str,
-			Expr:   r.replacement,
-		}
+	text.appendStr(strs[0])
+	for _, s := range strs[1:] {
+		text.appendValue(r.replacement)
+		text.appendStr(s)
 	}
-	return result
+	return text.value()
 }
 
 func (textReplace) ArgType() Value { return Text }

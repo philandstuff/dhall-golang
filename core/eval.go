@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/philandstuff/dhall-golang/v5/term"
 )
@@ -137,41 +136,15 @@ func evalWith(t term.Term, e env) Value {
 	case term.DoubleLit:
 		return DoubleLit(t)
 	case term.TextLit:
-		var str strings.Builder
-		var newChunks chunks
+		text := &textValBuilder{}
 		for _, chk := range t.Chunks {
-			str.WriteString(chk.Prefix)
+			text.appendStr(chk.Prefix)
 			normExpr := evalWith(chk.Expr, e)
-			if text, ok := normExpr.(PlainTextLit); ok {
-				str.WriteString(string(text))
-			} else if text, ok := normExpr.(interpolatedText); ok {
-				// first chunk gets the rest of str
-				str.WriteString(text.Chunks[0].Prefix)
-				newChunks = append(newChunks,
-					chunk{Prefix: str.String(), Expr: text.Chunks[0].Expr})
-				newChunks = append(newChunks,
-					text.Chunks[1:]...)
-				str.Reset()
-				str.WriteString(text.Suffix)
-			} else {
-				newChunks = append(newChunks, chunk{Prefix: str.String(), Expr: normExpr})
-				str.Reset()
-			}
+			text.appendValue(normExpr)
 		}
-		str.WriteString(t.Suffix)
-		newSuffix := str.String()
+		text.appendStr(t.Suffix)
 
-		// Special case: "${<expr>}" → <expr>
-		if len(newChunks) == 1 && newChunks[0].Prefix == "" && newSuffix == "" {
-			return newChunks[0].Expr
-		}
-
-		// Special case: no chunks -> PlainTextLit
-		if len(newChunks) == 0 {
-			return PlainTextLit(newSuffix)
-		}
-
-		return interpolatedText{Chunks: newChunks, Suffix: newSuffix}
+		return text.value()
 	case term.BoolLit:
 		return BoolLit(t)
 	case term.If:

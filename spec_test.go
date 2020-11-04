@@ -65,9 +65,6 @@ var expectedFailures = []string{
 	// We alpha-normalize due to the enforced caching in the prelude
 	// import
 	"TestNormalization/remoteSystems",
-
-	// WIP
-	"TestNormalization/unit/TextReplaceAbstractA",
 }
 
 func pass(t *testing.T) {
