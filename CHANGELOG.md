@@ -3,7 +3,7 @@
 ## [Unreleased]
 [Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v6.0.0...HEAD
 
-## [6.0.0] - 2020-10-04
+## [6.0.0] - 2020-11-04
 [6.0.0]: https://github.com/philandstuff/dhall-golang/compare/v5.0.0...v6.0.0
 
 This brings dhall-golang up to version 19.0.0 of the Dhall standard.
