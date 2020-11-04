@@ -3,6 +3,7 @@ package dhall
 import (
 	"errors"
 	"fmt"
+	"io"
 	"reflect"
 
 	"github.com/philandstuff/dhall-golang/v5/core"
@@ -20,11 +21,50 @@ func isMapEntryType(recordType map[string]core.Value) bool {
 	return false
 }
 
+var JSONType core.Value = mkJSONType()
+
+var identity core.Value = core.Eval(term.NewLambda("_", term.Type, term.NewVar("_")))
+
+// we use identity in a non-type-safe way here, but rely on being able
+// inspect the type at runtime in a dynamic language way
+var jsonConstructors core.Value = core.RecordLit{
+	"array":   identity,
+	"bool":    identity,
+	"double":  identity,
+	"integer": identity,
+	"null":    core.NoneOf{}, // the Type doesn't matter here
+	"object":  identity,
+	"string":  identity,
+}
+
+func mkJSONType() core.Value {
+	term, err := parser.ParseFile("./dhall-lang/Prelude/JSON/Type.dhall")
+	if err != nil {
+		panic(err)
+	}
+	_, err = core.TypeOf(term)
+	if err != nil {
+		panic(err)
+	}
+	return core.Eval(term)
+}
+
 // Unmarshal takes dhall input as a byte array and parses it, resolves
 // imports, typechecks, evaluates, and unmarshals it into the given
 // variable.
 func Unmarshal(b []byte, out interface{}) error {
 	term, err := parser.Parse("-", b)
+	if err != nil {
+		return err
+	}
+	return unmarshalTerm(term, out)
+}
+
+// UnmarshalReader takes dhall input as a byte array and parses it, resolves
+// imports, typechecks, evaluates, and unmarshals it into the given
+// variable.
+func UnmarshalReader(filename string, r io.Reader, out interface{}) error {
+	term, err := parser.ParseReader(filename, r)
 	if err != nil {
 		return err
 	}
@@ -241,84 +281,120 @@ func decode(e core.Value, v reflect.Value) error {
 		// (similar to EmptyList below)
 		return nil
 	}
-types:
-	switch v.Kind() {
-	case reflect.Bool:
-		if e, ok := e.(core.BoolLit); ok {
-			v.SetBool(bool(e))
-			return nil
-		}
-	case reflect.Int, reflect.Int8, reflect.Int16,
-		reflect.Int32, reflect.Int64:
-		if e, ok := e.(core.IntegerLit); ok {
-			v.SetInt(int64(e))
-			return nil
-		}
-		if e, ok := e.(core.NaturalLit); ok {
-			v.SetInt(int64(e))
-			return nil
-		}
-	case reflect.Uint, reflect.Uint8, reflect.Uint16,
-		reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		if e, ok := e.(core.NaturalLit); ok {
-			v.SetUint(uint64(e))
-			return nil
-		}
-	case reflect.Float32, reflect.Float64:
-		if e, ok := e.(core.DoubleLit); ok {
-			v.SetFloat(float64(e))
-			return nil
-		}
-	case reflect.Func:
-		fnType := v.Type()
-		if fnType.NumIn() == 0 {
-			return fmt.Errorf("You must decode into a function type with at least one input parameter, not %v", fnType)
-		}
-		if fnType.NumOut() != 1 {
-			return fmt.Errorf("You must decode into a function type with exactly one output parameter, not %v", fnType)
-		}
-		returnType := fnType.Out(0)
-
-		result := e
-		for i := 0; i < fnType.NumIn(); i++ {
-			callable, ok := result.(core.Callable)
-			if !ok {
-				break types
-			}
-			testValue := mkTestVal(fnType.In(i))
-			testDhallVal, err := encode(testValue, callable.ArgType())
+	if c, ok := e.(core.Callable); ok {
+		if c.ArgType() == core.Type {
+			t, err := core.TypeOf(core.Quote(e))
 			if err != nil {
 				return err
 			}
-			result = callable.Call(testDhallVal)
+			if core.AlphaEquivalent(t, JSONType) {
+				return decodeJSON(e, v)
+			}
 		}
-		err := decode(result, reflect.New(fnType.Out(0)).Elem())
-		if err != nil {
-			return err
+	}
+	if v.Kind() == reflect.Ptr {
+		v.Set(reflect.New(v.Type().Elem()))
+		return decode(e, v.Elem())
+	}
+types:
+	switch e := e.(type) {
+	case core.BoolLit:
+		switch v.Kind() {
+		case reflect.Bool:
+			v.SetBool(bool(e))
+			return nil
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(bool(e)))
+			return nil
 		}
-		fn := reflect.MakeFunc(fnType, dhallShim(returnType, e.(core.Callable)))
-		v.Set(fn)
-		return nil
-	case reflect.Map:
-		// initialise with new (non-nil) value
-		v.Set(reflect.MakeMap(v.Type()))
-		if _, ok := e.(core.EmptyList); ok {
+	case core.NaturalLit:
+		switch v.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16,
+			reflect.Int32, reflect.Int64:
+			v.SetInt(int64(e))
+			return nil
+		case reflect.Uint, reflect.Uint8, reflect.Uint16,
+			reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			v.SetUint(uint64(e))
+			return nil
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(int(e)))
+			return nil
+		}
+	case core.IntegerLit:
+		switch v.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16,
+			reflect.Int32, reflect.Int64:
+			v.SetInt(int64(e))
+			return nil
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(int(e)))
+			return nil
+		}
+	case core.DoubleLit:
+		switch v.Kind() {
+		case reflect.Float32, reflect.Float64:
+			v.SetFloat(float64(e))
+			return nil
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(float64(e)))
+			return nil
+		}
+	case core.PlainTextLit:
+		switch v.Kind() {
+		case reflect.String:
+			v.SetString(string(e))
+			return nil
+		case reflect.Interface:
+			v.Set(reflect.ValueOf(string(e)))
+			return nil
+		}
+	case core.EmptyList:
+		switch v.Kind() {
+		case reflect.Slice:
+			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
+			return nil
+		case reflect.Map:
+			// initialise with new (non-nil) value
+			v.Set(reflect.MakeMap(v.Type()))
 			// TODO: should this fail if type mismatches?
 			// it should at least be a mapKey/mapValue type
 			return nil
+		case reflect.Interface:
+			recordType, ok := e.Type.(core.RecordType)
+			if ok && isMapEntryType(recordType) {
+				mapType := reflect.TypeOf(map[interface{}]interface{}{})
+				if recordType["mapKey"] == core.Text {
+					// special case for Text keys, since this is such
+					// a common use case and map[string]interface{} is
+					// more ergonomic than map[interface{}]interface{}
+					mapType = reflect.TypeOf(map[string]interface{}{})
+				}
+				v.Set(reflect.MakeMap(mapType))
+				return nil
+			}
+			var i []interface{}
+			v.Set(reflect.MakeSlice(reflect.TypeOf(i), 0, 0))
+			return nil
 		}
-		if e, ok := e.(core.NonEmptyList); ok {
-			recordLit, ok := e[0].(core.RecordLit)
-			if !ok {
-				break
+	case core.NonEmptyList:
+		recordLit, ok := e[0].(core.RecordLit)
+		if ok && isMapEntryType(recordLit) &&
+			(v.Kind() == reflect.Map || v.Kind() == reflect.Interface) {
+			mapType := reflect.TypeOf(map[interface{}]interface{}{})
+			if v.Kind() == reflect.Map {
+				mapType = v.Type()
+			} else if _, ok := recordLit["mapKey"].(core.PlainTextLit); ok {
+				// special case for Text keys, since this is such a
+				// common use case and map[string]interface{} is more
+				// ergonomic than map[interface{}]interface{}
+				mapType = reflect.TypeOf(map[string]interface{}{})
 			}
-			if !isMapEntryType(recordLit) {
-				return errors.New("can only unmarshal `List {mapKey : T, mapValue : U}` into go map")
-			}
+			newMap := reflect.MakeMap(mapType)
 			for _, r := range e {
 				entry := r.(core.RecordLit)
-				key := reflect.New(v.Type().Key()).Elem()
-				val := reflect.New(v.Type().Elem()).Elem()
+				key := reflect.New(mapType.Key()).Elem()
+				val := reflect.New(mapType.Elem()).Elem()
 				err := decode(entry["mapKey"], key)
 				if err != nil {
 					return err
@@ -327,20 +403,18 @@ types:
 				if err != nil {
 					return err
 				}
-				v.SetMapIndex(key, val)
+				newMap.SetMapIndex(key, val)
 			}
+			v.Set(newMap)
 			return nil
 		}
-	case reflect.Ptr:
-		v.Set(reflect.New(v.Type().Elem()))
-		return decode(e, v.Elem())
-	case reflect.Slice:
-		if _, ok := e.(core.EmptyList); ok {
-			v.Set(reflect.MakeSlice(v.Type(), 0, 0))
-			return nil
-		}
-		if e, ok := e.(core.NonEmptyList); ok {
-			slice := reflect.MakeSlice(v.Type(), len(e), len(e))
+		if v.Kind() == reflect.Slice || v.Kind() == reflect.Interface {
+			var s []interface{}
+			sliceType := reflect.TypeOf(s)
+			if v.Kind() == reflect.Slice {
+				sliceType = v.Type()
+			}
+			slice := reflect.MakeSlice(sliceType, len(e), len(e))
 			for i, expr := range e {
 				err := decode(expr, slice.Index(i))
 				if err != nil {
@@ -350,13 +424,8 @@ types:
 			v.Set(slice)
 			return nil
 		}
-	case reflect.String:
-		if e, ok := e.(core.PlainTextLit); ok {
-			v.SetString(string(e))
-			return nil
-		}
-	case reflect.Struct:
-		if e, ok := e.(core.RecordLit); ok {
+	case core.RecordLit:
+		if v.Kind() == reflect.Struct {
 			structType := v.Type()
 			for i := 0; i < structType.NumField(); i++ {
 				// FIXME ignores fields in RecordLit not in Struct
@@ -373,6 +442,72 @@ types:
 			}
 			return nil
 		}
+		if v.Kind() == reflect.Interface {
+			// decode into a map[string]interface{}
+			var m map[string]interface{}
+			mapType := reflect.TypeOf(m)
+			newMap := reflect.MakeMap(mapType)
+			for k, v := range e {
+				key := reflect.New(reflect.TypeOf(k)).Elem()
+				val := reflect.New(mapType.Elem()).Elem()
+				key.SetString(k)
+				err := decode(v, val)
+				if err != nil {
+					return err
+				}
+				newMap.SetMapIndex(key, val)
+			}
+			v.Set(newMap)
+			return nil
+		}
+	case core.Callable:
+		if v.Kind() == reflect.Func {
+			fnType := v.Type()
+			if fnType.NumIn() == 0 {
+				return fmt.Errorf("You must decode into a function type with at least one input parameter, not %v", fnType)
+			}
+			if fnType.NumOut() != 1 {
+				return fmt.Errorf("You must decode into a function type with exactly one output parameter, not %v", fnType)
+			}
+			returnType := fnType.Out(0)
+
+			var result core.Value = e
+			for i := 0; i < fnType.NumIn(); i++ {
+				callable, ok := result.(core.Callable)
+				if !ok {
+					break types
+				}
+				testValue := mkTestVal(fnType.In(i))
+				testDhallVal, err := encode(testValue, callable.ArgType())
+				if err != nil {
+					return err
+				}
+				result = callable.Call(testDhallVal)
+			}
+			err := decode(result, reflect.New(fnType.Out(0)).Elem())
+			if err != nil {
+				return err
+			}
+			fn := reflect.MakeFunc(fnType, dhallShim(returnType, e.(core.Callable)))
+			v.Set(fn)
+			return nil
+		}
 	}
 	return fmt.Errorf("Don't know how to decode %v into %v", e, v.Kind())
+}
+
+// decodeJSON decodes values of Prelude's JSON Type
+func decodeJSON(e core.Value, v reflect.Value) error {
+	e1, ok := e.(core.Callable)
+	if !ok {
+		return errors.New("haven't thought this through yet")
+	}
+	// the value we pass in doesn't matter here
+	val1 := e1.Call(core.Type)
+	e2, ok := val1.(core.Callable)
+	if !ok {
+		return errors.New("haven't thought this through yet")
+	}
+	val := e2.Call(jsonConstructors)
+	return decode(val, v)
 }

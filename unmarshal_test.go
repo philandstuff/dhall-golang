@@ -20,6 +20,14 @@ func DecodeAndCompare(input core.Value, ptr interface{}, expected interface{}) {
 		To(Equal(expected))
 }
 
+func UnmarshalAndCompare(input string, ptr interface{}, expected interface{}) {
+	err := Unmarshal([]byte(input), ptr)
+	Expect(err).ToNot(HaveOccurred())
+	// use reflect to dereference a pointer of unknown type
+	Expect(reflect.ValueOf(ptr).Elem().Interface()).
+		To(Equal(expected))
+}
+
 type testStruct struct {
 	Foo uint
 	Bar string
@@ -222,6 +230,62 @@ var _ = Describe("Decode", func() {
 			Expect(fn(uint(1))(uint(3))).To(Equal(uint(2)))
 		})
 	})
+	DescribeTable("Types into interface{}", DecodeAndCompare,
+		Entry("DoubleLit as float64",
+			core.DoubleLit(3.5), new(interface{}), float64(3.5)),
+		Entry("True as bool",
+			core.True, new(interface{}), true),
+		Entry("NaturalLit as int",
+			core.NaturalLit(5), new(interface{}), int(5)),
+		Entry("IntegerLit as int",
+			core.IntegerLit(5), new(interface{}), int(5)),
+		Entry("TextLit as string",
+			core.PlainTextLit("lalala"), new(interface{}), "lalala"),
+		Entry("List Integer as []interface{}",
+			core.NonEmptyList{core.IntegerLit(5)},
+			new(interface{}),
+			[]interface{}{5}),
+		Entry("List Bool as []interface{}",
+			core.NonEmptyList{core.True, core.False},
+			new(interface{}),
+			[]interface{}{true, false}),
+		Entry("empty List Bool as []interface{}",
+			core.EmptyList{Type: core.Bool},
+			new(interface{}),
+			[]interface{}{}),
+		Entry("Map Natural Text as map[interface{}]interface{}",
+			core.NonEmptyList{core.RecordLit{
+				"mapKey":   core.NaturalLit(3),
+				"mapValue": core.PlainTextLit("value"),
+			}},
+			new(interface{}),
+			map[interface{}]interface{}{3: "value"}),
+		Entry("empty Map Natural Text as map[interface{}]interface{}",
+			core.EmptyList{Type: core.RecordType{
+				"mapKey":   core.Natural,
+				"mapValue": core.Text,
+			}},
+			new(interface{}),
+			map[interface{}]interface{}{}),
+		Entry("Map Text Text as map[string]interface{}",
+			core.NonEmptyList{core.RecordLit{
+				"mapKey":   core.PlainTextLit("key"),
+				"mapValue": core.PlainTextLit("value"),
+			}},
+			new(interface{}),
+			map[string]interface{}{"key": "value"}),
+		Entry("empty Map Text Text as map[string]interface{}",
+			core.EmptyList{Type: core.RecordType{
+				"mapKey":   core.Text,
+				"mapValue": core.Text,
+			}},
+			new(interface{}),
+			map[string]interface{}{}),
+		Entry("struct as map[string]interface{}",
+			core.RecordLit{"foo": core.PlainTextLit("bar")},
+			new(interface{}),
+			map[string]interface{}{"foo": "bar"}),
+	)
 	// TODO expected errors
 })
 
@@ -297,4 +361,48 @@ var _ = Describe("Unmarshal", func() {
 			`, new(func(string) uint)),
 		)
 	})
+	DescribeTable("Dhall JSON types into Go", UnmarshalAndCompare,
+		Entry("unmarshals JSON.null into pointer",
+			`./dhall-lang/Prelude/JSON/null.dhall`,
+			new(*string),
+			(*string)(nil)),
+		Entry("unmarshals JSON.string into string",
+			`./dhall-lang/Prelude/JSON/string.dhall "foobar"`,
+			new(string),
+			"foobar"),
+		Entry("unmarshals JSON.double into float64",
+			`./dhall-lang/Prelude/JSON/double.dhall 5.5`,
+			new(float64),
+			float64(5.5)),
+		Entry("unmarshals JSON.integer into int",
+			`./dhall-lang/Prelude/JSON/integer.dhall +10`,
+			new(int),
+			10),
+		Entry("unmarshals JSON.natural into int",
+			`./dhall-lang/Prelude/JSON/natural.dhall 5`,
+			new(int),
+			5),
+		Entry("unmarshals JSON.object into map",
+			`./dhall-lang/Prelude/JSON/object.dhall (toMap {foo = ./dhall-lang/Prelude/JSON/string.dhall "bar"})`,
+			new(map[string]string),
+			map[string]string{"foo": "bar"}),
+		// this test shows a use case for decoding into interface{}
+		Entry("unmarshals complex JSON.object into map[string]interface{}",
+			`./dhall-lang/Prelude/JSON/object.dhall (toMap {foo = ./dhall-lang/Prelude/JSON/string.dhall "bar", baz = ./dhall-lang/Prelude/JSON/object.dhall (toMap { number = ./dhall-lang/Prelude/JSON/string.dhall "quux"})})`,
+			new(map[string]interface{}),
+			map[string]interface{}{"foo": "bar", "baz": map[string]interface{}{"number": "quux"}}),
+		Entry("unmarshals JSON.array into slice",
+			`./dhall-lang/Prelude/JSON/array.dhall [./dhall-lang/Prelude/JSON/string.dhall "bar"]`,
+			new([]string),
+			[]string{"bar"}),
+		// this test shows a use case for decoding into interface{}
+		Entry("unmarshals complex JSON.array into []interface{}",
+			`./dhall-lang/Prelude/JSON/array.dhall [./dhall-lang/Prelude/JSON/string.dhall "bar", ./dhall-lang/Prelude/JSON/object.dhall (toMap { number = ./dhall-lang/Prelude/JSON/natural.dhall 3})]`,
+			new([]interface{}),
+			[]interface{}{"bar", map[string]interface{}{"number": 3}}),
+		Entry("unmarshals JSON.bool into bool",
+			`./dhall-lang/Prelude/JSON/bool.dhall True`,
+			new(bool),
+			true),
+	)
 })
