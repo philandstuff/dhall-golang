@@ -1,4 +1,4 @@
-module github.com/philandstuff/dhall-golang/v5
+module github.com/philandstuff/dhall-golang/v6
 
 require (
 	github.com/fxamacker/cbor/v2 v2.2.1-0.20200511212021-28e39be4a84f

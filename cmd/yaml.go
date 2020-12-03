@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/philandstuff/dhall-golang/v5"
+	"github.com/philandstuff/dhall-golang/v6"
 	"github.com/urfave/cli/v2" // imports as package "cli"
 	"gopkg.in/yaml.v2"
 )
