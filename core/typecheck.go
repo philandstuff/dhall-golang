@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 
-	"github.com/philandstuff/dhall-golang/v5/term"
+	"github.com/philandstuff/dhall-golang/v6/term"
 )
 
 type context map[string][]Value

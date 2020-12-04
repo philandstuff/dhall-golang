@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/philandstuff/dhall-golang/v5/term"
+	"github.com/philandstuff/dhall-golang/v6/term"
 )
 
 type env map[string][]Value

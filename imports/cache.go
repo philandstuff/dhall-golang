@@ -10,8 +10,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/philandstuff/dhall-golang/v5/binary"
-	"github.com/philandstuff/dhall-golang/v5/term"
+	"github.com/philandstuff/dhall-golang/v6/binary"
+	"github.com/philandstuff/dhall-golang/v6/term"
 )
 
 // DhallCache is an interface for caching implementations.

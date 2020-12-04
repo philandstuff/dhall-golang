@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/philandstuff/dhall-golang/v5/binary"
-	"github.com/philandstuff/dhall-golang/v5/core"
-	"github.com/philandstuff/dhall-golang/v5/imports"
-	"github.com/philandstuff/dhall-golang/v5/parser"
+	"github.com/philandstuff/dhall-golang/v6/binary"
+	"github.com/philandstuff/dhall-golang/v6/core"
+	"github.com/philandstuff/dhall-golang/v6/imports"
+	"github.com/philandstuff/dhall-golang/v6/parser"
 	"github.com/urfave/cli/v2" // imports as package "cli"
 )
 

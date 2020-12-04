@@ -29,7 +29,7 @@ import (
 "unicode"
 "unicode/utf8"
 )
-import . "github.com/philandstuff/dhall-golang/v5/term"
+import . "github.com/philandstuff/dhall-golang/v6/term"
 
 // Helper function for parsing all the operator parsing blocks
 // see OrExpression for an example of how this is used
