@@ -1,7 +1,16 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v6.0.0...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v6.0.1...HEAD
+
+## [6.0.1] - 2020-12-04
+[6.0.1]: https://github.com/philandstuff/dhall-golang/compare/v6.0.0...v6.0.1
+
+This fixes a showstopper bug in 6.0.0.
+
+### Fixed
+
+ - Fix import paths to match new major version (#56)
 
 ## [6.0.0] - 2020-11-04
 [6.0.0]: https://github.com/philandstuff/dhall-golang/compare/v5.0.0...v6.0.0
