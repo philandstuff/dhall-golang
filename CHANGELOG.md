@@ -1,7 +1,15 @@
 # Changelog
 
 ## [Unreleased]
-[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v6.0.1...HEAD
+[Unreleased]: https://github.com/philandstuff/dhall-golang/compare/v6.0.2...HEAD
+
+## [6.0.2] - 2021-10-09
+[6.0.2]: https://github.com/philandstuff/dhall-golang/compare/v6.0.1...v6.0.2
+
+This fixes a problem where dhall-golang expected the Prelude to be
+present on the host machine.
+
+Thanks to @Trundle and @Gabriel439 for their contributions to this release.
 
 ## [6.0.1] - 2020-12-04
 [6.0.1]: https://github.com/philandstuff/dhall-golang/compare/v6.0.0...v6.0.1
