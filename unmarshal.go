@@ -38,15 +38,68 @@ var jsonConstructors core.Value = core.RecordLit{
 }
 
 func mkJSONType() core.Value {
-	term, err := parser.ParseFile("./dhall-lang/Prelude/JSON/Type.dhall")
-	if err != nil {
-		panic(err)
+	return core.Pi{
+		Label: "JSON",
+		Domain: core.Type,
+		Codomain: func(JSON core.Value) core.Value {
+			return core.Pi{
+				Label: "json",
+				Domain: core.RecordType{
+					"array": core.Pi{
+						Label: "_",
+						Domain: core.ListOf{JSON},
+						Codomain: func(_ core.Value) core.Value{
+							return JSON
+						},
+					},
+					"bool": core.Pi{
+						Label: "_",
+						Domain: core.Bool,
+						Codomain: func(_ core.Value) core.Value{
+							return JSON
+						},
+					},
+					"double": core.Pi{
+						Label: "_",
+						Domain: core.Double,
+						Codomain: func(_ core.Value) core.Value{
+							return JSON
+						},
+					},
+					"integer": core.Pi{
+						Label: "_",
+						Domain: core.Integer,
+						Codomain: func(_ core.Value) core.Value{
+							return JSON
+						},
+					},
+					"null": JSON,
+					"object": core.Pi{
+						Label: "_",
+						Domain: core.ListOf{
+							Type: core.RecordType{
+								"mapKey": core.Text,
+								"mapValue": JSON,
+							},
+						},
+						Codomain: func(_ core.Value) core.Value{
+							return JSON
+						},
+					},
+					"string": core.Pi{
+						Label: "_",
+						Domain: core.Text,
+						Codomain: func(_ core.Value) core.Value{
+							return JSON
+						},
+					},
+				},
+				Codomain: func(json core.Value) core.Value {
+					return JSON
+				},
+			}
+		},
 	}
-	_, err = core.TypeOf(term)
-	if err != nil {
-		panic(err)
-	}
-	return core.Eval(term)
 }
 
 // Unmarshal takes dhall input as a byte array and parses it, resolves
