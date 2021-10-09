@@ -16,7 +16,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	"github.com/philandstuff/dhall-golang/v6"
 )
@@ -30,11 +29,7 @@ type Config struct {
 
 func main() {
 	var config Config
-	bytes, err := ioutil.ReadFile("/path/to/config.dhall")
-	if err != nil {
-		panic(err)
-	}
-	err = dhall.Unmarshal(bytes, &config)
+	err = dhall.UnmarshalFile("/path/to/config.dhall", &config)
 	if err != nil {
 		panic(err)
 	}
