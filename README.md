@@ -41,7 +41,8 @@ func main() {
 
 You can find more documentation in the [dhall-golang godoc][].
 
-[dhall-golang godoc]: https://godoc.org/github.com/philandstuff/dhall-golang
+[dhall-golang godoc]:
+https://godoc.org/github.com/philandstuff/dhall-golang/v6
 
 ## Development
 
